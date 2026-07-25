@@ -60,10 +60,10 @@ export const VisualizerWorkspace: React.FC = () => {
           {/* Center: Playback Controls */}
           <StageControls />
 
-          {/* Right: DSA Algorithm Stage (62%) */}
+          {/* Right: Custom Flowchart Stage (Exact same visual stage as Python/C++/Java/C!) */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
             <div className="h-[70%] relative overflow-hidden flex flex-col">
-              <DsaAlgoStage />
+              <CustomFlowchartStage />
               <PenMenu />
             </div>
             <div className="h-[30%] overflow-hidden flex flex-col">

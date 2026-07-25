@@ -1243,6 +1243,37 @@ export const CustomFlowchartStage: React.FC = () => {
                         <div className="absolute -top-8 -left-32 w-32 h-8 border-l-2 border-b-2 border-fuchsia-500/40 rounded-bl-xl border-dashed" />
                       )}
 
+                      {(ev?.type === 'STACK_PUSH' || ev?.type === 'STACK_POP' || ev?.type === 'SET_POINTERS' || ev?.type === 'COMPARE_INDICES' || (ev?.type === 'NONE' && step.memorySnapshot?.stack !== undefined)) && (() => {
+                        const rawStack = step.memorySnapshot?.stack !== undefined ? step.memorySnapshot.stack : (ev as any)?.stackState;
+                        const items: Array<string | number> = Array.isArray(rawStack) 
+                          ? rawStack 
+                          : typeof rawStack === 'string'
+                            ? (() => { try { return JSON.parse(rawStack); } catch { return []; } })()
+                            : [];
+
+                        const highlightedIdx = ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA : (ev as any)?.pointers?.curr ?? (typeof step.memorySnapshot?.i === 'number' ? step.memorySnapshot.i : undefined);
+                        const comparingIdxs: [number, number] | undefined = ev?.type === 'COMPARE_INDICES' ? [(ev as any).indexA, (ev as any).indexB] : undefined;
+
+                        return (
+                          <div className="flex flex-col items-center gap-3">
+                            <DataStructureBox
+                              name="stack"
+                              variant="array"
+                              items={items}
+                              isActive={isLatest}
+                              highlightedIndex={highlightedIdx}
+                              comparingIndices={comparingIdxs}
+                              pointers={{ mid: typeof step.memorySnapshot?.top === 'number' && step.memorySnapshot.top >= 0 ? step.memorySnapshot.top : undefined }}
+                            />
+                            {typeof step.memorySnapshot?.top === 'number' && (
+                              <div className="px-3 py-1 rounded-full bg-purple-950/80 border border-purple-500/30 text-purple-300 font-mono text-xs font-bold shadow-md">
+                                TOP Pointer = Index [{step.memorySnapshot.top}]
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {ev?.type === 'MATCH_START' && (
                         <MatchBlock variableName={ev.variableName} value={ev.value} isActive={isLatest} />
                       )}
