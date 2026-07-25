@@ -125,7 +125,7 @@ const dsaTopics = [
     complexity: 'O(1)', category: 'Data Structure', difficulty: 'Intermediate' as const,
     accentColor: '#06b6d4', Icon: AlignJustify,
     tags: ['Enqueue', 'Dequeue', 'Front', 'Rear'],
-    interactive: false, programsCount: 4,
+    interactive: true, programsCount: 4,
   },
   {
     id: 'singly_linked_list', number: '07', name: 'Singly Linked List',
@@ -300,8 +300,8 @@ export const TopicSelectionPage: React.FC = () => {
     : 'Python';
 
   const handleTopicClick = (topicId: string) => {
-    if (isDsa && topicId === 'stack') {
-      navigate(`/visualizer/${languageId}/stack/dsa_stack_push_pop`);
+    if (isDsa && (topicId === 'stack' || topicId === 'queue')) {
+      navigate(`/visualizer/${languageId}/${topicId}/dsa_${topicId}_op`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
     }
