@@ -76,6 +76,7 @@ export const DsaOperationalPanel: React.FC = () => {
       memorySnapshot: {
         top: stack.length - 1,
         capacity,
+        stack, // Persist current stack state array
         ...memUpdate,
       },
       consoleOutput: consoleOut,

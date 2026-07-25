@@ -335,11 +335,20 @@ export const DsaAlgoStage: React.FC = () => {
     }));
   }, [mem]);
 
-  // Derive stack/queue/linked list state from event
+  // Derive stack/queue/linked list state from event or memory
   const stackState = useMemo<(string | number)[] | null>(() => {
-    if (event?.type === 'STACK_PUSH' || event?.type === 'STACK_POP') return (event as any).stackState;
+    if (lesson?.topic === 'stack') {
+      if (Array.isArray(mem.stack)) return mem.stack;
+      if (typeof mem.stack === 'string') {
+        try { return JSON.parse(mem.stack); } catch {}
+      }
+      if (event?.type === 'STACK_PUSH' || event?.type === 'STACK_POP') {
+        return (event as any).stackState;
+      }
+      return [];
+    }
     return null;
-  }, [event]);
+  }, [lesson, mem, event]);
 
   const queueState = useMemo<(string | number)[] | null>(() => {
     if (event?.type === 'ENQUEUE' || event?.type === 'DEQUEUE') return (event as any).queueState;
