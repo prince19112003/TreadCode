@@ -28,8 +28,9 @@ export const StackVisualStage: React.FC = () => {
     ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA :
     (ev as any)?.pointers?.curr ?? (typeof currentStep?.memorySnapshot?.i === 'number' ? currentStep.memorySnapshot.i : undefined);
 
-  const isOverflow = stackItems.length > CAPACITY;
   const isEmpty = stackItems.length === 0;
+  const isFull = stackItems.length >= CAPACITY;
+  const isUnderflow = (ev?.type === 'STACK_POP' && isEmpty) || (currentStep?.explanationEnglish?.includes('Underflow'));
 
   return (
     <div className="flex-1 w-full h-full bg-[#060814] flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
@@ -47,6 +48,32 @@ export const StackVisualStage: React.FC = () => {
           <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse" />
         </div>
 
+        {/* OVERFLOW / UNDERFLOW ALERT BANNERS */}
+        <AnimatePresence>
+          {isFull && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="px-4 py-1.5 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 text-[11px] font-mono font-black tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse"
+            >
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              OVERFLOW WARNING: STACK IS FULL ({stackItems.length}/{CAPACITY})
+            </motion.div>
+          )}
+          {isUnderflow && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400 text-[11px] font-mono font-black tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              UNDERFLOW WARNING: CANNOT POP FROM EMPTY STACK
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Open Top Label */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] font-mono text-slate-600 tracking-widest uppercase">OPEN TOP ▼</span>
@@ -56,7 +83,7 @@ export const StackVisualStage: React.FC = () => {
         {/* Main Stack Frame */}
         <div
           className={`relative flex flex-col gap-0 rounded-b-2xl overflow-hidden transition-all duration-300 ${
-            isOverflow ? 'ring-2 ring-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)]' : ''
+            isFull ? 'ring-2 ring-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]' : ''
           }`}
           style={{ minWidth: 340 }}
         >
