@@ -2,26 +2,26 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLesson } from '../../../../lessons/LessonContext';
 
-const CAPACITY = 6;
 
-const getStackFromStep = (step: any): (string | number)[] => {
-  if (!step) return [];
+const getStackFromStep = (step: any): { stack: (string | number)[]; capacity: number } => {
+  if (!step) return { stack: [], capacity: 4 };
   const mem = step.memorySnapshot;
-  if (Array.isArray(mem?.stack)) return mem.stack;
+  const cap = typeof mem?.capacity === 'number' ? mem.capacity : 4;
+  if (Array.isArray(mem?.stack)) return { stack: mem.stack, capacity: cap };
   if (typeof mem?.stack === 'string') {
-    try { return JSON.parse(mem.stack); } catch { return []; }
+    try { return { stack: JSON.parse(mem.stack), capacity: cap }; } catch { return { stack: [], capacity: cap }; }
   }
   const ev = step.animationEvent;
   if (ev?.type === 'STACK_PUSH' || ev?.type === 'STACK_POP') {
-    return (ev as any).stackState ?? [];
+    return { stack: (ev as any).stackState ?? [], capacity: cap };
   }
-  return [];
+  return { stack: [], capacity: cap };
 };
 
 export const StackVisualStage: React.FC = () => {
   const { currentStep, zoom } = useLesson();
 
-  const stackItems: (string | number)[] = getStackFromStep(currentStep);
+  const { stack: stackItems, capacity: CAPACITY } = getStackFromStep(currentStep);
   const topIndex = stackItems.length - 1;
   const ev = currentStep?.animationEvent;
   const activeHighlight: number | undefined =
