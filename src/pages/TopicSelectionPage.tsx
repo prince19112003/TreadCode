@@ -244,7 +244,7 @@ export const TopicSelectionPage: React.FC = () => {
                   aria-label={`Select topic ${topic.name}`}
                   onClick={() => {
                     if (languageId === 'dsa' && topic.id === 'stack') {
-                      navigate(`/visualize/${languageId}/dsa_stack_push_pop`);
+                      navigate(`/visualizer/${languageId}/stack/dsa_stack_push_pop`);
                     } else {
                       navigate(`/topics/${languageId}/programs/${topic.id}`);
                     }
@@ -252,7 +252,7 @@ export const TopicSelectionPage: React.FC = () => {
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       if (languageId === 'dsa' && topic.id === 'stack') {
-                        navigate(`/visualize/${languageId}/dsa_stack_push_pop`);
+                        navigate(`/visualizer/${languageId}/stack/dsa_stack_push_pop`);
                       } else {
                         navigate(`/topics/${languageId}/programs/${topic.id}`);
                       }
