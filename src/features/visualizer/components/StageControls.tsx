@@ -82,7 +82,7 @@ export const StageControls: React.FC = () => {
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-px h-full bg-gradient-to-b from-transparent via-purple-500/20 to-transparent" />
+          <div className="w-px h-full bg-linear-to-b from-transparent via-purple-500/20 to-transparent" />
         </div>
       )}
 
