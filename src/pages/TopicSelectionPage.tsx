@@ -209,21 +209,10 @@ const DsaTopicCard: React.FC<{ topic: DsaTopic; index: number; onClick: () => vo
           style={{ background: `linear-gradient(to right, transparent, ${topic.accentColor}60, transparent)` }}
         />
 
-        {/* Interactive badge */}
-        {topic.interactive && (
-          <div
-            className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-black tracking-wider"
-            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
-          >
-            <Zap size={8} />
-            INTERACTIVE
-          </div>
-        )}
-
         {/* Card body */}
         <div className="p-5 flex flex-col gap-4">
 
-          {/* Top: Icon + Number + Category */}
+          {/* Top: Icon + Number + Badges */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -237,12 +226,24 @@ const DsaTopicCard: React.FC<{ topic: DsaTopic; index: number; onClick: () => vo
                 <div className="text-[10px] font-mono font-bold" style={{ color: `${topic.accentColor}90` }}>{topic.number}</div>
               </div>
             </div>
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0"
-              style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}
-            >
-              {topic.difficulty}
-            </span>
+            
+            <div className="flex items-center gap-1.5 shrink-0">
+              {topic.interactive && (
+                <span
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-black tracking-wider"
+                  style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
+                >
+                  <Zap size={8} />
+                  INTERACTIVE
+                </span>
+              )}
+              <span
+                className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}
+              >
+                {topic.difficulty}
+              </span>
+            </div>
           </div>
 
           {/* Name + Subtitle */}

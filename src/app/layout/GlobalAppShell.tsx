@@ -246,7 +246,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
         </div>
 
         {/* Results */}
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-100 overflow-y-auto p-2 space-y-1 custom-scrollbar">
           {query.trim() === '' ? (
             <div className="py-12 text-center" style={{ color: '#525870' }}>
               <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
