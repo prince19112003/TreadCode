@@ -69,6 +69,9 @@ export const VisualizerWorkspace: React.FC = () => {
             </div>
           </div>
 
+          {/* ── Center: Vertical Control Panel (Zoom, Fit, Reset) ── */}
+          <StageControls />
+
           {/* ── Right Column: Visual Stage (62%) ── */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
             <div className="h-[70%] relative overflow-hidden flex flex-col rounded-2xl border border-slate-800/30">

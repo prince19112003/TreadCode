@@ -19,7 +19,7 @@ const getStackFromStep = (step: any): (string | number)[] => {
 };
 
 export const StackVisualStage: React.FC = () => {
-  const { currentStep } = useLesson();
+  const { currentStep, zoom } = useLesson();
 
   const stackItems: (string | number)[] = getStackFromStep(currentStep);
   const topIndex = stackItems.length - 1;
@@ -32,8 +32,11 @@ export const StackVisualStage: React.FC = () => {
   const isEmpty = stackItems.length === 0;
 
   return (
-    <div className="flex-1 w-full h-full bg-[#060814] flex items-center justify-center overflow-auto">
-      <div className="flex flex-col items-center gap-6 py-6">
+    <div className="flex-1 w-full h-full bg-[#060814] flex items-center justify-center overflow-auto relative">
+      <div
+        className="flex flex-col items-center gap-6 py-6 transition-transform duration-200 ease-out origin-center"
+        style={{ transform: `scale(${zoom})` }}
+      >
 
         {/* Stack Header Label */}
         <div className="flex items-center gap-3">
