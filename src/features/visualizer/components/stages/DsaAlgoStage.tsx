@@ -60,7 +60,7 @@ const ArrayBox: React.FC<ArrayBoxProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="flex gap-0.5 min-h-[22px] items-end">
+      <div className="flex gap-0.5 min-h-5.5 items-end">
         {pointersAbove.map(ptr => {
           const c = getPointerColor(ptr);
           return (

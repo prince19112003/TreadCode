@@ -1255,7 +1255,7 @@ export const CustomFlowchartStage: React.FC = () => {
                         const highlightedIdx = ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA : (ev as any)?.pointers?.curr ?? (typeof step.memorySnapshot?.i === 'number' ? step.memorySnapshot.i : undefined);
 
                         return (
-                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-2xl bg-slate-950/80 border-2 border-indigo-500/20 shadow-2xl backdrop-blur-md min-w-[300px]">
+                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-2xl bg-slate-950/80 border-2 border-indigo-500/20 shadow-2xl backdrop-blur-md min-w-75">
                             <div className="flex items-center justify-between w-full border-b border-indigo-500/10 pb-2">
                               <span className="text-xs font-mono font-black uppercase tracking-widest text-purple-400">
                                 STACK CONTAINER (LIFO)
