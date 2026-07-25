@@ -94,57 +94,108 @@ const StackViz: React.FC<{
   stackState: (string | number)[];
   lastAction?: 'push' | 'pop';
   lastValue?: string | number;
-}> = ({ stackState, lastAction, lastValue }) => (
-  <div className="flex flex-col items-center gap-3">
-    <div className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
-      style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)' }}>
-      Stack (LIFO)
-    </div>
-    <div className="relative flex flex-col-reverse gap-1.5 items-center">
-      <div className="w-[90px] h-[3px] rounded-full" style={{ background: 'rgba(168,85,247,0.4)' }} />
-      <AnimatePresence>
-        {stackState.map((val, idx) => {
-          const isTop = idx === stackState.length - 1;
+  pointers?: Record<string, number | null>;
+  compareA?: number;
+  compareB?: number;
+}> = ({ stackState, lastAction, lastValue, pointers = {}, compareA = -1, compareB = -1 }) => {
+  const capacity = 6;
+  const slots = Array.from({ length: capacity }, (_, i) => capacity - 1 - i); // [5, 4, 3, 2, 1, 0]
+
+  return (
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+      <div className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+        style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)' }}>
+        Stack (LIFO)
+      </div>
+      <div className="relative flex flex-col gap-1.5 p-3 rounded-2xl border-2 border-dashed border-purple-500/20 bg-purple-950/5 w-full">
+        {slots.map((idx) => {
+          const hasValue = idx < stackState.length;
+          const val = hasValue ? stackState[idx] : null;
+          const isTop = idx === stackState.length - 1 && hasValue;
+
+          const activePointers = Object.entries(pointers)
+            .filter(([, pIdx]) => pIdx === idx)
+            .map(([name]) => name);
+
+          let borderStyle = '1px solid rgba(255,255,255,0.06)';
+          let bgStyle = 'rgba(22,27,45,0.4)';
+          let textStyle = 'text-slate-500';
+          let shadow = 'none';
+
+          if (isTop) {
+            borderStyle = '2px solid #a855f7';
+            bgStyle = 'rgba(168,85,247,0.15)';
+            textStyle = 'text-purple-300 font-black';
+            shadow = '0 0 10px rgba(168,85,247,0.2)';
+          } else if (hasValue) {
+            borderStyle = '1px solid rgba(168,85,247,0.4)';
+            bgStyle = 'rgba(22,27,45,0.8)';
+            textStyle = 'text-slate-200 font-bold';
+          }
+
+          if (compareA === idx || compareB === idx) {
+            borderStyle = '2px solid #3b82f6';
+            bgStyle = 'rgba(59,130,246,0.2)';
+            shadow = '0 0 12px rgba(59,130,246,0.3)';
+          }
+
           return (
-            <motion.div key={`s-${idx}-${val}`}
-              initial={{ opacity: 0, y: -20, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.8 }} transition={{ duration: 0.3 }}
-              className="flex items-center justify-center rounded-lg font-black text-base"
-              style={{
-                width: 80, height: 44,
-                background: isTop ? 'rgba(168,85,247,0.22)' : 'rgba(22,27,45,0.9)',
-                border: `2px solid ${isTop ? '#a855f7' : 'rgba(168,85,247,0.2)'}`,
-                boxShadow: isTop ? '0 0 14px rgba(168,85,247,0.3)' : 'none',
-                color: isTop ? '#d8b4fe' : '#94a3b8',
-                fontFamily: "'JetBrains Mono', monospace",
-              }}>
-              {val}
-            </motion.div>
+            <div key={idx} className="flex items-center justify-between gap-3 w-full px-2">
+              <span className="w-8 text-right font-mono text-xs text-slate-500">[{idx}]</span>
+              <motion.div
+                layout
+                className={`flex-1 h-12 flex items-center justify-center rounded-xl font-mono text-sm transition-all duration-300 ${textStyle}`}
+                style={{ border: borderStyle, background: bgStyle, boxShadow: shadow }}
+              >
+                <AnimatePresence mode="wait">
+                  {hasValue ? (
+                    <motion.span
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {val}
+                    </motion.span>
+                  ) : (
+                    <span className="text-[10px] tracking-wider text-slate-700 uppercase font-sans select-none">Empty</span>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+              <div className="w-16 flex gap-1 items-center">
+                {activePointers.map((ptr) => {
+                  const c = getPointerColor(ptr);
+                  return (
+                    <motion.span
+                      key={ptr}
+                      initial={{ scale: 0.8, opacity: 0, x: -5 }}
+                      animate={{ scale: 1, opacity: 1, x: 0 }}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
+                      style={{ background: c.bg, borderColor: c.border, color: c.text }}
+                    >
+                      {ptr === 'top' ? 'TOP' : ptr.toUpperCase()}
+                    </motion.span>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
-      </AnimatePresence>
-      {stackState.length === 0 && (
-        <div className="text-xs font-mono" style={{ color: '#4b5563' }}>Empty</div>
+      </div>
+      {lastAction && (
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+          className="text-xs font-bold px-3 py-1 rounded-lg"
+          style={{
+            color: lastAction === 'push' ? '#86efac' : '#fca5a5',
+            background: lastAction === 'push' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${lastAction === 'push' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          }}>
+          {lastAction === 'push' ? `⬆ PUSH(${lastValue})` : `⬇ POP → ${lastValue}`}
+        </motion.div>
       )}
     </div>
-    {stackState.length > 0 && (
-      <div className="text-xs font-bold" style={{ color: '#a855f7' }}>
-        ↑ TOP = {stackState[stackState.length - 1]}
-      </div>
-    )}
-    {lastAction && (
-      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-        className="text-xs font-bold px-2 py-1 rounded-lg"
-        style={{
-          color: lastAction === 'push' ? '#86efac' : '#fca5a5',
-          background: lastAction === 'push' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-          border: `1px solid ${lastAction === 'push' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-        {lastAction === 'push' ? `⬆ PUSH(${lastValue})` : `⬇ POP → ${lastValue}`}
-      </motion.div>
-    )}
-  </div>
-);
+  );
+};
 
 /* ─── Queue Visualization ───────────────────────────────────────────────── */
 const QueueViz: React.FC<{
@@ -379,7 +430,10 @@ export const DsaAlgoStage: React.FC = () => {
         {stackState && (
           <StackViz stackState={stackState}
             lastAction={event?.type === 'STACK_PUSH' ? 'push' : event?.type === 'STACK_POP' ? 'pop' : undefined}
-            lastValue={event?.type === 'STACK_PUSH' ? event.value : event?.type === 'STACK_POP' ? event.poppedValue : undefined} />
+            lastValue={event?.type === 'STACK_PUSH' ? event.value : event?.type === 'STACK_POP' ? event.poppedValue : undefined}
+            pointers={pointers}
+            compareA={compareA}
+            compareB={compareB} />
         )}
 
         {/* QUEUE */}

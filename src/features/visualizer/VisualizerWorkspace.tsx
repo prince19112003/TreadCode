@@ -7,6 +7,7 @@ import { ExplanationBar } from './components/ExplanationBar';
 import { PenMenu } from './components/PenMenu';
 import { CustomFlowchartStage } from './components/stages/CustomFlowchartStage';
 import { DsaAlgoStage } from './components/stages/DsaAlgoStage';
+import { DsaOperationalPanel } from './components/DsaOperationalPanel';
 import { useLesson } from '../../lessons/LessonContext';
 
 export const VisualizerWorkspace: React.FC = () => {
@@ -40,21 +41,26 @@ export const VisualizerWorkspace: React.FC = () => {
     );
   }
 
-  /* ── DSA Layout: no CodeStepPanel, full-width algorithm stage ─────────── */
+  /* ── DSA Layout: Code Panel replaced by DsaOperationalPanel, ExplanationBar stays ── */
   if (isDsa) {
     return (
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#050510] text-slate-200">
         <div className="flex-1 flex gap-1.5 p-1.5 overflow-hidden bg-[#050510]">
 
-          {/* Left: Explanation Panel (40%) */}
-          <div className="w-[40%] flex flex-col gap-1.5 overflow-hidden shrink-0">
-            <ExplanationBar />
+          {/* Left: Operations & Explanation Panel (38%) */}
+          <div className="w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0">
+            <div className="h-[70%] overflow-hidden flex flex-col">
+              {lesson?.topic === 'stack' ? <DsaOperationalPanel /> : <CodeStepPanel />}
+            </div>
+            <div className="h-[30%] overflow-hidden flex flex-col">
+              <ExplanationBar />
+            </div>
           </div>
 
           {/* Center: Playback Controls */}
           <StageControls />
 
-          {/* Right: DSA Algorithm Stage (60%) */}
+          {/* Right: DSA Algorithm Stage (62%) */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
             <div className="h-[70%] relative overflow-hidden flex flex-col">
               <DsaAlgoStage />

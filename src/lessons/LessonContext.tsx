@@ -26,6 +26,8 @@ interface LessonContextType {
   setHasEdited: (b: boolean) => void;
   playSpeed: number;
   setPlaySpeed: (speed: number) => void;
+  customSteps: ExecutionStep[] | null;
+  setCustomSteps: React.Dispatch<React.SetStateAction<ExecutionStep[] | null>>;
 }
 
 const LessonContext = createContext<LessonContextType>({
@@ -53,6 +55,8 @@ const LessonContext = createContext<LessonContextType>({
   setHasEdited: () => {},
   playSpeed: 1.0,
   setPlaySpeed: () => {},
+  customSteps: null,
+  setCustomSteps: () => {},
 });
 
 export const useLesson = () => useContext(LessonContext);
@@ -84,20 +88,22 @@ export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.R
   );
   const [hasEdited, setHasEdited] = useState(false);
   const [playSpeed, setPlaySpeed] = useState<number>(1.0);
+  const [customSteps, setCustomSteps] = useState<ExecutionStep[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Derive active steps: use generateSteps if available, otherwise fall back to static
-  const activeSteps: ExecutionStep[] = lesson.generateSteps
-    ? lesson.generateSteps(editableValues)
-    : lesson.executionSteps;
+  // Derive active steps: use customSteps if set, otherwise generateSteps or executionSteps
+  const activeSteps: ExecutionStep[] = customSteps
+    ? customSteps
+    : (lesson.generateSteps ? lesson.generateSteps(editableValues) : lesson.executionSteps);
 
   const totalSteps = activeSteps.length + 1; // +1 for the empty step-0 canvas
   const currentStep = currentStepIndex === 0 ? null : activeSteps[currentStepIndex - 1] ?? null;
   const isComplete = currentStepIndex >= totalSteps - 1;
 
-  // Reset step index when lesson changes
+  // Reset step index and customSteps when lesson changes
   useEffect(() => {
     setCurrentStepIndex(0);
+    setCustomSteps(null);
     setEditableValues(getDefaultEditableValues(lesson));
   }, [lesson.id, getDefaultEditableValues]);
 
@@ -194,6 +200,8 @@ export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.R
         setHasEdited,
         playSpeed,
         setPlaySpeed,
+        customSteps,
+        setCustomSteps,
       }}
     >
       {children}
