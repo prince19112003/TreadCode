@@ -46,7 +46,7 @@ export const DsaOperationalPanel: React.FC = () => {
       lineNum: 1,
       explanationEnglish: 'Stack is initialized and currently empty. Capacity is set to 6.',
       explanationHinglish: 'Stack empty state me initialize hua hai. Capacity 6 slots ki hai.',
-      memorySnapshot: { top: -1, capacity },
+      memorySnapshot: { top: -1, capacity, stack: [] },
       consoleOutput: 'Stack initialized (Empty).',
       animationEvent: { type: 'STACK_POP', poppedValue: '', stackState: [] },
     };

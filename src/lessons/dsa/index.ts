@@ -439,29 +439,24 @@ export const dsa_recursion_sum: LessonProgram = {
 
 export const dsa_stack_push_pop: LessonProgram = {
   id: 'dsa_stack_push_pop', language: 'dsa', topic: 'stack', lessonNumber: 1,
-  friendlyName: 'Stack Implementation — Push, Pop & Top',
-  learningObjective: 'Build a stack using an array. Top pointer tracks the last inserted element. LIFO order.',
+  friendlyName: 'Stack Data Structure (LIFO)',
+  learningObjective: 'Interactive Stack Workspace: Perform Push, Pop, Peek, Search, and Traverse operations directly.',
   lines: [
-    line(1, [kw('int'), tx(' '), va('stack'), pu('['), nu('5'), pu(']'), pu(','), tx(' '), va('top'), tx(' '), op('='), tx(' '), nu('-1'), pu(';')]),
-    line(2, [cm('// Push 10, 20, 30')]),
-    line(3, [va('stack'), pu('['), op('++'), va('top'), pu(']'), tx(' '), op('='), tx(' '), nu('10'), pu(';'), tx(' '), cm('// Push 10')]),
-    line(4, [va('stack'), pu('['), op('++'), va('top'), pu(']'), tx(' '), op('='), tx(' '), nu('20'), pu(';'), tx(' '), cm('// Push 20')]),
-    line(5, [va('stack'), pu('['), op('++'), va('top'), pu(']'), tx(' '), op('='), tx(' '), nu('30'), pu(';'), tx(' '), cm('// Push 30')]),
-    line(6, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Top: "'), tx(' '), op('<<'), tx(' '), va('stack'), pu('['), va('top'), pu(']'), pu(';')]),
-    line(7, [va('top'), op('--'), pu(';'), tx(' '), cm('// Pop top element')]),
-    line(8, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"New Top: "'), tx(' '), op('<<'), tx(' '), va('stack'), pu('['), va('top'), pu(']'), pu(';')]),
+    line(1, [cm('// Interactive Stack Workspace (Language Independent)')]),
+    line(2, [cm('// Use the Operational Panel on the left to perform stack operations.')]),
   ],
   editableVariables: {},
   generateSteps: (): ExecutionStep[] => {
-
     return [
-      { step: 1, lineNum: 1, explanationEnglish: 'Stack array and top = -1 initialized. Stack is empty.', explanationHinglish: 'Stack array aur top = -1 initialize hua. Stack khali hai.', memorySnapshot: { top: -1, stack: '[]' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'top', value: -1 } },
-      { step: 2, lineNum: 3, explanationEnglish: 'PUSH 10: top++ = 0. stack[0] = 10.', explanationHinglish: 'Push 10: top = 0, stack[0] = 10.', memorySnapshot: { top: 0, stack: '[10]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'top', oldValue: -1, newValue: 0 } },
-      { step: 3, lineNum: 4, explanationEnglish: 'PUSH 20: top++ = 1. stack[1] = 20.', explanationHinglish: 'Push 20: top = 1, stack[1] = 20.', memorySnapshot: { top: 1, stack: '[10, 20]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'top', oldValue: 0, newValue: 1 } },
-      { step: 4, lineNum: 5, explanationEnglish: 'PUSH 30: top++ = 2. stack[2] = 30. Stack full [10,20,30].', explanationHinglish: 'Push 30: top = 2, stack[2] = 30.', memorySnapshot: { top: 2, stack: '[10, 20, 30]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'top', oldValue: 1, newValue: 2 } },
-      { step: 5, lineNum: 6, explanationEnglish: 'Peek Top: stack[top] = stack[2] = 30.', explanationHinglish: 'Top element = stack[2] = 30.', memorySnapshot: { top: 2, stack: '[10, 20, 30]' }, consoleOutput: 'Top: 30', animationEvent: { type: 'PRINT_VALUE', variableName: 'stack[top]', outputValue: 30 } },
-      { step: 6, lineNum: 7, explanationEnglish: 'POP: top-- = 1. Element 30 removed from stack.', explanationHinglish: 'Pop: top-- = 1. 30 stack se nikal gaya.', memorySnapshot: { top: 1, stack: '[10, 20]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'top', oldValue: 2, newValue: 1 } },
-      { step: 7, lineNum: 8, explanationEnglish: 'New top: stack[1] = 20. LIFO order maintained!', explanationHinglish: 'New top = stack[1] = 20. LIFO order sahi hai!', memorySnapshot: { top: 1, stack: '[10, 20]' }, consoleOutput: 'New Top: 20', animationEvent: { type: 'PRINT_VALUE', variableName: 'stack[top]', outputValue: 20 } },
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Stack initialized. Enter values in the Operational Dashboard to perform operations.',
+        explanationHinglish: 'Stack initialize ho gaya hai. Operational Dashboard se operations perform karein.',
+        memorySnapshot: { top: -1, capacity: 6, stack: [] },
+        consoleOutput: 'Stack initialized (Empty).',
+        animationEvent: { type: 'NONE' },
+      },
     ];
   },
   executionSteps: [],
