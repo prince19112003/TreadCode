@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLesson } from '../../../lessons/LessonContext';
 import type { ExecutionStep } from '../../../lessons/types';
-import { RotateCcw, AlertTriangle } from 'lucide-react';
+
 
 export const DsaOperationalPanel: React.FC = () => {
   const {
@@ -277,15 +277,12 @@ export const DsaOperationalPanel: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0b0c14] border border-indigo-500/20 rounded-2xl overflow-hidden shadow-2xl">
+    <div className="h-full flex flex-col bg-[#08090f] rounded-2xl overflow-hidden">
       {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-indigo-500/20 bg-indigo-950/20 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse" />
-          <span className="text-xs font-mono font-black tracking-widest text-indigo-400 uppercase">
-            Operational Dashboard
-          </span>
-        </div>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-500/10 shrink-0">
+        <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+          Stack Controller
+        </span>
         <button
           onClick={() => {
             const initialStep: ExecutionStep = {
@@ -300,35 +297,34 @@ export const DsaOperationalPanel: React.FC = () => {
             setCustomSteps([initialStep]);
             goToStep(1);
           }}
-          className="p-1.5 rounded-lg border border-red-500/30 bg-red-900/10 hover:bg-red-500/20 transition-all text-xs text-red-400 hover:text-white flex items-center gap-1 font-mono"
-          title="Reset Stack"
+          className="text-xs text-red-400/80 hover:text-red-400 font-mono transition-colors"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Reset
+          Reset Stack
         </button>
       </div>
 
       {/* Control Body */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
-        {/* State Indicators */}
-        <div className="grid grid-cols-2 gap-2 bg-black/30 p-3 rounded-xl border border-indigo-500/10 font-mono text-xs text-slate-400">
-          <div>TOP Pointer: <span className="text-indigo-400 font-bold">{stack.length - 1}</span></div>
-          <div>Size: <span className="text-indigo-400 font-bold">{stack.length} / {capacity}</span></div>
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+        {/* Real-time Status Badges (Minimalist) */}
+        <div className="flex gap-2 justify-between items-center text-[11px] font-mono text-slate-500 border-b border-indigo-500/5 pb-4">
+          <span className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${stack.length === 0 ? 'bg-purple-500' : 'bg-green-500'}`} />
+            {stack.length === 0 ? 'Empty' : stack.length === capacity ? 'Full' : 'Active'}
+          </span>
+          <span>Size: {stack.length} / {capacity}</span>
+          <span>Top: {stack.length - 1}</span>
         </div>
 
         {/* Error Message Box */}
         {errorMsg && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-red-950/20 border border-red-500/30 text-red-400 text-xs animate-shake">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
+          <div className="p-3 rounded-xl bg-red-950/10 border border-red-500/20 text-red-400 text-xs font-mono">
+            {errorMsg}
           </div>
         )}
 
-        {/* Primary Stack Actions */}
-        <div className="flex flex-col gap-3">
-          <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Primary Operations</span>
-
-          {/* PUSH Operation */}
+        {/* Action Groups */}
+        <div className="flex flex-col gap-5">
+          {/* PUSH Group */}
           <div className="flex gap-2">
             <input
               type="text"
@@ -336,11 +332,11 @@ export const DsaOperationalPanel: React.FC = () => {
               value={pushVal}
               onChange={(e) => setPushVal(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handlePush()}
-              className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-indigo-500/20 focus:border-indigo-500/50 text-slate-200 text-sm font-mono focus:outline-none transition-all placeholder:text-slate-600"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950/40 border border-indigo-500/10 focus:border-indigo-500/30 text-slate-200 text-xs font-mono focus:outline-none transition-all placeholder:text-slate-700"
             />
             <button
               onClick={handlePush}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/35 transition-all font-mono"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 text-white font-bold text-xs transition-colors font-mono"
             >
               Push()
             </button>
@@ -350,76 +346,70 @@ export const DsaOperationalPanel: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handlePop}
-              className="px-3 py-2.5 rounded-xl border border-rose-500/30 bg-rose-950/10 hover:bg-rose-500/20 text-rose-400 hover:text-white font-bold text-sm transition-all font-mono"
+              className="py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 font-medium text-xs transition-all font-mono"
             >
               Pop()
             </button>
             <button
               onClick={handlePeek}
-              className="px-3 py-2.5 rounded-xl border border-amber-500/30 bg-amber-950/10 hover:bg-amber-500/20 text-amber-400 hover:text-white font-bold text-sm transition-all font-mono"
+              className="py-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-400 font-medium text-xs transition-all font-mono"
             >
               Peek()
             </button>
           </div>
-        </div>
 
-        {/* Utility Methods */}
-        <div className="flex flex-col gap-2">
-          <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Boolean Queries & Info</span>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="w-full border-t border-indigo-500/5 my-1" />
+
+          {/* SEARCH Group */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Value to search..."
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950/40 border border-indigo-500/10 focus:border-indigo-500/30 text-slate-200 text-xs font-mono focus:outline-none transition-all placeholder:text-slate-700"
+            />
+            <button
+              onClick={handleSearch}
+              className="px-5 py-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400 font-bold text-xs transition-colors font-mono"
+            >
+              Search()
+            </button>
+          </div>
+
+          {/* Utility / Getter Functions Grid */}
+          <div className="grid grid-cols-3 gap-2 mt-2">
             <button
               onClick={handleIsEmpty}
-              className="py-2 px-1 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-indigo-500/10 hover:border-indigo-500/20 text-slate-300 text-xs font-mono transition-all"
+              className="py-2 rounded-xl bg-slate-950/30 hover:bg-slate-950/60 border border-indigo-500/10 text-slate-400 hover:text-slate-200 text-[10px] font-mono transition-all"
             >
               isEmpty()
             </button>
             <button
               onClick={handleIsFull}
-              className="py-2 px-1 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-indigo-500/10 hover:border-indigo-500/20 text-slate-300 text-xs font-mono transition-all"
+              className="py-2 rounded-xl bg-slate-950/30 hover:bg-slate-950/60 border border-indigo-500/10 text-slate-400 hover:text-slate-200 text-[10px] font-mono transition-all"
             >
               isFull()
             </button>
             <button
               onClick={handleSize}
-              className="py-2 px-1 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-indigo-500/10 hover:border-indigo-500/20 text-slate-300 text-xs font-mono transition-all"
+              className="py-2 rounded-xl bg-slate-950/30 hover:bg-slate-950/60 border border-indigo-500/10 text-slate-400 hover:text-slate-200 text-[10px] font-mono transition-all"
             >
               Size()
-            </button>
-          </div>
-        </div>
-
-        {/* Advanced Iteration Operations */}
-        <div className="flex flex-col gap-3">
-          <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Search & Traversal</span>
-
-          {/* Search Operation */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search value..."
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-indigo-500/20 focus:border-indigo-500/50 text-slate-200 text-sm font-mono focus:outline-none transition-all placeholder:text-slate-600"
-            />
-            <button
-              onClick={handleSearch}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/35 transition-all font-mono"
-            >
-              Search()
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleTraverse}
-              className="py-2.5 px-3 rounded-xl border border-cyan-500/30 bg-cyan-950/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-white font-bold text-xs transition-all font-mono"
+              className="py-2 rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 text-[10px] transition-all font-mono"
             >
-              Display/Traverse
+              Traverse
             </button>
             <button
               onClick={handleClear}
-              className="py-2.5 px-3 rounded-xl border border-slate-500/30 bg-slate-950/10 hover:bg-slate-800/40 text-slate-400 hover:text-white font-bold text-xs transition-all font-mono"
+              className="py-2 rounded-xl border border-slate-700/20 hover:bg-slate-800/20 text-slate-500 hover:text-slate-400 text-[10px] transition-all font-mono"
             >
               Clear Stack
             </button>
