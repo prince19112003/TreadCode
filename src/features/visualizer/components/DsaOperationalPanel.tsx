@@ -64,9 +64,11 @@ export const DsaOperationalPanel: React.FC = () => {
     setErrorMsg(null);
     if (!customSteps) return;
 
-    // Slice history up to current step index to handle "time travel" (overwriting future steps if user stepped back)
+    // Slice history up to current step index to handle "time travel"
     const baseSteps = customSteps.slice(0, currentStepIndex);
     const nextStepNum = baseSteps.length + 1;
+
+    const targetStack = memUpdate.stack !== undefined ? memUpdate.stack : stack;
 
     const newStep: ExecutionStep = {
       step: nextStepNum,
@@ -74,9 +76,9 @@ export const DsaOperationalPanel: React.FC = () => {
       explanationEnglish: explanationEn,
       explanationHinglish: explanationHi,
       memorySnapshot: {
-        top: stack.length - 1,
+        top: targetStack.length - 1,
         capacity,
-        stack, // Persist current stack state array
+        stack: targetStack,
         ...memUpdate,
       },
       consoleOutput: consoleOut,
@@ -86,7 +88,6 @@ export const DsaOperationalPanel: React.FC = () => {
     const updated = [...baseSteps, newStep];
     setCustomSteps(updated);
 
-    // Give React context a moment to update totalSteps, then jump to the new step
     setTimeout(() => {
       goToStep(updated.length);
     }, 50);
@@ -112,7 +113,7 @@ export const DsaOperationalPanel: React.FC = () => {
       `PUSH operation: Element ${value} stack ke top pe add ho gaya. TOP ek index upar chala gaya.`,
       { type: 'STACK_PUSH', value, stackState: newStack },
       `Pushed: ${value}`,
-      { top: newStack.length - 1 }
+      { stack: newStack, top: newStack.length - 1 }
     );
     setPushVal('');
   };
@@ -131,7 +132,7 @@ export const DsaOperationalPanel: React.FC = () => {
       `POP operation: Sabse upar ka element ${popped} stack se nikal (remove) diya gaya.`,
       { type: 'STACK_POP', poppedValue: popped, stackState: newStack },
       `Popped: ${popped}`,
-      { top: newStack.length - 1 }
+      { stack: newStack, top: newStack.length - 1 }
     );
   };
 
@@ -185,7 +186,7 @@ export const DsaOperationalPanel: React.FC = () => {
       `CLEAR operation: Stack ke saare elements ko clear kar diya gaya hai.`,
       { type: 'STACK_POP', poppedValue: '', stackState: [] },
       `Stack cleared.`,
-      { top: -1 }
+      { stack: [], top: -1 }
     );
   };
 
@@ -195,18 +196,16 @@ export const DsaOperationalPanel: React.FC = () => {
       return;
     }
 
-    // Generate animation steps sequentially for traversal
     let stepsToInject = [...(customSteps ?? [])];
     const baseIndex = currentStepIndex;
 
-    // We can generate multiple steps to animate the traversal from TOP to BOTTOM
     for (let i = stack.length - 1; i >= 0; i--) {
       stepsToInject.push({
         step: stepsToInject.length + 1,
         lineNum: stepsToInject.length + 1,
         explanationEnglish: `Traversing: Inspecting stack element at index [${i}] = ${stack[i]}.`,
         explanationHinglish: `Traverse step: Index [${i}] pe inspect kiya, value = ${stack[i]} hai.`,
-        memorySnapshot: { top: stack.length - 1, capacity, i },
+        memorySnapshot: { top: stack.length - 1, capacity, stack, i },
         consoleOutput: `Element at [${i}]: ${stack[i]}`,
         animationEvent: { type: 'SET_POINTERS', pointers: { curr: i } },
       });
@@ -214,7 +213,7 @@ export const DsaOperationalPanel: React.FC = () => {
 
     setCustomSteps(stepsToInject);
     setTimeout(() => {
-      goToStep(baseIndex + 1); // Start the traversal playback
+      goToStep(baseIndex + 1);
     }, 50);
   };
 
@@ -234,7 +233,6 @@ export const DsaOperationalPanel: React.FC = () => {
 
     let foundIndex = -1;
 
-    // Animate search from Top to Bottom
     for (let i = stack.length - 1; i >= 0; i--) {
       const match = stack[i] === target;
       if (match) foundIndex = i;
@@ -244,7 +242,7 @@ export const DsaOperationalPanel: React.FC = () => {
         lineNum: stepsToInject.length + 1,
         explanationEnglish: `Search Step: Comparing stack[${i}] (${stack[i]}) with target ${target}. ${match ? 'MATCH FOUND!' : 'No match.'}`,
         explanationHinglish: `Search Step: stack[${i}] (${stack[i]}) ko target ${target} se compare kiya. ${match ? 'MATCH MIL GAYA!' : 'Match nahi hua.'}`,
-        memorySnapshot: { top: stack.length - 1, capacity, i },
+        memorySnapshot: { top: stack.length - 1, capacity, stack, i },
         consoleOutput: `Compare index [${i}]: ${stack[i]} == ${target} (${match ? 'Match' : 'No Match'})`,
         animationEvent: {
           type: 'COMPARE_INDICES',
@@ -255,7 +253,7 @@ export const DsaOperationalPanel: React.FC = () => {
         },
       });
 
-      if (match) break; // Stop search on first match
+      if (match) break;
     }
 
     if (foundIndex === -1) {
@@ -264,7 +262,7 @@ export const DsaOperationalPanel: React.FC = () => {
         lineNum: stepsToInject.length + 1,
         explanationEnglish: `Search finished: Target element ${target} not found in the stack.`,
         explanationHinglish: `Search khatam: Target element ${target} stack me nahi mila.`,
-        memorySnapshot: { top: stack.length - 1, capacity },
+        memorySnapshot: { top: stack.length - 1, capacity, stack },
         consoleOutput: `Search: ${target} Not Found`,
         animationEvent: { type: 'NONE' },
       });
@@ -273,7 +271,7 @@ export const DsaOperationalPanel: React.FC = () => {
     setCustomSteps(stepsToInject);
     setSearchVal('');
     setTimeout(() => {
-      goToStep(baseIndex + 1); // Start search playback
+      goToStep(baseIndex + 1);
     }, 50);
   };
 
