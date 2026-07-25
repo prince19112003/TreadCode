@@ -32,9 +32,9 @@ export const StackVisualStage: React.FC = () => {
   const isEmpty = stackItems.length === 0;
 
   return (
-    <div className="flex-1 w-full h-full bg-[#060814] flex items-center justify-center overflow-auto relative">
+    <div className="flex-1 w-full h-full bg-[#060814] flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
       <div
-        className="flex flex-col items-center gap-6 py-6 transition-transform duration-200 ease-out origin-center"
+        className="flex flex-col items-center gap-6 my-auto transition-transform duration-200 ease-out origin-top"
         style={{ transform: `scale(${zoom})` }}
       >
 
