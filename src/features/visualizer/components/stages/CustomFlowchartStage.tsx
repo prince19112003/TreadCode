@@ -1245,31 +1245,74 @@ export const CustomFlowchartStage: React.FC = () => {
 
                       {(ev?.type === 'STACK_PUSH' || ev?.type === 'STACK_POP' || ev?.type === 'SET_POINTERS' || ev?.type === 'COMPARE_INDICES' || (ev?.type === 'NONE' && step.memorySnapshot?.stack !== undefined)) && (() => {
                         const rawStack = step.memorySnapshot?.stack !== undefined ? step.memorySnapshot.stack : (ev as any)?.stackState;
-                        const items: Array<string | number> = Array.isArray(rawStack) 
+                        const stackItems: Array<string | number> = Array.isArray(rawStack) 
                           ? rawStack 
                           : typeof rawStack === 'string'
                             ? (() => { try { return JSON.parse(rawStack); } catch { return []; } })()
                             : [];
 
+                        const capacity = 6;
                         const highlightedIdx = ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA : (ev as any)?.pointers?.curr ?? (typeof step.memorySnapshot?.i === 'number' ? step.memorySnapshot.i : undefined);
-                        const comparingIdxs: [number, number] | undefined = ev?.type === 'COMPARE_INDICES' ? [(ev as any).indexA, (ev as any).indexB] : undefined;
 
                         return (
-                          <div className="flex flex-col items-center gap-3">
-                            <DataStructureBox
-                              name="stack"
-                              variant="array"
-                              items={items}
-                              isActive={isLatest}
-                              highlightedIndex={highlightedIdx}
-                              comparingIndices={comparingIdxs}
-                              pointers={{ mid: typeof step.memorySnapshot?.top === 'number' && step.memorySnapshot.top >= 0 ? step.memorySnapshot.top : undefined }}
-                            />
-                            {typeof step.memorySnapshot?.top === 'number' && (
-                              <div className="px-3 py-1 rounded-full bg-purple-950/80 border border-purple-500/30 text-purple-300 font-mono text-xs font-bold shadow-md">
-                                TOP Pointer = Index [{step.memorySnapshot.top}]
-                              </div>
-                            )}
+                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-2xl bg-slate-950/80 border-2 border-indigo-500/20 shadow-2xl backdrop-blur-md min-w-[300px]">
+                            <div className="flex items-center justify-between w-full border-b border-indigo-500/10 pb-2">
+                              <span className="text-xs font-mono font-black uppercase tracking-widest text-purple-400">
+                                STACK CONTAINER (LIFO)
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-500">
+                                Capacity: {capacity}
+                              </span>
+                            </div>
+
+                            {/* Vertical Stack Frame */}
+                            <div className="flex flex-col gap-2 w-full">
+                              {Array.from({ length: capacity }).map((_, i) => {
+                                const idx = capacity - 1 - i; // Render from top index [5] down to [0]
+                                const hasVal = idx < stackItems.length;
+                                const val = hasVal ? stackItems[idx] : null;
+                                const isTop = idx === stackItems.length - 1 && hasVal;
+                                const isHighlighted = idx === highlightedIdx;
+
+                                return (
+                                  <div key={idx} className="flex items-center gap-3 w-full">
+                                    {/* Index label on left */}
+                                    <span className="text-xs font-mono text-slate-500 w-8 text-right font-bold">[{idx}]</span>
+                                    
+                                    {/* Slot Box */}
+                                    <motion.div
+                                      layout
+                                      initial={{ scale: 0.9, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      className={`flex-1 h-11 rounded-xl flex items-center justify-center font-mono font-bold text-sm border-2 transition-all duration-300 ${
+                                        isHighlighted
+                                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-[1.03]'
+                                          : isTop
+                                          ? 'border-purple-400 bg-purple-500/25 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-[1.02]'
+                                          : hasVal
+                                          ? 'border-indigo-500/40 bg-indigo-950/70 text-slate-200 shadow-md'
+                                          : 'border-dashed border-slate-800/80 bg-slate-900/30 text-slate-700'
+                                      }`}
+                                    >
+                                      {hasVal ? val : <span className="text-[10px] text-slate-700 tracking-widest font-sans font-normal uppercase select-none">Empty</span>}
+                                    </motion.div>
+
+                                    {/* Pointer Badge on right */}
+                                    <div className="w-16 flex justify-start">
+                                      {isTop && (
+                                        <motion.span
+                                          initial={{ x: -5, opacity: 0 }}
+                                          animate={{ x: 0, opacity: 1 }}
+                                          className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-mono font-black tracking-wider shadow-sm"
+                                        >
+                                          TOP ←
+                                        </motion.span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       })()}

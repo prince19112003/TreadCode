@@ -85,11 +85,11 @@ export const DsaOperationalPanel: React.FC = () => {
       animationEvent: event,
     };
 
-    const updated = [...baseSteps, newStep];
+    const updated = [newStep];
     setCustomSteps(updated);
 
     setTimeout(() => {
-      goToStep(updated.length);
+      goToStep(1);
     }, 50);
   };
 
