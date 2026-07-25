@@ -41,7 +41,7 @@ export const VisualizerWorkspace: React.FC = () => {
     );
   }
 
-  /* ── DSA Layout: Code Panel replaced by DsaOperationalPanel, ExplanationBar stays ── */
+  /* ── DSA Layout: Operational Panel on left, no timeline slider, Flowchart Stage on right ── */
   if (isDsa) {
     return (
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#050510] text-slate-200">
@@ -57,10 +57,7 @@ export const VisualizerWorkspace: React.FC = () => {
             </div>
           </div>
 
-          {/* Center: Playback Controls */}
-          <StageControls />
-
-          {/* Right: Custom Flowchart Stage (Exact same visual stage as Python/C++/Java/C!) */}
+          {/* Right: Custom Flowchart Stage (62%) */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
             <div className="h-[70%] relative overflow-hidden flex flex-col">
               <CustomFlowchartStage />
