@@ -243,42 +243,16 @@ export const TopicSelectionPage: React.FC = () => {
                   tabIndex={0}
                   aria-label={`Select topic ${topic.name}`}
                   onClick={() => {
-                    if (languageId === 'dsa') {
-                      const dsaDefaultPrograms: Record<string, string> = {
-                        array_operations: 'dsa_array_declare',
-                        searching: 'dsa_linear_search',
-                        sorting: 'dsa_bubble_sort',
-                        recursion_dsa: 'dsa_recursion_factorial',
-                        stack: 'dsa_stack_push_pop',
-                        queue: 'dsa_queue_enq_deq',
-                        singly_linked_list: 'dsa_sll_traverse',
-                        doubly_linked_list: 'dsa_sll_traverse',
-                        binary_tree: 'dsa_sll_traverse',
-                        graph_basics: 'dsa_array_max_min',
-                      };
-                      const progId = dsaDefaultPrograms[topic.id] || 'dsa_stack_push_pop';
-                      navigate(`/visualize/${languageId}/${progId}`);
+                    if (languageId === 'dsa' && topic.id === 'stack') {
+                      navigate(`/visualize/${languageId}/dsa_stack_push_pop`);
                     } else {
                       navigate(`/topics/${languageId}/programs/${topic.id}`);
                     }
                   }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      if (languageId === 'dsa') {
-                        const dsaDefaultPrograms: Record<string, string> = {
-                          array_operations: 'dsa_array_declare',
-                          searching: 'dsa_linear_search',
-                          sorting: 'dsa_bubble_sort',
-                          recursion_dsa: 'dsa_recursion_factorial',
-                          stack: 'dsa_stack_push_pop',
-                          queue: 'dsa_queue_enq_deq',
-                          singly_linked_list: 'dsa_sll_traverse',
-                          doubly_linked_list: 'dsa_sll_traverse',
-                          binary_tree: 'dsa_sll_traverse',
-                          graph_basics: 'dsa_array_max_min',
-                        };
-                        const progId = dsaDefaultPrograms[topic.id] || 'dsa_stack_push_pop';
-                        navigate(`/visualize/${languageId}/${progId}`);
+                      if (languageId === 'dsa' && topic.id === 'stack') {
+                        navigate(`/visualize/${languageId}/dsa_stack_push_pop`);
                       } else {
                         navigate(`/topics/${languageId}/programs/${topic.id}`);
                       }
