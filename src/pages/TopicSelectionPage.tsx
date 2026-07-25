@@ -300,7 +300,7 @@ export const TopicSelectionPage: React.FC = () => {
     : 'Python';
 
   const handleTopicClick = (topicId: string) => {
-    if (isDsa && (topicId === 'stack' || topicId === 'queue')) {
+    if (isDsa) {
       navigate(`/visualizer/${languageId}/${topicId}/dsa_${topicId}_op`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
