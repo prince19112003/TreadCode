@@ -47,7 +47,7 @@ export const StackVisualStage: React.FC = () => {
         {/* Open Top Label */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] font-mono text-slate-600 tracking-widest uppercase">OPEN TOP ▼</span>
-          <div className="w-40 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+          <div className="w-40 h-px bg-linear-to-r from-transparent via-purple-500/30 to-transparent" />
         </div>
 
         {/* Main Stack Frame */}
@@ -148,14 +148,14 @@ export const StackVisualStage: React.FC = () => {
           })}
 
           {/* Solid Base */}
-          <div className="h-3 bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 border-t-2 border-slate-600/60 flex items-center justify-center">
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-slate-500/40 to-transparent" />
+          <div className="h-3 bg-linear-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 border-t-2 border-slate-600/60 flex items-center justify-center">
+            <div className="w-24 h-0.5 bg-linear-to-r from-transparent via-slate-500/40 to-transparent" />
           </div>
         </div>
 
         {/* Base Label */}
         <div className="flex flex-col items-center gap-1">
-          <div className="w-40 h-px bg-gradient-to-r from-transparent via-slate-700/40 to-transparent" />
+          <div className="w-40 h-px bg-linear-to-r from-transparent via-slate-700/40 to-transparent" />
           <span className="text-[10px] font-mono text-slate-700 tracking-widest uppercase">▲ BASE (index 0)</span>
         </div>
 
