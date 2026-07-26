@@ -301,7 +301,8 @@ export const TopicSelectionPage: React.FC = () => {
 
   const handleTopicClick = (topicId: string) => {
     if (isDsa) {
-      navigate(`/visualizer/${languageId}/${topicId}/dsa_${topicId}_op`);
+      const programId = topicId === 'stack' ? 'dsa_stack_push_pop' : topicId === 'queue' ? 'dsa_queue_enq_deq' : `dsa_${topicId}_op`;
+      navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
     }
