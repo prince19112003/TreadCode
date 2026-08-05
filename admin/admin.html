@@ -8,20 +8,23 @@
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=SF+Mono:wght@400;600&display=swap');
     
     body {
-      background-color: #000000;
+      background-color: #030307;
       color: #f5f5f7;
       font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
       margin: 0;
       padding: 0;
       display: flex;
       min-height: 100vh;
+      background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
     }
 
     /* Sidebar Navigation */
     .sidebar {
       width: 260px;
-      background: #161617;
-      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(10, 10, 15, 0.6);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       display: flex;
       flex-direction: column;
       padding: 32px 24px;
@@ -37,7 +40,7 @@
     .brand-logo {
       width: 32px;
       height: 32px;
-      background: linear-gradient(135deg, #3a3a3c, #1c1c1e);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 9px;
       display: flex;
@@ -71,7 +74,8 @@
     }
     .nav-item.active, .nav-item:hover {
       color: #ffffff;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     /* Main Content Stage */
@@ -92,23 +96,27 @@
       font-weight: 600;
       margin: 0;
       letter-spacing: -0.5px;
+      color: #ffffff;
     }
 
     /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 150px);
+      grid-template-columns: repeat(3, 160px);
       gap: 20px;
       margin-bottom: 40px;
     }
     .stat-card {
-      background: #161617;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 18px;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 6px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     }
     .stat-label {
       font-size: 11px;
@@ -123,14 +131,16 @@
       color: #ffffff;
     }
 
-    /* Cards */
+    /* Black Glassmorphism Cards */
     .card {
-      background: #1d1d1f;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(10, 10, 15, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
       border-radius: 24px;
       padding: 32px;
       margin-bottom: 32px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
     .card-title {
       font-size: 18px;
@@ -138,6 +148,7 @@
       margin-top: 0;
       margin-bottom: 24px;
       letter-spacing: -0.2px;
+      color: #ffffff;
     }
 
     /* Form Fields */
@@ -146,7 +157,7 @@
       gap: 16px;
     }
     input {
-      background: #2c2c2e;
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       padding: 14px 20px;
@@ -158,12 +169,13 @@
       transition: all 0.2s;
     }
     input:focus {
-      border-color: #0071e3;
-      background: #3a3a3c;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
     }
     button.btn-primary {
-      background: #0071e3;
-      color: #ffffff;
+      background: #ffffff;
+      color: #000000;
       border: none;
       border-radius: 12px;
       padding: 14px 28px;
@@ -173,7 +185,7 @@
       transition: all 0.2s;
     }
     button.btn-primary:hover {
-      background: #147ce5;
+      opacity: 0.9;
     }
 
     /* Table Design */
@@ -184,7 +196,7 @@
     th, td {
       text-align: left;
       padding: 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       font-size: 14px;
     }
     th {
@@ -203,12 +215,14 @@
       font-weight: 500;
     }
     .badge-active {
-      background: rgba(48, 209, 88, 0.15);
+      background: rgba(48, 209, 88, 0.12);
       color: #30d158;
+      border: 1px solid rgba(48, 209, 88, 0.15);
     }
     .badge-blocked {
-      background: rgba(255, 69, 58, 0.15);
+      background: rgba(255, 69, 58, 0.12);
       color: #ff453a;
+      border: 1px solid rgba(255, 69, 58, 0.15);
     }
     .device-log {
       font-family: 'SF Mono', monospace;
@@ -246,60 +260,99 @@
       </div>
       <div class="brand-title">FlowTrace</div>
     </div>
-    <button class="nav-item active">
+    <button class="nav-item active" id="navLicenses" onclick="showSection('licenses')">
       <span>Licenses</span>
+    </button>
+    <button class="nav-item" id="navManual" onclick="showSection('manual')">
+      <span>User Manual</span>
     </button>
   </div>
 
   <!-- Main Workspace -->
   <div class="main-stage">
-    <div class="header-panel">
-      <h2>Licensing Console</h2>
+    <!-- SECTION 1: LICENSES -->
+    <div id="sectionLicenses">
+      <div class="header-panel">
+        <h2>Licensing Console</h2>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Keys</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active</div>
+          <div class="stat-value" id="statActive">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Blocked</div>
+          <div class="stat-value" id="statBlocked">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Generate Enterprise License</div>
+        <div class="form-group">
+          <input type="text" id="targetCollege" placeholder="Institution Name (e.g. BCA Lab 2)" />
+          <input type="number" id="limitCount" placeholder="System Limit" style="max-width: 150px;" />
+          <button class="btn-primary" onclick="generateKey()">Generate Key</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Keys & Connected Hardware Locks</div>
+        <table>
+          <thead>
+            <tr>
+              <th>License Key</th>
+              <th>Institution</th>
+              <th>Activations</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="licenseTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: #86868b; padding: 32px 0;">Syncing console metrics...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Quick Metrics -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Total Keys</div>
-        <div class="stat-value" id="statTotal">0</div>
+    <!-- SECTION 2: USER MANUAL -->
+    <div id="sectionManual" style="display: none;">
+      <div class="header-panel">
+        <h2>FlowTrace User Manual</h2>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Active</div>
-        <div class="stat-value" id="statActive">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Blocked</div>
-        <div class="stat-value" id="statBlocked">0</div>
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">Generate Enterprise License</div>
-      <div class="form-group">
-        <input type="text" id="targetCollege" placeholder="Institution Name (e.g. BCA Lab 2)" />
-        <input type="number" id="limitCount" placeholder="System Limit" style="max-width: 150px;" />
-        <button class="btn-primary" onclick="generateKey()">Generate Key</button>
-      </div>
-    </div>
+      <div class="card" style="line-height: 1.6; color: #e2e8f0;">
+        <h3 style="color: #ffffff; margin-top: 0;">1. License Key Generate Kaise Karein?</h3>
+        <p>
+          "Licenses" tab par jayein. **Generate Enterprise License** card me target institution ya college ka naam enter karein,
+          aur unke computer labs ke liye systems limit specify karein (e.g. 30). **Generate Key** par click karte hi ek random unique key create ho jayegi.
+        </p>
 
-    <div class="card">
-      <div class="card-title">Keys & Connected Hardware Locks</div>
-      <table>
-        <thead>
-          <tr>
-            <th>License Key</th>
-            <th>Institution</th>
-            <th>Activations</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="licenseTableBody">
-          <tr>
-            <td colspan="5" style="text-align: center; color: #86868b; padding: 32px 0;">Syncing console metrics...</td>
-          </tr>
-        </tbody>
-      </table>
+        <h3 style="color: #ffffff; margin-top: 24px;">2. Student Computer Par Active Kaise Hoga?</h3>
+        <p>
+          Jab student FlowTrace desktop app open karega, use ek Apple-style validation window dikhegi. Unhe generated key 
+          copy-paste karke **Activate Software** click karna hoga. Validation complete hone par system register ho jayega.
+        </p>
+
+        <h3 style="color: #ffffff; margin-top: 24px;">3. Device Lock (HWID) Kaise Kaam Karta Hai?</h3>
+        <p>
+          Ek key duplicate share na ho sake, isliye user key enter karte hi unka hardware interface ID database me automatically lock ho jata hai. 
+          Ek user se dusre user par duplicate validation run karne par license access direct deny show hoga agar limit exceed ho chuki hai.
+        </p>
+
+        <h3 style="color: #ffffff; margin-top: 24px;">4. Installation Block / Revoke Kaise Karein?</h3>
+        <p>
+          Agar kisi key ka access cancel karna hai, toh license key ke row me **Revoke Key / Block Key** button click karein. Status instantly 
+          **Blocked** ho jayega aur current users ka software block screen lock state me chala jayega.
+        </p>
+      </div>
     </div>
   </div>
 
@@ -319,6 +372,20 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    window.showSection = (section) => {
+      if (section === 'licenses') {
+        document.getElementById('sectionLicenses').style.display = 'block';
+        document.getElementById('sectionManual').style.display = 'none';
+        document.getElementById('navLicenses').classList.add('active');
+        document.getElementById('navManual').classList.remove('active');
+      } else {
+        document.getElementById('sectionLicenses').style.display = 'none';
+        document.getElementById('sectionManual').style.display = 'block';
+        document.getElementById('navLicenses').classList.remove('active');
+        document.getElementById('navManual').classList.add('active');
+      }
+    };
 
     onValue(ref(db, 'licenses'), (snapshot) => {
       const data = snapshot.val() || {};
