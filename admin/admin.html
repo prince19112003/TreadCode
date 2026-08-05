@@ -321,6 +321,9 @@
     <button class="nav-item active" id="navLicenses" onclick="showSection('licenses')">
       <span>Licenses</span>
     </button>
+    <button class="nav-item" id="navSettings" onclick="showSection('settings')">
+      <span>Global Locker</span>
+    </button>
     <button class="nav-item" id="navManual" onclick="showSection('manual')">
       <span>User Manual</span>
     </button>
@@ -414,6 +417,51 @@
         </p>
       </div>
     </div>
+
+    <!-- SECTION 3: GLOBAL LOCKER SETTINGS -->
+    <div id="sectionSettings" style="display: none;">
+      <div class="header-panel">
+        <h2>Global Feature Locker</h2>
+      </div>
+
+      <div class="card" style="max-width: 500px;">
+        <div class="card-title">Access Controls</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+            <div>
+              <div style="font-weight: 600; color: #ffffff;">Python Courses</div>
+              <div style="font-size: 12px; color: #86868b;">Bypass license verification checks for Python</div>
+            </div>
+            <input type="checkbox" id="lockPython" onchange="updateGlobalSetting('lockPython', this.checked)" style="max-width: 40px; cursor: pointer;" />
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+            <div>
+              <div style="font-weight: 600; color: #ffffff;">C++ Courses</div>
+              <div style="font-size: 12px; color: #86868b;">Lock C++ visualization panels</div>
+            </div>
+            <input type="checkbox" id="lockCpp" onchange="updateGlobalSetting('lockCpp', this.checked)" style="max-width: 40px; cursor: pointer;" />
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+            <div>
+              <div style="font-weight: 600; color: #ffffff;">Java Courses</div>
+              <div style="font-size: 12px; color: #86868b;">Lock Java code execution stage</div>
+            </div>
+            <input type="checkbox" id="lockJava" onchange="updateGlobalSetting('lockJava', this.checked)" style="max-width: 40px; cursor: pointer;" />
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px;">
+            <div>
+              <div style="font-weight: 600; color: #ffffff;">DSA Sections</div>
+              <div style="font-size: 12px; color: #86868b;">Lock all DSA sorting & stack programs</div>
+            </div>
+            <input type="checkbox" id="lockDsa" onchange="updateGlobalSetting('lockDsa', this.checked)" style="max-width: 40px; cursor: pointer;" />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -434,17 +482,48 @@
     const db = getDatabase(app);
 
     window.showSection = (section) => {
+      const sectionLicenses = document.getElementById('sectionLicenses');
+      const sectionManual = document.getElementById('sectionManual');
+      const sectionSettings = document.getElementById('sectionSettings');
+      
+      const navLicenses = document.getElementById('navLicenses');
+      const navSettings = document.getElementById('navSettings');
+      const navManual = document.getElementById('navManual');
+
+      // Reset layouts visibility
+      sectionLicenses.style.display = 'none';
+      sectionManual.style.display = 'none';
+      sectionSettings.style.display = 'none';
+
+      navLicenses.classList.remove('active');
+      navSettings.classList.remove('active');
+      navManual.classList.remove('active');
+
       if (section === 'licenses') {
-        document.getElementById('sectionLicenses').style.display = 'block';
-        document.getElementById('sectionManual').style.display = 'none';
-        document.getElementById('navLicenses').classList.add('active');
-        document.getElementById('navManual').classList.remove('active');
+        sectionLicenses.style.display = 'block';
+        navLicenses.classList.add('active');
+      } else if (section === 'settings') {
+        sectionSettings.style.display = 'block';
+        navSettings.classList.add('active');
       } else {
-        document.getElementById('sectionLicenses').style.display = 'none';
-        document.getElementById('sectionManual').style.display = 'block';
-        document.getElementById('navLicenses').classList.remove('active');
-        document.getElementById('navManual').classList.add('active');
+        sectionManual.style.display = 'block';
+        navManual.classList.add('active');
       }
+    };
+
+    // Global settings observer sync
+    onValue(ref(db, 'global_settings'), (snapshot) => {
+      const settings = snapshot.val() || {};
+      document.getElementById('lockPython').checked = !!settings.lockPython;
+      document.getElementById('lockCpp').checked = !!settings.lockCpp;
+      document.getElementById('lockJava').checked = !!settings.lockJava;
+      document.getElementById('lockDsa').checked = !!settings.lockDsa;
+    });
+
+    window.updateGlobalSetting = (settingKey, value) => {
+      update(ref(db, 'global_settings'), {
+        [settingKey]: value
+      });
     };
 
     onValue(ref(db, 'licenses'), (snapshot) => {

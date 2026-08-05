@@ -18,6 +18,7 @@ const NotFoundPage = lazy(() => import('@pages/NotFoundPage').then(m => ({ defau
 export const LicenseContext = React.createContext<{
   activated: boolean;
   hwid: string;
+  settings: Record<string, boolean>;
   handleActivate: (key: string) => Promise<boolean>;
 } | null>(null);
 
@@ -27,13 +28,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   if (!context) return <>{children}</>;
 
-  // Check if current route matches unlocked path
-  const isPython = location.pathname.includes('/python');
-  const isLanguages = location.pathname === '/languages';
+  const path = location.pathname;
+  const isLanguages = path === '/languages';
 
-  // If app is not activated and user tries to access C, C++, Java, or DSA sections, intercept and lock
-  if (!context.activated && !isPython && !isLanguages) {
-    return <LicenseModal onActivate={context.handleActivate} />;
+  // Retrieve locking states
+  const lockPython = !!context.settings.lockPython;
+  const lockCpp = !!context.settings.lockCpp;
+  const lockJava = !!context.settings.lockJava;
+  const lockDsa = !!context.settings.lockDsa;
+
+  // Intercept locked path routes if license is not activated yet
+  if (!context.activated && !isLanguages) {
+    if (path.includes('/python') && lockPython) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/cpp') && lockCpp) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/java') && lockJava) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/c/') && lockCpp) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/dsa') && lockDsa) return <LicenseModal onActivate={context.handleActivate} />;
+    
+    // Default course gating for non-python sections
+    if (!path.includes('/python')) {
+      return <LicenseModal onActivate={context.handleActivate} />;
+    }
   }
 
   return <>{children}</>;
@@ -109,12 +124,24 @@ const AnimatedRoutes: React.FC = () => {
 };
 
 import { LicenseModal } from '@shared/components/ui/LicenseModal';
-import { validateLicenseKey } from '../shared/config/firebase';
+import { validateLicenseKey, db } from '../shared/config/firebase';
+import { ref, onValue } from 'firebase/database';
 
 export const App: React.FC = () => {
   const [showSplash, setShowSplash] = React.useState(true);
   const [activated, setActivated] = React.useState<boolean | null>(null);
   const [hwid, setHwid] = React.useState('fallback-device-id-xxxx');
+  const [settings, setSettings] = React.useState<Record<string, boolean>>({});
+
+  // Sync global settings from firebase database
+  React.useEffect(() => {
+    const settingsRef = ref(db, 'global_settings');
+    const unsubscribe = onValue(settingsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      setSettings(data);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Verify license key status at startup
   React.useEffect(() => {
@@ -157,7 +184,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <LicenseContext.Provider value={{ activated: !!activated, hwid, handleActivate }}>
+    <LicenseContext.Provider value={{ activated: !!activated, hwid, settings, handleActivate }}>
       <BrowserRouter>
         {/* Global in-app update modal — renders above everything */}
         <UpdateModal />

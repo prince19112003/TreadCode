@@ -12,8 +12,8 @@ const firebaseConfig = {
   appId: "1:54812800974:web:46f3294f029da000f4dd9f"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+export const app = initializeApp(firebaseConfig);
+export const db = getDatabase(app);
 
 /**
  * Validate License Key and HWID locking mapping
