@@ -197,9 +197,9 @@
       }
     });
 
-    window.generateKey = function() {
-      const inst = document.getElementById('targetCollege').value;
-      const limit = parseInt(document.getElementById('limitCount').value);
+    window.generateKey = () => {
+      const inst = (document.getElementById('targetCollege') as any).value;
+      const limit = parseInt((document.getElementById('limitCount') as any).value);
       if (!inst || !limit) return alert('Please enter both name and limit!');
 
       const key = 'FT-' + Math.random().toString(36).substring(2, 6).toUpperCase() + 
@@ -208,15 +208,14 @@
       set(ref(db, `licenses/${key}`), {
         institution: inst,
         maxDevices: limit,
-        blocked: false,
-        devices: {}
+        blocked: false
       }).then(() => {
-        document.getElementById('targetCollege').value = '';
-        document.getElementById('limitCount').value = '';
+        (document.getElementById('targetCollege') as any).value = '';
+        (document.getElementById('limitCount') as any).value = '';
       });
     };
 
-    window.toggleBlock = function(key, currentBlockedState) {
+    window.toggleBlock = (key, currentBlockedState) => {
       update(ref(db, `licenses/${key}`), {
         blocked: !currentBlockedState
       });
