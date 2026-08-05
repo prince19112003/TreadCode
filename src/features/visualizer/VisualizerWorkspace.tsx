@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { CodeStepPanel } from './components/CodeStepPanel';
-import { MemoryStage } from './components/MemoryStage';
 import { StageControls } from './components/StageControls';
 import { OutputConsole } from './components/OutputConsole';
 import { ExplanationBar } from './components/ExplanationBar';
@@ -12,6 +11,7 @@ import { SllVisualStage } from './components/stages/SllVisualStage';
 import { DllVisualStage } from './components/stages/DllVisualStage';
 import { TreeVisualStage } from './components/stages/TreeVisualStage';
 import { GraphVisualStage } from './components/stages/GraphVisualStage';
+import { DsaAlgoStage } from './components/stages/DsaAlgoStage';
 import { DsaOperationalPanel } from './components/DsaOperationalPanel';
 import { QueueOperationalPanel } from './components/QueueOperationalPanel';
 import { SllOperationalPanel } from './components/SllOperationalPanel';
@@ -61,7 +61,7 @@ export const VisualizerWorkspace: React.FC = () => {
       <div className="flex h-screen w-screen overflow-hidden bg-[#050510] text-slate-200 relative p-1.5 gap-1.5">
         {!isDsa && <StageControls />}
         <div className="flex-1 h-full relative overflow-hidden flex flex-col">
-          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <MemoryStage />}
+          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
         </div>
         <PenMenu />
       </div>
@@ -127,7 +127,7 @@ export const VisualizerWorkspace: React.FC = () => {
         {/* Right: Visualization Stage */}
         <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
           <div className="h-[70%] relative overflow-hidden flex flex-col">
-            {isFlowchartTopic ? <CustomFlowchartStage /> : <MemoryStage />}
+            {isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
             <PenMenu />
           </div>
           <div className="h-[30%] overflow-hidden flex flex-col">
