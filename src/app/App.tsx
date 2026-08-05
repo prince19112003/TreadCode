@@ -14,11 +14,28 @@ const VisualizerPage = lazy(() => import('@pages/VisualizerPage').then(m => ({ d
 const SettingsPage = lazy(() => import('@pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const NotFoundPage = lazy(() => import('@pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
-/**
- * RouteGuards placeholder
- * Future capability to protect routes based on auth or state
- */
+// Context hook values to expose activation states globally
+export const LicenseContext = React.createContext<{
+  activated: boolean;
+  hwid: string;
+  handleActivate: (key: string) => Promise<boolean>;
+} | null>(null);
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const context = React.useContext(LicenseContext);
+  
+  if (!context) return <>{children}</>;
+
+  // Check if current route matches unlocked path
+  const isPython = location.pathname.includes('/python');
+  const isLanguages = location.pathname === '/languages';
+
+  // If app is not activated and user tries to access C, C++, Java, or DSA sections, intercept and lock
+  if (!context.activated && !isPython && !isLanguages) {
+    return <LicenseModal onActivate={context.handleActivate} />;
+  }
+
   return <>{children}</>;
 };
 
@@ -140,17 +157,17 @@ export const App: React.FC = () => {
   }
 
   return (
-    <BrowserRouter>
-      {/* Global in-app update modal — renders above everything */}
-      <UpdateModal />
+    <LicenseContext.Provider value={{ activated: !!activated, hwid, handleActivate }}>
+      <BrowserRouter>
+        {/* Global in-app update modal — renders above everything */}
+        <UpdateModal />
 
-      {!activated ? (
-        <LicenseModal onActivate={handleActivate} />
-      ) : showSplash ? (
-        <SplashPage onComplete={() => setShowSplash(false)} />
-      ) : (
-        <AnimatedRoutes />
-      )}
-    </BrowserRouter>
+        {showSplash ? (
+          <SplashPage onComplete={() => setShowSplash(false)} />
+        ) : (
+          <AnimatedRoutes />
+        )}
+      </BrowserRouter>
+    </LicenseContext.Provider>
   );
 };
