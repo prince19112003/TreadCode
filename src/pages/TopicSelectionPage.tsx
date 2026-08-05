@@ -157,7 +157,7 @@ const dsaTopics = [
     complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
     accentColor: '#eab308', Icon: Network,
     tags: ['BFS', 'DFS', 'Matrix', 'Path'],
-    interactive: false, programsCount: 4,
+    interactive: true, programsCount: 4,
   },
 ];
 
@@ -306,7 +306,8 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'queue') programId = 'dsa_queue_enq_deq';
       else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse';
-      else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
+      else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse';
+      else if (topicId === 'graph_basics') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
