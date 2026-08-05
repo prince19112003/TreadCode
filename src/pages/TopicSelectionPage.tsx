@@ -141,7 +141,7 @@ const dsaTopics = [
     complexity: 'O(N)', category: 'Data Structure', difficulty: 'Advanced' as const,
     accentColor: '#6366f1', Icon: GitBranch,
     tags: ['Prev', 'Next', 'Insert', 'Delete'],
-    interactive: false, programsCount: 4,
+    interactive: true, programsCount: 4,
   },
   {
     id: 'binary_tree', number: '09', name: 'Binary Tree',
@@ -305,6 +305,7 @@ export const TopicSelectionPage: React.FC = () => {
       if (topicId === 'stack') programId = 'dsa_stack_push_pop';
       else if (topicId === 'queue') programId = 'dsa_queue_enq_deq';
       else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
+      else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
