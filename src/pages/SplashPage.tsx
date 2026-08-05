@@ -305,106 +305,111 @@ export const SplashPage: React.FC<SplashPageProps> = ({ onComplete }) => {
                 }}
               />
 
-              {/* Glassmorphism card */}
+              {/* Premium Minimalist Card */}
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 style={{
-                  width: '360px', height: '200px',
-                  background: 'rgba(6, 6, 20, 0.65)',
-                  border: '1px solid rgba(99,102,241,0.2)',
-                  borderRadius: '20px',
-                  backdropFilter: 'blur(20px)',
+                  width: '320px', height: '240px',
+                  background: 'rgba(10, 12, 30, 0.35)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '32px',
+                  backdropFilter: 'blur(30px)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: '0 0 60px rgba(99,102,241,0.1), 0 0 120px rgba(168,85,247,0.05), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  gap: '16px',
+                  boxShadow: '0 0 80px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)',
                 }}
               >
                 {/* Logo Icon */}
                 <motion.div
-                  initial={{ scale: 0, rotate: -45 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                   style={{
-                    width: '44px', height: '44px',
-                    background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                    borderRadius: '12px',
+                    width: '64px', height: '64px',
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '20px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 30px rgba(99,102,241,0.5)',
-                    marginBottom: '4px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                   }}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-                    <path d="M12 2v20M2 7l10 5 10-5" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                    <motion.path
+                      d="M12 2L2 7v10l10 5 10-5V7L12 2z"
+                      stroke="url(#iconGrad)" strokeWidth="1.5" strokeLinejoin="round"
+                      initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                      transition={{ delay: 0.5, duration: 1, ease: 'easeInOut' }}
+                    />
+                    <motion.path
+                      d="M12 22V12m0 0L2 7m10 5l10-5"
+                      stroke="rgba(255,255,255,0.6)" strokeWidth="1.2"
+                      initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                      transition={{ delay: 0.8, duration: 0.8, ease: 'easeInOut' }}
+                    />
+                    <defs>
+                      <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#818cf8" />
+                        <stop offset="100%" stopColor="#22d3ee" />
+                      </linearGradient>
+                    </defs>
                   </svg>
                 </motion.div>
 
                 {/* Wordmark */}
-                <svg width="280" height="72" viewBox="0 0 280 72" overflow="visible">
-                  <defs>
-                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#818cf8" />
-                      <stop offset="40%" stopColor="#c084fc" />
-                      <stop offset="70%" stopColor="#22d3ee" />
-                      <stop offset="100%" stopColor="#f472b6" />
-                    </linearGradient>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="3" result="blur"/>
-                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
-                  </defs>
-
-                  {/* Stroke draw animation */}
-                  <motion.text
-                    x="50%" y="50%"
-                    textAnchor="middle" dominantBaseline="middle"
-                    fill="none"
-                    stroke="url(#logoGrad)"
-                    strokeWidth="2"
-                    filter="url(#glow)"
-                    style={{ fontFamily: "'Dancing Script', cursive", fontSize: '62px', letterSpacing: '-1px' }}
-                    initial={{ strokeDasharray: 1200, strokeDashoffset: 1200 }}
-                    animate={{ strokeDashoffset: 0 }}
-                    transition={{ duration: 1.4, ease: 'easeInOut' }}
+                <div className="flex flex-col items-center">
+                  <motion.h1
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: '32px',
+                      fontWeight: 600,
+                      letterSpacing: '-0.5px',
+                      background: 'linear-gradient(180deg, #ffffff 0%, #a5b4fc 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
                   >
                     FlowTrace
-                  </motion.text>
-
-                  {/* Filled text fade in */}
-                  <motion.text
-                    x="50%" y="50%"
-                    textAnchor="middle" dominantBaseline="middle"
-                    fill="url(#logoGrad)"
-                    filter="url(#glow)"
-                    style={{ fontFamily: "'Dancing Script', cursive", fontSize: '62px', letterSpacing: '-1px' }}
+                  </motion.h1>
+                  <motion.span
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.1, duration: 0.6 }}
+                    animate={{ opacity: 0.5 }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                    style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: '11px',
+                      letterSpacing: '3px',
+                      textTransform: 'uppercase',
+                      color: '#ffffff',
+                      marginTop: '2px',
+                    }}
                   >
-                    FlowTrace
-                  </motion.text>
-                </svg>
+                    Visualizer
+                  </motion.span>
+                </div>
               </motion.div>
 
               {/* Orbiting dot */}
               <motion.div
                 animate={{ rotate: -360 }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
                 className="absolute"
-                style={{ width: '420px', height: '420px' }}
+                style={{ width: '380px', height: '380px' }}
               >
                 <div style={{
-                  position: 'absolute', top: '50%', left: '-5px',
+                  position: 'absolute', top: '50%', left: '-4px',
                   transform: 'translateY(-50%)',
-                  width: '10px', height: '10px',
-                  background: 'radial-gradient(circle, #22d3ee, #6366f1)',
+                  width: '8px', height: '8px',
+                  background: 'rgba(255,255,255,0.8)',
                   borderRadius: '50%',
-                  boxShadow: '0 0 14px #22d3ee, 0 0 4px white',
+                  boxShadow: '0 0 16px rgba(255,255,255,0.6)',
                 }} />
               </motion.div>
 
