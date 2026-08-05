@@ -322,7 +322,7 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'queue') programId = 'dsa_queue_enq_deq';
       else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse';
-      else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse';
+      else if (topicId === 'binary_tree') programId = 'dsa_binary_tree';
       else if (topicId === 'graph_basics') programId = 'dsa_graph_basics';
       else if (topicId === 'graph_bfs') programId = 'dsa_graph_bfs';
       else if (topicId === 'graph_dfs') programId = 'dsa_graph_dfs';

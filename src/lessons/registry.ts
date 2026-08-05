@@ -77,7 +77,7 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
       dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
     },
     binary_tree: {
-      dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
+      dsa_binary_tree: dsaLessons.dsa_binary_tree,
     },
     graph_basics: {
       dsa_graph_basics: dsaLessons.dsa_graph_basics,

@@ -824,6 +824,31 @@ export const dsa_graph_dfs: LessonProgram = {
   },
   executionSteps: [],
 };
+export const dsa_binary_tree: LessonProgram = {
+  id: 'dsa_binary_tree', language: 'dsa', topic: 'binary_tree', lessonNumber: 1,
+  friendlyName: 'Binary Search Tree (BST)',
+  learningObjective: 'Interactive Binary Search Tree Workspace: Perform Node Insertion, Searching, and Traversal operations.',
+  lines: [
+    line(1, [cm('// Interactive Binary Search Tree (BST) Workspace')]),
+    line(2, [cm('// Use the operational panel on the left to insert, search and delete nodes.')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Binary Search Tree initialized. Left children elements are smaller; right children are larger.',
+        explanationHinglish: 'BST initialize ho gaya. Left nodes choti values contain karte hain aur right nodes badi values.',
+        memorySnapshot: { capacity: 7, list: [] },
+        consoleOutput: 'Binary Search Tree initialized.',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
+
 // ─── EXPORT ────────────────────────────────────────────────────────────────────
 
 export const dsaLessons: Record<string, LessonProgram> = {
@@ -846,6 +871,7 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_graph_basics,
   dsa_graph_bfs,
   dsa_graph_dfs,
+  dsa_binary_tree,
   // Re-use existing Python lessons for tree/graph until dedicated versions are built:
   linear_search: dsa_linear_search,
   binary_search: dsa_binary_search,
