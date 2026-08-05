@@ -47,46 +47,25 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     }
   }, [hasUpdate]);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     setPhase('downloading');
     setProgress(0);
 
-    // Simulate progress bar — actual update = download zip from GitHub
-    const intervals = [
-      { target: 25, delay: 0, speed: 80 },
-      { target: 60, delay: 600, speed: 55 },
-      { target: 85, delay: 1400, speed: 90 },
-      { target: 100, delay: 2200, speed: 40 },
-    ];
-
-    const timers: ReturnType<typeof setInterval>[] = [];
-
-    intervals.forEach(({ target, delay, speed }) => {
-      setTimeout(() => {
-        const interval = setInterval(() => {
-          setProgress((p) => {
-            if (p >= target) {
-              clearInterval(interval);
-              return p;
-            }
-            return Math.min(p + 1, target);
-          });
-        }, speed);
-        timers.push(interval);
-      }, delay);
-    });
-
-    // After "download" completes, trigger actual file download + show done
+    // Animate progress to 100%, then open the GitHub release page in browser
+    const step = () => {
+      setProgress((p) => {
+        if (p >= 100) return 100;
+        return p + 4;
+      });
+    };
+    const interval = setInterval(step, 40);
     setTimeout(() => {
-      timers.forEach(clearInterval);
+      clearInterval(interval);
       setProgress(100);
       setPhase('done');
-      // Trigger real download
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `FlowTrace-latest.zip`;
-      a.click();
-    }, 3000);
+      // Open real GitHub releases page in default browser
+      window.open(downloadUrl, '_blank');
+    }, 1800);
   };
 
   const handleDismiss = () => {
@@ -473,10 +452,10 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       padding: '14px 16px', marginBottom: '20px', textAlign: 'left',
                     }}>
                       {[
-                        '1. Open your Downloads folder',
-                        '2. Extract FlowTrace-latest.zip',
-                        '3. Replace your current FlowTrace folder',
-                        '4. Open the new index.html or run npm run dev',
+                        '1. GitHub Releases page has opened in your browser',
+                        '2. Download FlowTrace_x64-setup.exe from the latest release',
+                        '3. Run the installer — it will auto-replace the old version',
+                        '4. Relaunch FlowTrace after installation completes',
                       ].map((step, i) => (
                         <motion.p
                           key={i}

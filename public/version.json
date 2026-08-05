@@ -1,12 +1,13 @@
 {
-  "version": "1.6.0",
-  "buildDate": "2026-07-23",
+  "version": "1.7.0",
+  "buildDate": "2026-08-05",
   "changelog": [
-    "Complete DSA section with 10 topics and 34 programs",
-    "Advanced splash screen with glassmorphism and animated ring",
-    "Dynamic file header (main.py / main.cpp / Main.java / main.c)",
-    "C and C++ lesson programs with full execution flow"
+    "Dynamic Feature Locker — lock/unlock Python, C++, Java, DSA from admin panel",
+    "Admin panel Global Locker controls with real-time Firebase sync",
+    "Mobile-responsive admin panel redesign",
+    "Python bypass routing — free access without license key",
+    "Licensing system upgraded with per-route dynamic gating"
   ],
   "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest",
-  "downloadUrl": "https://github.com/prince19112003/FlowTrace/archive/refs/heads/main.zip"
+  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v1.7.0/FlowTrace_1.7.0_x64-setup.exe"
 }

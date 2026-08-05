@@ -24,14 +24,14 @@ export interface UpdateStatus {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CURRENT_VERSION = '1.1.0';
+const CURRENT_VERSION = '1.7.0';
 
 // GitHub raw content URL — directly reads your public/version.json from main branch
 const VERSION_CHECK_URL =
   'https://raw.githubusercontent.com/prince19112003/FlowTrace/main/public/version.json';
 
-// Cache check for 6 hours
-const CACHE_DURATION_MS = 6 * 60 * 60 * 1000;
+// On startup always do a fresh check (no cache delay)
+const CACHE_DURATION_MS = 0;
 const STORAGE_KEY = 'flowtrace_update_check';
 const DISMISSED_KEY = 'flowtrace_dismissed_version';
 
