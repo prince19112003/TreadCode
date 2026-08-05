@@ -139,8 +139,8 @@ export function useUpdateChecker(): UpdateStatus & {
   useEffect(() => {
     if (checkedRef.current) return;
     checkedRef.current = true;
-    // Delay 4s so splash screen finishes first
-    const t = setTimeout(() => checkForUpdate(false), 4000);
+    // Delay 4s so splash screen finishes first, runs fresh check ignoring cache
+    const t = setTimeout(() => checkForUpdate(true), 4000);
     return () => clearTimeout(t);
   }, [checkForUpdate]);
 

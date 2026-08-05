@@ -45,15 +45,15 @@ export const SplashPage: React.FC<SplashPageProps> = ({ onComplete }) => {
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('particles'), 100);
-    const t2 = setTimeout(() => { setPhase('logo'); setShowCodeSnippets(true); }, 600);
-    const t3 = setTimeout(() => setShowLogo(true), 800);
-    const t4 = setTimeout(() => setShowTagline(true), 1500);
-    const t5 = setTimeout(() => setShowBadge(true), 2000);
+    const t2 = setTimeout(() => { setPhase('logo'); setShowCodeSnippets(true); }, 300);
+    const t3 = setTimeout(() => setShowLogo(true), 400);
+    const t4 = setTimeout(() => setShowTagline(true), 800);
+    const t5 = setTimeout(() => setShowBadge(true), 1100);
     const t6 = setTimeout(() => {
       setPhase('done');
       if (onComplete) onComplete();
       else navigate('/languages', { replace: true });
-    }, 3800);
+    }, 2400);
 
     return () => { [t1, t2, t3, t4, t5, t6].forEach(clearTimeout); };
   }, [navigate, onComplete]);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Code2, Search, Settings, ChevronRight, Home } from 'lucide-react';
+import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { motion, AnimatePresence } from 'motion/react';
 
 const GithubIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -314,6 +315,7 @@ export const GlobalAppShell: React.FC = () => {
   const navigate = useNavigate();
   const breadcrumbs = useBreadcrumbs();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { hasUpdate } = useUpdateChecker();
 
   // Ctrl+K / Cmd+K to open search
   useEffect(() => {
@@ -482,7 +484,7 @@ export const GlobalAppShell: React.FC = () => {
           <button
             onClick={() => navigate('/settings')}
             title="Settings"
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-xl transition-all relative"
             style={{
               color: location.pathname === '/settings' ? '#6366f1' : '#8b92a8',
               background: location.pathname === '/settings' ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.04)',
@@ -500,6 +502,9 @@ export const GlobalAppShell: React.FC = () => {
             }}
           >
             <Settings className="w-4 h-4" />
+            {hasUpdate && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)] animate-pulse" />
+            )}
           </button>
         </div>
       </header>

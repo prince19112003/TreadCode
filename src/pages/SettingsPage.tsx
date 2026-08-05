@@ -3,6 +3,7 @@ import { Monitor, Zap, Globe, Info, Moon, Sun, Laptop, ChevronRight } from 'luci
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
+import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 
 /* =========================================================
    SETTINGS PAGE
@@ -13,6 +14,7 @@ export const SettingsPage: React.FC = () => {
   const [themeVal, setThemeVal] = useState<'dark' | 'light' | 'system'>('dark');
   const [langVal, setLangVal] = useState('English');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const { hasUpdate, latestVersion, currentVersion } = useUpdateChecker();
 
   const sections = [
     {
@@ -124,21 +126,20 @@ export const SettingsPage: React.FC = () => {
       iconColor: '#8b5cf6',
       content: (
         <div className="space-y-4 text-sm" style={{ color: '#8b92a8' }}>
-          <SettingRow label="FlowTrace Version" description="Current installed version: v1.1.0">
+          <SettingRow label="FlowTrace Version" description={`Current version: v${currentVersion}`}>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowPreviewModal(true)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 shadow-md"
-                style={{
-                  background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                  color: '#ffffff',
-                }}
-              >
-                Preview Update Modal 🚀
-              </button>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-md" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)' }}>
-                v1.1.0 (Latest)
-              </span>
+              {hasUpdate ? (
+                <button
+                  onClick={() => setShowPreviewModal(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 shadow-[0_0_12px_rgba(244,63,94,0.3)] bg-rose-500 hover:bg-rose-600 text-white animate-pulse"
+                >
+                  Update Available (v{latestVersion}) 🚀
+                </button>
+              ) : (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)' }}>
+                  v{currentVersion} (Latest)
+                </span>
+              )}
             </div>
           </SettingRow>
           <p style={{ color: '#525870', fontSize: '13px' }}>
