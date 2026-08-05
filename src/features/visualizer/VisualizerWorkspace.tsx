@@ -40,7 +40,7 @@ export const VisualizerWorkspace: React.FC = () => {
     'arrays', 'arrays_1d', 'arrays_2d', 'searching_sorting', 'array_operations',
     'searching', 'sorting',
     'stack', 'queue', 'singly_linked_list', 'doubly_linked_list', 'recursion_dsa',
-    'binary_tree', 'graph_basics', 'graph_bfs', 'graph_dfs', 'bubble_sort', 'selection_sort', 'insertion_sort',
+    'binary_tree', 'graph_basics', 'graph_bfs', 'graph_dfs',
   ].includes(lesson?.topic || '');
 
   /* ── Console FullScreen ─────────────────────────────────────────────────── */
