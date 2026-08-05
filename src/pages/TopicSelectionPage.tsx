@@ -145,11 +145,11 @@ const dsaTopics = [
   },
   {
     id: 'binary_tree', number: '09', name: 'Binary Tree',
-    subtitle: 'Root, Left/Right Children & BFS/DFS',
-    complexity: 'O(log N)', category: 'Tree', difficulty: 'Advanced' as const,
-    accentColor: '#14b8a6', Icon: Network,
-    tags: ['Inorder', 'Preorder', 'Height', 'BFS'],
-    interactive: false, programsCount: 4,
+    subtitle: 'Node → Left & Right Children Branches',
+    complexity: 'O(log N)', category: 'Data Structure', difficulty: 'Advanced' as const,
+    accentColor: '#a78bfa', Icon: Network,
+    tags: ['Root', 'Branch', 'DFS', 'Traversals'],
+    interactive: true, programsCount: 4,
   },
   {
     id: 'graph_basics', number: '10', name: 'Graph Fundamentals',
@@ -305,7 +305,8 @@ export const TopicSelectionPage: React.FC = () => {
       if (topicId === 'stack') programId = 'dsa_stack_push_pop';
       else if (topicId === 'queue') programId = 'dsa_queue_enq_deq';
       else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
-      else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
+      else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse';
+      else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
