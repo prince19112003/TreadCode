@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
@@ -7,515 +7,152 @@ interface SplashPageProps {
   onComplete?: () => void;
 }
 
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  targetX?: number;
-  targetY?: number;
-  alpha: number;
-  size: number;
-  color: string;
-  pulse: number;
-  pulseSpeed: number;
-}
-
-const CODE_LINES = [
-  { text: 'def factorial(n):', indent: 0, color: '#818cf8' },
-  { text: '  if n == 0: return 1', indent: 1, color: '#94a3b8' },
-  { text: '  return n * factorial(n-1)', indent: 1, color: '#94a3b8' },
-  { text: 'int main() {', indent: 0, color: '#34d399' },
-  { text: '  arr[i] = arr[j];', indent: 1, color: '#94a3b8' },
-  { text: '  stack.push(node);', indent: 1, color: '#94a3b8' },
-  { text: 'for i in range(n):', indent: 0, color: '#f472b6' },
-  { text: '  sum += arr[i]', indent: 1, color: '#94a3b8' },
-  { text: 'node.next = head;', indent: 0, color: '#facc15' },
-  { text: 'return root.val;', indent: 0, color: '#67e8f9' },
-];
-
 export const SplashPage: React.FC<SplashPageProps> = ({ onComplete }) => {
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [phase, setPhase] = useState<'init' | 'particles' | 'logo' | 'tagline' | 'done'>('init');
-  const [showLogo, setShowLogo] = useState(false);
-  const [showTagline, setShowTagline] = useState(false);
-  const [showCodeSnippets, setShowCodeSnippets] = useState(false);
-  const [showBadge, setShowBadge] = useState(false);
+  const [phase, setPhase] = useState<'logo' | 'progress' | 'done'>('logo');
+  const [percentage, setPercentage] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('particles'), 100);
-    const t2 = setTimeout(() => { setPhase('logo'); setShowCodeSnippets(true); }, 300);
-    const t3 = setTimeout(() => setShowLogo(true), 400);
-    const t4 = setTimeout(() => setShowTagline(true), 800);
-    const t5 = setTimeout(() => setShowBadge(true), 1100);
-    const t6 = setTimeout(() => {
-      setPhase('done');
-      if (onComplete) onComplete();
-      else navigate('/languages', { replace: true });
-    }, 2400);
+    // Stage 1: Display Logo for 1.2s
+    const t1 = setTimeout(() => {
+      setPhase('progress');
+    }, 1200);
 
-    return () => { [t1, t2, t3, t4, t5, t6].forEach(clearTimeout); };
-  }, [navigate, onComplete]);
-
-  // Canvas particle system
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let width = (canvas.width = canvas.offsetWidth);
-    let height = (canvas.height = canvas.offsetHeight);
-    let frame = 0;
-
-    const handleResize = () => {
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
-    };
-    window.addEventListener('resize', handleResize);
-
-    const particleCount = 90;
-    const colors = ['rgba(99,102,241,', 'rgba(168,85,247,', 'rgba(34,211,238,', 'rgba(244,114,182,'];
-    const particles: Particle[] = [];
-
-    for (let i = 0; i < particleCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 80 + Math.random() * 300;
-      particles.push({
-        x: width / 2 + Math.cos(angle) * radius,
-        y: height / 2 + Math.sin(angle) * radius,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        alpha: 0.2 + Math.random() * 0.6,
-        size: 0.8 + Math.random() * 2.2,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.02 + Math.random() * 0.03,
-      });
+    // Stage 2: Animate Progress Bar
+    let interval: ReturnType<typeof setInterval>;
+    if (phase === 'progress') {
+      interval = setInterval(() => {
+        setPercentage((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            // Complete Splash Screen transition after progress completion
+            setTimeout(() => {
+              setPhase('done');
+              if (onComplete) onComplete();
+              else navigate('/languages', { replace: true });
+            }, 300);
+            return 100;
+          }
+          return prev + 4;
+        });
+      }, 35);
     }
 
-    // Halo ring targets
-    const haloRadius = 175;
-    const targets = particles.map((_, k) => {
-      const angle = (k / particles.length) * Math.PI * 2;
-      const r = haloRadius + Math.sin(k * 2.5) * 18;
-      return { x: width / 2 + Math.cos(angle) * r, y: height / 2 + Math.sin(angle) * r };
-    });
-
-    let currentPhase = 'init';
-
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      frame++;
-
-      if (canvasRef.current) {
-        currentPhase = canvasRef.current.getAttribute('data-phase') || 'init';
-      }
-
-      const assembling = currentPhase === 'logo' || currentPhase === 'tagline' || currentPhase === 'done';
-
-      // Draw soft connection lines
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 70) {
-            const alpha = (1 - dist / 70) * 0.07;
-            ctx.strokeStyle = `rgba(99,102,241,${alpha})`;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      particles.forEach((p, i) => {
-        p.pulse += p.pulseSpeed;
-        const pulsedAlpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
-
-        if (assembling) {
-          const target = targets[i];
-          const dx = target.x - p.x;
-          const dy = target.y - p.y;
-          p.x += dx * 0.09;
-          p.y += dy * 0.09;
-          p.alpha = Math.min(p.alpha + 0.01, 0.9);
-        } else {
-          p.x += p.vx + Math.sin(frame * 0.008 + i) * 0.15;
-          p.y += p.vy + Math.cos(frame * 0.008 + i) * 0.15;
-          if (p.x < 0 || p.x > width) p.vx *= -1;
-          if (p.y < 0 || p.y > height) p.vy *= -1;
-        }
-
-        // Glow
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-        gradient.addColorStop(0, p.color + (pulsedAlpha) + ')');
-        gradient.addColorStop(1, p.color + '0)');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Core dot
-        ctx.fillStyle = p.color + pulsedAlpha + ')';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
+      clearTimeout(t1);
+      if (interval) clearInterval(interval);
     };
-  }, []);
+  }, [phase, navigate, onComplete]);
 
   return (
-    <PageTransition className="items-center justify-center bg-[#020308] text-slate-100 overflow-hidden relative">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Space+Grotesk:wght@300;400;600&display=swap');
-        @keyframes float-code { 0%,100% { transform: translateY(0px) rotate(var(--r)); opacity: var(--o); } 50% { transform: translateY(-12px) rotate(var(--r)); opacity: calc(var(--o) * 1.3); } }
-        @keyframes scanline { 0% { top: -2px; } 100% { top: 100%; } }
-        @keyframes border-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-      `}</style>
-
-      {/* Canvas */}
-      <canvas
-        ref={canvasRef}
-        data-phase={phase}
-        className="absolute inset-0 w-full h-full pointer-events-none z-0"
-      />
-
-      {/* Grid */}
-      <div
+    <PageTransition className="items-center justify-center bg-[#000000] text-slate-100 overflow-hidden relative">
+      {/* Sleek Apple Monochromatic Ambient glow */}
+      <div 
         className="absolute inset-0 pointer-events-none z-0"
         style={{
-          backgroundImage: 'linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
+          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 60%)',
         }}
       />
 
-      {/* Scan line effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-20">
-        <div
-          style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.6), transparent)', animation: 'scanline 3s linear infinite' }}
-        />
-      </div>
-
-      {/* Deep ambient orbs */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, rgba(168,85,247,0.04) 40%, transparent 70%)' }} />
-      <div className="absolute top-[20%] right-[15%] w-[25vw] h-[25vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%)' }} />
-      <div className="absolute bottom-[20%] left-[10%] w-[20vw] h-[20vw] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(244,114,182,0.05) 0%, transparent 70%)' }} />
-
-      {/* Floating code snippets */}
-      <AnimatePresence>
-        {showCodeSnippets && CODE_LINES.map((line, i) => {
-          const positions = [
-            { top: '8%', left: '3%', r: '-6deg' },
-            { top: '15%', right: '4%', r: '4deg' },
-            { top: '30%', left: '1%', r: '-3deg' },
-            { top: '72%', right: '3%', r: '3deg' },
-            { bottom: '12%', left: '5%', r: '-5deg' },
-            { bottom: '22%', right: '2%', r: '6deg' },
-            { top: '50%', left: '2%', r: '-2deg' },
-            { top: '45%', right: '1%', r: '4deg' },
-            { bottom: '35%', left: '8%', r: '-4deg' },
-            { top: '22%', left: '40%', r: '0deg' },
-          ];
-          const pos = positions[i] || { top: '50%', left: '50%', r: '0deg' };
-          const delay = i * 0.08;
-          return (
+      <div className="flex flex-col items-center justify-center z-10 select-none gap-10">
+        {/* Apple-like minimalist branding container */}
+        <AnimatePresence mode="wait">
+          {phase === 'logo' && (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay, duration: 0.5 }}
-              className="absolute pointer-events-none z-10 select-none"
-              style={{
-                ...pos,
-                fontFamily: "'Fira Code', 'Courier New', monospace",
-                fontSize: '11px',
-                color: line.color,
-                opacity: 0.18 + (i % 3) * 0.06,
-                transform: `rotate(${pos.r})`,
-                animation: `float-code ${3.5 + i * 0.4}s ease-in-out infinite`,
-                animationDelay: `${i * 0.3}s`,
-                background: 'rgba(0,0,0,0.3)',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                border: `1px solid ${line.color}22`,
-                whiteSpace: 'nowrap',
-                backdropFilter: 'blur(4px)',
-              } as React.CSSProperties}
-            >
-              {line.text}
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-
-      {/* Center Content */}
-      <div className="flex flex-col items-center justify-center z-20 select-none gap-5">
-
-        {/* Spinning ring container */}
-        <AnimatePresence>
-          {showLogo && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.7 }}
+              key="apple-logo-intro"
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
-              className="relative flex items-center justify-center"
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+              className="flex flex-col items-center gap-6"
             >
-              {/* Outer spinning gradient ring */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                className="absolute"
+              {/* Apple-style minimalist vector icon container */}
+              <div 
+                className="w-16 h-16 rounded-[22%] flex items-center justify-center"
                 style={{
-                  width: '420px', height: '420px',
-                  background: 'conic-gradient(from 0deg, rgba(99,102,241,0.5), rgba(168,85,247,0.5), rgba(34,211,238,0.5), rgba(244,114,182,0.3), rgba(99,102,241,0.5))',
-                  borderRadius: '50%',
-                  mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), white calc(100% - 2px))',
-                  WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), white calc(100% - 2px))',
-                  filter: 'blur(1px)',
-                }}
-              />
-
-              {/* Inner static ring */}
-              <div
-                className="absolute"
-                style={{
-                  width: '395px', height: '395px',
-                  borderRadius: '50%',
-                  border: '1px solid rgba(99,102,241,0.12)',
-                }}
-              />
-
-              {/* Premium Minimalist Card */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                style={{
-                  width: '320px', height: '240px',
-                  background: 'rgba(10, 12, 30, 0.35)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '32px',
-                  backdropFilter: 'blur(30px)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '16px',
-                  boxShadow: '0 0 80px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 10px 30px rgba(0,0,0,0.4)',
                 }}
               >
-                {/* Logo Icon */}
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path 
+                    d="M12 2L2 7v10l10 5 10-5V7L12 2z" 
+                    stroke="rgba(255,255,255,0.9)" 
+                    strokeWidth="1.6" 
+                    strokeLinejoin="round"
+                  />
+                  <path 
+                    d="M12 22V12m0 0L2 7m10 5l10-5" 
+                    stroke="rgba(255,255,255,0.4)" 
+                    strokeWidth="1.2"
+                  />
+                </svg>
+              </div>
+
+              <div className="flex flex-col items-center gap-1">
+                <h1 
                   style={{
-                    width: '64px', height: '64px',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '20px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                  }}
-                >
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <motion.path
-                      d="M12 2L2 7v10l10 5 10-5V7L12 2z"
-                      stroke="url(#iconGrad)" strokeWidth="1.5" strokeLinejoin="round"
-                      initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
-                      transition={{ delay: 0.5, duration: 1, ease: 'easeInOut' }}
-                    />
-                    <motion.path
-                      d="M12 22V12m0 0L2 7m10 5l10-5"
-                      stroke="rgba(255,255,255,0.6)" strokeWidth="1.2"
-                      initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
-                      transition={{ delay: 0.8, duration: 0.8, ease: 'easeInOut' }}
-                    />
-                    <defs>
-                      <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#818cf8" />
-                        <stop offset="100%" stopColor="#22d3ee" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </motion.div>
-
-                {/* Wordmark */}
-                <div className="flex flex-col items-center">
-                  <motion.h1
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '32px',
-                      fontWeight: 600,
-                      letterSpacing: '-0.5px',
-                      background: 'linear-gradient(180deg, #ffffff 0%, #a5b4fc 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    FlowTrace
-                  </motion.h1>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.5 }}
-                    transition={{ delay: 0.8, duration: 0.5 }}
-                    style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '11px',
-                      letterSpacing: '3px',
-                      textTransform: 'uppercase',
-                      color: '#ffffff',
-                      marginTop: '2px',
-                    }}
-                  >
-                    Visualizer
-                  </motion.span>
-                </div>
-              </motion.div>
-
-              {/* Orbiting dot */}
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
-                className="absolute"
-                style={{ width: '380px', height: '380px' }}
-              >
-                <div style={{
-                  position: 'absolute', top: '50%', left: '-4px',
-                  transform: 'translateY(-50%)',
-                  width: '8px', height: '8px',
-                  background: 'rgba(255,255,255,0.8)',
-                  borderRadius: '50%',
-                  boxShadow: '0 0 16px rgba(255,255,255,0.6)',
-                }} />
-              </motion.div>
-
-              {/* Orbiting dot 2 */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
-                className="absolute"
-                style={{ width: '420px', height: '420px' }}
-              >
-                <div style={{
-                  position: 'absolute', top: '-5px', left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '7px', height: '7px',
-                  background: 'radial-gradient(circle, #f472b6, #a855f7)',
-                  borderRadius: '50%',
-                  boxShadow: '0 0 10px #f472b6',
-                }} />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Tagline */}
-        <AnimatePresence>
-          {showTagline && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="flex flex-col items-center gap-2"
-            >
-              <p style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '13px',
-                fontWeight: 300,
-                letterSpacing: '0.25em',
-                textTransform: 'uppercase',
-                background: 'linear-gradient(90deg, #818cf8, #c084fc, #22d3ee)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                Visualize &nbsp;·&nbsp; Learn &nbsp;·&nbsp; Master
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Language badges */}
-        <AnimatePresence>
-          {showBadge && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex items-center gap-2"
-            >
-              {['Python', 'C++', 'Java', 'C', 'DSA'].map((lang, i) => (
-                <motion.div
-                  key={lang}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.07, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-                  style={{
-                    padding: '3px 12px',
-                    borderRadius: '100px',
-                    fontSize: '10px',
-                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    fontSize: '24px',
                     fontWeight: 600,
-                    letterSpacing: '0.08em',
-                    border: '1px solid rgba(99,102,241,0.3)',
-                    color: 'rgba(165,180,252,0.85)',
-                    background: 'rgba(99,102,241,0.08)',
-                    backdropFilter: 'blur(8px)',
+                    letterSpacing: '-0.5px',
+                    color: '#ffffff',
                   }}
                 >
-                  {lang}
-                </motion.div>
-              ))}
+                  FlowTrace
+                </h1>
+                <span 
+                  style={{
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    fontSize: '10px',
+                    letterSpacing: '4px',
+                    textTransform: 'uppercase',
+                    color: '#8e8e93',
+                  }}
+                >
+                  Visualizer
+                </span>
+              </div>
             </motion.div>
           )}
-        </AnimatePresence>
 
-        {/* Loading bar */}
-        <AnimatePresence>
-          {showBadge && (
+          {phase === 'progress' && (
             <motion.div
+              key="apple-progress-bar"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              style={{ width: '200px' }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col items-center gap-8 w-44"
             >
-              <div style={{ height: '1px', background: 'rgba(99,102,241,0.15)', borderRadius: '1px', overflow: 'hidden' }}>
-                <motion.div
-                  initial={{ width: '0%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 1.6, ease: 'easeInOut' }}
+              {/* Minimal Apple Progress bar */}
+              <div 
+                className="w-full rounded-full overflow-hidden"
+                style={{
+                  height: '3px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                <div 
+                  className="h-full bg-white transition-all duration-75"
                   style={{
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #6366f1, #a855f7, #22d3ee)',
-                    borderRadius: '1px',
-                    boxShadow: '0 0 8px rgba(99,102,241,0.8)',
+                    width: `${percentage}%`,
+                    boxShadow: '0 0 8px rgba(255,255,255,0.4)',
                   }}
                 />
               </div>
+
+              <span 
+                style={{
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  color: '#8e8e93',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                Loading...
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
