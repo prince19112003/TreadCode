@@ -246,6 +246,64 @@
       color: #ff453a;
       border-color: rgba(255, 69, 58, 0.2);
     }
+
+    /* Responsive Media Queries */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .brand {
+        margin-bottom: 0;
+      }
+      .sidebar .nav-item {
+        width: auto;
+        margin-bottom: 0;
+        padding: 8px 12px;
+      }
+      .main-stage {
+        padding: 24px 16px;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .stat-card {
+        padding: 12px;
+      }
+      .stat-value {
+        font-size: 18px;
+      }
+      .form-group {
+        flex-direction: column;
+        gap: 12px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      button.btn-primary {
+        width: 100%;
+      }
+      .card {
+        padding: 20px;
+        border-radius: 16px;
+      }
+      /* Horizontal Scroll wrapper for Table */
+      .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
   </style>
 </head>
 <body>
@@ -303,22 +361,24 @@
 
       <div class="card">
         <div class="card-title">Keys & Connected Hardware Locks</div>
-        <table>
-          <thead>
-            <tr>
-              <th>License Key</th>
-              <th>Institution</th>
-              <th>Activations</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="licenseTableBody">
-            <tr>
-              <td colspan="5" style="text-align: center; color: #86868b; padding: 32px 0;">Syncing console metrics...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>License Key</th>
+                <th>Institution</th>
+                <th>Activations</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="licenseTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: #86868b; padding: 32px 0;">Syncing console metrics...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
