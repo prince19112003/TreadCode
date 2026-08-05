@@ -149,7 +149,6 @@
     </div>
   </div>
 
-  <!-- Firebase CDN integration inside Standalone Admin template -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -167,7 +166,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Fetch and sync table list
     onValue(ref(db, 'licenses'), (snapshot) => {
       const data = snapshot.val() || {};
       const tbody = document.getElementById('licenseTableBody');
@@ -204,7 +202,6 @@
       const limit = parseInt(document.getElementById('limitCount').value);
       if (!inst || !limit) return alert('Please enter both name and limit!');
 
-      // Generate random unique key
       const key = 'FT-' + Math.random().toString(36).substring(2, 6).toUpperCase() + 
                   '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
