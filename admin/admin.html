@@ -6,29 +6,29 @@
   <title>FlowTrace Admin Control Panel</title>
   <style>
     body {
-      background-color: #030307;
-      color: #e2e8f0;
+      background-color: #050508;
+      color: #f1f5f9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 40px;
+      padding: 40px 20px;
     }
     .container {
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
     }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 40px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding-bottom: 20px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 24px;
     }
     h1 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #818cf8, #22d3ee);
+      letter-spacing: -0.8px;
+      background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -36,27 +36,42 @@
     }
     .card {
       background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-top: 0;
+      margin-bottom: 20px;
+      letter-spacing: -0.3px;
     }
     .form-group {
       display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 16px;
+      flex-wrap: wrap;
     }
     input, button {
-      padding: 12px 18px;
+      padding: 14px 20px;
       font-size: 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.4);
       color: white;
       outline: none;
+      transition: all 0.2s;
     }
     input {
       flex: 1;
+      min-width: 200px;
+    }
+    input:focus {
+      border-color: rgba(165,180,252,0.4);
+      box-shadow: 0 0 12px rgba(165,180,252,0.1);
     }
     button {
       background: #ffffff;
@@ -64,10 +79,11 @@
       font-weight: 600;
       cursor: pointer;
       border: none;
-      transition: opacity 0.2s;
+      box-shadow: 0 4px 12px rgba(255,255,255,0.1);
     }
     button:hover {
       opacity: 0.9;
+      transform: translateY(-1px);
     }
     table {
       width: 100%;
@@ -76,37 +92,53 @@
     }
     th, td {
       text-align: left;
-      padding: 14px;
+      padding: 16px;
       border-bottom: 1px solid rgba(255,255,255,0.04);
       font-size: 14px;
     }
     th {
       color: #94a3b8;
       font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 1px;
     }
     .badge {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 100px;
-      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: 600;
     }
     .badge-active {
-      background: rgba(34,197,94,0.12);
-      color: #4ade80;
+      background: rgba(52,211,153,0.1);
+      color: #34d399;
+      border: 1px solid rgba(52,211,153,0.15);
     }
     .badge-blocked {
-      background: rgba(239,68,68,0.12);
+      background: rgba(248,113,113,0.1);
       color: #f87171;
+      border: 1px solid rgba(248,113,113,0.15);
     }
     .btn-action {
-      background: rgba(239,68,68,0.1);
-      color: #f87171;
-      padding: 6px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 8px;
       font-size: 12px;
+      box-shadow: none;
     }
     .btn-action:hover {
-      background: rgba(239,68,68,0.2);
+      background: rgba(248,113,113,0.15);
+      color: #f87171;
+      border-color: rgba(248,113,113,0.2);
+    }
+    .device-row {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+      font-family: monospace;
     }
   </style>
 </head>
@@ -114,35 +146,35 @@
   <div class="container">
     <header>
       <div>
-        <h1>FlowTrace Admin</h1>
-        <p style="color: #64748b; margin: 4px 0 0 0; font-size: 13px;">Manage licenses, activations and device locks</p>
+        <h1>FlowTrace Licensing</h1>
+        <p style="color: #64748b; margin: 6px 0 0 0; font-size: 13px;">Enterprise License Key Manager & Device Lock Registry</p>
       </div>
     </header>
 
     <div class="card">
-      <h3 style="margin-top: 0; margin-bottom: 16px;">Generate Activation Key</h3>
+      <div class="card-title">Create License Key</div>
       <div class="form-group">
-        <input type="text" id="targetCollege" placeholder="Institution / College Name (e.g. ABC College)" />
-        <input type="number" id="limitCount" placeholder="Device Limit (e.g. 20)" style="max-width: 150px;" />
-        <button onclick="generateKey()">Create License Key</button>
+        <input type="text" id="targetCollege" placeholder="Institution / College Name (e.g. BCA Dept)" />
+        <input type="number" id="limitCount" placeholder="System Limit (e.g. 30)" style="max-width: 160px;" />
+        <button onclick="generateKey()">Generate & Save</button>
       </div>
     </div>
 
     <div class="card">
-      <h3 style="margin-top: 0; margin-bottom: 16px;">Active License Keys</h3>
+      <div class="card-title">Active Registrations</div>
       <table>
         <thead>
           <tr>
-            <th>Key</th>
+            <th>License Key</th>
             <th>Institution</th>
-            <th>Devices</th>
+            <th>Activations</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="licenseTableBody">
           <tr>
-            <td colspan="5" style="text-align: center; color: #64748b;">Connecting to database...</td>
+            <td colspan="5" style="text-align: center; color: #64748b;">Synchronizing database metrics...</td>
           </tr>
         </tbody>
       </table>
@@ -177,17 +209,28 @@
       }
 
       for (const [key, val] of Object.entries(data)) {
-        const devCount = val.devices ? Object.keys(val.devices).length : 0;
+        const activeDevices = val.devices ? Object.keys(val.devices) : [];
+        const devCount = activeDevices.length;
         const statusBadge = val.blocked 
           ? `<span class="badge badge-blocked">Blocked</span>` 
           : `<span class="badge badge-active">Active</span>`;
-        const actionLabel = val.blocked ? 'Unblock' : 'Block';
+        const actionLabel = val.blocked ? 'Unblock' : 'Revoke Key';
+
+        // Render connected HWIDs under devices column
+        const deviceListHtml = activeDevices.length > 0 
+          ? activeDevices.map(d => `<div class="device-row">↳ HWID: ${d.substring(0, 16)}...</div>`).join('')
+          : '<div class="device-row" style="color:#475569">No devices connected yet</div>';
         
         tbody.innerHTML += `
           <tr>
-            <td style="font-family: monospace; font-weight: bold; color: #a5b4fc;">${key}</td>
-            <td>${val.institution}</td>
-            <td>${devCount} / ${val.maxDevices}</td>
+            <td style="font-family: monospace; font-weight: 600; color: #a5b4fc; font-size: 15px;">${key}</td>
+            <td>
+              <div style="font-weight: 500;">${val.institution}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600;">${devCount} / ${val.maxDevices}</div>
+              ${deviceListHtml}
+            </td>
             <td>${statusBadge}</td>
             <td>
               <button class="btn-action" onclick="toggleBlock('${key}', ${!!val.blocked})">${actionLabel}</button>
@@ -198,8 +241,8 @@
     });
 
     window.generateKey = () => {
-      const inst = (document.getElementById('targetCollege') as any).value;
-      const limit = parseInt((document.getElementById('limitCount') as any).value);
+      const inst = document.getElementById('targetCollege').value;
+      const limit = parseInt(document.getElementById('limitCount').value);
       if (!inst || !limit) return alert('Please enter both name and limit!');
 
       const key = 'FT-' + Math.random().toString(36).substring(2, 6).toUpperCase() + 
@@ -210,8 +253,8 @@
         maxDevices: limit,
         blocked: false
       }).then(() => {
-        (document.getElementById('targetCollege') as any).value = '';
-        (document.getElementById('limitCount') as any).value = '';
+        document.getElementById('targetCollege').value = '';
+        document.getElementById('limitCount').value = '';
       });
     };
 
