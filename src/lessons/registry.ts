@@ -88,6 +88,15 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
     graph_dfs: {
       dsa_graph_dfs: dsaLessons.dsa_graph_dfs,
     },
+    bubble_sort: {
+      dsa_bubble_sort: dsaLessons.dsa_bubble_sort,
+    },
+    selection_sort: {
+      dsa_selection_sort: dsaLessons.dsa_selection_sort,
+    },
+    insertion_sort: {
+      dsa_insertion_sort: dsaLessons.dsa_insertion_sort,
+    },
   },
   c: {
     variables: {

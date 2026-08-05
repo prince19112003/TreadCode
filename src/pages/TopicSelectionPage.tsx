@@ -96,15 +96,31 @@ const dsaTopics = [
     interactive: false, programsCount: 3,
   },
   {
-    id: 'sorting', number: '03', name: 'Sorting Algorithms',
-    subtitle: 'Bubble, Selection & Insertion Sort',
+    id: 'bubble_sort', number: '03', name: 'Bubble Sort',
+    subtitle: 'Bubble adjacent elements to sort array',
     complexity: 'O(N²)', category: 'Algorithm', difficulty: 'Intermediate' as const,
     accentColor: '#a855f7', Icon: ArrowUpDown,
-    tags: ['Bubble', 'Selection', 'Insertion'],
-    interactive: false, programsCount: 4,
+    tags: ['Bubble', 'Sort', 'Adjacent', 'Swapping'],
+    interactive: true, programsCount: 1,
   },
   {
-    id: 'recursion_dsa', number: '04', name: 'Recursion & Call Stack',
+    id: 'selection_sort', number: '04', name: 'Selection Sort',
+    subtitle: 'Select minimum element to swap repeatedly',
+    complexity: 'O(N²)', category: 'Algorithm', difficulty: 'Intermediate' as const,
+    accentColor: '#8b5cf6', Icon: ArrowUpDown,
+    tags: ['Selection', 'Minimum', 'Swap', 'Passes'],
+    interactive: true, programsCount: 1,
+  },
+  {
+    id: 'insertion_sort', number: '05', name: 'Insertion Sort',
+    subtitle: 'Insert elements sequentially into sorted sublist',
+    complexity: 'O(N²)', category: 'Algorithm', difficulty: 'Intermediate' as const,
+    accentColor: '#6366f1', Icon: ArrowUpDown,
+    tags: ['Insertion', 'Sorted', 'Sublist', 'Shift'],
+    interactive: true, programsCount: 1,
+  },
+  {
+    id: 'recursion_dsa', number: '06', name: 'Recursion & Call Stack',
     subtitle: 'Base Cases, Stack Frames & Tree Calls',
     complexity: 'O(N)', category: 'Algorithm', difficulty: 'Intermediate' as const,
     accentColor: '#f97316', Icon: RefreshCw,
@@ -112,7 +128,7 @@ const dsaTopics = [
     interactive: false, programsCount: 4,
   },
   {
-    id: 'stack', number: '05', name: 'Stack (LIFO)',
+    id: 'stack', number: '07', name: 'Stack (LIFO)',
     subtitle: 'Push, Pop, Peek, Search & Traverse',
     complexity: 'O(1)', category: 'Data Structure', difficulty: 'Intermediate' as const,
     accentColor: '#ec4899', Icon: AlignJustify,
@@ -120,7 +136,7 @@ const dsaTopics = [
     interactive: true, programsCount: 9,
   },
   {
-    id: 'queue', number: '06', name: 'Queue (FIFO)',
+    id: 'queue', number: '08', name: 'Queue (FIFO)',
     subtitle: 'Enqueue, Dequeue & Front/Rear Pointers',
     complexity: 'O(1)', category: 'Data Structure', difficulty: 'Intermediate' as const,
     accentColor: '#06b6d4', Icon: AlignJustify,
@@ -128,7 +144,7 @@ const dsaTopics = [
     interactive: true, programsCount: 4,
   },
   {
-    id: 'singly_linked_list', number: '07', name: 'Singly Linked List',
+    id: 'singly_linked_list', number: '09', name: 'Singly Linked List',
     subtitle: 'Node → Data | Next Pointer Chain',
     complexity: 'O(N)', category: 'Data Structure', difficulty: 'Intermediate' as const,
     accentColor: '#8b5cf6', Icon: GitBranch,
@@ -136,7 +152,7 @@ const dsaTopics = [
     interactive: true, programsCount: 5,
   },
   {
-    id: 'doubly_linked_list', number: '08', name: 'Doubly Linked List',
+    id: 'doubly_linked_list', number: '10', name: 'Doubly Linked List',
     subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links',
     complexity: 'O(N)', category: 'Data Structure', difficulty: 'Advanced' as const,
     accentColor: '#6366f1', Icon: GitBranch,
@@ -144,7 +160,7 @@ const dsaTopics = [
     interactive: true, programsCount: 4,
   },
   {
-    id: 'binary_tree', number: '09', name: 'Binary Tree',
+    id: 'binary_tree', number: '11', name: 'Binary Tree',
     subtitle: 'Node → Left & Right Children Branches',
     complexity: 'O(log N)', category: 'Data Structure', difficulty: 'Advanced' as const,
     accentColor: '#a78bfa', Icon: Network,
@@ -152,7 +168,7 @@ const dsaTopics = [
     interactive: true, programsCount: 4,
   },
   {
-    id: 'graph_basics', number: '10', name: 'Graph Fundamentals',
+    id: 'graph_basics', number: '12', name: 'Graph Fundamentals',
     subtitle: 'Vertices, Edges & Adjacency Matrix',
     complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
     accentColor: '#eab308', Icon: Network,
@@ -160,7 +176,7 @@ const dsaTopics = [
     interactive: true, programsCount: 2,
   },
   {
-    id: 'graph_bfs', number: '11', name: 'Graph BFS Traversal',
+    id: 'graph_bfs', number: '13', name: 'Graph BFS Traversal',
     subtitle: 'Breadth-First Queue-based Level-Order Path Scan',
     complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
     accentColor: '#10b981', Icon: Network,
@@ -168,7 +184,7 @@ const dsaTopics = [
     interactive: true, programsCount: 1,
   },
   {
-    id: 'graph_dfs', number: '12', name: 'Graph DFS Traversal',
+    id: 'graph_dfs', number: '14', name: 'Graph DFS Traversal',
     subtitle: 'Depth-First Stack-based Backtracking Path Scan',
     complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
     accentColor: '#8b5cf6', Icon: Network,
@@ -326,6 +342,9 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'graph_basics') programId = 'dsa_graph_basics';
       else if (topicId === 'graph_bfs') programId = 'dsa_graph_bfs';
       else if (topicId === 'graph_dfs') programId = 'dsa_graph_dfs';
+      else if (topicId === 'bubble_sort') programId = 'dsa_bubble_sort';
+      else if (topicId === 'selection_sort') programId = 'dsa_selection_sort';
+      else if (topicId === 'insertion_sort') programId = 'dsa_insertion_sort';
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
