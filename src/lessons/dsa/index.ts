@@ -466,28 +466,26 @@ export const dsa_stack_push_pop: LessonProgram = {
 
 export const dsa_queue_enq_deq: LessonProgram = {
   id: 'dsa_queue_enq_deq', language: 'dsa', topic: 'queue', lessonNumber: 1,
-  friendlyName: 'Queue Implementation — Enqueue & Dequeue',
-  learningObjective: 'Build a queue using an array. front=rear=-1 initially. Enqueue at rear, Dequeue from front. FIFO.',
+  friendlyName: 'Queue Implementation (FIFO)',
+  learningObjective: 'Interactive Queue Workspace: Perform Enqueue, Dequeue, Peek Front, Search, and Traverse operations directly.',
   lines: [
-    line(1, [kw('int'), tx(' '), va('queue'), pu('['), nu('5'), pu(']'), pu(','), tx(' '), va('front'), tx(' '), op('='), tx(' '), nu('-1'), pu(','), tx(' '), va('rear'), tx(' '), op('='), tx(' '), nu('-1'), pu(';')]),
-    line(2, [cm('// Enqueue 10, 20, 30')]),
-    line(3, [va('queue'), pu('['), op('++'), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('10'), pu(';'), tx(' '), kw('if'), pu('('), va('front'), tx(' '), op('=='), tx(' '), nu('-1'), pu(')'), tx(' '), va('front'), op('='), nu('0'), pu(';')]),
-    line(4, [va('queue'), pu('['), op('++'), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('20'), pu(';')]),
-    line(5, [va('queue'), pu('['), op('++'), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('30'), pu(';')]),
-    line(6, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Front: "'), tx(' '), op('<<'), tx(' '), va('queue'), pu('['), va('front'), pu(']'), pu(';')]),
-    line(7, [va('front'), op('++'), pu(';'), tx(' '), cm('// Dequeue')]),
-    line(8, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"New Front: "'), tx(' '), op('<<'), tx(' '), va('queue'), pu('['), va('front'), pu(']'), pu(';')]),
+    line(1, [cm('// Interactive Queue Workspace (Language Independent)')]),
+    line(2, [cm('// Use the Operational Panel on the left to perform queue operations.')]),
   ],
   editableVariables: {},
-  generateSteps: (): ExecutionStep[] => [
-    { step: 1, lineNum: 1, explanationEnglish: 'Queue initialized. front = rear = -1. Queue is empty.', explanationHinglish: 'front = rear = -1. Queue khali hai.', memorySnapshot: { front: -1, rear: -1, queue: '[]' }, animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'front', value: -1 }, { name: 'rear', value: -1 }] } },
-    { step: 2, lineNum: 3, explanationEnglish: 'ENQUEUE 10: rear++ = 0, queue[0]=10. front=0 (first insert).', explanationHinglish: 'Enqueue 10: rear=0, queue[0]=10. front=0 set.', memorySnapshot: { front: 0, rear: 0, queue: '[10]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'rear', oldValue: -1, newValue: 0 } },
-    { step: 3, lineNum: 4, explanationEnglish: 'ENQUEUE 20: rear++ = 1, queue[1]=20.', explanationHinglish: 'Enqueue 20: rear=1, queue[1]=20.', memorySnapshot: { front: 0, rear: 1, queue: '[10, 20]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'rear', oldValue: 0, newValue: 1 } },
-    { step: 4, lineNum: 5, explanationEnglish: 'ENQUEUE 30: rear++ = 2, queue[2]=30.', explanationHinglish: 'Enqueue 30: rear=2, queue[2]=30.', memorySnapshot: { front: 0, rear: 2, queue: '[10, 20, 30]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'rear', oldValue: 1, newValue: 2 } },
-    { step: 5, lineNum: 6, explanationEnglish: 'Peek Front: queue[0] = 10. First element inserted.', explanationHinglish: 'Front element = queue[0] = 10.', memorySnapshot: { front: 0, rear: 2, queue: '[10, 20, 30]' }, consoleOutput: 'Front: 10', animationEvent: { type: 'PRINT_VALUE', variableName: 'queue[front]', outputValue: 10 } },
-    { step: 6, lineNum: 7, explanationEnglish: 'DEQUEUE: front++ = 1. Element 10 removed. FIFO order!', explanationHinglish: 'Dequeue: front++ = 1. 10 nikal gaya. FIFO order!', memorySnapshot: { front: 1, rear: 2, queue: '[_, 20, 30]' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'front', oldValue: 0, newValue: 1 } },
-    { step: 7, lineNum: 8, explanationEnglish: 'New front: queue[1] = 20. FIFO maintained!', explanationHinglish: 'New front = 20. FIFO order correct hai!', memorySnapshot: { front: 1, rear: 2, queue: '[20, 30]' }, consoleOutput: 'New Front: 20', animationEvent: { type: 'PRINT_VALUE', variableName: 'queue[front]', outputValue: 20 } },
-  ],
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Queue initialized. Use the Operational Dashboard to add/remove elements.',
+        explanationHinglish: 'Queue initialize ho gaya hai. Operational Dashboard se elements add/remove karein.',
+        memorySnapshot: { front: -1, rear: -1, capacity: 4, queue: [] },
+        consoleOutput: 'Queue initialized (Empty).',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
   executionSteps: [],
 };
 
@@ -495,32 +493,26 @@ export const dsa_queue_enq_deq: LessonProgram = {
 
 export const dsa_sll_traverse: LessonProgram = {
   id: 'dsa_sll_traverse', language: 'dsa', topic: 'singly_linked_list', lessonNumber: 1,
-  friendlyName: 'Singly Linked List — Node Structure & Traversal',
-  learningObjective: 'Each node stores data + a next pointer. Head pointer points to first node. NULL marks the end.',
+  friendlyName: 'Singly Linked List (SLL)',
+  learningObjective: 'Interactive Singly Linked List Workspace: Perform Node Insertion, Deletion, Searching, and Traversal directly.',
   lines: [
-    line(1, [kw('struct'), tx(' '), va('Node'), tx(' '), pu('{'), tx(' '), kw('int'), tx(' '), va('data'), pu(';'), tx(' '), va('Node'), op('*'), va('next'), pu(';'), tx(' '), pu('};')]),
-    line(2, [va('Node'), op('*'), va('head'), tx(' '), op('='), tx(' '), kw('new'), tx(' '), va('Node'), pu('('), nu('10'), pu(')'), pu(';')]),
-    line(3, [va('head'), op('->'), va('next'), tx(' '), op('='), tx(' '), kw('new'), tx(' '), va('Node'), pu('('), nu('20'), pu(')'), pu(';')]),
-    line(4, [va('head'), op('->'), va('next'), op('->'), va('next'), tx(' '), op('='), tx(' '), kw('new'), tx(' '), va('Node'), pu('('), nu('30'), pu(')'), pu(';')]),
-    line(5, [va('Node'), op('*'), va('curr'), tx(' '), op('='), tx(' '), va('head'), pu(';')]),
-    line(6, [kw('while'), pu('('), va('curr'), tx(' '), op('!='), tx(' '), kw('nullptr'), pu(')'), tx(' {')]),
-    line(7, [tx('    '), fn('cout'), tx(' '), op('<<'), tx(' '), va('curr'), op('->'), va('data'), pu(';')]),
-    line(8, [tx('    '), va('curr'), tx(' '), op('='), tx(' '), va('curr'), op('->'), va('next'), pu(';')]),
-    line(9, [pu('}')]),
+    line(1, [cm('// Interactive Singly Linked List Workspace (Language Independent)')]),
+    line(2, [cm('// Use the SLL Controls panel to insert or delete nodes dynamically.')]),
   ],
   editableVariables: {},
-  generateSteps: (): ExecutionStep[] => [
-    { step: 1, lineNum: 2, explanationEnglish: 'Create Node(10). head → [10|next→?]. Allocate heap memory.', explanationHinglish: 'Pehla node [10] banaya. head pointer is se point kar rha hai.', memorySnapshot: { 'Node 1': '{ data:10, next:→ }', head: '→Node1' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'head', value: 'Node(10)' } },
-    { step: 2, lineNum: 3, explanationEnglish: 'Create Node(20). head→next = Node(20). [10]→[20|NULL].', explanationHinglish: 'Doosra node [20] banaya. Node1.next ab Node2 ko point karta hai.', memorySnapshot: { 'Node 1': '{ data:10, next:→Node2 }', 'Node 2': '{ data:20, next:→ }', head: '→Node1' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'Node2', value: 20 } },
-    { step: 3, lineNum: 4, explanationEnglish: 'Create Node(30). [10]→[20]→[30|NULL]. List is complete.', explanationHinglish: 'Teesra node [30] banaya. List: 10 → 20 → 30 → NULL.', memorySnapshot: { 'Node 1': '{ data:10, next:→Node2 }', 'Node 2': '{ data:20, next:→Node3 }', 'Node 3': '{ data:30, next:NULL }', head: '→Node1' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'Node3', value: 30 } },
-    { step: 4, lineNum: 5, explanationEnglish: 'curr = head. Start traversal from head node.', explanationHinglish: 'curr pointer head se start hua.', memorySnapshot: { curr: '→Node1 (data=10)' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'curr', value: 'head→Node(10)' } },
-    { step: 5, lineNum: 7, explanationEnglish: 'Print curr->data = 10.', explanationHinglish: 'curr->data = 10 print hua.', memorySnapshot: { curr: '→Node1', data: 10 }, consoleOutput: '10 ', animationEvent: { type: 'PRINT_VALUE', variableName: 'curr->data', outputValue: 10 } },
-    { step: 6, lineNum: 8, explanationEnglish: 'curr = curr->next → Node2 (data=20).', explanationHinglish: 'curr ab Node2 (20) ko point kar rha hai.', memorySnapshot: { curr: '→Node2 (data=20)' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'curr', oldValue: 'Node1', newValue: 'Node2' } },
-    { step: 7, lineNum: 7, explanationEnglish: 'Print curr->data = 20.', explanationHinglish: 'curr->data = 20 print hua.', memorySnapshot: { curr: '→Node2', data: 20 }, consoleOutput: '10 20 ', animationEvent: { type: 'PRINT_VALUE', variableName: 'curr->data', outputValue: 20 } },
-    { step: 8, lineNum: 8, explanationEnglish: 'curr = curr->next → Node3 (data=30).', explanationHinglish: 'curr ab Node3 (30) ko point kar rha hai.', memorySnapshot: { curr: '→Node3 (data=30)' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'curr', oldValue: 'Node2', newValue: 'Node3' } },
-    { step: 9, lineNum: 7, explanationEnglish: 'Print curr->data = 30.', explanationHinglish: 'curr->data = 30 print hua.', memorySnapshot: { curr: '→Node3', data: 30 }, consoleOutput: '10 20 30 ', animationEvent: { type: 'PRINT_VALUE', variableName: 'curr->data', outputValue: 30 } },
-    { step: 10, lineNum: 8, explanationEnglish: 'curr = nullptr. Loop ends. Traversal complete!', explanationHinglish: 'curr = NULL. Loop khatam. Traversal complete!', memorySnapshot: { curr: 'nullptr' }, animationEvent: { type: 'COMPLETE' } },
-  ],
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Singly Linked List initialized. Head points to NULL.',
+        explanationHinglish: 'Singly Linked List initialize ho gayi hai. Head NULL ko point kar raha hai.',
+        memorySnapshot: { capacity: 6, list: [] },
+        consoleOutput: 'Singly Linked List initialized (Empty).',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
   executionSteps: [],
 };
 

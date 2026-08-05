@@ -8,8 +8,10 @@ import { PenMenu } from './components/PenMenu';
 import { CustomFlowchartStage } from './components/stages/CustomFlowchartStage';
 import { StackVisualStage } from './components/stages/StackVisualStage';
 import { QueueVisualStage } from './components/stages/QueueVisualStage';
+import { SllVisualStage } from './components/stages/SllVisualStage';
 import { DsaOperationalPanel } from './components/DsaOperationalPanel';
 import { QueueOperationalPanel } from './components/QueueOperationalPanel';
+import { SllOperationalPanel } from './components/SllOperationalPanel';
 import { useLesson } from '../../lessons/LessonContext';
 
 export const VisualizerWorkspace: React.FC = () => {
@@ -19,6 +21,7 @@ export const VisualizerWorkspace: React.FC = () => {
   const isDsa = lesson?.language === 'dsa';
   const isStackTopic = isDsa && lesson?.topic === 'stack';
   const isQueueTopic = isDsa && lesson?.topic === 'queue';
+  const isSllTopic = isDsa && lesson?.topic === 'singly_linked_list';
 
   const isFlowchartTopic = [
     'variables', 'type_casting', 'operators', 'operators_expressions', 'user_input', 'data_types',
@@ -49,7 +52,7 @@ export const VisualizerWorkspace: React.FC = () => {
       <div className="flex h-screen w-screen overflow-hidden bg-[#050510] text-slate-200 relative p-1.5 gap-1.5">
         {!isDsa && <StageControls />}
         <div className="flex-1 h-full relative overflow-hidden flex flex-col">
-          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <MemoryStage />}
+          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <MemoryStage />}
         </div>
         <PenMenu />
       </div>
@@ -65,7 +68,7 @@ export const VisualizerWorkspace: React.FC = () => {
           {/* ── Left Column: Operational Dashboard (38%) ── */}
           <div className="w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0">
             <div className="h-[70%] overflow-hidden flex flex-col">
-              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : <CodeStepPanel />}
+              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : <CodeStepPanel />}
             </div>
             <div className="h-[30%] overflow-hidden flex flex-col">
               <ExplanationBar />
@@ -78,7 +81,7 @@ export const VisualizerWorkspace: React.FC = () => {
           {/* ── Right Column: Visual Stage (62%) ── */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
             <div className="h-[70%] relative overflow-hidden flex flex-col rounded-2xl border border-slate-800/30">
-              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : <CustomFlowchartStage />}
+              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : <CustomFlowchartStage />}
               <PenMenu />
             </div>
             <div className="h-[30%] overflow-hidden flex flex-col">

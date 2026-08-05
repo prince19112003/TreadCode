@@ -133,7 +133,7 @@ const dsaTopics = [
     complexity: 'O(N)', category: 'Data Structure', difficulty: 'Intermediate' as const,
     accentColor: '#8b5cf6', Icon: GitBranch,
     tags: ['Insert', 'Delete', 'Traverse', 'NULL'],
-    interactive: false, programsCount: 5,
+    interactive: true, programsCount: 5,
   },
   {
     id: 'doubly_linked_list', number: '08', name: 'Doubly Linked List',
@@ -301,7 +301,10 @@ export const TopicSelectionPage: React.FC = () => {
 
   const handleTopicClick = (topicId: string) => {
     if (isDsa) {
-      const programId = topicId === 'stack' ? 'dsa_stack_push_pop' : topicId === 'queue' ? 'dsa_queue_enq_deq' : `dsa_${topicId}_op`;
+      let programId = `dsa_${topicId}_op`;
+      if (topicId === 'stack') programId = 'dsa_stack_push_pop';
+      else if (topicId === 'queue') programId = 'dsa_queue_enq_deq';
+      else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
