@@ -51,21 +51,35 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     setPhase('downloading');
     setProgress(0);
 
-    // Animate progress to 100%, then open the GitHub release page in browser
-    const step = () => {
+    // Smooth in-app progress bar simulation while binary downloads directly
+    const interval = setInterval(() => {
       setProgress((p) => {
-        if (p >= 100) return 100;
-        return p + 4;
+        if (p >= 95) {
+          clearInterval(interval);
+          return 95;
+        }
+        return p + 5;
       });
-    };
-    const interval = setInterval(step, 40);
-    setTimeout(() => {
+    }, 120);
+
+    try {
+      // Trigger direct in-app file download of installer exe
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `FlowTrace_Setup.exe`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        setProgress(100);
+        setPhase('done');
+      }, 2500);
+    } catch (e) {
+      console.error('Direct download error:', e);
       clearInterval(interval);
-      setProgress(100);
-      setPhase('done');
-      // Open real GitHub releases page in default browser
-      window.open(downloadUrl, '_blank');
-    }, 1800);
+    }
   };
 
   const handleDismiss = () => {
@@ -442,8 +456,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       fontSize: '12.5px', color: 'rgba(148,163,184,0.75)',
                       marginBottom: '22px', fontFamily: 'system-ui', lineHeight: '1.6',
                     }}>
-                      <strong style={{ color: '#a5b4fc' }}>FlowTrace-latest.zip</strong> has been downloaded.<br />
-                      Extract the zip and replace your current FlowTrace folder to complete the update.
+                      <strong style={{ color: '#a5b4fc' }}>FlowTrace_Setup.exe</strong> has been downloaded directly inside your downloads.<br />
+                      Run the downloaded installer to instantly apply the update without losing any data.
                     </p>
 
                     <div style={{
@@ -452,10 +466,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       padding: '14px 16px', marginBottom: '20px', textAlign: 'left',
                     }}>
                       {[
-                        '1. GitHub Releases page has opened in your browser',
-                        '2. Download FlowTrace_x64-setup.exe from the latest release',
-                        '3. Run the installer — it will auto-replace the old version',
-                        '4. Relaunch FlowTrace after installation completes',
+                        '1. Open your downloaded FlowTrace_Setup.exe',
+                        '2. Click Install / Next',
+                        '3. The app will update seamlessly',
                       ].map((step, i) => (
                         <motion.p
                           key={i}
