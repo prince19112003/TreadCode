@@ -3,13 +3,13 @@ import { getDatabase, ref, get, runTransaction } from 'firebase/database';
 
 // Firebase Web Config Setup targeting licensing database
 const firebaseConfig = {
-  apiKey: "AIzaSyAsf-DummyKeyForCompilationChecksOnly",
-  authDomain: "flowtrace-license.firebaseapp.com",
-  databaseURL: "https://flowtrace-license-default-rtdb.firebaseio.com",
-  projectId: "flowtrace-license",
-  storageBucket: "flowtrace-license.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
+  apiKey: "AIzaSyCR9JqBrN1jfTuopPAvb8fbqSxjbOcilmc",
+  authDomain: "flowtrace-licensing.firebaseapp.com",
+  databaseURL: "https://flowtrace-licensing-default-rtdb.firebaseio.com",
+  projectId: "flowtrace-licensing",
+  storageBucket: "flowtrace-licensing.firebasestorage.app",
+  messagingSenderId: "54812800974",
+  appId: "1:54812800974:web:46f3294f029da000f4dd9f"
 };
 
 const app = initializeApp(firebaseConfig);
