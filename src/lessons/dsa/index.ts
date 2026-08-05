@@ -550,7 +550,55 @@ export const dsa_sll_reverse: LessonProgram = {
   },
   executionSteps: [],
 };
+export const dsa_graph_basics: LessonProgram = {
+  id: 'dsa_graph_basics', language: 'dsa', topic: 'graph_basics', lessonNumber: 1,
+  friendlyName: 'Graph Fundamentals (Vertices & Edges)',
+  learningObjective: 'Interactive Graph Workspace: Insert/Remove Vertices and Setup connections dynamically.',
+  lines: [
+    line(1, [cm('// Interactive Graph Workspace (Vertices & Connections)')]),
+    line(2, [cm('// Use the left controls panel to manage nodes and edges.')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Graph Workspace initialized. Add vertices and edges to construct the mesh network.',
+        explanationHinglish: 'Graph workspace initialize hua. Mesh network banane ke liye vertices add karein.',
+        memorySnapshot: { vertices: [], edges: [] },
+        consoleOutput: 'Graph Mesh Workspace initialized.',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
 
+export const dsa_graph_traversals: LessonProgram = {
+  id: 'dsa_graph_traversals', language: 'dsa', topic: 'graph_traversals', lessonNumber: 1,
+  friendlyName: 'Graph Traversals (BFS & DFS)',
+  learningObjective: 'Interactive Graph Traversals: Visualize path finding steps using Breadth-First & Depth-First Search routing.',
+  lines: [
+    line(1, [cm('// Interactive Graph Traversals Workspace')]),
+    line(2, [cm('// Perform BFS Path finding or DFS Path search with node traversal animations.')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Graph Traversals Workspace initialized. Choose a start vertex and run BFS or DFS.',
+        explanationHinglish: 'Graph Traversals workspace initialize hua. Start node chunein aur BFS/DFS path trace karein.',
+        memorySnapshot: { visited: [] },
+        consoleOutput: 'Graph Traversals Workspace ready.',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
 // ─── EXPORT ────────────────────────────────────────────────────────────────────
 
 export const dsaLessons: Record<string, LessonProgram> = {
@@ -570,6 +618,8 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_queue_enq_deq,
   dsa_sll_traverse,
   dsa_sll_reverse,
+  dsa_graph_basics,
+  dsa_graph_traversals,
   // Re-use existing Python lessons for tree/graph until dedicated versions are built:
   linear_search: dsa_linear_search,
   binary_search: dsa_binary_search,

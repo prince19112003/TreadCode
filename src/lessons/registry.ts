@@ -80,10 +80,10 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
       dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
     },
     graph_basics: {
-      dsa_array_max_min: dsaLessons.dsa_array_max_min,
+      dsa_graph_basics: dsaLessons.dsa_graph_basics,
     },
     graph_traversals: {
-      dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
+      dsa_graph_traversals: dsaLessons.dsa_graph_traversals,
     },
   },
   c: {

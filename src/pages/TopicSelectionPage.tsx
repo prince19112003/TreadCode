@@ -315,8 +315,8 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse';
-      else if (topicId === 'graph_basics') programId = 'dsa_sll_traverse';
-      else if (topicId === 'graph_traversals') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
+      else if (topicId === 'graph_basics') programId = 'dsa_graph_basics';
+      else if (topicId === 'graph_traversals') programId = 'dsa_graph_traversals';
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
