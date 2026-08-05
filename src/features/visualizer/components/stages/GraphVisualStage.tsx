@@ -67,8 +67,8 @@ export const GraphVisualStage: React.FC = () => {
   return (
     <div className="flex-1 w-full h-full bg-[#060814] flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
       <div
-        className="flex flex-col items-center gap-4 my-auto transition-transform duration-200 ease-out origin-top w-full max-w-[800px]"
-        style={{ transform: `scale(${zoom})` }}
+        className="flex flex-col items-center gap-4 my-auto transition-transform duration-200 ease-out origin-top w-full"
+        style={{ transform: `scale(${zoom})`, maxWidth: '800px' }}
       >
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -80,7 +80,10 @@ export const GraphVisualStage: React.FC = () => {
         </div>
 
         {/* Graph Mesh area */}
-        <div className="relative w-[800px] h-[340px] border border-slate-800/40 bg-slate-950/20 rounded-2xl overflow-hidden py-4">
+        <div
+          className="relative border border-slate-800/40 bg-slate-950/20 rounded-2xl overflow-hidden py-4"
+          style={{ width: '800px', height: '340px' }}
+        >
           {isEmpty ? (
             <div className="absolute inset-0 flex items-center justify-center text-slate-700 text-xs font-mono">
               [EMPTY GRAPH - ADD VERTICES TO CONSTRUCT CONNECTION MESH]
