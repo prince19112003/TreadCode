@@ -97,6 +97,12 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
     insertion_sort: {
       dsa_insertion_sort: dsaLessons.dsa_insertion_sort,
     },
+    merge_sort: {
+      dsa_merge_sort: dsaLessons.dsa_merge_sort,
+    },
+    heap_sort: {
+      dsa_heap_sort: dsaLessons.dsa_heap_sort,
+    },
   },
   c: {
     variables: {

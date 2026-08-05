@@ -368,6 +368,128 @@ export const dsa_insertion_sort: LessonProgram = {
   executionSteps: [],
 };
 
+export const dsa_merge_sort: LessonProgram = {
+  id: 'dsa_merge_sort', language: 'dsa', topic: 'merge_sort', lessonNumber: 1,
+  friendlyName: 'Merge Sort Algorithm',
+  learningObjective: 'Observe recursive divide-and-conquer strategy. Visual trace shows sublist partitions and merges.',
+  lines: [
+    line(1, [cm('// Merge Sort Walkthrough (Numerical Simulation)')]),
+    line(2, [kw('void'), tx(' '), fn('mergeSort'), pu('('), va('int'), tx(' '), va('arr'), pu('[]'), pu(')')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Merge Sort initialized with unsorted array: [38, 27, 43, 3, 9, 82, 10].',
+        explanationHinglish: 'Merge Sort shuru hua unsorted array ke sath: [38, 27, 43, 3, 9, 82, 10].',
+        memorySnapshot: { arr: '[38, 27, 43, 3, 9, 82, 10]' },
+        consoleOutput: 'Array loaded for Merge Sort.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 2,
+        lineNum: 2,
+        explanationEnglish: 'Divide array into two halves: Left = [38, 27, 43, 3], Right = [9, 82, 10].',
+        explanationHinglish: 'Array ko do halves me divide kiya: Left=[38, 27, 43, 3], Right=[9, 82, 10].',
+        memorySnapshot: { left: '[38, 27, 43, 3]', right: '[9, 82, 10]' },
+        consoleOutput: 'Divided array into Left and Right subarrays.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 3,
+        lineNum: 2,
+        explanationEnglish: 'Sort left half recursively: [3, 27, 38, 43].',
+        explanationHinglish: 'Left half ko recursively sort kiya: [3, 27, 38, 43].',
+        memorySnapshot: { left: '[3, 27, 38, 43]', right: '[9, 82, 10]' },
+        consoleOutput: 'Sorted left subarray.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 4,
+        lineNum: 2,
+        explanationEnglish: 'Sort right half recursively: [9, 10, 82].',
+        explanationHinglish: 'Right half ko recursively sort kiya: [9, 10, 82].',
+        memorySnapshot: { left: '[3, 27, 38, 43]', right: '[9, 10, 82]' },
+        consoleOutput: 'Sorted right subarray.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 5,
+        lineNum: 2,
+        explanationEnglish: 'Merge sorted halves back: Compare fronts to build final sorted array.',
+        explanationHinglish: 'Dono sorted halves ko merge kiya to produce final sorted array.',
+        memorySnapshot: { arr: '[3, 9, 10, 27, 38, 43, 82]' },
+        consoleOutput: 'Merged subarrays. Merge Sort complete!',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
+
+export const dsa_heap_sort: LessonProgram = {
+  id: 'dsa_heap_sort', language: 'dsa', topic: 'heap_sort', lessonNumber: 1,
+  friendlyName: 'Heap Sort Algorithm',
+  learningObjective: 'Observe Max-Heap structures and tree root replacements to perform sorted element extraction.',
+  lines: [
+    line(1, [cm('// Heap Sort Walkthrough (Numerical Simulation)')]),
+    line(2, [kw('void'), tx(' '), fn('heapSort'), pu('('), va('int'), tx(' '), va('arr'), pu('[]'), pu(')')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Heap Sort initialized with array: [12, 11, 13, 5, 6, 7].',
+        explanationHinglish: 'Heap Sort shuru hua array ke sath: [12, 11, 13, 5, 6, 7].',
+        memorySnapshot: { arr: '[12, 11, 13, 5, 6, 7]' },
+        consoleOutput: 'Array loaded for Heap Sort.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 2,
+        lineNum: 2,
+        explanationEnglish: 'Convert array to Max-Heap (Heapify): Max element 13 is moved to root index [0].',
+        explanationHinglish: 'Array ko Max-Heap me convert kiya (Heapify): Sabse bada element 13 root pe aa gaya.',
+        memorySnapshot: { heap: '[13, 11, 12, 5, 6, 7]' },
+        consoleOutput: 'Max Heap built successfully.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 3,
+        lineNum: 2,
+        explanationEnglish: 'Swap root 13 with last element 7 and extract 13.',
+        explanationHinglish: 'Root element 13 ko last element 7 ke sath swap kiya aur extract kiya.',
+        memorySnapshot: { heap: '[12, 11, 7, 5, 6]', extracted: '13' },
+        consoleOutput: 'Extracted: 13',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 4,
+        lineNum: 2,
+        explanationEnglish: 'Heapify remaining elements and extract root 12.',
+        explanationHinglish: 'Bache huye elements ko heapify kiya aur root 12 extract kiya.',
+        memorySnapshot: { heap: '[11, 6, 7, 5]', extracted: '13, 12' },
+        consoleOutput: 'Extracted: 12',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 5,
+        lineNum: 2,
+        explanationEnglish: 'Repeat extraction steps until heap is empty. Sorted Array: [5, 6, 7, 11, 12, 13].',
+        explanationHinglish: 'Heap khali hone tak extraction steps repeat kiye. Sorted Array: [5, 6, 7, 11, 12, 13].',
+        memorySnapshot: { arr: '[5, 6, 7, 11, 12, 13]' },
+        consoleOutput: 'Heap Sort complete!',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
+
 // ─── TOPIC 04: RECURSION ─────────────────────────────────────────────────────
 
 export const dsa_recursion_factorial: LessonProgram = {
@@ -872,6 +994,8 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_graph_bfs,
   dsa_graph_dfs,
   dsa_binary_tree,
+  dsa_merge_sort,
+  dsa_heap_sort,
   // Re-use existing Python lessons for tree/graph until dedicated versions are built:
   linear_search: dsa_linear_search,
   binary_search: dsa_binary_search,
