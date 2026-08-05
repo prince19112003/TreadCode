@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "notes": "Initial Desktop release with automatic update check.",
+  "pub_date": "2026-08-06T00:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "",
+      "url": "https://github.com/prince19112003/FlowTrace/releases/latest/download/FlowTrace_0.1.0_x64-setup.nsis.zip"
+    }
+  }
+}
