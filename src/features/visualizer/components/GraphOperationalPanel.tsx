@@ -359,13 +359,17 @@ export const GraphOperationalPanel: React.FC = () => {
     );
   };
 
+  const isBasics = lesson?.topic === 'graph_basics';
+  const isTraversals = lesson?.topic === 'graph_traversals';
   const isEmpty = nodes.length === 0;
 
   return (
     <div className="h-full flex flex-col bg-[#0a0c16] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
       {/* Header */}
       <div className="px-4 py-3 bg-[#0d0f1f] border-b border-slate-800/60 flex items-center justify-between shrink-0 font-mono text-xs">
-        <span className="font-bold text-slate-300">GRAPH CONTROLS</span>
+        <span className="font-bold text-slate-300">
+          {isBasics ? 'GRAPH FUNDAMENTALS' : 'GRAPH BFS & DFS'}
+        </span>
         <button onClick={handleReset} className="text-slate-500 hover:text-slate-300 p-1" title="Reset default configuration">
           <RotateCcw size={13} />
         </button>
@@ -380,107 +384,115 @@ export const GraphOperationalPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Add/Remove Vertex */}
-        <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Manage Vertices</span>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="ID (e.g. A)..."
-              value={nodeId}
-              onChange={e => setNodeId(e.target.value)}
-              className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-            />
-            <button
-              onClick={handleAddVertex}
-              className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs font-mono flex items-center justify-center gap-1"
-            >
-              <Plus size={14} /> Add
-            </button>
-            <button
-              onClick={handleRemoveVertex}
-              disabled={isEmpty}
-              className="px-3 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono"
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-
-        {/* Add/Remove Edge */}
-        <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Manage Edges (Connections)</span>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="From..."
-              value={edgeU}
-              onChange={e => setEdgeU(e.target.value)}
-              className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-            />
-            <div className="flex items-center text-slate-600">
-              <ArrowLeftRight size={13} />
+        {/* Add/Remove Vertex (Basics only) */}
+        {isBasics && (
+          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Manage Vertices</span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="ID (e.g. A)..."
+                value={nodeId}
+                onChange={e => setNodeId(e.target.value)}
+                className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
+              />
+              <button
+                onClick={handleAddVertex}
+                className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs font-mono flex items-center justify-center gap-1"
+              >
+                <Plus size={14} /> Add
+              </button>
+              <button
+                onClick={handleRemoveVertex}
+                disabled={isEmpty}
+                className="px-3 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono"
+              >
+                Remove
+              </button>
             </div>
-            <input
-              type="text"
-              placeholder="To..."
-              value={edgeV}
-              onChange={e => setEdgeV(e.target.value)}
-              className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-            />
-            <button
-              onClick={handleAddEdge}
-              disabled={isEmpty}
-              className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
-            >
-              Link
-            </button>
-            <button
-              onClick={handleRemoveEdge}
-              disabled={isEmpty}
-              className="px-3 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono"
-            >
-              Unlink
-            </button>
           </div>
-        </div>
+        )}
 
-        {/* Traversals Algorithms */}
-        <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Graph Traversals</span>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Start node (e.g. A)..."
-              value={startVertex}
-              onChange={e => setStartVertex(e.target.value)}
-              className="w-1/3 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
-            />
-            <button
-              onClick={handleBFS}
-              disabled={isEmpty}
-              className="flex-1 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 disabled:opacity-40 text-xs font-bold font-mono"
-            >
-              BFS Path
-            </button>
-            <button
-              onClick={handleDFS}
-              disabled={isEmpty}
-              className="flex-1 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 disabled:opacity-40 text-xs font-bold font-mono"
-            >
-              DFS Path
-            </button>
+        {/* Add/Remove Edge (Basics only) */}
+        {isBasics && (
+          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Manage Edges (Connections)</span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="From..."
+                value={edgeU}
+                onChange={e => setEdgeU(e.target.value)}
+                className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
+              />
+              <div className="flex items-center text-slate-600">
+                <ArrowLeftRight size={13} />
+              </div>
+              <input
+                type="text"
+                placeholder="To..."
+                value={edgeV}
+                onChange={e => setEdgeV(e.target.value)}
+                className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
+              />
+              <button
+                onClick={handleAddEdge}
+                disabled={isEmpty}
+                className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
+              >
+                Link
+              </button>
+              <button
+                onClick={handleRemoveEdge}
+                disabled={isEmpty}
+                className="px-3 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono"
+              >
+                Unlink
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Clear Graph */}
-        <button
-          onClick={handleClear}
-          disabled={isEmpty}
-          className="w-full py-2 rounded-lg bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 disabled:opacity-30 text-red-400 font-mono text-[11px] flex items-center justify-center gap-1"
-        >
-          <Trash2 size={12} /> Clear Graph
-        </button>
+        {/* Traversals Algorithms (Traversals only) */}
+        {isTraversals && (
+          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Graph Traversals</span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Start node (e.g. A)..."
+                value={startVertex}
+                onChange={e => setStartVertex(e.target.value)}
+                className="w-1/3 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                onClick={handleBFS}
+                disabled={isEmpty}
+                className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
+              >
+                BFS Path
+              </button>
+              <button
+                onClick={handleDFS}
+                disabled={isEmpty}
+                className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
+              >
+                DFS Path
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Clear Graph (Basics only) */}
+        {isBasics && (
+          <button
+            onClick={handleClear}
+            disabled={isEmpty}
+            className="w-full py-2 rounded-lg bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 disabled:opacity-30 text-red-400 font-mono text-[11px] flex items-center justify-center gap-1"
+          >
+            <Trash2 size={12} /> Clear Graph
+          </button>
+        )}
       </div>
     </div>
   );

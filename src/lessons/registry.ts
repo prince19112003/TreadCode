@@ -82,6 +82,9 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
     graph_basics: {
       dsa_array_max_min: dsaLessons.dsa_array_max_min,
     },
+    graph_traversals: {
+      dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
+    },
   },
   c: {
     variables: {

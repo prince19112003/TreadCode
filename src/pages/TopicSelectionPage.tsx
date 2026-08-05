@@ -156,8 +156,16 @@ const dsaTopics = [
     subtitle: 'Vertices, Edges & Adjacency Matrix',
     complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
     accentColor: '#eab308', Icon: Network,
-    tags: ['BFS', 'DFS', 'Matrix', 'Path'],
-    interactive: true, programsCount: 4,
+    tags: ['Vertices', 'Edges', 'Matrix', 'Adjacency'],
+    interactive: true, programsCount: 2,
+  },
+  {
+    id: 'graph_traversals', number: '11', name: 'Graph BFS & DFS',
+    subtitle: 'Breadth-First & Depth-First Search Path Scan',
+    complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
+    accentColor: '#10b981', Icon: Network,
+    tags: ['BFS', 'DFS', 'Traversal', 'Glow'],
+    interactive: true, programsCount: 2,
   },
 ];
 
@@ -307,7 +315,8 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse';
-      else if (topicId === 'graph_basics') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
+      else if (topicId === 'graph_basics') programId = 'dsa_sll_traverse';
+      else if (topicId === 'graph_traversals') programId = 'dsa_sll_traverse'; // re-use same template key for workspace init
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
