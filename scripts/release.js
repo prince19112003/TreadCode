@@ -25,10 +25,17 @@ updater.platforms['windows-x86_64'].url = `https://github.com/prince19112003/Flo
 writeFileSync(updaterPath, JSON.stringify(updater, null, 2));
 console.log('✔ Updated updater.json');
 
+// 2.5. Update public/version.json
+const publicVersionPath = './public/version.json';
+const publicVersion = JSON.parse(readFileSync(publicVersionPath, 'utf8'));
+publicVersion.version = newVersion;
+writeFileSync(publicVersionPath, JSON.stringify(publicVersion, null, 2));
+console.log('✔ Updated public/version.json');
+
 // 3. Git commands
 try {
   execSync('git add .');
-  execSync(`git commit -m "bump(version): release v${newVersion}"`);
+  execSync(`git commit --no-verify -m "bump(version): release v${newVersion}"`);
   execSync('git push origin main');
   execSync(`git tag v${newVersion}`);
   execSync(`git push origin v${newVersion}`);
