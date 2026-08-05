@@ -1,10 +1,12 @@
+use systemstat::Platform;
+
 #[tauri::command]
 fn get_hwid() -> String {
-  // Simple unique fingerprint using target system information
-  if let Ok(interfaces) = systemstat::System::new().networks() {
-    for (_, interface) in interfaces {
-      if !interface.addrs.is_empty() {
-        return interface.name; // Use network interface name as unique ID
+  let sys = systemstat::System::new();
+  if let Ok(networks) = sys.networks() {
+    for net in networks.values() {
+      if !net.addrs.is_empty() {
+        return format!("{:?}", net.name);
       }
     }
   }
