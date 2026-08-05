@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowTrace Admin Control Panel</title>
+  <style>
+    body {
+      background-color: #030307;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #818cf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    input, button {
+      padding: 12px 18px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.2);
+      color: white;
+      outline: none;
+    }
+    input {
+      flex: 1;
+    }
+    button {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 14px;
+    }
+    th {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-active {
+      background: rgba(34,197,94,0.12);
+      color: #4ade80;
+    }
+    .badge-blocked {
+      background: rgba(239,68,68,0.12);
+      color: #f87171;
+    }
+    .btn-action {
+      background: rgba(239,68,68,0.1);
+      color: #f87171;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    .btn-action:hover {
+      background: rgba(239,68,68,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>FlowTrace Admin</h1>
+        <p style="color: #64748b; margin: 4px 0 0 0; font-size: 13px;">Manage licenses, activations and device locks</p>
+      </div>
+    </header>
+
+    <div class="card">
+      <h3 style="margin-top: 0; margin-bottom: 16px;">Generate Activation Key</h3>
+      <div class="form-group">
+        <input type="text" id="targetCollege" placeholder="Institution / College Name (e.g. ABC College)" />
+        <input type="number" id="limitCount" placeholder="Device Limit (e.g. 20)" style="max-width: 150px;" />
+        <button onclick="generateKey()">Create License Key</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top: 0; margin-bottom: 16px;">Active License Keys</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Institution</th>
+            <th>Devices</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="licenseTableBody">
+          <tr>
+            <td colspan="5" style="text-align: center; color: #64748b;">Connecting to database...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Firebase CDN integration inside Standalone Admin template -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsf-DummyKeyForCompilationChecksOnly",
+      authDomain: "flowtrace-license.firebaseapp.com",
+      databaseURL: "https://flowtrace-license-default-rtdb.firebaseio.com",
+      projectId: "flowtrace-license",
+      storageBucket: "flowtrace-license.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Fetch and sync table list
+    onValue(ref(db, 'licenses'), (snapshot) => {
+      const data = snapshot.val() || {};
+      const tbody = document.getElementById('licenseTableBody');
+      tbody.innerHTML = '';
+
+      if (Object.keys(data).length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b;">No active licenses found.</td></tr>`;
+        return;
+      }
+
+      for (const [key, val] of Object.entries(data)) {
+        const devCount = val.devices ? Object.keys(val.devices).length : 0;
+        const statusBadge = val.blocked 
+          ? `<span class="badge badge-blocked">Blocked</span>` 
+          : `<span class="badge badge-active">Active</span>`;
+        const actionLabel = val.blocked ? 'Unblock' : 'Block';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-family: monospace; font-weight: bold; color: #a5b4fc;">${key}</td>
+            <td>${val.institution}</td>
+            <td>${devCount} / ${val.maxDevices}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn-action" onclick="toggleBlock('${key}', ${!!val.blocked})">${actionLabel}</button>
+            </td>
+          </tr>
+        `;
+      }
+    });
+
+    window.generateKey = function() {
+      const inst = document.getElementById('targetCollege').value;
+      const limit = parseInt(document.getElementById('limitCount').value);
+      if (!inst || !limit) return alert('Please enter both name and limit!');
+
+      // Generate random unique key
+      const key = 'FT-' + Math.random().toString(36).substring(2, 6).toUpperCase() + 
+                  '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      set(ref(db, `licenses/${key}`), {
+        institution: inst,
+        maxDevices: limit,
+        blocked: false,
+        devices: {}
+      }).then(() => {
+        document.getElementById('targetCollege').value = '';
+        document.getElementById('limitCount').value = '';
+      });
+    };
+
+    window.toggleBlock = function(key, currentBlockedState) {
+      update(ref(db, `licenses/${key}`), {
+        blocked: !currentBlockedState
+      });
+    };
+  </script>
+</body>
+</html>

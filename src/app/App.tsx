@@ -91,15 +91,62 @@ const AnimatedRoutes: React.FC = () => {
   );
 };
 
+import { LicenseModal } from '@shared/components/ui/LicenseModal';
+import { validateLicenseKey } from '../shared/config/firebase';
+
 export const App: React.FC = () => {
   const [showSplash, setShowSplash] = React.useState(true);
+  const [activated, setActivated] = React.useState<boolean | null>(null);
+  const [hwid, setHwid] = React.useState('fallback-device-id-xxxx');
+
+  // Verify license key status at startup
+  React.useEffect(() => {
+    async function checkLicense() {
+      // 1. Fetch HWID from Tauri
+      let currentHwid = 'fallback-device-id-xxxx';
+      if ((window as any).__TAURI_INTERNALS__) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core') as any;
+          currentHwid = await invoke('get_hwid');
+        } catch (e) {
+          console.error('Failed to get HWID:', e);
+        }
+      }
+      setHwid(currentHwid);
+
+      // 2. Check local key
+      const cachedKey = localStorage.getItem('flowtrace_license_key');
+      if (cachedKey) {
+        const isValid = await validateLicenseKey(cachedKey, currentHwid);
+        setActivated(isValid);
+      } else {
+        setActivated(false);
+      }
+    }
+    checkLicense();
+  }, []);
+
+  const handleActivate = async (key: string): Promise<boolean> => {
+    const isValid = await validateLicenseKey(key, hwid);
+    if (isValid) {
+      localStorage.setItem('flowtrace_license_key', key);
+      setActivated(true);
+    }
+    return isValid;
+  };
+
+  if (activated === null) {
+    return <div style={{ background: '#020205', height: '100vh', width: '100vw' }} />;
+  }
 
   return (
     <BrowserRouter>
       {/* Global in-app update modal — renders above everything */}
       <UpdateModal />
 
-      {showSplash ? (
+      {!activated ? (
+        <LicenseModal onActivate={handleActivate} />
+      ) : showSplash ? (
         <SplashPage onComplete={() => setShowSplash(false)} />
       ) : (
         <AnimatedRoutes />
