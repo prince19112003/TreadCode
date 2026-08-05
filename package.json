@@ -21,6 +21,7 @@
     "*.css": "prettier --write"
   },
   "dependencies": {
+    "firebase": "^12.17.1",
     "howler": "^2.2.4",
     "lucide-react": "^1.24.0",
     "motion": "^12.42.2",
