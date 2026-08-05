@@ -360,15 +360,16 @@ export const GraphOperationalPanel: React.FC = () => {
   };
 
   const isBasics = lesson?.topic === 'graph_basics';
-  const isTraversals = lesson?.topic === 'graph_traversals';
+  const isBFS = lesson?.topic === 'graph_bfs';
+  const isDFS = lesson?.topic === 'graph_dfs';
   const isEmpty = nodes.length === 0;
 
   return (
     <div className="h-full flex flex-col bg-[#0a0c16] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
       {/* Header */}
       <div className="px-4 py-3 bg-[#0d0f1f] border-b border-slate-800/60 flex items-center justify-between shrink-0 font-mono text-xs">
-        <span className="font-bold text-slate-300">
-          {isBasics ? 'GRAPH FUNDAMENTALS' : 'GRAPH BFS & DFS'}
+        <span className="font-bold text-emerald-400">
+          {isBasics ? 'GRAPH FUNDAMENTALS' : isBFS ? 'GRAPH BFS TRAVERSAL' : 'GRAPH DFS TRAVERSAL'}
         </span>
         <button onClick={handleReset} className="text-slate-500 hover:text-slate-300 p-1" title="Reset default configuration">
           <RotateCcw size={13} />
@@ -453,31 +454,47 @@ export const GraphOperationalPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Traversals Algorithms (Traversals only) */}
-        {isTraversals && (
+        {/* BFS (BFS page only) */}
+        {isBFS && (
           <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Graph Traversals</span>
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Breadth-First Search (Queue Based)</span>
             <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="Start node (e.g. A)..."
                 value={startVertex}
                 onChange={e => setStartVertex(e.target.value)}
-                className="w-1/3 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
+                className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
               />
               <button
                 onClick={handleBFS}
                 disabled={isEmpty}
-                className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
+                className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono flex items-center gap-1"
               >
-                BFS Path
+                Run BFS Path
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* DFS (DFS page only) */}
+        {isDFS && (
+          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Depth-First Search (Stack Based)</span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Start node (e.g. A)..."
+                value={startVertex}
+                onChange={e => setStartVertex(e.target.value)}
+                className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
+              />
               <button
                 onClick={handleDFS}
                 disabled={isEmpty}
-                className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
+                className="px-4 py-1.5 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold text-xs font-mono flex items-center gap-1"
               >
-                DFS Path
+                Run DFS Path
               </button>
             </div>
           </div>

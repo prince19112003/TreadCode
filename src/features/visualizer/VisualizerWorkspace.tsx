@@ -30,7 +30,7 @@ export const VisualizerWorkspace: React.FC = () => {
   const isSllTopic = isDsa && lesson?.topic === 'singly_linked_list';
   const isDllTopic = isDsa && lesson?.topic === 'doubly_linked_list';
   const isTreeTopic = isDsa && lesson?.topic === 'binary_tree';
-  const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_traversals');
+  const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs');
 
   const isFlowchartTopic = [
     'variables', 'type_casting', 'operators', 'operators_expressions', 'user_input', 'data_types',
@@ -40,7 +40,7 @@ export const VisualizerWorkspace: React.FC = () => {
     'arrays', 'arrays_1d', 'arrays_2d', 'searching_sorting', 'array_operations',
     'searching', 'sorting',
     'stack', 'queue', 'singly_linked_list', 'doubly_linked_list', 'recursion_dsa',
-    'binary_tree', 'graph_basics', 'graph_traversals',
+    'binary_tree', 'graph_basics', 'graph_bfs', 'graph_dfs',
   ].includes(lesson?.topic || '');
 
   /* ── Console FullScreen ─────────────────────────────────────────────────── */

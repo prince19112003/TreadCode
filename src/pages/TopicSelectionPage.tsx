@@ -160,12 +160,20 @@ const dsaTopics = [
     interactive: true, programsCount: 2,
   },
   {
-    id: 'graph_traversals', number: '11', name: 'Graph BFS & DFS',
-    subtitle: 'Breadth-First & Depth-First Search Path Scan',
+    id: 'graph_bfs', number: '11', name: 'Graph BFS Traversal',
+    subtitle: 'Breadth-First Queue-based Level-Order Path Scan',
     complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
     accentColor: '#10b981', Icon: Network,
-    tags: ['BFS', 'DFS', 'Traversal', 'Glow'],
-    interactive: true, programsCount: 2,
+    tags: ['BFS', 'Queue', 'Level-Order', 'Search'],
+    interactive: true, programsCount: 1,
+  },
+  {
+    id: 'graph_dfs', number: '12', name: 'Graph DFS Traversal',
+    subtitle: 'Depth-First Stack-based Backtracking Path Scan',
+    complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
+    accentColor: '#8b5cf6', Icon: Network,
+    tags: ['DFS', 'Stack', 'Backtracking', 'Search'],
+    interactive: true, programsCount: 1,
   },
 ];
 
@@ -316,7 +324,8 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'doubly_linked_list') programId = 'dsa_sll_traverse';
       else if (topicId === 'binary_tree') programId = 'dsa_sll_traverse';
       else if (topicId === 'graph_basics') programId = 'dsa_graph_basics';
-      else if (topicId === 'graph_traversals') programId = 'dsa_graph_traversals';
+      else if (topicId === 'graph_bfs') programId = 'dsa_graph_bfs';
+      else if (topicId === 'graph_dfs') programId = 'dsa_graph_dfs';
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);

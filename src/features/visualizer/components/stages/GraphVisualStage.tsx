@@ -55,7 +55,7 @@ const getGraphDataFromStep = (step: any): { nodes: GraphNode[]; edges: GraphEdge
 };
 
 export const GraphVisualStage: React.FC = () => {
-  const { currentStep, zoom } = useLesson();
+  const { lesson, currentStep, zoom } = useLesson();
 
   const { nodes, edges } = getGraphDataFromStep(currentStep);
   const ev = currentStep?.animationEvent as any;
@@ -74,7 +74,11 @@ export const GraphVisualStage: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
           <span className="text-xs font-mono font-black uppercase tracking-[0.3em] text-emerald-400/90">
-            Graph Fundamentals — Vertices & Edges
+            {lesson?.topic === 'graph_basics'
+              ? 'Graph Fundamentals — Vertices & Edges'
+              : lesson?.topic === 'graph_bfs'
+              ? 'Graph Breadth-First Search (BFS)'
+              : 'Graph Depth-First Search (DFS)'}
           </span>
           <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
         </div>

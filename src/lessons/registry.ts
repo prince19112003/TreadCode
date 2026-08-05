@@ -82,8 +82,11 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
     graph_basics: {
       dsa_graph_basics: dsaLessons.dsa_graph_basics,
     },
-    graph_traversals: {
-      dsa_graph_traversals: dsaLessons.dsa_graph_traversals,
+    graph_bfs: {
+      dsa_graph_bfs: dsaLessons.dsa_graph_bfs,
+    },
+    graph_dfs: {
+      dsa_graph_dfs: dsaLessons.dsa_graph_dfs,
     },
   },
   c: {
