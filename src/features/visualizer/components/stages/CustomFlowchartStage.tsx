@@ -417,22 +417,18 @@ export const CustomFlowchartStage: React.FC = () => {
         )}
 
         <div id={elementId} className="w-fit flex flex-col items-center gap-4">
-          {/* For function body, render small text block only if there is no visual component rendering */}
-          {isFunctionBody && !['CREATE_VARIABLE', 'UPDATE_VARIABLE', 'UPDATE_ARRAY_INDEX', 'MULTI_CREATE_VARIABLES', 'PRINT_VALUE', 'COMPUTE'].includes(ev?.type || '') && (
-            <div className={`px-3 py-1 border rounded-md font-mono text-[11px] whitespace-pre transition-all duration-300 ${
+          {/* For function body, render small text block only */}
+          {isFunctionBody ? (
+            <div className={`px-3 py-1.5 border-l-2 font-mono text-[11px] whitespace-pre transition-all duration-300 ${
               isLatest 
-                ? (isPrintLine 
-                    ? 'border-green-400 text-green-200 bg-green-950/30 shadow-[0_0_10px_rgba(34,197,94,0.3)] scale-105' 
-                    : 'border-yellow-400 text-yellow-200 bg-yellow-900/30 shadow-[0_0_10px_rgba(234,179,8,0.3)] scale-105') 
-                : (isPrintLine 
-                    ? 'border-green-900/50 text-green-400/80 bg-green-950/10' 
-                    : 'border-slate-700/50 text-slate-400 bg-slate-800/40')
+                ? 'border-amber-400 text-amber-300 bg-slate-900/40' 
+                : 'border-slate-800 text-slate-400'
             }`}>
               {line.tokens.map((t: any) => t.value).join('').trim()}
             </div>
-          )}
+          ) : null}
           
-          {ev?.type === 'CREATE_VARIABLE' && (
+          {!isFunctionBody && ev?.type === 'CREATE_VARIABLE' && (
             isDataStructure(ev.value) ? (() => {
               const { variant, items } = parseDataStructure(ev.value);
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
@@ -452,7 +448,7 @@ export const CustomFlowchartStage: React.FC = () => {
             )
           )}
 
-          {ev?.type === 'MULTI_CREATE_VARIABLES' && (
+          {!isFunctionBody && ev?.type === 'MULTI_CREATE_VARIABLES' && (
             <div className="flex gap-4 items-center">
               {ev.variables.map((v, idx) => (
                 isDataStructure(v.value) ? (() => {
@@ -465,7 +461,7 @@ export const CustomFlowchartStage: React.FC = () => {
             </div>
           )}
 
-          {ev?.type === 'UPDATE_VARIABLE' && (
+          {!isFunctionBody && ev?.type === 'UPDATE_VARIABLE' && (
             isDataStructure(ev.newValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.newValue);
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
@@ -485,7 +481,7 @@ export const CustomFlowchartStage: React.FC = () => {
             )
           )}
 
-          {ev?.type === 'COMPUTE' && (
+          {!isFunctionBody && ev?.type === 'COMPUTE' && (
             <ComputeBlock
               inputs={ev.inputs}
               operator={ev.operator || '+'}
@@ -499,7 +495,7 @@ export const CustomFlowchartStage: React.FC = () => {
             />
           )}
 
-           {ev?.type === 'UPDATE_ARRAY_INDEX' && (
+           {!isFunctionBody && ev?.type === 'UPDATE_ARRAY_INDEX' && (
             (() => {
               const { variant, items } = parseDataStructure(latestStep.memorySnapshot[ev.arrayName]);
               return (
@@ -525,7 +521,7 @@ export const CustomFlowchartStage: React.FC = () => {
             })()
           )}
 
-          {ev?.type === 'HIGHLIGHT_ARRAY_INDEX' && (
+          {!isFunctionBody && ev?.type === 'HIGHLIGHT_ARRAY_INDEX' && (
             (() => {
               const { variant, items } = parseDataStructure(latestStep.memorySnapshot[ev.arrayName]);
               return (
@@ -551,7 +547,7 @@ export const CustomFlowchartStage: React.FC = () => {
             })()
           )}
 
-          {ev?.type === 'PRINT_VALUE' && (
+          {!isFunctionBody && ev?.type === 'PRINT_VALUE' && (
             isDataStructure(ev.outputValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.outputValue);
               return (
