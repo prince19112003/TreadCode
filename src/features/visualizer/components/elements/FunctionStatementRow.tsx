@@ -62,34 +62,26 @@ export const FunctionStatementRow: React.FC<FunctionStatementRowProps> = ({
   activeComponent,
 }) => {
   const cfg = typeConfig[statementType];
-  const bgClass = isActive ? cfg.activeBg : hasExecuted ? cfg.executedBg : cfg.pendingBg;
 
   return (
-    <div className="flex flex-col items-center gap-3 w-full">
+    <div className="flex flex-col items-center gap-2 w-full">
       <motion.div
         layout
         animate={{ 
-          scale: isActive ? 1.02 : 1, 
-          opacity: !hasExecuted && !isActive ? 0.4 : 1 
+          scale: isActive ? 1.01 : 1, 
+          opacity: !hasExecuted && !isActive ? 0.3 : 1 
         }}
-        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        className={`w-full flex items-center gap-3 px-4 py-2 border border-l-4 rounded-xl font-mono text-[11px] whitespace-pre transition-all duration-300 ${cfg.borderAccent} ${bgClass}`}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        className={`w-full flex items-center gap-2 px-3 py-1.5 border-l-2 font-mono text-[11px] whitespace-pre transition-all duration-300 ${cfg.borderAccent} ${isActive ? 'text-white' : 'text-slate-300'}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot} ${isActive ? 'animate-ping' : ''}`} />
-        <span className={`font-medium ${isActive ? 'text-white font-semibold' : hasExecuted ? 'text-slate-300' : 'text-slate-500'}`}>
+        <span className={`font-semibold ${isActive ? 'text-amber-300' : 'text-slate-200'}`}>
           {code}
         </span>
         {isActive && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="ml-auto text-[8px] font-black tracking-widest text-amber-400 bg-amber-950/80 border border-amber-500/30 px-1.5 py-0.5 rounded uppercase shrink-0"
-          >
-            ACTIVE
-          </motion.span>
-        )}
-        {hasExecuted && !isActive && (
-          <span className="ml-auto text-[9px] text-emerald-400 font-bold">✓</span>
+          <span className="ml-auto text-[8px] font-black tracking-widest text-amber-400 uppercase shrink-0">
+            ●
+          </span>
         )}
       </motion.div>
 
@@ -97,11 +89,11 @@ export const FunctionStatementRow: React.FC<FunctionStatementRowProps> = ({
         {isActive && activeComponent && (
           <motion.div
             key="active-component"
-            initial={{ opacity: 0, y: -10, scale: 0.94 }}
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.94 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="w-full flex justify-center mt-1"
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+            className="w-full flex justify-center"
           >
             {activeComponent}
           </motion.div>

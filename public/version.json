@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.8.0",
   "buildDate": "2026-08-08",
   "changelog": [
     "Dynamic Feature Locker — lock/unlock Python, C++, Java, DSA from admin panel",
@@ -9,5 +9,5 @@
     "Licensing system upgraded with per-route dynamic gating"
   ],
   "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest",
-  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v2.7.0/FlowTrace_2.7.0_x64-setup.exe"
+  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v2.8.0/FlowTrace_2.8.0_x64-setup.exe"
 }
