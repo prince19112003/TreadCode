@@ -1250,26 +1250,6 @@ export const CustomFlowchartStage: React.FC = () => {
                           let stmtType = isPrint ? 'print' : isReturn ? 'return' : isCompute ? 'compute' : 'other';
                           
                           let activeComponent = null;
-                          if (visibleSteps.length > 0) {
-                            const lineLatestStep = [...visibleSteps].reverse().find(s => s.lineNum === line.lineNum);
-                            if (lineLatestStep) {
-                              const ev = lineLatestStep.animationEvent;
-                              if (ev?.type === 'PRINT_VALUE') activeComponent = <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} isSmall />;
-                              if (ev?.type === 'CREATE_VARIABLE') {
-                                activeComponent = isDataStructure(ev.value) ? (() => {
-                                  const { variant, items } = parseDataStructure(ev.value);
-                                  return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
-                                })() : <VariableBox name={ev.name} value={ev.value} isActive={isLatest} isSmall />;
-                              }
-                              if (ev?.type === 'UPDATE_VARIABLE') {
-                                activeComponent = isDataStructure(ev.newValue) ? (() => {
-                                  const { variant, items } = parseDataStructure(ev.newValue);
-                                  return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
-                                })() : <VariableBox name={ev.name} value={ev.newValue} oldValue={ev.oldValue} isActive={isLatest} isSmall />;
-                              }
-                              if (ev?.type === 'COMPUTE' && ev.storeIn !== 'Condition') activeComponent = <ComputeBlock inputs={ev.inputs} operator={ev.operator || '+'} storeIn={ev.storeIn} result={ev.result} memorySnapshot={lineLatestStep.memorySnapshot} isActive={isLatest} isSmall />;
-                            }
-                          }
 
                           return (
                             <FunctionStatementRow
