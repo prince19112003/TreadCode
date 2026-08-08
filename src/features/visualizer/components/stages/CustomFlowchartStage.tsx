@@ -257,7 +257,7 @@ export const CustomFlowchartStage: React.FC = () => {
       
       if (isDef) {
         inFunctionDef = true;
-        mainFlowLines.push(line);
+        functionLines.push(line);
       } else if (inFunctionDef && hasContent && indent === 0) {
         inFunctionDef = false;
         mainFlowLines.push(line);
