@@ -24,7 +24,7 @@ export interface UpdateStatus {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CURRENT_VERSION = '2.2.0';
+const CURRENT_VERSION = '2.3.0';
 
 // GitHub raw content URL — directly reads your public/version.json from main branch
 const VERSION_CHECK_URL =

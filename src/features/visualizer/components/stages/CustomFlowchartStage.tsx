@@ -409,38 +409,7 @@ export const CustomFlowchartStage: React.FC = () => {
     const isFunctionBody = isFunctionLine && !isHeader;
 
     if (!hasExecuted) {
-      // Pending state (not yet reached)
-      const codeText = line.tokens.map((t: any) => t.value).join('');
-      let borderClass = isPrintLine ? 'border-green-500/30 text-green-400/70 bg-green-950/10' : 'border-slate-700/50 text-slate-500 bg-slate-800/40';
-      let paddingClass = 'px-5 py-3';
-      let textClass = 'text-sm rounded-xl';
-      
-      if (isFunctionLine) {
-        if (isHeader) {
-          borderClass = 'border-yellow-500/30 text-yellow-400/70 bg-yellow-950/10 rounded-none';
-        } else {
-          borderClass = isPrintLine ? 'border-green-900/30 text-green-500/50 bg-green-950/5' : 'border-slate-700/50 text-slate-500 bg-slate-800/40';
-          paddingClass = 'px-3 py-1';
-          textClass = 'text-[11px] rounded-md border';
-        }
-      }
-
-      return (
-        <motion.div
-          key={line.lineNum}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-4 relative shrink-0 min-w-max transition-all duration-300 opacity-60"
-          id={elementId}
-        >
-          {line.lineNum !== activeLines[0]?.lineNum && line.lineNum !== functionLines[0]?.lineNum && line.lineNum !== mainFlowLines[0]?.lineNum && (
-            <div className={`absolute ${isFunctionBody ? '-top-7' : '-top-9'} left-1/2 w-0.5 ${isFunctionBody ? 'h-4' : 'h-6'} bg-slate-500/30 -translate-x-1/2`} />
-          )}
-          <div className={`${paddingClass} ${isFunctionBody ? '' : 'border-2'} font-mono whitespace-pre ${textClass} ${borderClass}`}>
-            {codeText.trim()}
-          </div>
-        </motion.div>
-      );
+      return null;
     }
     
     const ev = latestStep.animationEvent;
@@ -1305,16 +1274,16 @@ export const CustomFlowchartStage: React.FC = () => {
                             functionName={functionLines[0]?.tokens.find((t: any) => t.type === 'function')?.value || 'Function'} 
                             phase={functionPhase}
                           >
-                        {functionLines.slice(1).map(line => {
+                        {functionLines.slice(1).filter(line => visibleSteps.some(s => s.lineNum === line.lineNum)).map(line => {
                           const isLatest = line.lineNum === currentActiveLine;
-                          const hasExecuted = visibleSteps.some(s => s.lineNum === line.lineNum);
+                          const hasExecuted = true;
                           const isPrint = line.tokens.some((t: any) => t.type === 'function' && t.value === 'print');
                           const isReturn = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'return');
                           const isCompute = line.tokens.some((t: any) => t.type === 'operator' && t.value === '=');
                           let stmtType = isPrint ? 'print' : isReturn ? 'return' : isCompute ? 'compute' : 'other';
                           
                           let activeComponent = null;
-                          if (hasExecuted && visibleSteps.length > 0) {
+                          if (visibleSteps.length > 0) {
                             const lineLatestStep = [...visibleSteps].reverse().find(s => s.lineNum === line.lineNum);
                             if (lineLatestStep) {
                               const ev = lineLatestStep.animationEvent;
