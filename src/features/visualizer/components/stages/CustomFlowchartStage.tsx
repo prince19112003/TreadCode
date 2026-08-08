@@ -1227,13 +1227,6 @@ export const CustomFlowchartStage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* SVG Connector linking the columns */}
-                  <SVGConnector
-                    isVisible={visibleSteps.length > 0 && functionLines.length > 0}
-                    isActive={functionPhase === 'calling' || functionPhase === 'returning'}
-                    isReturning={functionPhase === 'returning'}
-                    isExecuting={functionPhase === 'executing'}
-                  />
 
                   {/* Left Column: MAIN PROGRAM FLOW */}
                   <div className={`flex flex-col items-center gap-10 w-1/2 min-w-75 z-10 pt-4 transition-all duration-700 ease-in-out ${
