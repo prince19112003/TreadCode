@@ -13,34 +13,8 @@ import { FunctionBlock } from '../elements/FunctionBlock';
 import { FunctionStatementRow } from '../elements/FunctionStatementRow';
 import { DataStructureBox } from '../elements/DataStructureBox';
 
-const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = ({ isActive, isReturning, isExecuting, isVisible }) => {
-  if (!isVisible) return null;
-  return (
-    <div className="absolute top-0 bottom-0 left-1/2 w-48 -translate-x-1/2 pointer-events-none z-0" style={{ height: '300px', marginTop: '100px' }}>
-      <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <path
-          d="M 0,10 C 50,10 50,50 100,50"
-          fill="none"
-          stroke={isExecuting ? 'rgba(245, 158, 11, 0.4)' : isReturning ? 'rgba(20, 184, 166, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
-          strokeWidth="2"
-          strokeDasharray={isExecuting ? undefined : "4 4"}
-          className={isExecuting ? "animate-pulse" : undefined}
-          vectorEffect="non-scaling-stroke"
-        />
-        {isActive && (
-          <motion.path
-            d={isReturning ? "M 100,50 C 50,50 50,10 0,10" : "M 0,10 C 50,10 50,50 100,50"}
-            fill="none"
-            stroke={isReturning ? '#14b8a6' : '#f59e0b'}
-            strokeWidth="3"
-            vectorEffect="non-scaling-stroke"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: [0, 1], opacity: [0, 1, 1, 0] }}
-          />
-        )}
-      </svg>
-    </div>
-  );
+const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = () => {
+  return null;
 };
 
 const isDataStructure = (val: any) => {
