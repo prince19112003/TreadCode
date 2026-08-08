@@ -5,16 +5,16 @@ import type { CodeLine } from '../../../lessons/types';
 import { usePinchZoom } from '../../../shared/hooks/usePinchZoom';
 
 const TOKEN_COLORS: Record<string, string> = {
-  keyword: 'text-purple-400 font-bold',
-  function: 'text-blue-400 font-semibold',
-  variable: 'text-emerald-300',
-  string: 'text-amber-400',
-  number: 'text-orange-400',
-  operator: 'text-pink-400',
-  punctuation: 'text-slate-400',
-  comment: 'text-slate-500 italic',
-  parameter: 'text-white font-bold',
-  text: 'text-slate-300',
+  keyword: 'text-purple-300 font-extrabold',
+  function: 'text-sky-300 font-bold',
+  variable: 'text-emerald-200 font-bold',
+  string: 'text-amber-300 font-medium',
+  number: 'text-orange-300 font-bold',
+  operator: 'text-pink-300 font-bold',
+  punctuation: 'text-white font-bold',
+  comment: 'text-slate-400 font-bold italic',
+  parameter: 'text-white font-extrabold',
+  text: 'text-white font-medium',
 };
 
 /**
@@ -172,7 +172,7 @@ const CodeLineRow: React.FC<{
       {/* Tokens */}
       <span
         className={`font-mono py-1.5 pr-6 whitespace-pre flex items-center flex-nowrap shrink-0`}
-        style={{ fontSize: `${1 * zoomLevel}rem`, fontFeatureSettings: '"liga" 0', fontVariantLigatures: 'none' }}
+        style={{ fontSize: 'var(--code-font-size, 14px)', fontFeatureSettings: '"liga" 0', fontVariantLigatures: 'none' }}
       >
         {line.tokens.map((token, i) => {
           // Check if this is the editable number or string on this line

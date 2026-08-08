@@ -772,7 +772,148 @@ export const CustomFlowchartStage: React.FC = () => {
           <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
 
           <AnimatePresence mode="wait">
-            {visibleSteps.length === 0 && !isLoopTopic && !isFunctionTopic ? (
+            {isFunctionTopic ? (() => {
+              let functionPhase: 'idle' | 'defined' | 'calling' | 'executing' | 'returning' = 'idle';
+              const defLineNum = functionLines[0]?.lineNum;
+              const defStep = visibleSteps.find(s => s.lineNum === defLineNum);
+              
+              if (defStep) functionPhase = 'defined';
+              
+              let currentActiveLine = -1;
+              if (visibleSteps.length > 0) {
+                const latestStep = visibleSteps[visibleSteps.length - 1];
+                currentActiveLine = latestStep.lineNum;
+                const latestEvent = latestStep.animationEvent;
+                if (latestEvent?.type === 'FUNCTION_CALL') {
+                  functionPhase = 'calling';
+                } else if (latestEvent?.type === 'FUNCTION_RETURN') {
+                  functionPhase = 'returning';
+                } else if (functionLines.some(l => l.lineNum === currentActiveLine) && currentActiveLine !== defLineNum) {
+                  functionPhase = 'executing';
+                }
+              }
+
+
+
+              return (
+                <motion.div
+                  key="function-split-canvas"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-center gap-24 shrink-0 w-full px-10 relative mt-24"
+                >
+                  {/* Fixed Top Headers for Split Layout */}
+                  <div className="absolute -top-20 left-0 right-0 flex justify-center gap-24 px-10">
+                    <div className="w-1/2 min-w-75 flex flex-col items-center">
+                      <span className="text-indigo-400 text-xs font-bold tracking-[0.25em] uppercase opacity-90 select-none">
+                        MAIN PROGRAM FLOW
+                      </span>
+                      <div className="w-24 h-px bg-linear-to-r from-transparent via-indigo-500/40 to-transparent mt-1.5" />
+                    </div>
+                    <div className="w-1/2 min-w-87.5 flex flex-col items-center">
+                      <span className="text-amber-400 text-xs font-bold tracking-[0.25em] uppercase opacity-90 select-none">
+                        FUNCTION SPACE
+                      </span>
+                      <div className="w-24 h-px bg-linear-to-r from-transparent via-amber-500/40 to-transparent mt-1.5" />
+                    </div>
+                  </div>
+
+                  {/* SVG Connector linking the columns */}
+                  <SVGConnector
+                    isVisible={visibleSteps.length > 0 && functionLines.length > 0}
+                    isActive={functionPhase === 'calling' || functionPhase === 'returning'}
+                    isReturning={functionPhase === 'returning'}
+                    isExecuting={functionPhase === 'executing'}
+                  />
+
+                  {/* Left Column: MAIN PROGRAM FLOW */}
+                  <div className={`flex flex-col items-center gap-10 w-1/2 min-w-75 z-10 pt-4 transition-all duration-700 ease-in-out ${
+                    functionPhase === 'executing' 
+                      ? 'opacity-35 scale-95 blur-[2px]' 
+                      : 'opacity-100 scale-100'
+                  }`}>
+                    {mainFlowLines.map(renderFixedLineBlock)}
+                  </div>
+
+                  {/* Right Column: FUNCTION SPACE */}
+                  <div className={`flex flex-col items-center pt-20 w-1/2 min-w-87.5 relative z-10 transition-all duration-700 ease-in-out ${
+                    functionPhase === 'executing' 
+                      ? 'opacity-100 scale-105 filter-none' 
+                      : functionPhase === 'calling' || functionPhase === 'returning' 
+                        ? 'opacity-100 scale-100' 
+                        : 'opacity-50 scale-95 grayscale-50'
+                  }`}>
+                    {functionLines.length > 0 && (
+                      <AnimatePresence mode="wait">
+                        {functionPhase === 'idle' ? (
+                          <motion.div
+                            key="placeholder"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.3 }}
+                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-2xl flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
+                          >
+                            <svg className="w-6 h-6 opacity-30 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-[10px] font-mono tracking-wider">Awaiting Function Creation...</span>
+                          </motion.div>
+                        ) : (
+                          <FunctionBlock 
+                            key="func-block"
+                            functionName={functionLines[0]?.tokens.find((t: any) => t.type === 'function')?.value || 'Function'} 
+                            phase={functionPhase}
+                          >
+                        {functionLines.slice(1).map(line => {
+                          const isLineLatest = line.lineNum === currentActiveLine;
+                          const hasExecuted = visibleSteps.some(s => s.lineNum === line.lineNum);
+                          const isPrint = line.tokens.some((t: any) => t.type === 'function' && t.value === 'print');
+                          const isReturn = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'return');
+                          const isCompute = line.tokens.some((t: any) => t.type === 'operator' && t.value === '=');
+                          let stmtType = isPrint ? 'print' : isReturn ? 'return' : isCompute ? 'compute' : 'other';
+                          
+                          let activeComponent = null;
+                          if (hasExecuted && visibleSteps.length > 0) {
+                            const lineLatestStep = [...visibleSteps].reverse().find(s => s.lineNum === line.lineNum);
+                            if (lineLatestStep) {
+                              const ev = lineLatestStep.animationEvent;
+                              if (ev?.type === 'PRINT_VALUE') activeComponent = <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLineLatest} isSmall />;
+                              if (ev?.type === 'CREATE_VARIABLE') {
+                                activeComponent = isDataStructure(ev.value) ? (() => {
+                                  const { variant, items } = parseDataStructure(ev.value);
+                                  return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
+                                })() : <VariableBox name={ev.name} value={ev.value} isActive={isLineLatest} isSmall />;
+                              }
+                              if (ev?.type === 'UPDATE_VARIABLE') {
+                                activeComponent = isDataStructure(ev.newValue) ? (() => {
+                                  const { variant, items } = parseDataStructure(ev.newValue);
+                                  return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
+                                })() : <VariableBox name={ev.name} value={ev.newValue} oldValue={ev.oldValue} isActive={isLineLatest} isSmall />;
+                              }
+                              if (ev?.type === 'COMPUTE' && ev.storeIn !== 'Condition') activeComponent = <ComputeBlock inputs={ev.inputs} operator={ev.operator || '+'} storeIn={ev.storeIn} result={ev.result} memorySnapshot={lineLatestStep.memorySnapshot} isActive={isLineLatest} isSmall />;
+                            }
+                          }
+
+                          return (
+                            <FunctionStatementRow
+                              key={line.lineNum}
+                              code={line.tokens.map((t: any) => t.value).join('').trim()}
+                              statementType={stmtType as any}
+                              isActive={isLineLatest}
+                              hasExecuted={hasExecuted}
+                              activeComponent={activeComponent}
+                            />
+                          );
+                        })}
+                      </FunctionBlock>
+                    )}
+                  </AnimatePresence>
+                )}
+                  </div>
+                </motion.div>
+              );
+            })() : visibleSteps.length === 0 && !isLoopTopic ? (
               /* ── Step 0: blank canvas ── program hasn't started yet */
               <motion.div
                 key="empty-canvas"

@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
-  "buildDate": "2026-08-05",
+  "version": "2.1.0",
+  "buildDate": "2026-08-08",
   "changelog": [
     "Dynamic Feature Locker — lock/unlock Python, C++, Java, DSA from admin panel",
     "Admin panel Global Locker controls with real-time Firebase sync",
@@ -9,5 +9,5 @@
     "Licensing system upgraded with per-route dynamic gating"
   ],
   "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest",
-  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v1.9.0/FlowTrace_1.9.0_x64-setup.exe"
+  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v2.1.0/FlowTrace_2.1.0_x64-setup.exe"
 }

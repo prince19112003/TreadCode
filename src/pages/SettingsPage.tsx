@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Monitor, Zap, Globe, Info, Moon, Sun, Laptop, ChevronRight } from 'lucide-react';
+import { Monitor, Info, ChevronRight } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
@@ -9,11 +9,9 @@ import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
    SETTINGS PAGE
    ========================================================= */
 export const SettingsPage: React.FC = () => {
-  const [speed, setSpeed] = useState('1x');
   const [fontSizeVal, setFontSizeVal] = useState(16);
-  const [themeVal, setThemeVal] = useState<'dark' | 'light' | 'system'>('dark');
-  const [langVal, setLangVal] = useState('English');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [policyDoc, setPolicyDoc] = useState<'privacy' | 'terms' | null>(null);
   const { hasUpdate, latestVersion, currentVersion } = useUpdateChecker();
 
   const sections = [
@@ -24,31 +22,6 @@ export const SettingsPage: React.FC = () => {
       iconColor: '#6366f1',
       content: (
         <>
-          {/* Theme */}
-          <SettingRow label="Theme" description="Choose your preferred color scheme.">
-            <div className="flex gap-2">
-              {(['dark', 'light', 'system'] as const).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setThemeVal(t)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all duration-150"
-                  style={{
-                    color: themeVal === t ? '#f0f2f8' : '#8b92a8',
-                    background: themeVal === t ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${themeVal === t ? 'rgba(99,102,241,0.40)' : 'rgba(255,255,255,0.07)'}`,
-                  }}
-                >
-                  {t === 'dark' && <Moon className="w-3.5 h-3.5" />}
-                  {t === 'light' && <Sun className="w-3.5 h-3.5" />}
-                  {t === 'system' && <Laptop className="w-3.5 h-3.5" />}
-                  {t}
-                </button>
-              ))}
-            </div>
-          </SettingRow>
-
-          <Divider />
-
           {/* Font Size */}
           <SettingRow label="Font Size" description={`Code display size: ${fontSizeVal}px`}>
             <div className="flex items-center gap-3">
@@ -59,7 +32,11 @@ export const SettingsPage: React.FC = () => {
                 max={24}
                 step={1}
                 value={fontSizeVal}
-                onChange={e => setFontSizeVal(Number(e.target.value))}
+                onChange={e => {
+                  const size = Number(e.target.value);
+                  setFontSizeVal(size);
+                  document.documentElement.style.setProperty('--code-font-size', `${size}px`);
+                }}
                 className="w-28"
                 style={{ accentColor: '#6366f1' }}
               />
@@ -67,56 +44,6 @@ export const SettingsPage: React.FC = () => {
             </div>
           </SettingRow>
         </>
-      ),
-    },
-    {
-      id: 'playback',
-      label: 'Playback',
-      icon: Zap,
-      iconColor: '#f59e0b',
-      content: (
-        <SettingRow label="Default Animation Speed" description="Set how fast visualizations play automatically.">
-          <div className="flex gap-2">
-            {['0.5x', '1x', '1.5x', '2x'].map(s => (
-              <button
-                key={s}
-                onClick={() => setSpeed(s)}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
-                style={{
-                  color: speed === s ? '#f59e0b' : '#8b92a8',
-                  background: speed === s ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${speed === s ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </SettingRow>
-      ),
-    },
-    {
-      id: 'language',
-      label: 'Localization',
-      icon: Globe,
-      iconColor: '#22c55e',
-      content: (
-        <SettingRow label="App Language" description="Change the language of the application interface.">
-          <select
-            value={langVal}
-            onChange={e => setLangVal(e.target.value)}
-            className="px-3 py-2 rounded-lg text-sm font-medium outline-none transition-colors"
-            style={{
-              color: '#f0f2f8',
-              background: '#141620',
-              border: '1px solid rgba(255,255,255,0.10)',
-            }}
-          >
-            {['English', 'Hindi', 'Spanish', 'French'].map(l => (
-              <option key={l}>{l}</option>
-            ))}
-          </select>
-        </SettingRow>
       ),
     },
     {
@@ -146,17 +73,18 @@ export const SettingsPage: React.FC = () => {
             FlowTrace — An animation-first learning platform for school students, BCA, DCA, and B.Tech students.
           </p>
           <div className="flex gap-3 pt-2">
-            {['Privacy Policy', 'Terms of Service'].map(link => (
-              <button
-                key={link}
-                className="text-xs font-medium transition-colors"
-                style={{ color: '#6366f1' }}
-                onMouseEnter={e => ((e.target as HTMLElement).style.color = '#818cf8')}
-                onMouseLeave={e => ((e.target as HTMLElement).style.color = '#6366f1')}
-              >
-                {link}
-              </button>
-            ))}
+            <button
+              onClick={() => setPolicyDoc('privacy')}
+              className="text-xs font-medium transition-colors text-indigo-400 hover:text-indigo-300"
+            >
+              Privacy Policy
+            </button>
+            <button
+              onClick={() => setPolicyDoc('terms')}
+              className="text-xs font-medium transition-colors text-indigo-400 hover:text-indigo-300"
+            >
+              Terms of Service
+            </button>
           </div>
         </div>
       ),
@@ -232,6 +160,52 @@ export const SettingsPage: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Dynamic Privacy Policy / Terms Modal */}
+      {policyDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg rounded-2xl border border-white/10 p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
+            style={{ background: 'rgba(10, 11, 18, 0.95)' }}
+          >
+            <h2 className="text-xl font-bold mb-4 text-white">
+              {policyDoc === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
+            </h2>
+            
+            <div className="text-xs text-slate-400 space-y-3 leading-relaxed mb-6">
+              {policyDoc === 'privacy' ? (
+                <>
+                  <p className="font-semibold text-slate-200">Last updated: August 2026</p>
+                  <p>At FlowTrace, we take your privacy seriously. This Privacy Policy details how we process user data within the desktop application.</p>
+                  <h3 className="font-semibold text-slate-200 mt-2">1. Information Collection</h3>
+                  <p>We do not collect personal identify information. The app reads your network hardware interface signature (HWID) purely to bind license key credentials securely on our licensing server database.</p>
+                  <h3 className="font-semibold text-slate-200 mt-2">2. Licensing Data Protection</h3>
+                  <p>All verification requests are processed securely using standard secure database nodes. No usage history, code scripts, or execution flows are tracked or stored externally.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-slate-200">Last updated: August 2026</p>
+                  <p>By using the FlowTrace visualizer platform, you agree to comply with these terms.</p>
+                  <h3 className="font-semibold text-slate-200 mt-2">1. Software License</h3>
+                  <p>FlowTrace grants you a non-exclusive, non-transferable internal license to access the algorithm visualization platform according to the limits authorized by your institution.</p>
+                  <h3 className="font-semibold text-slate-200 mt-2">2. Hardware Key Binding</h3>
+                  <p>Each license key is securely bound to the hardware signature of the target system. Sharing verification keys beyond the designated limits will result in key blockage.</p>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() => setPolicyDoc(null)}
+              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition-colors"
+            >
+              Accept & Close
+            </button>
+          </motion.div>
+        </div>
+      )}
+
       {showPreviewModal && (
         <UpdateModal forceShow={true} onClosePreview={() => setShowPreviewModal(false)} />
       )}
@@ -254,6 +228,4 @@ function SettingRow({ label, description, children }: { label: string; descripti
   );
 }
 
-function Divider() {
-  return <div className="my-5" style={{ height: '1px', background: 'rgba(255,255,255,0.04)' }} />;
-}
+
