@@ -1,11 +1,11 @@
 {
-  "version": "2.6.0",
+  "version": "2.7.0",
   "notes": "Premium Minimalist Apple-style Splash Screen & settings badges.",
-  "pub_date": "2026-08-08T13:34:20.027Z",
+  "pub_date": "2026-08-08T13:35:59.352Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "",
-      "url": "https://github.com/prince19112003/FlowTrace/releases/download/v2.6.0/FlowTrace_2.6.0_x64-setup.exe"
+      "url": "https://github.com/prince19112003/FlowTrace/releases/download/v2.7.0/FlowTrace_2.7.0_x64-setup.exe"
     }
   }
 }
