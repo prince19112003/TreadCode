@@ -82,7 +82,7 @@ export const FunctionBlock: React.FC<FunctionBlockProps> = ({
       initial={{ opacity: 0, y: 30, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative rounded-2xl p-6 pt-12 flex flex-col items-start gap-4 min-w-[310px] max-w-[420px] border transition-all duration-500 ${cfg.border} ${cfg.bg} ${cfg.shadow}`}
+      className={`relative rounded-2xl p-6 pt-12 flex flex-col items-start gap-4 min-w-77.5 max-w-105 border transition-all duration-500 ${cfg.border} ${cfg.bg} ${cfg.shadow}`}
       style={{
         boxShadow: `0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 40px ${cfg.glowColor}`,
       }}
