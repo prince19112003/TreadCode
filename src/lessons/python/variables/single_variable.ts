@@ -15,14 +15,14 @@ export const single_variable: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: `The computer creates a memory box named "age" and stores the number ${age} inside it.`,
-      explanationHinglish: `Computer ne "age" naam ka ek dabba banaya aur usme ${age} daal diya!`,
+      explanationHinglish: `Computer ne "age" variable declare kiya aur usme ${age} store kar diya!`,
       memorySnapshot: { age },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'age', value: age },
     },
     {
       step: 2, lineNum: 2,
       explanationEnglish: `The computer opens the "age" box, reads ${age} from it, and prints it on the screen.`,
-      explanationHinglish: `"age" ka dabba khula, andar se ${age} nikla, aur screen pe aa gaya!`,
+      explanationHinglish: `"age" ka variable read kiya, andar se ${age} fetch kiya, aur screen par print ho gaya!`,
       memorySnapshot: { age },
       consoleOutput: String(age),
       animationEvent: { type: 'PRINT_VALUE', variableName: 'age', outputValue: age },
@@ -32,14 +32,14 @@ export const single_variable: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'The computer creates a memory box named "age" and stores the number 15 inside it.',
-      explanationHinglish: 'Computer ne "age" naam ka ek dabba banaya aur usme 15 daal diya!',
+      explanationHinglish: 'Computer ne "age" variable declare kiya aur usme 15 store kar diya!',
       memorySnapshot: { age: 15 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'age', value: 15 },
     },
     {
       step: 2, lineNum: 2,
       explanationEnglish: 'The computer opens the "age" box, reads 15 from it, and prints it on the screen.',
-      explanationHinglish: '"age" ka dabba khula, andar se 15 nikla, aur screen pe aa gaya!',
+      explanationHinglish: '"age" ka variable read kiya, andar se 15 fetch kiya, aur screen par print ho gaya!',
       memorySnapshot: { age: 15 },
       consoleOutput: '15',
       animationEvent: { type: 'PRINT_VALUE', variableName: 'age', outputValue: 15 },

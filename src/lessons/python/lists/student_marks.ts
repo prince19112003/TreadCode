@@ -60,7 +60,7 @@ export const student_marks: LessonProgram = {
     steps.push({
       step: stepNum++, lineNum: 2,
       explanationEnglish: `Initialize total = 0.`,
-      explanationHinglish: `total ko 0 se shuru kiya.`,
+      explanationHinglish: `total ko 0 se start kiya.`,
       memorySnapshot: { ...mem },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'total', value: total },
     });
@@ -70,7 +70,7 @@ export const student_marks: LessonProgram = {
     steps.push({
       step: stepNum++, lineNum: 3,
       explanationEnglish: `Initialize pass count p_count = 0.`,
-      explanationHinglish: `Pass count p_count ko 0 se shuru kiya.`,
+      explanationHinglish: `Pass count p_count ko 0 se start kiya.`,
       memorySnapshot: { ...mem },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'p_count', value: p_count },
     });
@@ -80,7 +80,7 @@ export const student_marks: LessonProgram = {
     steps.push({
       step: stepNum++, lineNum: 4,
       explanationEnglish: `Initialize fail count f_count = 0.`,
-      explanationHinglish: `Fail count f_count ko 0 se shuru kiya.`,
+      explanationHinglish: `Fail count f_count ko 0 se start kiya.`,
       memorySnapshot: { ...mem },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'f_count', value: f_count },
     });
@@ -140,7 +140,7 @@ export const student_marks: LessonProgram = {
         steps.push({
           step: stepNum++, lineNum: 9,
           explanationEnglish: `Failed (marks < 35). Enter the else block.`,
-          explanationHinglish: `Fail hua (marks < 35). else block mein gaye.`,
+          explanationHinglish: `Fail hua (marks < 35). else block mein move hua.`,
           memorySnapshot: { ...mem },
           animationEvent: { type: 'NONE' },
         });

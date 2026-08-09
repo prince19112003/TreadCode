@@ -109,7 +109,7 @@ export const selection_sort: LessonProgram = {
         steps.push({
           step: stepNum++, lineNum: 6,
           explanationEnglish: `Check if arr[${j}] (${items[j]}) < arr[${min_idx}] (${items[min_idx]}): ${isSmaller ? 'TRUE (New min found!)' : 'FALSE'}.`,
-          explanationHinglish: `Check kiya kya arr[${j}] (${items[j]}) < arr[${min_idx}] (${items[min_idx]}): ${isSmaller ? 'SAHI (Naya min mila!)' : 'GALAT'}.`,
+          explanationHinglish: `Check kiya kya arr[${j}] (${items[j]}) < arr[${min_idx}] (${items[min_idx]}): ${isSmaller ? 'SAHI (Naya min found hua!)' : 'GALAT'}.`,
           memorySnapshot: {
             ...mem,
             min_idx,
@@ -128,7 +128,7 @@ export const selection_sort: LessonProgram = {
           steps.push({
             step: stepNum++, lineNum: 7,
             explanationEnglish: `New minimum element found! Updated min_idx = ${min_idx} (value ${items[min_idx]}).`,
-            explanationHinglish: `Naya minimum element mila! min_idx ko ${min_idx} (value ${items[min_idx]}) par update kiya.`,
+            explanationHinglish: `Naya minimum element found hua! min_idx ko ${min_idx} (value ${items[min_idx]}) par update kiya.`,
             memorySnapshot: { ...mem, min_idx, sortedIndices: [...sortedIndices], passSnapshots: [...passSnapshots] },
             animationEvent: { type: 'UPDATE_VARIABLE', name: 'min_idx', oldValue: oldMin, newValue: min_idx },
           });

@@ -14,7 +14,7 @@ export const multiplication_table: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the table number in "num".',
-      explanationHinglish: '"num" dabbe mein table number dala.',
+      explanationHinglish: '"num" variable me table number dala.',
       memorySnapshot: { num: 4 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: 4 },
     },

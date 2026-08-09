@@ -18,7 +18,7 @@ export const voting_eligibility: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Create a box "age" and store ${age}.`,
-        explanationHinglish: `"age" naam ka dabba bana aur ${age} daal diya.`,
+        explanationHinglish: `"age" naam ka variable bana aur ${age} store kiya.`,
         memorySnapshot: { age },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'age', value: age },
       },
@@ -46,7 +46,7 @@ export const voting_eligibility: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Create a box "age" and store 18.',
-      explanationHinglish: '"age" naam ka dabba bana aur 18 daal diya.',
+      explanationHinglish: '"age" naam ka variable bana aur 18 store kiya.',
       memorySnapshot: { age: 18 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'age', value: 18 },
     },

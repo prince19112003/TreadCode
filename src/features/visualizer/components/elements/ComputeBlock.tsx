@@ -73,12 +73,6 @@ const cleanValueAndType = (raw: any) => {
   else if (str.includes('[1B]')) varType = 'bool';
 
   const cleanedVal = str.replace(/\s*\[(4B|8B|1B|const|short|long)\]/gi, '').trim();
-  
-  if (cleanedVal.includes('.')) {
-    varType = 'float';
-  } else if (!isNaN(Number(cleanedVal)) && varType !== 'const') {
-    varType = 'int';
-  }
 
   return { value: cleanedVal, varType };
 };

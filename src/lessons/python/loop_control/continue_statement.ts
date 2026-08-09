@@ -46,7 +46,7 @@ export const continue_statement: LessonProgram = {
     steps.push({
       step: stepCount++, lineNum: 3,
       explanationEnglish: `The loop will iterate through numbers 1 to ${limit - 1}.`,
-      explanationHinglish: `Loop 1 se ${limit - 1} tak numbers chalayega.`,
+      explanationHinglish: `Loop 1 se ${limit - 1} tak numbers execute huayega.`,
       memorySnapshot: { ...mem },
       animationEvent: { type: 'NONE' },
     });

@@ -87,7 +87,7 @@ export const list_modify: LessonProgram = {
       {
         step: stepNum++, lineNum: 2,
         explanationEnglish: `Insert "${insVal}" at index ${insIdx}. Elements shift right.`,
-        explanationHinglish: `Index ${insIdx} par "${insVal}" insert kiya. Baaki elements right shift ho gaye.`,
+        explanationHinglish: `Index ${insIdx} par "${insVal}" insert kiya. Baaki elements right shift ho move hua.`,
         memorySnapshot: { data: insertListStr },
         animationEvent: { type: 'COMPUTE', inputs: ['data', String(insIdx), fInsVal], operator: 'insert', result: insertListStr, storeIn: 'data' },
       },
@@ -102,7 +102,7 @@ export const list_modify: LessonProgram = {
       {
         step: stepNum++, lineNum: 4,
         explanationEnglish: `Delete element "${deletedVal}" at index ${delIdx}. Elements shift left.`,
-        explanationHinglish: `Index ${delIdx} ke element "${deletedVal}" ko delete kiya. Baaki elements left shift ho gaye.`,
+        explanationHinglish: `Index ${delIdx} ke element "${deletedVal}" ko delete kiya. Baaki elements left shift ho move hua.`,
         memorySnapshot: { data: deleteListStr },
         animationEvent: { type: 'COMPUTE', inputs: ['data', String(delIdx)], operator: 'del', result: deleteListStr, storeIn: 'data' },
       },

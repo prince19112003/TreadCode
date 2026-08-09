@@ -22,7 +22,7 @@ export const sum_n_natural: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Create variable "n" with value ${n}.`,
-      explanationHinglish: `"n" dabbe mein ${n} save kiya.`,
+      explanationHinglish: `"n" variable me ${n} save kiya.`,
       memorySnapshot: { n },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: n },
     });
@@ -31,7 +31,7 @@ export const sum_n_natural: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 2,
       explanationEnglish: 'Create a variable "total" to hold the sum, starting at 0.',
-      explanationHinglish: 'Sum store karne ke liye "total" dabba banaya.',
+      explanationHinglish: 'Sum store karne ke liye "total" variable declare kiya.',
       memorySnapshot: { n, total: 0 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'total', value: 0 },
     });
@@ -62,7 +62,7 @@ export const sum_n_natural: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 5,
       explanationEnglish: 'The loop ends. Print the final total.',
-      explanationHinglish: 'Loop khatam hua. Final sum print kiya.',
+      explanationHinglish: 'Loop complete hua. Final sum print kiya.',
       memorySnapshot: { n, total, i: Number(n) }, // Keep last i in memory
       consoleOutput: String(total),
       animationEvent: { type: 'PRINT_VALUE', variableName: 'total', outputValue: total },

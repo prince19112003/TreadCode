@@ -62,7 +62,7 @@ export const compare_strings: LessonProgram = {
       steps.push({
         step: 4, lineNum: 5,
         explanationEnglish: 'Go to else block because condition is false.',
-        explanationHinglish: 'Condition false hone par else block mein gaye.',
+        explanationHinglish: 'Condition false hone par else block mein move hua.',
         memorySnapshot: { str1: f1, str2: f2 },
         animationEvent: { type: 'NONE' },
       });

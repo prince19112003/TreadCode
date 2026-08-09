@@ -27,14 +27,14 @@ export const func_no_args: LessonProgram = {
       {
         step: 2, lineNum: 4,
         explanationEnglish: 'greet() is called. Program control jumps from line 4 into the greet() function body at line 2.',
-        explanationHinglish: 'greet() call hua. Control line 4 se jump karke function ke andar chala gaya.',
+        explanationHinglish: 'greet() call hua. Control line 4 se jump karke function ke andar execute hua gaya.',
         memorySnapshot: {},
         animationEvent: { type: 'FUNCTION_CALL', functionName: 'greet', args: {} },
       },
       {
         step: 3, lineNum: 2,
         explanationEnglish: `Inside the function body: print(${formattedMsg}) executes and outputs the text.`,
-        explanationHinglish: `Function ke andar: print(${formattedMsg}) chala aur text screen par aa gaya.`,
+        explanationHinglish: `Function ke andar: print(${formattedMsg}) execute hua aur text screen par aa gaya.`,
         memorySnapshot: {},
         consoleOutput: cleanMsg,
         animationEvent: { type: 'PRINT_VALUE', variableName: 'output', outputValue: formattedMsg },

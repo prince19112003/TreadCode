@@ -18,14 +18,14 @@ export const square_root: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Create a box "number" and store ${number} inside it.`,
-        explanationHinglish: `"number" naam ka dabba banaya aur usme ${number} daal diya.`,
+        explanationHinglish: `"number" naam ka variable declare kiya aur usme ${number} store kar diya.`,
         memorySnapshot: { number },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'number', value: number },
       },
       {
         step: 2, lineNum: 2,
         explanationEnglish: `Calculate the square root of ${number} (** 0.5) and store the result (${root}) in "root".`,
-        explanationHinglish: `${number} ka square root nikala (** 0.5 use karke) aur result ${root} "root" dabbe me daal diya.`,
+        explanationHinglish: `${number} ka square root nikala (** 0.5 use karke) aur result ${root} "root" variable me store kiya.`,
         memorySnapshot: { number, root },
         animationEvent: { type: 'COMPUTE', inputs: ['number', '0.5'], operator: '**', result: root, storeIn: 'root' },
       },
@@ -43,14 +43,14 @@ export const square_root: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Create a box "number" and store 16 inside it.',
-      explanationHinglish: '"number" naam ka dabba banaya aur usme 16 daal diya.',
+      explanationHinglish: '"number" naam ka variable declare kiya aur usme 16 store kar diya.',
       memorySnapshot: { number: 16 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'number', value: 16 },
     },
     {
       step: 2, lineNum: 2,
       explanationEnglish: 'Calculate the square root of 16 using the exponent operator (** 0.5) and store the result (4.0) in "root".',
-      explanationHinglish: '16 ka square root nikala (** 0.5 use karke) aur result 4.0 "root" dabbe me daal diya.',
+      explanationHinglish: '16 ka square root nikala (** 0.5 use karke) aur result 4.0 "root" variable me store kiya.',
       memorySnapshot: { number: 16, root: 4.0 },
       animationEvent: { type: 'COMPUTE', inputs: ['number', '0.5'], operator: '**', result: 4.0, storeIn: 'root' },
     },

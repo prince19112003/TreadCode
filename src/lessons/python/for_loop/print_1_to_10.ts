@@ -20,7 +20,7 @@ export const print_1_to_10: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Create variable "n" with value ${n}.`,
-      explanationHinglish: `"n" dabbe mein ${n} save kiya.`,
+      explanationHinglish: `"n" variable me ${n} save kiya.`,
       memorySnapshot: { n },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: n },
     });

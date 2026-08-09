@@ -64,7 +64,7 @@ export const list_search: LessonProgram = {
       {
         step: stepNum++, lineNum: 3,
         explanationEnglish: `Initialize occurrence count to 0.`,
-        explanationHinglish: `Milne wale matches ka count 0 se shuru kiya.`,
+        explanationHinglish: `Milne wale matches ka count 0 se start kiya.`,
         memorySnapshot: { items: firstListStr, search_target: targetVal, count: 0 },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'count', value: 0 },
       }

@@ -43,7 +43,7 @@ export const func_with_args: LessonProgram = {
       {
         step: 4, lineNum: 2,
         explanationEnglish: `Execute print("Hello,", name) -> Outputs "${greetingText}".`,
-        explanationHinglish: `print("Hello,", name) chala -> Output aaya: "${greetingText}".`,
+        explanationHinglish: `print("Hello,", name) execute hua -> Output aaya: "${greetingText}".`,
         memorySnapshot: { name: formattedName },
         consoleOutput: greetingText,
         animationEvent: { type: 'PRINT_VALUE', variableName: 'output', outputValue: `"${greetingText}"` },

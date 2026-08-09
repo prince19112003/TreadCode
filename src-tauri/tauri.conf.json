@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "FlowTrace",
-  "version": "2.10.0",
+  "version": "2.11.0",
   "identifier": "com.flowtrace.app",
   "build": {
     "frontendDist": "../dist",
@@ -13,10 +13,11 @@
     "windows": [
       {
         "title": "FlowTrace Code Visualizer",
-        "width": 800,
-        "height": 600,
+        "width": 1280,
+        "height": 768,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "decorations": false
       }
     ],
     "security": {

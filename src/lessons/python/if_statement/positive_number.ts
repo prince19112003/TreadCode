@@ -19,7 +19,7 @@ export const positive_number: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Create a variable "number" and store the value ${number}.`,
-        explanationHinglish: `"number" naam ka dabba bana aur usme ${number} daal diya.`,
+        explanationHinglish: `"number" naam ka variable bana aur usme ${number} store kar diya.`,
         memorySnapshot: { number },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'number', value: number },
       },
@@ -35,7 +35,7 @@ export const positive_number: LessonProgram = {
       steps.push({
         step: 3, lineNum: 3,
         explanationEnglish: 'Because the condition is true, we go inside the if block and print "Positive!".',
-        explanationHinglish: 'Condition true thi isliye hum if block ke andar gaye aur "Positive!" print kiya.',
+        explanationHinglish: 'Condition true thi isliye hum if block ke andar move hua aur "Positive!" print kiya.',
         memorySnapshot: { number },
         consoleOutput: 'Positive!',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Positive!"', outputValue: 'Positive!' },
@@ -44,7 +44,7 @@ export const positive_number: LessonProgram = {
     steps.push({
       step: conditionResult ? 4 : 3, lineNum: 4,
       explanationEnglish: 'The if statement is over, so we continue and print "Done".',
-      explanationHinglish: 'If statement khatam ho gaya, ab aage badh kar "Done" print kiya.',
+      explanationHinglish: 'If statement complete ho gaya, ab aage badh kar "Done" print kiya.',
       memorySnapshot: { number },
       consoleOutput: conditionResult ? 'Positive!\nDone' : 'Done',
       animationEvent: { type: 'PRINT_VALUE', variableName: '"Done"', outputValue: 'Done' },
@@ -55,7 +55,7 @@ export const positive_number: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Create a variable "number" and store the value 10.',
-      explanationHinglish: '"number" naam ka dabba bana aur usme 10 daal diya.',
+      explanationHinglish: '"number" naam ka variable bana aur usme 10 store kar diya.',
       memorySnapshot: { number: 10 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'number', value: 10 },
     },
@@ -69,7 +69,7 @@ export const positive_number: LessonProgram = {
     {
       step: 3, lineNum: 3,
       explanationEnglish: 'Because the condition is true, we go inside the if block and print "Positive!".',
-      explanationHinglish: 'Condition true thi isliye hum if block ke andar gaye aur "Positive!" print kiya.',
+      explanationHinglish: 'Condition true thi isliye hum if block ke andar move hua aur "Positive!" print kiya.',
       memorySnapshot: { number: 10 },
       consoleOutput: 'Positive!',
       animationEvent: { type: 'PRINT_VALUE', variableName: '"Positive!"', outputValue: 'Positive!' },
@@ -77,7 +77,7 @@ export const positive_number: LessonProgram = {
     {
       step: 4, lineNum: 4,
       explanationEnglish: 'The if statement is over, so we continue and print "Done".',
-      explanationHinglish: 'If statement khatam ho gaya, ab aage badh kar "Done" print kiya.',
+      explanationHinglish: 'If statement complete ho gaya, ab aage badh kar "Done" print kiya.',
       memorySnapshot: { number: 10 },
       consoleOutput: 'Positive!\nDone',
       animationEvent: { type: 'PRINT_VALUE', variableName: '"Done"', outputValue: 'Done' },

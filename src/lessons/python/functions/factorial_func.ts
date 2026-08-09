@@ -40,21 +40,21 @@ export const factorial_func: LessonProgram = {
     {
       step: 4, lineNum: 1,
       explanationEnglish: 'The parameter n receives the value 4.',
-      explanationHinglish: 'Parameter n ko 4 mila.',
+      explanationHinglish: 'Parameter n ko 4 found hua.',
       memorySnapshot: { num: 4, n: 4 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: 4 },
     },
     {
       step: 5, lineNum: 2,
       explanationEnglish: 'Initialize result to 1.',
-      explanationHinglish: 'result ko 1 se shuru kiya.',
+      explanationHinglish: 'result ko 1 se start kiya.',
       memorySnapshot: { num: 4, n: 4, result: 1 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'result', value: 1 },
     },
     {
       step: 6, lineNum: 3,
       explanationEnglish: 'Loop starts for i = 1.',
-      explanationHinglish: 'Loop chalega jab i = 1 hoga.',
+      explanationHinglish: 'Loop execute hoega jab i = 1 hoga.',
       memorySnapshot: { num: 4, n: 4, result: 1, i: 1 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'i', value: 1 },
     },
@@ -68,7 +68,7 @@ export const factorial_func: LessonProgram = {
     {
       step: 8, lineNum: 3,
       explanationEnglish: 'Loop starts for i = 2.',
-      explanationHinglish: 'Loop chalega jab i = 2 hoga.',
+      explanationHinglish: 'Loop execute hoega jab i = 2 hoga.',
       memorySnapshot: { num: 4, n: 4, result: 1, i: 2 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'i', value: 2 },
     },
@@ -82,7 +82,7 @@ export const factorial_func: LessonProgram = {
     {
       step: 10, lineNum: 3,
       explanationEnglish: 'Loop starts for i = 3.',
-      explanationHinglish: 'Loop chalega jab i = 3 hoga.',
+      explanationHinglish: 'Loop execute hoega jab i = 3 hoga.',
       memorySnapshot: { num: 4, n: 4, result: 2, i: 3 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'i', value: 3 },
     },
@@ -96,7 +96,7 @@ export const factorial_func: LessonProgram = {
     {
       step: 12, lineNum: 3,
       explanationEnglish: 'Loop starts for i = 4.',
-      explanationHinglish: 'Loop chalega jab i = 4 hoga.',
+      explanationHinglish: 'Loop execute hoega jab i = 4 hoga.',
       memorySnapshot: { num: 4, n: 4, result: 6, i: 4 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'i', value: 4 },
     },

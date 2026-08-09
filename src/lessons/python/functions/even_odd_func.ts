@@ -26,7 +26,7 @@ export const even_odd_func: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: 'Define check_even_odd(num) — checks if a number is even or odd.',
-        explanationHinglish: 'check_even_odd(num) banaya — number even hai ya odd check karta hai.',
+        explanationHinglish: 'check_even_odd(num) banaya — number even hai ya odd evaluate karta hai.',
         memorySnapshot: {},
         animationEvent: { type: 'NONE' },
       },
@@ -47,7 +47,7 @@ export const even_odd_func: LessonProgram = {
       {
         step: 4, lineNum: 1,
         explanationEnglish: `Parameter num receives ${num}. Function starts executing.`,
-        explanationHinglish: `Parameter num mein ${num} aaya. Function shuru hua.`,
+        explanationHinglish: `Parameter num mein ${num} aaya. Function start hua.`,
         memorySnapshot: { n: num, num },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: num },
       },
@@ -70,7 +70,7 @@ export const even_odd_func: LessonProgram = {
             {
               step: 6, lineNum: 4,
               explanationEnglish: 'Condition is FALSE. Jump to else.',
-              explanationHinglish: 'Condition galat. else mein gaye.',
+              explanationHinglish: 'Condition galat. else mein move hua.',
               memorySnapshot: { n: num, num },
               animationEvent: { type: 'NONE' as const },
             },

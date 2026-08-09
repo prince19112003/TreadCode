@@ -23,7 +23,7 @@ export const vowel_consonant: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store the character "${cleanChar}" in the "char" variable.`,
-        explanationHinglish: `"char" dabbe mein akshar "${cleanChar}" save kiya.`,
+        explanationHinglish: `"char" variable me akshar "${cleanChar}" save kiya.`,
         memorySnapshot: snap,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'char', value: `"${cleanChar}"` },
       },
@@ -40,7 +40,7 @@ export const vowel_consonant: LessonProgram = {
       steps.push({
         step: 3, lineNum: 3,
         explanationEnglish: 'Since it is true, run the if block and print "Vowel".',
-        explanationHinglish: 'Condition True mili isliye if block ke andar ja kar "Vowel" print kiya.',
+        explanationHinglish: 'Condition True is isliye if block ke andar ja kar "Vowel" print kiya.',
         memorySnapshot: snap,
         consoleOutput: 'Vowel',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Vowel"', outputValue: 'Vowel' },
@@ -57,7 +57,7 @@ export const vowel_consonant: LessonProgram = {
         {
           step: 4, lineNum: 5,
           explanationEnglish: 'Run the else block and print "Consonant".',
-          explanationHinglish: 'Else block chalaya aur "Consonant" print kiya.',
+          explanationHinglish: 'Else block execute kiya aur "Consonant" print kiya.',
           memorySnapshot: snap,
           consoleOutput: 'Consonant',
           animationEvent: { type: 'PRINT_VALUE', variableName: '"Consonant"', outputValue: 'Consonant' },
@@ -70,7 +70,7 @@ export const vowel_consonant: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the character "e" in the "char" variable.',
-      explanationHinglish: '"char" dabbe mein akshar "e" save kiya.',
+      explanationHinglish: '"char" variable me akshar "e" save kiya.',
       memorySnapshot: { char: '"e"' },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'char', value: '"e"' },
     },

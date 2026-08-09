@@ -137,7 +137,7 @@ export const linear_search: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 9,
         explanationEnglish: `Loop completed without finding target ${targetVal}.`,
-        explanationHinglish: `Loop poora hua par target ${targetVal} nahi mila.`,
+        explanationHinglish: `Loop poora hua par target ${targetVal} nahi found hua.`,
         memorySnapshot: { ...mem },
         animationEvent: { type: 'NONE' },
       });

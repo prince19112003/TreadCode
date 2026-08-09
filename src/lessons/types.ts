@@ -28,7 +28,7 @@ export type AnimationEvent =
   | { type: 'UPDATE_VARIABLE'; name: string; oldValue: string | number; newValue: string | number; formula?: string }
   | { type: 'COPY_VALUE'; from: string; to: string; value: string | number }
   | { type: 'PRINT_VALUE'; variableName: string; outputValue: string | number }
-  | { type: 'COMPUTE'; inputs: string[]; operator: string; result: string | number; storeIn: string }
+  | { type: 'COMPUTE'; inputs: string[]; operator: string; result: string | number; storeIn: string; formula?: string }
   | { type: 'SWAP'; varA: string; varB: string }
   | { type: 'MATCH_START'; variableName: string; value: string | number }
   | { type: 'FUNCTION_CALL'; functionName: string; args: Record<string, string | number> }
@@ -81,6 +81,7 @@ export interface LessonProgram {
   lessonNumber: number;
   friendlyName: string;
   learningObjective: string;
+  learningObjectiveHinglish?: string;
   lines: CodeLine[];
   executionSteps: ExecutionStep[];
   /** Defines which initial variables are user-editable */

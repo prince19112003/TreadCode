@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Minus, Square, X } from 'lucide-react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { motion, AnimatePresence } from 'motion/react';
+import { MindTraceLogo } from '@shared/components/ui/MindTraceLogo';
+import { LicenseContext } from '../App';
 
 const GithubIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -315,6 +317,7 @@ export const GlobalAppShell: React.FC = () => {
   const navigate = useNavigate();
   const breadcrumbs = useBreadcrumbs();
   const [searchOpen, setSearchOpen] = useState(false);
+  const licenseContext = React.useContext(LicenseContext);
   const { hasUpdate } = useUpdateChecker();
 
   // Ctrl+K / Cmd+K to open search
@@ -344,32 +347,38 @@ export const GlobalAppShell: React.FC = () => {
 
       {/* === HEADER === */}
       <header
-        className="h-16 sticky top-0 z-50 shrink-0 flex items-center justify-between px-4 md:px-6"
+        data-tauri-drag-region
+        className="h-13 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none"
         style={{
-          background: 'rgba(10, 11, 15, 0.82)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(10, 11, 15, 0.90)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
       >
-        {/* LEFT: Logo + App Name */}
-        <button
-          onClick={() => navigate('/languages')}
-          className="flex items-center gap-3 shrink-0 group"
-        >
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+        {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
+        <div className="flex items-center gap-3" data-tauri-drag-region>
+          <button
+            onClick={() => navigate('/languages')}
+            className="flex items-center gap-2 shrink-0 group p-1 rounded-xl hover:bg-white/5 transition-all"
+            title="Home"
           >
-            <Code2 className="w-5 h-5 text-white" />
-          </div>
-          <span
-            className="hidden sm:block text-base font-bold"
-            style={{ color: '#f0f2f8', letterSpacing: '-0.3px' }}
-          >
-            FlowTrace
-          </span>
-        </button>
+            <div className="w-8 h-8 rounded-xl bg-slate-900/80 border border-indigo-500/30 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+              <MindTraceLogo size={24} />
+            </div>
+            <span className="font-extrabold text-sm tracking-tight bg-linear-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent group-hover:to-indigo-200 transition-colors">
+              FlowTrace
+            </span>
+          </button>
+
+          {/* Co-Branding Institution Badge if configured on License Key */}
+          {licenseContext?.licenseDetails?.customBranding?.institutionName && (
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-indigo-500/40 bg-indigo-950/40 text-indigo-200 text-xs font-semibold shadow-inner">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{licenseContext.licenseDetails.customBranding.badgeText || `Licensed to: ${licenseContext.licenseDetails.customBranding.institutionName}`}</span>
+            </div>
+          )}
+        </div>
 
         {/* CENTER: Breadcrumb */}
         <nav className="hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2">
@@ -506,6 +515,47 @@ export const GlobalAppShell: React.FC = () => {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)] animate-pulse" />
             )}
           </button>
+
+          {/* FlowTrace Glass Window Control Capsule */}
+          <div className="flex items-center gap-0.5 bg-slate-950/80 border border-indigo-500/30 rounded-xl p-1 shadow-lg ml-1 shrink-0">
+            <button
+              onClick={async () => {
+                if ((window as any).__TAURI_INTERNALS__) {
+                  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                  getCurrentWindow().minimize();
+                }
+              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
+              title="Minimize Window"
+            >
+              <Minus size={13} />
+            </button>
+            <button
+              onClick={async () => {
+                if ((window as any).__TAURI_INTERNALS__) {
+                  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                  getCurrentWindow().toggleMaximize();
+                }
+              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-purple-300 hover:bg-purple-500/20 transition-all cursor-pointer"
+              title="Maximize / Restore Window"
+            >
+              <Square size={11} />
+            </button>
+            <div className="w-px h-3.5 bg-white/10 mx-0.5" />
+            <button
+              onClick={async () => {
+                if ((window as any).__TAURI_INTERNALS__) {
+                  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                  getCurrentWindow().close();
+                }
+              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-300 hover:bg-rose-500/25 transition-all cursor-pointer"
+              title="Close Application"
+            >
+              <X size={13} />
+            </button>
+          </div>
         </div>
       </header>
 

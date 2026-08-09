@@ -59,7 +59,7 @@ export const string_palindrome: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 4,
         explanationEnglish: `Add "${char}" to the beginning of rev_word. It becomes "${nextRev}".`,
-        explanationHinglish: `"${char}" ko rev_word ke shuru mein joda. Ab yeh "${nextRev}" ban gaya.`,
+        explanationHinglish: `"${char}" ko rev_word ke start mein joda. Ab yeh "${nextRev}" ban gaya.`,
         memorySnapshot: { word: fWord, rev_word: fNextRev, char: fChar },
         animationEvent: { type: 'COMPUTE', inputs: ['char', 'rev_word'], operator: '+', result: fNextRev, storeIn: 'rev_word' },
       });
@@ -94,7 +94,7 @@ export const string_palindrome: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 7,
         explanationEnglish: 'Go to else block because condition is false.',
-        explanationHinglish: 'Condition false hone par else block mein gaye.',
+        explanationHinglish: 'Condition false hone par else block mein move hua.',
         memorySnapshot: { word: fWord, rev_word: fFinalRev, ...(fLastChar ? { char: fLastChar } : {}) },
         animationEvent: { type: 'NONE' },
       });

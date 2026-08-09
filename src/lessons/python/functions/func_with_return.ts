@@ -28,14 +28,14 @@ export const func_with_return: LessonProgram = {
       {
         step: 2, lineNum: 4,
         explanationEnglish: 'Call get_number() from line 4. Program jumps to function definition.',
-        explanationHinglish: 'Line 4 par get_number() call hua. Control function ke andar chala gaya.',
+        explanationHinglish: 'Line 4 par get_number() call hua. Control function ke andar execute hua gaya.',
         memorySnapshot: {},
         animationEvent: { type: 'FUNCTION_CALL', functionName: 'get_number', args: {} },
       },
       {
         step: 3, lineNum: 2,
         explanationEnglish: `Execute "return ${val}". The function returns ${val} back to line 4.`,
-        explanationHinglish: `"return ${val}" chala. Function se ${val} value wapas line 4 ko bejhi.`,
+        explanationHinglish: `"return ${val}" execute hua. Function se ${val} value wapas line 4 ko bejhi.`,
         memorySnapshot: {},
         animationEvent: { type: 'FUNCTION_RETURN', functionName: 'get_number', returnValue: val },
       },

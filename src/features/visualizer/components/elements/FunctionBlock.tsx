@@ -69,7 +69,7 @@ export const FunctionBlock: React.FC<FunctionBlockProps> = ({
       initial={{ opacity: 0, y: 15, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative rounded-xl p-5 pt-11 flex flex-col items-start gap-3 min-w-77.5 max-w-105 border transition-all duration-300 ${cfg.border} ${cfg.bg} ${cfg.shadow}`}
+      className={`relative rounded-xl p-5 pt-16 flex flex-col items-start gap-3 min-w-77.5 max-w-105 border transition-all duration-300 ${cfg.border} ${cfg.bg} ${cfg.shadow}`}
     >
       {/* Function name header badge on top border */}
       <motion.div
@@ -94,7 +94,7 @@ export const FunctionBlock: React.FC<FunctionBlockProps> = ({
       </AnimatePresence>
 
       {/* Statement rows container */}
-      <div className="w-full flex flex-col gap-2.5 mt-0.5">
+      <div className="w-full flex flex-col gap-2.5 mt-4">
         {children}
       </div>
     </motion.div>

@@ -25,7 +25,7 @@ export const sum_of_digits: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the number ${currentN} in "n".`,
-      explanationHinglish: `"n" dabbe mein ${currentN} dala.`,
+      explanationHinglish: `"n" variable me ${currentN} dala.`,
       memorySnapshot: { n: currentN },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: currentN },
     });
@@ -51,7 +51,7 @@ export const sum_of_digits: LessonProgram = {
       steps.push({
         step: steps.length + 1, lineNum: 4,
         explanationEnglish: `Extract the last digit using modulo 10: ${currentN} % 10 = ${digit}.`,
-        explanationHinglish: `Aakhri digit nikalne ke liye % 10 kiya. Digit ${digit} mila.`,
+        explanationHinglish: `Aakhri digit nikalne ke liye % 10 kiya. Digit ${digit} found hua.`,
         memorySnapshot: { n: currentN, sum, digit },
         animationEvent: { type: 'COMPUTE', inputs: ['n'], operator: '% 10', result: digit, storeIn: 'digit' },
       });

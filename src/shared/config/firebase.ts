@@ -15,37 +15,72 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 
+export interface CustomBranding {
+  institutionName?: string;
+  badgeText?: string;
+  themeColor?: string;
+  logoUrl?: string;
+}
+
+export interface LicenseValidationResult {
+  isValid: boolean;
+  licenseKey?: string;
+  tier?: 'standard' | 'pro' | 'enterprise';
+  maxDevices?: number;
+  activeDevicesCount?: number;
+  customBranding?: CustomBranding;
+  features?: Record<string, boolean>;
+  blocked?: boolean;
+}
+
 /**
- * Validate License Key and HWID locking mapping
+ * Validate License Key, record HWID registration, and return rich custom branding & tier details
  */
 export async function validateLicenseKey(licenseKey: string, hwid: string): Promise<boolean> {
+  const res = await fetchLicenseDetails(licenseKey, hwid);
+  return res.isValid;
+}
+
+export async function fetchLicenseDetails(licenseKey: string, hwid: string): Promise<LicenseValidationResult> {
   const licenseRef = ref(db, `licenses/${licenseKey}`);
   try {
     const snapshot = await get(licenseRef);
-    if (!snapshot.exists()) return false;
+    if (!snapshot.exists()) return { isValid: false };
+    
     const licenseData = snapshot.val();
-    if (licenseData.blocked) return false;
+    if (licenseData.blocked) return { isValid: false, blocked: true };
 
     let devices = licenseData.devices || {};
-    // Device already registered on this key
-    if (devices[hwid]) return true;
+    let activeDevicesCount = Object.keys(devices).length;
+    let isAlreadyRegistered = Boolean(devices[hwid]);
 
-    // Check if new device registration exceeds capacity limits
-    const activeDevicesCount = Object.keys(devices).length;
-    if (activeDevicesCount >= licenseData.maxDevices) return false;
-
-    // Register new device HWID atomic transaction
-    await runTransaction(licenseRef, (currentData: any) => {
-      if (currentData) {
-        if (!currentData.devices) currentData.devices = {};
-        currentData.devices[hwid] = { activatedAt: new Date().toISOString() };
+    if (!isAlreadyRegistered) {
+      if (activeDevicesCount >= (licenseData.maxDevices || 1)) {
+        return { isValid: false, maxDevices: licenseData.maxDevices, activeDevicesCount };
       }
-      return currentData;
-    });
 
-    return true;
+      // Register new device HWID atomic transaction
+      await runTransaction(licenseRef, (currentData: any) => {
+        if (currentData) {
+          if (!currentData.devices) currentData.devices = {};
+          currentData.devices[hwid] = { activatedAt: new Date().toISOString() };
+        }
+        return currentData;
+      });
+      activeDevicesCount += 1;
+    }
+
+    return {
+      isValid: true,
+      licenseKey,
+      tier: licenseData.tier || 'standard',
+      maxDevices: licenseData.maxDevices || 1,
+      activeDevicesCount,
+      customBranding: licenseData.customBranding || {},
+      features: licenseData.features || {},
+    };
   } catch (err) {
     console.error('License validation failed:', err);
-    return false;
+    return { isValid: false };
   }
 }

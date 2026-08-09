@@ -40,7 +40,7 @@ export const strong_number: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the number ${limit} in "n".`,
-      explanationHinglish: `"n" dabbe mein ${limit} dala.`,
+      explanationHinglish: `"n" variable me ${limit} dala.`,
       memorySnapshot: { n: limit },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: limit },
     });
@@ -120,7 +120,7 @@ export const strong_number: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 4,
       explanationEnglish: `Check if temp > 0. (${temp} > 0) is False. Loop exits.`,
-      explanationHinglish: `Check kiya kya temp > 0. (${temp} > 0) False hai. Loop khatam.`,
+      explanationHinglish: `Check kiya kya temp > 0. (${temp} > 0) False hai. Loop complete.`,
       memorySnapshot: { n: limit, temp, sum, d, f },
       animationEvent: { type: 'COMPUTE', inputs: ['temp'], operator: '> 0', result: 'False', storeIn: 'Condition' },
     });

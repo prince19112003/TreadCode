@@ -22,14 +22,14 @@ export const pass_marks: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Create a box "marks" and store the student's score (${marks}).`,
-        explanationHinglish: `Student ke marks (${marks}) "marks" dabbe mein store kiye.`,
+        explanationHinglish: `Student ke marks (${marks}) "marks" variable me store kiye.`,
         memorySnapshot: snap1,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'marks', value: marks },
       },
       {
         step: 2, lineNum: 2,
         explanationEnglish: `Create a box "passing" to store the minimum required score (${passing}).`,
-        explanationHinglish: `Pass hone ka threshold (${passing}) "passing" dabbe mein store kiya.`,
+        explanationHinglish: `Pass hone ka threshold (${passing}) "passing" variable me store kiya.`,
         memorySnapshot: snap2,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'passing', value: passing },
       },
@@ -45,7 +45,7 @@ export const pass_marks: LessonProgram = {
       steps.push({
         step: 4, lineNum: 4,
         explanationEnglish: 'Condition met, print the passing message.',
-        explanationHinglish: 'Condition true mili isliye "Exam Passed!" print kiya.',
+        explanationHinglish: 'Condition True hai isliye "Exam Passed!" print kiya.',
         memorySnapshot: snap2,
         consoleOutput: 'Exam Passed!',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Exam Passed!"', outputValue: 'Exam Passed!' },
@@ -57,14 +57,14 @@ export const pass_marks: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: "Create a box \"marks\" and store the student's score (75).",
-      explanationHinglish: 'Student ke marks (75) "marks" dabbe mein store kiye.',
+      explanationHinglish: 'Student ke marks (75) "marks" variable me store kiye.',
       memorySnapshot: { marks: 75 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'marks', value: 75 },
     },
     {
       step: 2, lineNum: 2,
       explanationEnglish: 'Create a box "passing" to store the minimum required score (40).',
-      explanationHinglish: 'Pass hone ka threshold (40) "passing" dabbe mein store kiya.',
+      explanationHinglish: 'Pass hone ka threshold (40) "passing" variable me store kiya.',
       memorySnapshot: { marks: 75, passing: 40 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'passing', value: 40 },
     },
@@ -78,7 +78,7 @@ export const pass_marks: LessonProgram = {
     {
       step: 4, lineNum: 4,
       explanationEnglish: 'Condition met, print the passing message.',
-      explanationHinglish: 'Condition true mili isliye "Exam Passed!" print kiya.',
+      explanationHinglish: 'Condition True hai isliye "Exam Passed!" print kiya.',
       memorySnapshot: { marks: 75, passing: 40 },
       consoleOutput: 'Exam Passed!',
       animationEvent: { type: 'PRINT_VALUE', variableName: '"Exam Passed!"', outputValue: 'Exam Passed!' },

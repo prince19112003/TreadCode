@@ -38,14 +38,14 @@ export const count_vowels_consonants: LessonProgram = {
       {
         step: stepNum++, lineNum: 2,
         explanationEnglish: 'Initialize vowel counter to 0.',
-        explanationHinglish: 'Vowel ginne ke liye v_count ko 0 se shuru kiya.',
+        explanationHinglish: 'Vowel ginne ke liye v_count ko 0 se start kiya.',
         memorySnapshot: { word: fWord, v_count: 0 },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'v_count', value: 0 },
       },
       {
         step: stepNum++, lineNum: 3,
         explanationEnglish: 'Initialize consonant counter to 0.',
-        explanationHinglish: 'Consonant ginne ke liye c_count ko 0 se shuru kiya.',
+        explanationHinglish: 'Consonant ginne ke liye c_count ko 0 se start kiya.',
         memorySnapshot: { word: fWord, v_count: 0, c_count: 0 },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'c_count', value: 0 },
       }
@@ -85,7 +85,7 @@ export const count_vowels_consonants: LessonProgram = {
         steps.push({
           step: stepNum++, lineNum: 7,
           explanationEnglish: `It is not a vowel, go to else block.`,
-          explanationHinglish: `Yeh vowel nahi hai, isliye else block mein gaye.`,
+          explanationHinglish: `Yeh vowel nahi hai, isliye else block mein move hua.`,
           memorySnapshot: { word: fWord, v_count: vCount, c_count: cCount, char: fChar },
           animationEvent: { type: 'NONE' },
         });

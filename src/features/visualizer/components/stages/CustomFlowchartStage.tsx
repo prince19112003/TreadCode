@@ -10,6 +10,7 @@ import { ComputeBlock } from '../elements/ComputeBlock';
 import { ConditionBox } from '../elements/ConditionBox';
 import { MatchBlock } from '../elements/MatchBlock';
 import { FunctionBlock } from '../elements/FunctionBlock';
+import { RecursiveFunctionBlock } from '../elements/RecursiveFunctionBlock';
 import { FunctionStatementRow } from '../elements/FunctionStatementRow';
 import { DataStructureBox } from '../elements/DataStructureBox';
 
@@ -193,7 +194,7 @@ export const CustomFlowchartStage: React.FC = () => {
   );
   const branchSteps = matchedConditionIdx !== -1 ? visibleSteps.slice(matchedConditionIdx + 1) : [];
   
-  const isFunctionTopic = lesson.topic === 'functions';
+  const isFunctionTopic = lesson.topic === 'functions' || lesson.topic === 'recursion';
   let currentActiveLine = -1;
 
   // Variables for loop topic parsing
@@ -582,10 +583,12 @@ export const CustomFlowchartStage: React.FC = () => {
 
             return (
               <ConditionBox
-                condition={ev.inputs.length === 2
+                condition={ev.formula || (ev.inputs.length === 2
                   ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]}`
-                  : `${ev.inputs[0] || ''} ${ev.operator || ''}`
-                }
+                  : ev.inputs.length > 2
+                    ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]} and ${ev.inputs[0]} ${ev.operator} ${ev.inputs[2]}`
+                    : `${ev.inputs[0] || ''} ${ev.operator || ''}`
+                )}
                 inputs={ev.inputs}
                 memorySnapshot={latestStep.memorySnapshot}
                 isTrue={ev.result === 'True' || String(ev.result) === 'true'}
@@ -798,6 +801,12 @@ export const CustomFlowchartStage: React.FC = () => {
                             </svg>
                             <span className="text-[10px] font-mono tracking-wider">Awaiting Function Creation...</span>
                           </motion.div>
+                        ) : lesson.topic === 'recursion' ? (
+                          <RecursiveFunctionBlock
+                            visibleSteps={visibleSteps}
+                            lessonLines={lesson.lines}
+                            currentStepIndex={currentStepIndex}
+                          />
                         ) : (
                           <FunctionBlock 
                             key="func-block"
@@ -824,13 +833,57 @@ export const CustomFlowchartStage: React.FC = () => {
                                   return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
                                 })() : <VariableBox name={ev.name} value={ev.value} isActive={isLineLatest} isSmall />;
                               }
+                              if (ev?.type === 'MULTI_CREATE_VARIABLES') {
+                                activeComponent = (
+                                  <div className="flex gap-2 items-center">
+                                    {ev.variables.map((v: any, idx: number) => (
+                                      isDataStructure(v.value) ? (() => {
+                                        const { variant, items } = parseDataStructure(v.value);
+                                        return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLineLatest} />;
+                                      })() : (
+                                        <VariableBox key={idx} name={v.name} value={v.value} isActive={isLineLatest} isSmall />
+                                      )
+                                    ))}
+                                  </div>
+                                );
+                              }
                               if (ev?.type === 'UPDATE_VARIABLE') {
                                 activeComponent = isDataStructure(ev.newValue) ? (() => {
                                   const { variant, items } = parseDataStructure(ev.newValue);
                                   return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
                                 })() : <VariableBox name={ev.name} value={ev.newValue} oldValue={ev.oldValue} isActive={isLineLatest} isSmall />;
                               }
-                              if (ev?.type === 'COMPUTE' && ev.storeIn !== 'Condition') activeComponent = <ComputeBlock inputs={ev.inputs} operator={ev.operator || '+'} storeIn={ev.storeIn} result={ev.result} memorySnapshot={lineLatestStep.memorySnapshot} isActive={isLineLatest} isSmall />;
+                              if (ev?.type === 'COMPUTE') {
+                                if (ev.storeIn === 'Condition') {
+                                  activeComponent = (
+                                    <ConditionBox
+                                      condition={ev.formula || (ev.inputs.length === 2
+                                        ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]}`
+                                        : ev.inputs.length > 2
+                                          ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]} and ${ev.inputs[0]} ${ev.operator} ${ev.inputs[2]}`
+                                          : `${ev.inputs[0] || ''} ${ev.operator || ''}`
+                                      )}
+                                      inputs={ev.inputs}
+                                      memorySnapshot={lineLatestStep.memorySnapshot}
+                                      isTrue={ev.result === 'True' || String(ev.result) === 'true'}
+                                      isActive={isLineLatest}
+                                      label="CONDITION"
+                                      colorTheme="default"
+                                    />
+                                  );
+                                } else {
+                                  activeComponent = <ComputeBlock inputs={ev.inputs} operator={ev.operator || '+'} storeIn={ev.storeIn} result={ev.result} memorySnapshot={lineLatestStep.memorySnapshot} isActive={isLineLatest} isSmall />;
+                                }
+                              }
+                              if (ev?.type === 'FUNCTION_RETURN') {
+                                activeComponent = (
+                                  <div className={`px-4 py-2 bg-teal-950/40 border border-teal-500/50 rounded-xl text-center select-none shadow-md transition-all duration-300 ${isLineLatest ? 'scale-105 border-teal-400 ring-1 ring-teal-400/30' : ''}`}>
+                                    <span className="text-xs font-mono font-bold tracking-wider text-teal-300">
+                                      Return {ev.returnValue !== undefined ? ev.returnValue : ''}
+                                    </span>
+                                  </div>
+                                );
+                              }
                             }
                           }
 

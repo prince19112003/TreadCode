@@ -81,7 +81,7 @@ export const floyds_triangle: LessonProgram = {
       steps.push({
         step: steps.length + 1, lineNum: 7,
         explanationEnglish: 'Move to the next line.',
-        explanationHinglish: 'Agli line mein gaye.',
+        explanationHinglish: 'Agli line mein move hua.',
         memorySnapshot: { size: limit, num, i },
         consoleOutput: currentOutput,
         animationEvent: { type: 'PRINT_VALUE', variableName: '"\\n"', outputValue: '"\\n"' },

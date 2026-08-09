@@ -39,14 +39,14 @@ export const count_chars_types: LessonProgram = {
       {
         step: stepNum++, lineNum: 2,
         explanationEnglish: 'Initialize digits counter to 0.',
-        explanationHinglish: 'Digits ginne ke liye d_count ko 0 se shuru kiya.',
+        explanationHinglish: 'Digits ginne ke liye d_count ko 0 se start kiya.',
         memorySnapshot: { word: fWord, d_count: 0 },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'd_count', value: 0 },
       },
       {
         step: stepNum++, lineNum: 3,
         explanationEnglish: 'Initialize spaces counter to 0.',
-        explanationHinglish: 'Spaces ginne ke liye s_count ko 0 se shuru kiya.',
+        explanationHinglish: 'Spaces ginne ke liye s_count ko 0 se start kiya.',
         memorySnapshot: { word: fWord, d_count: 0, s_count: 0 },
         animationEvent: { type: 'CREATE_VARIABLE', name: 's_count', value: 0 },
       }

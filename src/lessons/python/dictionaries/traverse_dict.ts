@@ -67,7 +67,7 @@ export const traverse_dict: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 2,
         explanationEnglish: `Loop over keys using .keys(): Read key "${k}".`,
-        explanationHinglish: `.keys() par loop chalaya: "${k}" key padhi.`,
+        explanationHinglish: `.keys() par loop execute kiya: "${k}" key padhi.`,
         memorySnapshot: { ...mem },
         animationEvent: prevK !== undefined 
           ? { type: 'UPDATE_VARIABLE', name: 'k', oldValue: prevK, newValue: `"${k}"` }
@@ -94,7 +94,7 @@ export const traverse_dict: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 4,
         explanationEnglish: `Loop over values using .values(): Read value ${vOut}.`,
-        explanationHinglish: `.values() par loop chalaya: Value ${vOut} padhi.`,
+        explanationHinglish: `.values() par loop execute kiya: Value ${vOut} padhi.`,
         memorySnapshot: { ...mem },
         animationEvent: prevV !== undefined 
           ? { type: 'UPDATE_VARIABLE', name: 'v', oldValue: prevV, newValue: vOut }
@@ -123,7 +123,7 @@ export const traverse_dict: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 6,
         explanationEnglish: `Loop over key-value pairs using .items(): Read key "${k}" and value ${vOut}.`,
-        explanationHinglish: `.items() par loop chalaya: Key "${k}" aur value ${vOut} padhi.`,
+        explanationHinglish: `.items() par loop execute kiya: Key "${k}" aur value ${vOut} padhi.`,
         memorySnapshot: { ...mem },
         animationEvent: { type: 'UPDATE_VARIABLE', name: 'k', oldValue: mem.k || '', newValue: `"${k}"` },
       });

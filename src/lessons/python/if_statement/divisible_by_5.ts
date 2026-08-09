@@ -18,7 +18,7 @@ export const divisible_by_5: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store the value ${score} in the "score" variable.`,
-        explanationHinglish: `"score" dabbe mein ${score} save kiya.`,
+        explanationHinglish: `"score" variable me ${score} save kiya.`,
         memorySnapshot: { score },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'score', value: score },
       },
@@ -34,7 +34,7 @@ export const divisible_by_5: LessonProgram = {
       steps.push({
         step: 3, lineNum: 3,
         explanationEnglish: 'Condition is true, so print "Multiple of 5!".',
-        explanationHinglish: 'Condition true mili, isliye if block execute hua aur "Multiple of 5!" print kiya.',
+        explanationHinglish: 'Condition True hai, isliye if block execute hua aur "Multiple of 5!" print kiya.',
         memorySnapshot: { score },
         consoleOutput: 'Multiple of 5!',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Multiple of 5!"', outputValue: 'Multiple of 5!' },
@@ -46,7 +46,7 @@ export const divisible_by_5: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the value 25 in the "score" variable.',
-      explanationHinglish: '"score" dabbe mein 25 save kiya.',
+      explanationHinglish: '"score" variable me 25 save kiya.',
       memorySnapshot: { score: 25 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'score', value: 25 },
     },
@@ -60,7 +60,7 @@ export const divisible_by_5: LessonProgram = {
     {
       step: 3, lineNum: 3,
       explanationEnglish: 'Condition is true, so print "Multiple of 5!".',
-      explanationHinglish: 'Condition true mili, isliye if block execute hua aur "Multiple of 5!" print kiya.',
+      explanationHinglish: 'Condition True hai, isliye if block execute hua aur "Multiple of 5!" print kiya.',
       memorySnapshot: { score: 25 },
       consoleOutput: 'Multiple of 5!',
       animationEvent: { type: 'PRINT_VALUE', variableName: '"Multiple of 5!"', outputValue: 'Multiple of 5!' },

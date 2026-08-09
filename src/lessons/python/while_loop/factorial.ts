@@ -28,7 +28,7 @@ export const factorial: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the limit number ${limit} in "n".`,
-      explanationHinglish: `"n" dabbe mein ${limit} set kiya.`,
+      explanationHinglish: `"n" variable me ${limit} set kiya.`,
       memorySnapshot: { n: limit },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: limit },
     });
@@ -82,7 +82,7 @@ export const factorial: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 4,
       explanationEnglish: `Check if i <= n. (${i} <= ${limit}) is False. Loop exits.`,
-      explanationHinglish: `Check kiya kya i <= n. (${i} <= ${limit}) False hai. Loop khatam.`,
+      explanationHinglish: `Check kiya kya i <= n. (${i} <= ${limit}) False hai. Loop complete.`,
       memorySnapshot: { n: limit, fact, i },
       animationEvent: { type: 'COMPUTE', inputs: ['i', 'n'], operator: '<=', result: 'False', storeIn: 'Condition' },
     });

@@ -62,14 +62,14 @@ export const list_stats: LessonProgram = {
       {
         step: stepNum++, lineNum: 2,
         explanationEnglish: `Initialize total sum to 0.`,
-        explanationHinglish: `Sum calculate karne ke liye total ko 0 se shuru kiya.`,
+        explanationHinglish: `Sum calculate karne ke liye total ko 0 se start kiya.`,
         memorySnapshot: { nums: firstListStr, total: 0 },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'total', value: 0 },
       },
       {
         step: stepNum++, lineNum: 3,
         explanationEnglish: `Initialize largest and smallest with the first element of list: ${firstVal}.`,
-        explanationHinglish: `largest aur smallest dono ko list ke pehle element (${firstVal}) se shuru kiya.`,
+        explanationHinglish: `largest aur smallest dono ko list ke pehle element (${firstVal}) se start kiya.`,
         memorySnapshot: { nums: firstListStr, total: 0, largest: firstVal, smallest: firstVal },
         animationEvent: { 
           type: 'MULTI_CREATE_VARIABLES', 

@@ -95,7 +95,7 @@ export const insertion_sort: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 5,
         explanationEnglish: `Start scanning sorted portion from right: j = ${j} (arr[${j}] = ${items[j]}).`,
-        explanationHinglish: `Sorted portion mein right se scanning shuru ki: j = ${j} (arr[${j}] = ${items[j]}).`,
+        explanationHinglish: `Sorted portion mein right se scanning start ki: j = ${j} (arr[${j}] = ${items[j]}).`,
         memorySnapshot: { ...mem, j, sortedIndices: [...sortedIndices], passSnapshots: [...passSnapshots] },
         animationEvent: { type: 'CREATE_VARIABLE', name: 'j', value: j },
       });

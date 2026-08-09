@@ -22,7 +22,7 @@ export const factorial: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: 'Create a variable "fact" to hold the multiplication result, starting at 1.',
-      explanationHinglish: 'Result store karne ke liye "fact" dabba banaya, shuruwat 1 se ki.',
+      explanationHinglish: 'Result store karne ke liye "fact" variable declare kiya, shuruwat 1 se ki.',
       memorySnapshot: { fact },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'fact', value: fact },
     });
@@ -31,7 +31,7 @@ export const factorial: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 2,
       explanationEnglish: `Store the number to find factorial of in "n" (${n}).`,
-      explanationHinglish: `"n" dabbe mein ${n} dala.`,
+      explanationHinglish: `"n" variable me ${n} dala.`,
       memorySnapshot: { fact, n },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: n },
     });
@@ -62,7 +62,7 @@ export const factorial: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 5,
       explanationEnglish: 'The loop ends. Print the final factorial result.',
-      explanationHinglish: 'Loop khatam hua. Final factorial print kiya.',
+      explanationHinglish: 'Loop complete hua. Final factorial print kiya.',
       memorySnapshot: { fact, n, i: Number(n) },
       consoleOutput: String(fact),
       animationEvent: { type: 'PRINT_VALUE', variableName: 'fact', outputValue: fact },

@@ -1,4 +1,4 @@
-import type { LessonProgram } from '../../types';
+import type { LessonProgram, ExecutionStep } from '../../types';
 
 export const recursive_factorial: LessonProgram = {
   id: 'recursive_factorial', language: 'python', topic: 'recursion', lessonNumber: 3,
@@ -10,129 +10,128 @@ export const recursive_factorial: LessonProgram = {
     { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }] },
     { lineNum: 4, tokens: [{ type: 'text', value: '    ' }, { type: 'variable', value: 'prev_fact' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'factorial' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '-' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ')' }] },
     { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'prev_fact' }] },
-    { lineNum: 6, tokens: [{ type: 'variable', value: 'ans' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'factorial' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '3' }, { type: 'punctuation', value: ')' }] },
+    { lineNum: 6, tokens: [{ type: 'variable', value: 'ans' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'factorial' }, { type: 'punctuation', value: '(' }, { type: 'parameter', value: '3', paramId: 'n' }, { type: 'punctuation', value: ')' }] },
     { lineNum: 7, tokens: [{ type: 'function', value: 'print' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'ans' }, { type: 'punctuation', value: ')' }] },
   ],
-  executionSteps: [
-    {
-      step: 1, lineNum: 1,
-      explanationEnglish: 'Define a recursive function to compute factorial.',
-      explanationHinglish: 'Factorial calculate karne ke liye recursive function define kiya.',
-      memorySnapshot: {},
-      animationEvent: { type: 'NONE' },
-    },
-    {
-      step: 2, lineNum: 6,
-      explanationEnglish: 'Call factorial(3).',
-      explanationHinglish: 'factorial(3) ko call kiya.',
-      memorySnapshot: { CallStack: 'factorial(3)' },
-      animationEvent: { type: 'NONE' },
-    },
-    {
-      step: 3, lineNum: 1,
-      explanationEnglish: 'Entered factorial with n = 3.',
-      explanationHinglish: 'factorial function mein n = 3 aya.',
-      memorySnapshot: { n: 3, CallStack: 'factorial(3)' },
-      animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: 3 },
-    },
-    {
-      step: 4, lineNum: 2,
-      explanationEnglish: 'Check base condition: is n (3) <= 1?',
-      explanationHinglish: 'Check kiya kya n (3) <= 1 hai?',
-      memorySnapshot: { n: 3, CallStack: 'factorial(3)' },
-      animationEvent: { type: 'NONE' },
-    },
-    {
-        step: 5, lineNum: 4,
-        explanationEnglish: 'Call factorial(2) recursively. (Push to Stack)',
-        explanationHinglish: 'Recursion: factorial(2) ko call kiya. (Stack Push)',
-        memorySnapshot: { n: 3, CallStack: 'factorial(3) -> factorial(2)' },
+  editableVariables: {
+    n: { default: 3, min: 0, max: 7, type: 'number', label: 'Input Number (n)' },
+  },
+  generateSteps: (values: Record<string, any> = {}): ExecutionStep[] => {
+    const rawN = values?.n;
+    let n = (rawN !== undefined && rawN !== null && !isNaN(Number(rawN))) ? Number(rawN) : 3;
+    n = Math.max(0, Math.min(7, Math.floor(n))); // Constraint 0 to 7
+
+    const steps: ExecutionStep[] = [
+      {
+        step: 1, lineNum: 1,
+        explanationEnglish: 'Define a recursive function to compute factorial.',
+        explanationHinglish: 'Factorial calculate karne ke liye recursive function define kiya.',
+        memorySnapshot: {},
         animationEvent: { type: 'NONE' },
       },
-    {
-      step: 6, lineNum: 1,
-      explanationEnglish: 'Entered factorial with n = 2.',
-      explanationHinglish: 'factorial function mein n = 2 aya.',
-      memorySnapshot: { n: 2, CallStack: 'factorial(3) -> factorial(2)' },
-      animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: 2 },
-    },
-    {
-      step: 7, lineNum: 2,
-      explanationEnglish: 'Check base condition: is n (2) <= 1?',
-      explanationHinglish: 'Check kiya kya n (2) <= 1 hai?',
-      memorySnapshot: { n: 2, CallStack: 'factorial(3) -> factorial(2)' },
-      animationEvent: { type: 'NONE' },
-    },
-    {
-        step: 8, lineNum: 4,
-        explanationEnglish: 'Call factorial(1) recursively. (Push to Stack)',
-        explanationHinglish: 'Recursion: factorial(1) ko call kiya. (Stack Push)',
-        memorySnapshot: { n: 2, CallStack: 'factorial(3) -> factorial(2) -> factorial(1)' },
-        animationEvent: { type: 'NONE' },
+      {
+        step: 2, lineNum: 6,
+        explanationEnglish: `Call factorial(${n}).`,
+        explanationHinglish: `factorial(${n}) ko call kiya.`,
+        memorySnapshot: { CallStack: `factorial(${n})` },
+        animationEvent: { type: 'FUNCTION_CALL', functionName: 'factorial', args: { n } },
       },
-    {
-      step: 9, lineNum: 1,
-      explanationEnglish: 'Entered factorial with n = 1.',
-      explanationHinglish: 'factorial function mein n = 1 aya.',
-      memorySnapshot: { n: 1, CallStack: 'factorial(3) -> factorial(2) -> factorial(1)' },
-      animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: 1 },
-    },
-    {
-      step: 10, lineNum: 2,
-      explanationEnglish: 'Check base condition: is n (1) <= 1?',
-      explanationHinglish: 'Check kiya kya n (1) <= 1 hai?',
-      memorySnapshot: { n: 1, CallStack: 'factorial(3) -> factorial(2) -> factorial(1)' },
-      animationEvent: { type: 'NONE' },
-    },
-    {
-        step: 11, lineNum: 3,
-        explanationEnglish: 'Base condition met! Return 1.',
-        explanationHinglish: 'Base condition true! 1 return kiya.',
-        memorySnapshot: { n: 1, CallStack: 'factorial(3) -> factorial(2) -> factorial(1)' },
-        animationEvent: { type: 'COMPUTE', inputs: [], operator: 'return', result: 1, storeIn: 'ReturnValue' },
-      },
-    {
-        step: 12, lineNum: 4,
-        explanationEnglish: 'Returned from factorial(1) with value 1. (Pop from Stack)',
-        explanationHinglish: 'factorial(1) se 1 return aaya. (Stack Pop)',
-        memorySnapshot: { n: 2, CallStack: 'factorial(3) -> factorial(2)' },
-        animationEvent: { type: 'NONE' },
-      },
-    {
-        step: 13, lineNum: 5,
-        explanationEnglish: 'Compute 2 * 1 = 2 and return it.',
-        explanationHinglish: '2 aur 1 ko multiply karke 2 return kiya.',
-        memorySnapshot: { n: 2, CallStack: 'factorial(3) -> factorial(2)' },
-        animationEvent: { type: 'COMPUTE', inputs: ['n', 'ReturnValue'], operator: '*', result: 2, storeIn: 'ReturnValue' },
-      },
-    {
-        step: 14, lineNum: 4,
-        explanationEnglish: 'Returned from factorial(2) with value 2. (Pop from Stack)',
-        explanationHinglish: 'factorial(2) se 2 return aaya. (Stack Pop)',
-        memorySnapshot: { n: 3, CallStack: 'factorial(3)' },
-        animationEvent: { type: 'NONE' },
-      },
-    {
-        step: 15, lineNum: 5,
-        explanationEnglish: 'Compute 3 * 2 = 6 and return it.',
-        explanationHinglish: '3 aur 2 ko multiply karke 6 return kiya.',
-        memorySnapshot: { n: 3, CallStack: 'factorial(3)' },
-        animationEvent: { type: 'COMPUTE', inputs: ['n', 'ReturnValue'], operator: '*', result: 6, storeIn: 'ReturnValue' },
-      },
-    {
-      step: 16, lineNum: 6,
-      explanationEnglish: 'Store the final result (6) in "ans".',
-      explanationHinglish: 'Final result (6) ko "ans" mein store kiya.',
-      memorySnapshot: { ans: 6 },
-      animationEvent: { type: 'CREATE_VARIABLE', name: 'ans', value: 6 },
-    },
-    {
-      step: 17, lineNum: 7,
-      explanationEnglish: 'Print the factorial.',
-      explanationHinglish: 'Factorial print kiya.',
-      memorySnapshot: { ans: 6 },
-      consoleOutput: '6',
-      animationEvent: { type: 'PRINT_VALUE', variableName: 'ans', outputValue: 6 },
+    ];
+
+    const callChain: number[] = [];
+    for (let k = n; k >= 1; k--) {
+      callChain.push(k);
     }
-  ],
+    if (callChain.length === 0) callChain.push(0);
+
+    let stepNum = 3;
+
+    const fact = (x: number): number => (x <= 1 ? 1 : x * fact(x - 1));
+
+    let currentStack = '';
+    callChain.forEach((val, idx) => {
+      currentStack = currentStack ? `${currentStack} -> factorial(${val})` : `factorial(${val})`;
+
+      steps.push({
+        step: stepNum++, lineNum: 1,
+        explanationEnglish: `Entered factorial with n = ${val}.`,
+        explanationHinglish: `factorial function mein n = ${val} aya.`,
+        memorySnapshot: { n: val, CallStack: currentStack },
+        animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: val },
+      });
+
+      const isBase = val <= 1;
+      steps.push({
+        step: stepNum++, lineNum: 2,
+        explanationEnglish: `Check base condition: is n (${val}) <= 1? → ${isBase ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Check kiya kya n (${val}) <= 1 hai? → ${isBase ? 'SAHI' : 'GALAT'}.`,
+        memorySnapshot: { n: val, CallStack: currentStack },
+        animationEvent: { type: 'COMPUTE', inputs: ['n', '1'], operator: '<=', formula: 'n <= 1', result: isBase ? 'True' : 'False', storeIn: 'Condition' },
+      });
+
+      if (!isBase && idx < callChain.length - 1) {
+        steps.push({
+          step: stepNum++, lineNum: 4,
+          explanationEnglish: `Call factorial(${val - 1}) recursively. (Push to Stack)`,
+          explanationHinglish: `Recursion: factorial(${val - 1}) ko call kiya. (Stack Push)`,
+          memorySnapshot: { n: val, CallStack: currentStack },
+          animationEvent: { type: 'FUNCTION_CALL', functionName: 'factorial', args: { n: val - 1 } },
+        });
+      }
+    });
+
+    const baseVal = callChain[callChain.length - 1];
+    const stackAtBase = callChain.map(v => `factorial(${v})`).join(' -> ');
+    steps.push({
+      step: stepNum++, lineNum: 3,
+      explanationEnglish: `Base condition met for n = ${baseVal}! Return 1.`,
+      explanationHinglish: `Base condition true! 1 return kiya.`,
+      memorySnapshot: { n: baseVal, CallStack: stackAtBase },
+      animationEvent: { type: 'COMPUTE', inputs: [], operator: 'return', result: 1, storeIn: 'ReturnValue' },
+    });
+
+    let currentRes = 1;
+    for (let i = callChain.length - 2; i >= 0; i--) {
+      const val = callChain[i];
+      const subStack = callChain.slice(0, i + 1).map(v => `factorial(${v})`).join(' -> ');
+      currentRes = val * currentRes;
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `Returned from factorial(${val - 1}) with value ${currentRes / val}.`,
+        explanationHinglish: `factorial(${val - 1}) se ${currentRes / val} return aaya.`,
+        memorySnapshot: { n: val, CallStack: subStack },
+        animationEvent: { type: 'NONE' },
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 5,
+        explanationEnglish: `Compute ${val} * ${currentRes / val} = ${currentRes} and return it.`,
+        explanationHinglish: `${val} aur ${currentRes / val} ko multiply karke ${currentRes} return kiya.`,
+        memorySnapshot: { n: val, CallStack: subStack },
+        animationEvent: { type: 'FUNCTION_RETURN', functionName: 'factorial', returnValue: currentRes },
+      });
+    }
+
+    const finalAns = fact(n);
+    steps.push({
+      step: stepNum++, lineNum: 6,
+      explanationEnglish: `Store the final result (${finalAns}) in "ans".`,
+      explanationHinglish: `Final result (${finalAns}) ko "ans" mein store kiya.`,
+      memorySnapshot: { ans: finalAns },
+      animationEvent: { type: 'CREATE_VARIABLE', name: 'ans', value: finalAns },
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Print the factorial result: ${finalAns}.`,
+      explanationHinglish: `Factorial print kiya: ${finalAns}.`,
+      memorySnapshot: { ans: finalAns },
+      consoleOutput: String(finalAns),
+      animationEvent: { type: 'PRINT_VALUE', variableName: 'ans', outputValue: finalAns },
+    });
+
+    return steps;
+  },
+  executionSteps: [],
 };

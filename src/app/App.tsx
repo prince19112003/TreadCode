@@ -4,7 +4,9 @@ import { AnimatePresence } from 'motion/react';
 import { GlobalAppShell } from './layout/GlobalAppShell';
 import { LoadingSpinner } from '@shared/components/ui/LoadingSpinner';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
+import { EulaModal } from '@shared/components/ui/EulaModal';
 import { SplashPage } from '../pages/SplashPage';
+import { fetchLicenseDetails, type LicenseValidationResult } from '../shared/config/firebase';
 
 // Lazy loaded routes for scalability
 const LanguageSelectionPage = lazy(() => import('@pages/LanguageSelectionPage').then(m => ({ default: m.LanguageSelectionPage })));
@@ -19,7 +21,9 @@ export const LicenseContext = React.createContext<{
   activated: boolean;
   hwid: string;
   settings: Record<string, boolean>;
+  licenseDetails: LicenseValidationResult;
   handleActivate: (key: string) => Promise<boolean>;
+  deactivateLicense: () => void;
 } | null>(null);
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -124,7 +128,7 @@ const AnimatedRoutes: React.FC = () => {
 };
 
 import { LicenseModal } from '@shared/components/ui/LicenseModal';
-import { validateLicenseKey, db } from '../shared/config/firebase';
+import { db } from '../shared/config/firebase';
 import { ref, onValue } from 'firebase/database';
 
 export const App: React.FC = () => {
@@ -132,6 +136,7 @@ export const App: React.FC = () => {
   const [activated, setActivated] = React.useState<boolean | null>(null);
   const [hwid, setHwid] = React.useState('fallback-device-id-xxxx');
   const [settings, setSettings] = React.useState<Record<string, boolean>>({});
+  const [licenseDetails, setLicenseDetails] = React.useState<LicenseValidationResult>({ isValid: false });
 
   // Sync global settings from firebase database
   React.useEffect(() => {
@@ -140,6 +145,22 @@ export const App: React.FC = () => {
       const data = snapshot.val() || {};
       setSettings(data);
     });
+
+    // Apply saved display tuning for projectors/smartboards & font size
+    const savedTuning = localStorage.getItem('flowtrace_display_tuning');
+    if (savedTuning) {
+      try {
+        const { contrast, brightness, saturate } = JSON.parse(savedTuning);
+        document.documentElement.style.filter = `contrast(${contrast || 100}%) brightness(${brightness || 100}%) saturate(${saturate || 100}%)`;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    const savedFontSize = localStorage.getItem('flowtrace_font_size');
+    if (savedFontSize) {
+      document.documentElement.style.setProperty('--code-font-size', `${savedFontSize}px`);
+    }
+
     return () => unsubscribe();
   }, []);
 
@@ -161,22 +182,32 @@ export const App: React.FC = () => {
       // 2. Check local key
       const cachedKey = localStorage.getItem('flowtrace_license_key');
       if (cachedKey) {
-        const isValid = await validateLicenseKey(cachedKey, currentHwid);
-        setActivated(isValid);
+        const details = await fetchLicenseDetails(cachedKey, currentHwid);
+        setLicenseDetails(details);
+        setActivated(details.isValid);
       } else {
         setActivated(false);
+        setLicenseDetails({ isValid: false });
       }
     }
     checkLicense();
   }, []);
 
   const handleActivate = async (key: string): Promise<boolean> => {
-    const isValid = await validateLicenseKey(key, hwid);
-    if (isValid) {
+    const details = await fetchLicenseDetails(key, hwid);
+    if (details.isValid) {
       localStorage.setItem('flowtrace_license_key', key);
+      setLicenseDetails(details);
       setActivated(true);
+      return true;
     }
-    return isValid;
+    return false;
+  };
+
+  const deactivateLicense = () => {
+    localStorage.removeItem('flowtrace_license_key');
+    setActivated(false);
+    setLicenseDetails({ isValid: false });
   };
 
   if (activated === null) {
@@ -184,10 +215,20 @@ export const App: React.FC = () => {
   }
 
   return (
-    <LicenseContext.Provider value={{ activated: !!activated, hwid, settings, handleActivate }}>
+    <LicenseContext.Provider
+      value={{
+        activated: !!activated,
+        hwid,
+        settings,
+        licenseDetails,
+        handleActivate,
+        deactivateLicense,
+      }}
+    >
       <BrowserRouter>
-        {/* Global in-app update modal — renders above everything */}
+        {/* Global in-app update & initial setup EULA agreement modals */}
         <UpdateModal />
+        <EulaModal />
 
         {showSplash ? (
           <SplashPage onComplete={() => setShowSplash(false)} />

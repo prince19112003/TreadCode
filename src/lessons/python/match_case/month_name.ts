@@ -43,14 +43,14 @@ export const month_name: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store ${month} in "month".`,
-        explanationHinglish: `"month" dabbe mein ${month} dala.`,
+        explanationHinglish: `"month" variable me ${month} dala.`,
         memorySnapshot: snap,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'month', value: month },
       },
       {
         step: 2, lineNum: 2,
         explanationEnglish: `Start matching the value of "month" (${month}).`,
-        explanationHinglish: 'Match block shuru hua, month ki value check karne.',
+        explanationHinglish: 'Match block start hua, month ki value check karne.',
         memorySnapshot: snap,
         animationEvent: { type: 'MATCH_START', variableName: 'month', value: month },
       },
@@ -129,7 +129,7 @@ export const month_name: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store 13 in "month".',
-      explanationHinglish: '"month" dabbe mein 13 dala.',
+      explanationHinglish: '"month" variable me 13 dala.',
       memorySnapshot: { month: 13 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'month', value: 13 },
     },

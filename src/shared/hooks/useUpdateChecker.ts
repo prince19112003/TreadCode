@@ -22,23 +22,19 @@ export interface UpdateStatus {
   error: string | null;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// Current App Version built into this .exe (patched by npm run release <version>)
+const CURRENT_VERSION = '2.11.0';
 
-const CURRENT_VERSION = '2.10.0';
-
-// GitHub raw content URL — directly reads your public/version.json from main branch
+// 100% FREE GitHub raw version check URL - direct from your main branch repository
 const VERSION_CHECK_URL =
   'https://raw.githubusercontent.com/prince19112003/FlowTrace/main/public/version.json';
 
-// On startup always do a fresh check (no cache delay)
-const CACHE_DURATION_MS = 0;
-const STORAGE_KEY = 'flowtrace_update_check';
 const DISMISSED_KEY = 'flowtrace_dismissed_version';
 
 // ─── Semver Compare ───────────────────────────────────────────────────────────
 
 function isNewerVersion(local: string, remote: string): boolean {
-  const parse = (v: string) => v.split('.').map((n) => parseInt(n, 10));
+  const parse = (v: string) => v.split('.').map((n) => parseInt(n, 10) || 0);
   const [lMaj, lMin, lPat] = parse(local);
   const [rMaj, rMin, rPat] = parse(remote);
   if (rMaj !== lMaj) return rMaj > lMaj;
@@ -58,7 +54,7 @@ export function useUpdateChecker(): UpdateStatus & {
     currentVersion: CURRENT_VERSION,
     changelog: [],
     releaseUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
-    downloadUrl: 'https://github.com/prince19112003/FlowTrace/archive/refs/heads/main.zip',
+    downloadUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
     isChecking: false,
     lastChecked: null,
     error: null,
@@ -66,56 +62,34 @@ export function useUpdateChecker(): UpdateStatus & {
 
   const checkedRef = useRef(false);
 
-  const checkForUpdate = useCallback(async (force = false) => {
+  const checkForUpdate = useCallback(async (_force = false) => {
     const dismissedVersion = localStorage.getItem(DISMISSED_KEY);
-
-    if (!force) {
-      const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) {
-        try {
-          const { data, timestamp } = JSON.parse(cached) as { data: VersionInfo; timestamp: number };
-          if (Date.now() - timestamp < CACHE_DURATION_MS) {
-            const newer = isNewerVersion(CURRENT_VERSION, data.version);
-            const dismissed = dismissedVersion === data.version;
-            setStatus((s) => ({
-              ...s,
-              hasUpdate: newer && !dismissed,
-              latestVersion: data.version,
-              changelog: data.changelog,
-              releaseUrl: data.releaseUrl,
-              downloadUrl: data.downloadUrl,
-              lastChecked: new Date(timestamp),
-            }));
-            return;
-          }
-        } catch {
-          // stale cache, proceed
-        }
-      }
-    }
 
     setStatus((s) => ({ ...s, isChecking: true, error: null }));
 
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(VERSION_CHECK_URL, { signal: controller.signal, cache: 'no-store' });
+      // Fetch directly from GitHub main branch with cache-buster
+      const res = await fetch(`${VERSION_CHECK_URL}?t=${Date.now()}`, {
+        signal: controller.signal,
+        cache: 'no-store',
+      });
       clearTimeout(timeout);
+      
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: VersionInfo = await res.json();
 
       const newer = isNewerVersion(CURRENT_VERSION, data.version);
       const dismissed = dismissedVersion === data.version;
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
-
       setStatus({
         hasUpdate: newer && !dismissed,
         latestVersion: data.version,
         currentVersion: CURRENT_VERSION,
-        changelog: data.changelog,
-        releaseUrl: data.releaseUrl,
-        downloadUrl: data.downloadUrl,
+        changelog: data.changelog || [],
+        releaseUrl: data.releaseUrl || 'https://github.com/prince19112003/FlowTrace/releases/latest',
+        downloadUrl: data.downloadUrl || 'https://github.com/prince19112003/FlowTrace/releases/latest',
         isChecking: false,
         lastChecked: new Date(),
         error: null,
@@ -136,11 +110,11 @@ export function useUpdateChecker(): UpdateStatus & {
 
   const checkNow = useCallback(() => checkForUpdate(true), [checkForUpdate]);
 
+  // Check directly 1.2s after app startup (after splash screen)
   useEffect(() => {
     if (checkedRef.current) return;
     checkedRef.current = true;
-    // Delay 4s so splash screen finishes first, runs fresh check ignoring cache
-    const t = setTimeout(() => checkForUpdate(true), 4000);
+    const t = setTimeout(() => checkForUpdate(true), 1200);
     return () => clearTimeout(t);
   }, [checkForUpdate]);
 

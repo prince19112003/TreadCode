@@ -25,7 +25,7 @@ export const income_tax: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store the income value ${income} in variable "income".`,
-        explanationHinglish: `"income" dabbe mein ${income} save kiya.`,
+        explanationHinglish: `"income" variable me ${income} save kiya.`,
         memorySnapshot: snapIncome,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'income', value: income },
       },
@@ -146,7 +146,7 @@ export const income_tax: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the income value 700000.',
-      explanationHinglish: '"income" dabbe mein 700000 save kiya.',
+      explanationHinglish: '"income" variable me 700000 save kiya.',
       memorySnapshot: { income: 700000 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'income', value: 700000 },
     },

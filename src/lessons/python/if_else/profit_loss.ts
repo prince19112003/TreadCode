@@ -48,7 +48,7 @@ export const profit_loss: LessonProgram = {
       steps.push({
         step: 4, lineNum: 4,
         explanationEnglish: 'Since it is True, run the if block and print "Profit Made".',
-        explanationHinglish: 'Condition True thi isliye if block chala aur "Profit Made" print hua.',
+        explanationHinglish: 'Condition True thi isliye if block execute hua aur "Profit Made" print hua.',
         memorySnapshot: snap2,
         consoleOutput: 'Profit Made',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Profit Made"', outputValue: 'Profit Made' },
@@ -65,7 +65,7 @@ export const profit_loss: LessonProgram = {
         {
           step: 5, lineNum: 6,
           explanationEnglish: 'Run the else block and print "Loss Incurred".',
-          explanationHinglish: 'Else block chalaya aur "Loss Incurred" print kiya.',
+          explanationHinglish: 'Else block execute kiya aur "Loss Incurred" print kiya.',
           memorySnapshot: snap2,
           consoleOutput: 'Loss Incurred',
           animationEvent: { type: 'PRINT_VALUE', variableName: '"Loss Incurred"', outputValue: 'Loss Incurred' },

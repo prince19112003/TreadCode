@@ -32,7 +32,7 @@ export const decimal_to_binary: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the number ${initialN} in "n".`,
-      explanationHinglish: `"n" dabbe mein ${initialN} dala.`,
+      explanationHinglish: `"n" variable me ${initialN} dala.`,
       memorySnapshot: { n: initialN },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: initialN },
     });
@@ -105,7 +105,7 @@ export const decimal_to_binary: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 4,
       explanationEnglish: `Check if n > 0. (${currentN} > 0) is False. Loop exits.`,
-      explanationHinglish: `Check kiya kya n > 0. (${currentN} > 0) False hai. Loop khatam.`,
+      explanationHinglish: `Check kiya kya n > 0. (${currentN} > 0) False hai. Loop complete.`,
       memorySnapshot: { n: currentN, bin, place, rem },
       animationEvent: { type: 'COMPUTE', inputs: ['n'], operator: '> 0', result: 'False', storeIn: 'Condition' },
     });

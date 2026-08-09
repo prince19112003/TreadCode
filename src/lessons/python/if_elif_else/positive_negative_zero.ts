@@ -22,7 +22,7 @@ export const positive_negative_zero: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store ${num} in "num".`,
-        explanationHinglish: `"num" naam ke dabbe mein ${num} dala.`,
+        explanationHinglish: `"num" variable me ${num} dala.`,
         memorySnapshot: snap,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: num },
       },
@@ -39,7 +39,7 @@ export const positive_negative_zero: LessonProgram = {
       steps.push({
         step: 3, lineNum: 3,
         explanationEnglish: 'Since the condition is True, print "Positive".',
-        explanationHinglish: 'Condition True mili isliye "Positive" print kiya.',
+        explanationHinglish: 'Condition True is isliye "Positive" print kiya.',
         memorySnapshot: snap,
         consoleOutput: 'Positive',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Positive"', outputValue: 'Positive' },
@@ -74,7 +74,7 @@ export const positive_negative_zero: LessonProgram = {
           {
             step: 5, lineNum: 7,
             explanationEnglish: 'Run the else block and print "Zero".',
-            explanationHinglish: 'Else block chalaya aur "Zero" print kiya.',
+            explanationHinglish: 'Else block execute kiya aur "Zero" print kiya.',
             memorySnapshot: snap,
             consoleOutput: 'Zero',
             animationEvent: { type: 'PRINT_VALUE', variableName: '"Zero"', outputValue: 'Zero' },
@@ -88,7 +88,7 @@ export const positive_negative_zero: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store -5 in "num".',
-      explanationHinglish: '"num" naam ke dabbe mein -5 dala.',
+      explanationHinglish: '"num" variable me -5 dala.',
       memorySnapshot: { num: -5 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: -5 },
     },

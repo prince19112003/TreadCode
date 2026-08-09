@@ -56,7 +56,7 @@ export const reverse_string: LessonProgram = {
       steps.push({
         step: stepNum++, lineNum: 4,
         explanationEnglish: `Add "${char}" to the beginning of rev_word. It becomes "${nextRev}".`,
-        explanationHinglish: `"${char}" ko rev_word ke shuru mein joda. Ab yeh "${nextRev}" ban gaya.`,
+        explanationHinglish: `"${char}" ko rev_word ke start mein joda. Ab yeh "${nextRev}" ban gaya.`,
         memorySnapshot: { word: fWord, rev_word: fNextRev, char: fChar },
         animationEvent: { type: 'COMPUTE', inputs: ['char', 'rev_word'], operator: '+', result: fNextRev, storeIn: 'rev_word' },
       });

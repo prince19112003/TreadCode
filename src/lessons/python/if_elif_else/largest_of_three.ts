@@ -63,7 +63,7 @@ export const largest_of_three: LessonProgram = {
       steps.push({
         step: 5, lineNum: 5,
         explanationEnglish: `The condition is True, print "x" (${x}).`,
-        explanationHinglish: `Condition True mili isliye x ka value (${x}) print kiya.`,
+        explanationHinglish: `Condition True is isliye x ka value (${x}) print kiya.`,
         memorySnapshot: snap3,
         consoleOutput: String(x),
         animationEvent: { type: 'PRINT_VALUE', variableName: 'x', outputValue: x },
@@ -81,7 +81,7 @@ export const largest_of_three: LessonProgram = {
         steps.push({
           step: 6, lineNum: 7,
           explanationEnglish: `The elif condition is True, so print "y" (${y}).`,
-          explanationHinglish: `Elif condition True mili, isliye y ka value (${y}) print kiya.`,
+          explanationHinglish: `Elif condition True is, isliye y ka value (${y}) print kiya.`,
           memorySnapshot: snap3,
           consoleOutput: String(y),
           animationEvent: { type: 'PRINT_VALUE', variableName: 'y', outputValue: y },
@@ -98,7 +98,7 @@ export const largest_of_three: LessonProgram = {
           {
             step: 7, lineNum: 9,
             explanationEnglish: `Run the else block and print the value of "z" (${z}).`,
-            explanationHinglish: `Else block chalaya aur "z" ka value (${z}) print kiya.`,
+            explanationHinglish: `Else block execute kiya aur "z" ka value (${z}) print kiya.`,
             memorySnapshot: snap3,
             consoleOutput: String(z),
             animationEvent: { type: 'PRINT_VALUE', variableName: 'z', outputValue: z },

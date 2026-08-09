@@ -32,7 +32,7 @@ export const perfect_number: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the number ${limit} in "n".`,
-      explanationHinglish: `"n" dabbe mein ${limit} dala.`,
+      explanationHinglish: `"n" variable me ${limit} dala.`,
       memorySnapshot: { n: limit },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: limit },
     });
@@ -97,7 +97,7 @@ export const perfect_number: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 4,
       explanationEnglish: `Check if i < n. (${i} < ${limit}) is False. Loop exits.`,
-      explanationHinglish: `Check kiya kya i < n. (${i} < ${limit}) False hai. Loop khatam.`,
+      explanationHinglish: `Check kiya kya i < n. (${i} < ${limit}) False hai. Loop complete.`,
       memorySnapshot: { n: limit, sum, i },
       animationEvent: { type: 'COMPUTE', inputs: ['i', 'n'], operator: '<', result: 'False', storeIn: 'Condition' },
     });
@@ -125,7 +125,7 @@ export const perfect_number: LessonProgram = {
         {
           step: steps.length + 1, lineNum: 10,
           explanationEnglish: 'Condition was False, skip to else block.',
-          explanationHinglish: 'Condition False thi, else block par gaye.',
+          explanationHinglish: 'Condition False thi, else block par move hua.',
           memorySnapshot: { n: limit, sum, i },
           animationEvent: { type: 'NONE' },
         },

@@ -26,7 +26,7 @@ export const count_digits: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the number ${currentN} in "n".`,
-      explanationHinglish: `"n" dabbe mein ${currentN} dala.`,
+      explanationHinglish: `"n" variable me ${currentN} dala.`,
       memorySnapshot: { n: currentN },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: currentN },
     });

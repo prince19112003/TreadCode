@@ -22,7 +22,7 @@ export const grade_calculator: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store the student score ${marks} in "marks".`,
-        explanationHinglish: `Student ke marks (${marks}) "marks" dabbe mein dale.`,
+        explanationHinglish: `Student ke marks (${marks}) "marks" variable me dale.`,
         memorySnapshot: snap,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'marks', value: marks },
       },
@@ -39,7 +39,7 @@ export const grade_calculator: LessonProgram = {
       steps.push({
         step: 3, lineNum: 3,
         explanationEnglish: 'Since this condition is True, print "Grade A".',
-        explanationHinglish: 'Yeh condition True mili, isliye "Grade A" print kiya.',
+        explanationHinglish: 'Yeh condition True is, isliye "Grade A" print kiya.',
         memorySnapshot: snap,
         consoleOutput: 'Grade A',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Grade A"', outputValue: 'Grade A' },
@@ -57,7 +57,7 @@ export const grade_calculator: LessonProgram = {
         steps.push({
           step: 4, lineNum: 5,
           explanationEnglish: 'Since this condition is True, print "Grade B".',
-          explanationHinglish: 'Yeh condition True mili, isliye "Grade B" print kiya.',
+          explanationHinglish: 'Yeh condition True is, isliye "Grade B" print kiya.',
           memorySnapshot: snap,
           consoleOutput: 'Grade B',
           animationEvent: { type: 'PRINT_VALUE', variableName: '"Grade B"', outputValue: 'Grade B' },
@@ -74,7 +74,7 @@ export const grade_calculator: LessonProgram = {
           {
             step: 5, lineNum: 7,
             explanationEnglish: 'Run the else block and print "Grade C".',
-            explanationHinglish: 'Else block chalaya aur "Grade C" print kiya.',
+            explanationHinglish: 'Else block execute kiya aur "Grade C" print kiya.',
             memorySnapshot: snap,
             consoleOutput: 'Grade C',
             animationEvent: { type: 'PRINT_VALUE', variableName: '"Grade C"', outputValue: 'Grade C' },
@@ -88,7 +88,7 @@ export const grade_calculator: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the student score 82 in "marks".',
-      explanationHinglish: 'Student ke marks (82) "marks" dabbe mein dale.',
+      explanationHinglish: 'Student ke marks (82) "marks" variable me dale.',
       memorySnapshot: { marks: 82 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'marks', value: 82 },
     },

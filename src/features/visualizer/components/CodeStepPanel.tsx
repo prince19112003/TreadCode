@@ -270,8 +270,8 @@ export const CodeStepPanel: React.FC = () => {
 
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-[#0b0c14] border border-white/5 rounded-2xl overflow-hidden relative">
-      {/* Minimal header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 shrink-0 bg-white/2">
+      {/* Slim header */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/5 shrink-0 bg-white/2">
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-500 font-mono font-bold tracking-widest uppercase">
             {lesson?.language === 'java' ? 'Main.java' : lesson?.language === 'cpp' ? 'main.cpp' : lesson?.language === 'c' ? 'main.c' : 'main.py'}

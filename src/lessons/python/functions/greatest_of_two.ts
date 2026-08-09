@@ -19,9 +19,13 @@ export const greatest_of_two: LessonProgram = {
     n1: { default: 12, type: 'number', label: 'First Number (n1)' },
     n2: { default: 20, type: 'number', label: 'Second Number (n2)' },
   },
-  generateSteps: ({ n1, n2 }): ExecutionStep[] => {
-    const a = Number(n1);
-    const b = Number(n2);
+  generateSteps: (values: Record<string, any> = {}): ExecutionStep[] => {
+    const rawN1 = values?.n1;
+    const rawN2 = values?.n2;
+
+    const a = (rawN1 !== undefined && rawN1 !== null && !isNaN(Number(rawN1))) ? Number(rawN1) : 12;
+    const b = (rawN2 !== undefined && rawN2 !== null && !isNaN(Number(rawN2))) ? Number(rawN2) : 20;
+
     const isAGreater = a > b;
     const maximum = isAGreater ? a : b;
     return [
@@ -56,9 +60,9 @@ export const greatest_of_two: LessonProgram = {
       {
         step: 5, lineNum: 1,
         explanationEnglish: `Parameters: a = ${a}, b = ${b}. Function starts executing.`,
-        explanationHinglish: `Parameters: a = ${a}, b = ${b}. Function shuru hua.`,
+        explanationHinglish: `Parameters: a = ${a}, b = ${b}. Function start hua.`,
         memorySnapshot: { n1: a, n2: b, a, b },
-        animationEvent: { type: 'CREATE_VARIABLE', name: 'a', value: a },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'a', value: a }, { name: 'b', value: b }] },
       },
       {
         step: 6, lineNum: 2,
@@ -79,7 +83,7 @@ export const greatest_of_two: LessonProgram = {
             {
               step: 7, lineNum: 4,
               explanationEnglish: 'Condition is FALSE. Jump to else block.',
-              explanationHinglish: 'Condition galat. else block mein gaye.',
+              explanationHinglish: 'Condition galat. else block mein move hua.',
               memorySnapshot: { n1: a, n2: b, a, b },
               animationEvent: { type: 'NONE' as const },
             },

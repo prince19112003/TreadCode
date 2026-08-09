@@ -21,14 +21,14 @@ export const divisible_by_7: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store the number ${num} in "num".`,
-        explanationHinglish: `"num" naam ke dabbe mein ${num} dala.`,
+        explanationHinglish: `"num" variable me ${num} dala.`,
         memorySnapshot: snap,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: num },
       },
       {
         step: 2, lineNum: 2,
         explanationEnglish: `Check if ${num} divided by 7 leaves a remainder of 0. (${num} % 7 is ${num % 7}, so ${num % 7} == 0 is ${isDiv ? 'True' : 'False'}).`,
-        explanationHinglish: `Check kiya kya ${num} ko 7 se bhag karne par remainder 0 aata hai. Yeh condition ${isDiv ? 'True' : 'False'} hai.`,
+        explanationHinglish: `Check kiya kya ${num} ko 7 se divide karne par remainder 0 aata hai. Yeh condition ${isDiv ? 'True' : 'False'} hai.`,
         memorySnapshot: snap,
         animationEvent: { type: 'COMPUTE', inputs: ['num'], operator: '% 7 == 0', result: isDiv ? 'True' : 'False', storeIn: 'Condition' },
       },
@@ -38,7 +38,7 @@ export const divisible_by_7: LessonProgram = {
       steps.push({
         step: 3, lineNum: 3,
         explanationEnglish: 'Since the condition is true, run the if block and print "Divisible".',
-        explanationHinglish: 'Condition True mili isliye if block chala aur "Divisible" print kiya.',
+        explanationHinglish: 'Condition True is isliye if block execute hua aur "Divisible" print kiya.',
         memorySnapshot: snap,
         consoleOutput: 'Divisible',
         animationEvent: { type: 'PRINT_VALUE', variableName: '"Divisible"', outputValue: 'Divisible' },
@@ -55,7 +55,7 @@ export const divisible_by_7: LessonProgram = {
         {
           step: 4, lineNum: 5,
           explanationEnglish: 'Run the else block and print "Not Divisible".',
-          explanationHinglish: 'Else block chalaya aur "Not Divisible" print kiya.',
+          explanationHinglish: 'Else block execute kiya aur "Not Divisible" print kiya.',
           memorySnapshot: snap,
           consoleOutput: 'Not Divisible',
           animationEvent: { type: 'PRINT_VALUE', variableName: '"Not Divisible"', outputValue: 'Not Divisible' },
@@ -68,14 +68,14 @@ export const divisible_by_7: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the number 15 in "num".',
-      explanationHinglish: '"num" naam ke dabbe mein 15 dala.',
+      explanationHinglish: '"num" variable me 15 dala.',
       memorySnapshot: { num: 15 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: 15 },
     },
     {
       step: 2, lineNum: 2,
       explanationEnglish: 'Check if 15 divided by 7 leaves a remainder of 0. (15 % 7 is 1, so 1 == 0 is False).',
-      explanationHinglish: 'Check kiya kya 15 ko 7 se bhag dene par remainder 0 bachta hai. Yeh False hai kyunki remainder 1 aayega.',
+      explanationHinglish: 'Check kiya kya 15 ko 7 se divide karne par remainder 0 bachta hai. Yeh False hai kyunki remainder 1 aayega.',
       memorySnapshot: { num: 15 },
       animationEvent: { type: 'COMPUTE', inputs: ['num'], operator: '% 7 == 0', result: 'False', storeIn: 'Condition' },
     },

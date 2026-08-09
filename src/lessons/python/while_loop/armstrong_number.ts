@@ -31,7 +31,7 @@ export const armstrong_number: LessonProgram = {
     steps.push({
       step: steps.length + 1, lineNum: 1,
       explanationEnglish: `Store the number ${origNum} in "original".`,
-      explanationHinglish: `"original" dabbe mein ${origNum} dala.`,
+      explanationHinglish: `"original" variable me ${origNum} dala.`,
       memorySnapshot: { original: origNum },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'original', value: origNum },
     });

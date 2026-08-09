@@ -33,14 +33,14 @@ export const day_name: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store day value ${day} in "day".`,
-        explanationHinglish: `"day" dabbe mein ${day} save kiya.`,
+        explanationHinglish: `"day" variable me ${day} save kiya.`,
         memorySnapshot: snap,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'day', value: day },
       },
       {
         step: 2, lineNum: 2,
         explanationEnglish: `Start matching the value of "day" (${day}).`,
-        explanationHinglish: `Match block shuru hua, day (${day}) ki value check karne ke liye.`,
+        explanationHinglish: `Match block start hua, day (${day}) ki value check karne ke liye.`,
         memorySnapshot: snap,
         animationEvent: { type: 'MATCH_START', variableName: 'day', value: day },
       },
@@ -84,7 +84,7 @@ export const day_name: LessonProgram = {
       steps.push({
         step: steps.length + 1, lineNum: match.line,
         explanationEnglish: `Execute case ${day} block and print "${match.name}".`,
-        explanationHinglish: `Case ${day} chalaya aur "${match.name}" print kiya.`,
+        explanationHinglish: `Case ${day} execute kiya aur "${match.name}" print kiya.`,
         memorySnapshot: snap,
         consoleOutput: match.name,
         animationEvent: { type: 'PRINT_VALUE', variableName: `"${match.name}"`, outputValue: match.name },
@@ -95,7 +95,7 @@ export const day_name: LessonProgram = {
         {
           step: steps.length + 1, lineNum: 17,
           explanationEnglish: `No previous cases matched, fallback to default case (_).`,
-          explanationHinglish: `Koi case match nahi hua, default (_) case chala.`,
+          explanationHinglish: `Koi case match nahi hua, default (_) case execute hua.`,
           memorySnapshot: snap,
           animationEvent: { type: 'COMPUTE', inputs: ['day'], operator: '== default', result: 'True', storeIn: 'Condition' },
         },
@@ -115,7 +115,7 @@ export const day_name: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store 3 in "day".',
-      explanationHinglish: '"day" dabbe mein 3 dala.',
+      explanationHinglish: '"day" variable me 3 dala.',
       memorySnapshot: { day: 3 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'day', value: 3 },
     },

@@ -20,7 +20,7 @@ export const square_root_positive: LessonProgram = {
       {
         step: 1, lineNum: 1,
         explanationEnglish: `Store the number ${num} in the "num" box.`,
-        explanationHinglish: `"num" naam ke dabbe mein ${num} dala.`,
+        explanationHinglish: `"num" variable me ${num} dala.`,
         memorySnapshot: snapNum,
         animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: num },
       },
@@ -39,7 +39,7 @@ export const square_root_positive: LessonProgram = {
         {
           step: 3, lineNum: 3,
           explanationEnglish: `Calculate the square root of ${num} (which is ${root}) and store it in "root".`,
-          explanationHinglish: `${num} ka square root nikala (${root}) aur usko naye dabbe "root" mein save kiya.`,
+          explanationHinglish: `${num} ka square root nikala (${root}) aur usko naye variable "root" mein save kiya.`,
           memorySnapshot: snapRoot,
           animationEvent: { type: 'COMPUTE', inputs: ['num', '0.5'], operator: '**', result: root, storeIn: 'root' },
         },
@@ -59,7 +59,7 @@ export const square_root_positive: LessonProgram = {
     {
       step: 1, lineNum: 1,
       explanationEnglish: 'Store the number 25 in the "num" box.',
-      explanationHinglish: '"num" naam ke dabbe mein 25 dala.',
+      explanationHinglish: '"num" variable me 25 dala.',
       memorySnapshot: { num: 25 },
       animationEvent: { type: 'CREATE_VARIABLE', name: 'num', value: 25 },
     },
@@ -73,7 +73,7 @@ export const square_root_positive: LessonProgram = {
     {
       step: 3, lineNum: 3,
       explanationEnglish: 'Calculate the square root of 25 (which is 5.0) and store it in "root".',
-      explanationHinglish: '25 ka square root nikala (5.0) aur usko naye dabbe "root" mein save kiya.',
+      explanationHinglish: '25 ka square root nikala (5.0) aur usko naye variable "root" mein save kiya.',
       memorySnapshot: { num: 25, root: 5.0 },
       animationEvent: { type: 'COMPUTE', inputs: ['num', '0.5'], operator: '**', result: 5.0, storeIn: 'root' },
     },

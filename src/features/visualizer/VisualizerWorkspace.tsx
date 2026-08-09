@@ -23,6 +23,7 @@ import { useLesson } from '../../lessons/LessonContext';
 export const VisualizerWorkspace: React.FC = () => {
   const { lesson, isFullScreen } = useLesson();
   const [isConsoleFullScreen, setIsConsoleFullScreen] = useState(false);
+  const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
 
   const isDsa = lesson?.language === 'dsa';
   const isStackTopic = isDsa && lesson?.topic === 'stack';
@@ -89,14 +90,20 @@ export const VisualizerWorkspace: React.FC = () => {
 
           {/* ── Right Column: Visual Stage (62%) ── */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
-            <div className="h-[70%] relative overflow-hidden flex flex-col rounded-2xl border border-slate-800/30">
+            <div className={`relative overflow-hidden flex flex-col rounded-2xl border border-slate-800/30 transition-all duration-300 ${
+              isConsoleCollapsed ? 'flex-1' : 'h-[70%]'
+            }`}>
               {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
               <PenMenu />
             </div>
-            <div className="h-[30%] overflow-hidden flex flex-col">
+            <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
+              isConsoleCollapsed ? 'h-10 shrink-0' : 'h-[30%]'
+            }`}>
               <OutputConsole
                 isFullScreen={isConsoleFullScreen}
                 onToggleFullScreen={() => setIsConsoleFullScreen(!isConsoleFullScreen)}
+                isCollapsed={isConsoleCollapsed}
+                onToggleCollapse={() => setIsConsoleCollapsed(!isConsoleCollapsed)}
               />
             </div>
           </div>
@@ -126,14 +133,20 @@ export const VisualizerWorkspace: React.FC = () => {
 
         {/* Right: Visualization Stage */}
         <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
-          <div className="h-[70%] relative overflow-hidden flex flex-col">
+          <div className={`relative overflow-hidden flex flex-col transition-all duration-300 ${
+            isConsoleCollapsed ? 'flex-1' : 'h-[70%]'
+          }`}>
             {isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
             <PenMenu />
           </div>
-          <div className="h-[30%] overflow-hidden flex flex-col">
+          <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
+            isConsoleCollapsed ? 'h-10 shrink-0' : 'h-[30%]'
+          }`}>
             <OutputConsole
               isFullScreen={isConsoleFullScreen}
               onToggleFullScreen={() => setIsConsoleFullScreen(!isConsoleFullScreen)}
+              isCollapsed={isConsoleCollapsed}
+              onToggleCollapse={() => setIsConsoleCollapsed(!isConsoleCollapsed)}
             />
           </div>
         </div>

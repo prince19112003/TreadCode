@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
 import { useLesson } from '../../../lessons/LessonContext';
 
 // Map event type to a short human label + color
@@ -28,20 +29,127 @@ export const ExplanationBar: React.FC = () => {
   const { currentStep, lesson, language, toggleLanguage } = useLesson();
   const isDsa = lesson?.language === 'dsa';
   const [zoomLevel, setZoomLevel] = useState(isDsa ? 1.2 : 0.8);
+  
+  // Always default to Voice OFF on app restart / mount
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showUnderDevPopup, setShowUnderDevPopup] = useState(false);
 
-  if (!lesson) return null;
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+  }, []);
 
   const text = currentStep
     ? (language === 'en' ? currentStep.explanationEnglish : currentStep.explanationHinglish)
-    : lesson.learningObjective;
+    : (language === 'en'
+        ? lesson?.learningObjective
+        : (lesson?.learningObjectiveHinglish || `Samjhein kaise Python ${lesson?.friendlyName || ''} execute karta hai.`)) || '';
 
   const evType = currentStep?.animationEvent?.type ?? 'NONE';
   const badge = EVENT_LABEL[evType] ?? EVENT_LABEL.NONE;
 
+  // Speak explanation text automatically on step change when voice enabled
+  useEffect(() => {
+    if (!isVoiceEnabled || !synthRef.current || !text) return;
+    synthRef.current.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    const voices = synthRef.current.getVoices();
+    const customEnVoice = localStorage.getItem('flowtrace_voice_en');
+    const customHiVoice = localStorage.getItem('flowtrace_voice_hi');
+
+    if (language === 'hi') {
+      utterance.lang = 'hi-IN';
+      const emilyVoice = (customHiVoice && voices.find(v => v.name === customHiVoice)) ||
+                         voices.find(v => v.name.includes('Emily')) ||
+                         voices.find(v => v.lang.includes('hi')) ||
+                         voices.find(v => v.name.toLowerCase().includes('hindi'));
+      if (emilyVoice) utterance.voice = emilyVoice;
+    } else {
+      utterance.lang = 'en-US';
+      const liamVoice = (customEnVoice && voices.find(v => v.name === customEnVoice)) ||
+                        voices.find(v => v.name.includes('Liam')) ||
+                        voices.find(v => v.name.includes('Google US English')) ||
+                        voices.find(v => v.lang.includes('en-US')) ||
+                        voices.find(v => v.lang.includes('en'));
+      if (liamVoice) utterance.voice = liamVoice;
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    synthRef.current.speak(utterance);
+
+    return () => {
+      synthRef.current?.cancel();
+    };
+  }, [currentStep?.step, language, isVoiceEnabled, text]);
+
+  const toggleVoice = () => {
+    if (!isVoiceEnabled) {
+      // Show "Under Development" popup briefly when turning ON
+      setShowUnderDevPopup(true);
+      if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+      popupTimerRef.current = setTimeout(() => {
+        setShowUnderDevPopup(false);
+      }, 3000);
+      setIsVoiceEnabled(true);
+    } else {
+      synthRef.current?.cancel();
+      setIsSpeaking(false);
+      setIsVoiceEnabled(false);
+      setShowUnderDevPopup(false);
+    }
+  };
+
+  if (!lesson) return null;
+
   return (
     <div className="h-full flex flex-col bg-[#0b0c14] border border-indigo-500/20 rounded-2xl relative overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-indigo-500/20 shrink-0 bg-white/2">
-        <span className="text-xs text-indigo-400/80 font-mono font-bold tracking-widest uppercase">what happened</span>
+      {/* Slim Header bar */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-indigo-500/20 shrink-0 bg-white/2 relative">
+        <div className="flex items-center gap-2 relative">
+          {/* TTS Voice Toggle Button - Default OFF */}
+          <button
+            onClick={toggleVoice}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all text-xs font-mono font-bold ${
+              isVoiceEnabled
+                ? isSpeaking
+                  ? 'border-emerald-500/60 bg-emerald-950/40 text-emerald-300 ring-2 ring-emerald-500/30 animate-pulse'
+                  : 'border-amber-500/60 bg-amber-950/40 text-amber-300 ring-2 ring-amber-500/30'
+                : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+            }`}
+            title="AI Voice Feature"
+          >
+            {isVoiceEnabled ? <Volume2 size={14} className={isSpeaking ? 'text-emerald-400' : 'text-amber-400'} /> : <VolumeX size={14} />}
+            <span>{isVoiceEnabled ? (isSpeaking ? 'SPEAKING...' : 'VOICE ON') : 'VOICE OFF'}</span>
+          </button>
+
+          {/* Under Development Small Popup Badge */}
+          <AnimatePresence>
+            {showUnderDevPopup && (
+              <motion.div
+                initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                className="absolute left-0 top-9 z-50 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/95 border border-amber-500/50 rounded-xl shadow-2xl backdrop-blur-xl text-[11px] font-mono text-amber-300 whitespace-nowrap"
+              >
+                <AlertCircle size={13} className="text-amber-400 shrink-0" />
+                <span>🚧 Voice Feature Under Development</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <div className="flex items-center gap-2">
           {/* Language toggle */}
           <button
