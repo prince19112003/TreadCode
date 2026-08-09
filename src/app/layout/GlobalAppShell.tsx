@@ -520,9 +520,11 @@ export const GlobalAppShell: React.FC = () => {
           <div className="flex items-center gap-0.5 bg-slate-950/80 border border-indigo-500/30 rounded-xl p-1 shadow-lg ml-1 shrink-0">
             <button
               onClick={async () => {
-                if ((window as any).__TAURI_INTERNALS__) {
+                try {
                   const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                  getCurrentWindow().minimize();
+                  await getCurrentWindow().minimize();
+                } catch (e) {
+                  console.error('Minimize error:', e);
                 }
               }}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
@@ -532,9 +534,11 @@ export const GlobalAppShell: React.FC = () => {
             </button>
             <button
               onClick={async () => {
-                if ((window as any).__TAURI_INTERNALS__) {
+                try {
                   const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                  getCurrentWindow().toggleMaximize();
+                  await getCurrentWindow().toggleMaximize();
+                } catch (e) {
+                  console.error('Maximize error:', e);
                 }
               }}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-purple-300 hover:bg-purple-500/20 transition-all cursor-pointer"
@@ -545,9 +549,12 @@ export const GlobalAppShell: React.FC = () => {
             <div className="w-px h-3.5 bg-white/10 mx-0.5" />
             <button
               onClick={async () => {
-                if ((window as any).__TAURI_INTERNALS__) {
+                try {
                   const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                  getCurrentWindow().close();
+                  await getCurrentWindow().close();
+                } catch (e) {
+                  console.error('Close error:', e);
+                  window.close();
                 }
               }}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-300 hover:bg-rose-500/25 transition-all cursor-pointer"
