@@ -23,7 +23,7 @@ export interface UpdateStatus {
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
-const CURRENT_VERSION = '2.11.0';
+const CURRENT_VERSION = '2.12.0';
 
 // 100% FREE GitHub raw version check URL - direct from your main branch repository
 const VERSION_CHECK_URL =
