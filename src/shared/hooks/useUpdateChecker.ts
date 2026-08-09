@@ -25,9 +25,9 @@ export interface UpdateStatus {
 // Current App Version built into this .exe (patched by npm run release <version>)
 const CURRENT_VERSION = '2.12.0';
 
-// 100% FREE GitHub raw version check URL - direct from your main branch repository
+// 100% FREE Firebase RTDB version check URL (works reliably even if GitHub repo is private)
 const VERSION_CHECK_URL =
-  'https://raw.githubusercontent.com/prince19112003/FlowTrace/main/public/version.json';
+  'https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json';
 
 const DISMISSED_KEY = 'flowtrace_dismissed_version';
 

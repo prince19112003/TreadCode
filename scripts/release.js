@@ -38,7 +38,7 @@ publicVersion.releaseUrl = 'https://github.com/prince19112003/FlowTrace/releases
 writeFileSync(publicVersionPath, JSON.stringify(publicVersion, null, 2));
 console.log('✔ Updated public/version.json');
 
-// 4. Patch CURRENT_VERSION in useUpdateChecker.ts (so app knows its own installed version)
+// 4. Patch CURRENT_VERSION in useUpdateChecker.ts
 const hookPath = './src/shared/hooks/useUpdateChecker.ts';
 let hookContent = readFileSync(hookPath, 'utf8');
 hookContent = hookContent.replace(
@@ -48,14 +48,45 @@ hookContent = hookContent.replace(
 writeFileSync(hookPath, hookContent);
 console.log('✔ Patched CURRENT_VERSION in useUpdateChecker.ts');
 
-// 5. Git commit, push, tag
-try {
-  execSync('git add .');
-  execSync(`git commit --no-verify -m "bump(version): release v${newVersion}"`);
-  execSync('git push origin main');
-  execSync(`git tag v${newVersion}`);
-  execSync(`git push origin v${newVersion}`);
-  console.log(`\n🚀 Version v${newVersion} successfully pushed and tagged! GitHub Actions is building the release.`);
-} catch (error) {
-  console.error('Error during git operations:', error.message);
+// 5. Sync to Firebase RTDB node global_update.json
+async function syncFirebase() {
+  try {
+    const updateData = {
+      version: newVersion,
+      buildDate: new Date().toISOString().split('T')[0],
+      downloadUrl: EXE_URL,
+      releaseUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
+      changelog: [
+        "New 3D MindTrace execution tree logo across all platforms",
+        "Display & Projector Tuning with 1-click Faculty Presets",
+        "First-launch EULA & Privacy Policy agreement modal",
+        "Slim compact headers across all 3 visualizer panels",
+        "Futuristic Glass Window Control Capsule"
+      ]
+    };
+    const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData)
+    });
+    if (res.ok) {
+      console.log('✔ Synced global_update to Firebase RTDB');
+    }
+  } catch (e) {
+    console.warn('Firebase RTDB sync warning:', e.message);
+  }
+
+  // 6. Git commit, push, tag
+  try {
+    execSync('git add .');
+    execSync(`git commit --no-verify -m "bump(version): release v${newVersion}"`);
+    execSync('git push origin main');
+    execSync(`git tag v${newVersion}`);
+    execSync(`git push origin v${newVersion}`);
+    console.log(`\n🚀 Version v${newVersion} successfully pushed and tagged! Remote apps will receive update immediately.`);
+  } catch (error) {
+    console.error('Error during git operations:', error.message);
+  }
 }
+
+syncFirebase();
