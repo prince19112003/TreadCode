@@ -23,13 +23,11 @@ export interface UpdateStatus {
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
-const CURRENT_VERSION = '2.13.0';
+const CURRENT_VERSION = '2.14.0';
 
 // 100% FREE Firebase RTDB version check URL (works reliably even if GitHub repo is private)
 const VERSION_CHECK_URL =
   'https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json';
-
-const DISMISSED_KEY = 'flowtrace_dismissed_version';
 
 // ─── Semver Compare ───────────────────────────────────────────────────────────
 
@@ -63,8 +61,6 @@ export function useUpdateChecker(): UpdateStatus & {
   const checkedRef = useRef(false);
 
   const checkForUpdate = useCallback(async (_force = false) => {
-    const dismissedVersion = localStorage.getItem(DISMISSED_KEY);
-
     setStatus((s) => ({ ...s, isChecking: true, error: null }));
 
     try {
@@ -81,10 +77,9 @@ export function useUpdateChecker(): UpdateStatus & {
       const data: VersionInfo = await res.json();
 
       const newer = isNewerVersion(CURRENT_VERSION, data.version);
-      const dismissed = dismissedVersion === data.version;
 
       setStatus({
-        hasUpdate: newer && !dismissed,
+        hasUpdate: newer,
         latestVersion: data.version,
         currentVersion: CURRENT_VERSION,
         changelog: data.changelog || [],
@@ -104,9 +99,8 @@ export function useUpdateChecker(): UpdateStatus & {
   }, []);
 
   const dismiss = useCallback(() => {
-    if (status.latestVersion) localStorage.setItem(DISMISSED_KEY, status.latestVersion);
     setStatus((s) => ({ ...s, hasUpdate: false }));
-  }, [status.latestVersion]);
+  }, []);
 
   const checkNow = useCallback(() => checkForUpdate(true), [checkForUpdate]);
 

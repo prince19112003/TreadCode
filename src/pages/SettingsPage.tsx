@@ -447,6 +447,26 @@ export const SettingsPage: React.FC = () => {
       iconColor: '#8b5cf6',
       content: (
         <div className="space-y-4 text-sm" style={{ color: '#8b92a8' }}>
+          {hasUpdate && (
+            <div className="bg-linear-to-r from-indigo-950/90 via-purple-950/80 to-slate-950/90 border border-indigo-500/50 p-4 rounded-xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                  <span className="text-white font-bold text-xs uppercase tracking-wider">Update Available</span>
+                </div>
+                <p className="text-xs text-slate-200 font-medium">
+                  New Version v{latestVersion} is ready! (Your installed version: v{currentVersion})
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPreviewModal(true)}
+                className="px-4 py-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/30 transition-all shrink-0 cursor-pointer"
+              >
+                🚀 Update Now (v{latestVersion})
+              </button>
+            </div>
+          )}
+
           <SettingRow label="FlowTrace Version" description={`Current version: v${currentVersion}`}>
             <div className="flex items-center gap-2">
               {hasUpdate ? (
