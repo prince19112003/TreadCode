@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, FileText, CheckCircle2 } from 'lucide-react';
-import { MindTraceLogo } from './MindTraceLogo';
+import { TreadCodeLogo } from './MindTraceLogo';
 
 export const EulaModal: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -38,12 +38,12 @@ export const EulaModal: React.FC = () => {
           <div className="p-6 md:p-7">
             {/* Logo + Title */}
             <div className="flex items-center gap-3.5 mb-5">
-              <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-indigo-500/30 flex items-center justify-center shrink-0 shadow-lg">
-                <MindTraceLogo size={34} />
+              <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                <TreadCodeLogo size={40} />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-white tracking-tight">
-                  Welcome to FlowTrace
+                <h2 className="text-xl font-extrabold tracking-tight">
+                  Welcome to <span className="text-white">Tread</span><span className="text-indigo-400">Code</span>
                 </h2>
                 <p className="text-xs text-slate-400">
                   Please review & accept the agreement to continue

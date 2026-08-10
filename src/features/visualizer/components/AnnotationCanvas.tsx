@@ -18,6 +18,9 @@ interface AnnotationCanvasProps {
   dashStyle?: 'solid' | 'dashed' | 'dotted';
   mode: 'pen' | 'eraser';
   strokesRef: React.MutableRefObject<Stroke[]>;
+  undoneRef?: React.MutableRefObject<Stroke[]>;
+  revision?: number;
+  onStrokeComplete?: () => void;
 }
 
 export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
@@ -28,6 +31,9 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   dashStyle = 'solid',
   mode,
   strokesRef,
+  undoneRef,
+  revision = 0,
+  onStrokeComplete,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
@@ -43,18 +49,21 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     strokesRef.current.forEach(stroke => {
       if (stroke.points.length < 2) return;
-      ctx.lineWidth = stroke.strokeWidth || 4;
-      ctx.lineCap = 'round';
+      const w = stroke.strokeWidth || 4;
+      ctx.lineWidth = w;
       ctx.lineJoin = 'round';
       ctx.strokeStyle = stroke.color;
       ctx.shadowBlur = 0;
 
       const style = stroke.dashStyle || (stroke.isDashed ? 'dashed' : 'solid');
       if (style === 'dashed') {
-        ctx.setLineDash([10, 6]);
+        ctx.lineCap = 'butt';
+        ctx.setLineDash([w * 3.5, w * 2]);
       } else if (style === 'dotted') {
-        ctx.setLineDash([3, 4]);
+        ctx.lineCap = 'round';
+        ctx.setLineDash([0.1, w * 2]);
       } else {
+        ctx.lineCap = 'round';
         ctx.setLineDash([]);
       }
 
@@ -83,7 +92,9 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       return !stroke.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < eraseRadius);
     });
     if (strokesRef.current.length !== initialCount) {
+      if (undoneRef) undoneRef.current = [];
       redraw();
+      if (onStrokeComplete) onStrokeComplete();
     }
   };
 
@@ -111,28 +122,35 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     currentStroke.current.push(pt);
 
+    redraw();
+
     const ctx = getCtx();
     if (!ctx || currentStroke.current.length < 2) return;
     const pts = currentStroke.current;
+    const w = strokeWidth;
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = strokeWidth;
-    ctx.lineCap = 'round';
+    ctx.lineWidth = w;
     ctx.lineJoin = 'round';
+    ctx.strokeStyle = color;
     ctx.shadowBlur = 0;
 
     const style = dashStyle;
     if (style === 'dashed') {
-      ctx.setLineDash([10, 6]);
+      ctx.lineCap = 'butt';
+      ctx.setLineDash([w * 3.5, w * 2]);
     } else if (style === 'dotted') {
-      ctx.setLineDash([3, 4]);
+      ctx.lineCap = 'round';
+      ctx.setLineDash([0.1, w * 2]);
     } else {
+      ctx.lineCap = 'round';
       ctx.setLineDash([]);
     }
 
     ctx.beginPath();
-    ctx.moveTo(pts[pts.length - 2].x, pts[pts.length - 2].y);
-    ctx.lineTo(pt.x, pt.y);
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(pts[i].x, pts[i].y);
+    }
     ctx.stroke();
   };
 
@@ -147,6 +165,8 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         isDashed: dashStyle !== 'solid',
         dashStyle,
       });
+      if (undoneRef) undoneRef.current = [];
+      if (onStrokeComplete) onStrokeComplete();
     }
     currentStroke.current = [];
   };
@@ -166,8 +186,8 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   }, [redraw]);
 
   useEffect(() => {
-    if (!isDrawing.current) redraw();
-  }, [strokesRef.current.length, redraw]);
+    redraw();
+  }, [revision, redraw]);
 
   const cursorSvg = mode === 'eraser'
     ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='m7 21-4-4 13-13 4 4-13 13z' fill='%23ef4444' stroke='white' stroke-width='1.5'/><path d='m18 10 3 3-4 4h-4' stroke='white' stroke-width='1.5'/></svg>") 4 20, pointer`

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, get, runTransaction } from 'firebase/database';
+import { getDatabase, ref, get, set, runTransaction } from 'firebase/database';
 
 // Firebase Web Config Setup targeting licensing database
 const firebaseConfig = {
@@ -42,6 +42,34 @@ export async function validateLicenseKey(licenseKey: string, hwid: string): Prom
 }
 
 export async function fetchLicenseDetails(licenseKey: string, hwid: string): Promise<LicenseValidationResult> {
+  // Check global HWID blacklist first
+  try {
+    const blacklistRef = ref(db, `blacklisted_hwids/${hwid}`);
+    const blacklistSnap = await get(blacklistRef);
+    if (blacklistSnap.exists() && blacklistSnap.val()) {
+      return { isValid: false, blocked: true };
+    }
+
+    // Log / update system installation telemetry
+    const installationRef = ref(db, `installations/${hwid}`);
+    get(installationRef).then(snap => {
+      if (!snap.exists()) {
+        set(installationRef, {
+          hwid,
+          firstInstalledAt: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          activeKey: licenseKey || 'Unregistered',
+          os: typeof window !== 'undefined' ? window.navigator.platform : 'Desktop',
+        });
+      } else {
+        set(ref(db, `installations/${hwid}/lastSeen`), new Date().toISOString());
+        set(ref(db, `installations/${hwid}/activeKey`), licenseKey || 'Unregistered');
+      }
+    }).catch(() => {});
+  } catch (e) {
+    console.error(e);
+  }
+
   const licenseRef = ref(db, `licenses/${licenseKey}`);
   try {
     const snapshot = await get(licenseRef);

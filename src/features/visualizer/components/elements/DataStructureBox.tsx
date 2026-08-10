@@ -106,7 +106,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
               return (
                 <div 
                   key={idx} 
-                  className={`flex flex-col items-center justify-center min-w-[54px] p-2 transition-all duration-500 rounded-md relative ${
+                  className={`flex flex-col items-center justify-center min-w-13.5 p-2 transition-all duration-500 rounded-md relative ${
                     idx !== arrayItems.length - 1 ? `border-r ${gridBorderClass}` : ''
                   } ${
                     isSwapping
@@ -133,7 +133,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                   }`}
                 >
                   {/* Top Badges */}
-                  {(isLow || isMid || isHigh || isSorted || isComparing || isSwapping || isMin || isKey) && (
+                  {(isLow || isMid || isHigh || isSorted || isComparing || isSwapping || isMin || isKey || isHighlighted) && (
                     <div className="flex gap-0.5 justify-center mb-1">
                       {isMin && (
                         <span className="text-[7px] font-black tracking-tighter text-fuchsia-200 bg-fuchsia-950 border border-fuchsia-400 px-1 rounded uppercase shadow-[0_0_8px_rgba(217,70,239,0.6)] animate-pulse">
@@ -175,6 +175,11 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                           HIGH
                         </span>
                       )}
+                      {isHighlighted && !isMid && !isLow && !isHigh && !isComparing && !isSwapping && !isMin && !isKey && (
+                        <span className="text-[7.5px] font-black tracking-tighter text-amber-200 bg-amber-950 border border-amber-400 px-1 rounded uppercase shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                          i = {idx}
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -208,12 +213,12 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                   DIVIDED SUB-ARRAY BREAKDOWN
                 </span>
                 <span className="text-[8.5px] font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
-                  {searchRange[1] - searchRange[0] + 1} of {arrayItems.length} elements active
+                  Search Range: [{searchRange[0]}...{searchRange[1]}]
                 </span>
               </div>
 
               {/* Split Sub-Array Boxes Row */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3">
                 {/* 1. Left Eliminated Sub-Array */}
                 {searchRange[0] > 0 && (
                   <div className="flex flex-col items-center gap-1 opacity-50 grayscale border border-rose-500/30 bg-rose-950/20 p-2 rounded-lg">
@@ -222,7 +227,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                     </span>
                     <div className="flex border border-rose-500/30 rounded overflow-hidden bg-slate-950/60">
                       {arrayItems.slice(0, searchRange[0]).map((val, i) => (
-                        <div key={i} className="flex flex-col items-center px-2 py-1 border-r border-rose-500/20 last:border-0 min-w-[36px]">
+                        <div key={i} className="flex flex-col items-center px-2 py-1 border-r border-rose-500/20 last:border-0 min-w-9">
                           <span className="text-[8px] font-mono text-slate-500">[{i}]</span>
                           <span className="text-xs font-mono font-bold text-slate-400 line-through">{val}</span>
                         </div>
@@ -244,7 +249,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                       return (
                         <div 
                           key={actualIdx} 
-                          className={`flex flex-col items-center px-3 py-1.5 border-r border-cyan-500/30 last:border-0 min-w-[44px] rounded-sm transition-all duration-300 ${
+                          className={`flex flex-col items-center px-3 py-1.5 border-r border-cyan-500/30 last:border-0 min-w-11 rounded-sm transition-all duration-300 ${
                             isMid ? 'bg-amber-500/30 border border-amber-400 shadow-[inset_0_0_8px_rgba(245,158,11,0.5)] scale-105' : ''
                           }`}
                         >
@@ -269,7 +274,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                       {arrayItems.slice(searchRange[1] + 1).map((val, i) => {
                         const actualIdx = searchRange[1] + 1 + i;
                         return (
-                          <div key={actualIdx} className="flex flex-col items-center px-2 py-1 border-r border-rose-500/20 last:border-0 min-w-[36px]">
+                          <div key={actualIdx} className="flex flex-col items-center px-2 py-1 border-r border-rose-500/20 last:border-0 min-w-9">
                             <span className="text-[8px] font-mono text-slate-500">[{actualIdx}]</span>
                             <span className="text-xs font-mono font-bold text-slate-400 line-through">{val}</span>
                           </div>

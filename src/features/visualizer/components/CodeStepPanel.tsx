@@ -5,16 +5,16 @@ import type { CodeLine } from '../../../lessons/types';
 import { usePinchZoom } from '../../../shared/hooks/usePinchZoom';
 
 const TOKEN_COLORS: Record<string, string> = {
-  keyword: 'text-purple-300 font-extrabold',
-  function: 'text-sky-300 font-bold',
-  variable: 'text-emerald-200 font-bold',
-  string: 'text-amber-300 font-medium',
-  number: 'text-orange-300 font-bold',
-  operator: 'text-pink-300 font-bold',
-  punctuation: 'text-white font-bold',
+  keyword: 'text-purple-300 font-extrabold tracking-wide',
+  function: 'text-yellow-300 font-extrabold',
+  variable: 'text-sky-200 font-bold',
+  string: 'text-emerald-300 font-bold',
+  number: 'text-amber-300 font-black',
+  operator: 'text-pink-300 font-extrabold',
+  punctuation: 'text-white font-black',
   comment: 'text-slate-400 font-bold italic',
-  parameter: 'text-white font-extrabold',
-  text: 'text-white font-medium',
+  parameter: 'text-cyan-200 font-extrabold',
+  text: 'text-white font-bold',
 };
 
 /**
@@ -163,8 +163,8 @@ const CodeLineRow: React.FC<{
 
       {/* Line number */}
       <span
-        className={`select-none w-10 shrink-0 text-right pr-4 ${isActive ? 'text-indigo-400 font-black' : 'text-slate-600 font-medium'}`}
-        style={{ fontSize: `${0.75 * zoomLevel}rem` }}
+        className={`select-none w-10 shrink-0 text-right pr-4 ${isActive ? 'text-indigo-300 font-black' : 'text-slate-400 font-bold'}`}
+        style={{ fontSize: `${0.85 * zoomLevel}rem` }}
       >
         {line.lineNum}
       </span>
@@ -172,7 +172,7 @@ const CodeLineRow: React.FC<{
       {/* Tokens */}
       <span
         className={`font-mono py-1.5 pr-6 whitespace-pre flex items-center flex-nowrap shrink-0`}
-        style={{ fontSize: 'var(--code-font-size, 14px)', fontFeatureSettings: '"liga" 0', fontVariantLigatures: 'none' }}
+        style={{ fontSize: `${0.9 * zoomLevel}rem`, fontFeatureSettings: '"liga" 0', fontVariantLigatures: 'none' }}
       >
         {line.tokens.map((token, i) => {
           // Check if this is the editable number or string on this line
@@ -269,7 +269,7 @@ export const CodeStepPanel: React.FC = () => {
   }
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col bg-[#0b0c14] border border-white/5 rounded-2xl overflow-hidden relative">
+    <div ref={containerRef} className="h-full flex flex-col bg-[#050510] border border-white/10 rounded-lg overflow-hidden relative">
       {/* Slim header */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/5 shrink-0 bg-white/2">
         <div className="flex items-center gap-3">

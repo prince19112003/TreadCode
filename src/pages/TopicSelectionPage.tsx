@@ -320,7 +320,7 @@ export const TopicSelectionPage: React.FC = () => {
 
   const totalPrograms = useMemo(() => topics.reduce((s, t) => s + t.programsCount, 0), [topics]);
   const langDisplay = languageId
-    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA & Algorithms' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
+    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
     : 'Python';
 
   const handleTopicClick = (topicId: string) => {
@@ -348,42 +348,44 @@ export const TopicSelectionPage: React.FC = () => {
   /* ── DSA PAGE ──────────────────────────────────────────────────────────── */
   if (isDsa) {
     return (
-      <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full">
-        <div className="flex flex-col py-10 md:py-14 px-4 max-w-6xl mx-auto w-full min-h-full">
+      <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-purple-600/10 blur-[120px] pointer-events-none rounded-full" />
+        <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-6xl mx-auto w-full min-h-full relative z-10">
 
           {/* DSA Header */}
-          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest">Interactive Visualizer</span>
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6 md:mb-8">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/50 border border-purple-400/30 shadow-sm backdrop-blur-md">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-[10px] font-mono font-extrabold text-white uppercase tracking-widest">Interactive Operations</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
-                <span className="text-[10px] font-mono font-bold text-purple-400 uppercase tracking-widest">Language Independent</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/50 border border-indigo-400/30 shadow-sm backdrop-blur-md">
+                <span className="text-[10px] font-mono font-extrabold text-white uppercase tracking-widest">Visualizer</span>
               </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight" style={{ color: '#f0f2f8', letterSpacing: '-1px' }}>
+            
+            <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-white drop-shadow-sm">
               Data Structures & Algorithms
             </h1>
-            <p style={{ color: '#8b92a8', fontSize: '15px' }}>
-              Visualize every operation step-by-step. No code — just pure algorithmic logic in action.
+            <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
+              Interactive step-by-step algorithmic data structure visualizations.
             </p>
           </motion.div>
 
           {/* Stats Bar */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-3 mb-8 flex-wrap">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2.5 mb-6 flex-wrap">
             {[
-              { icon: Layers, label: `${dsaTopics.length} Topics`, color: '#6366f1' },
+              { icon: Layers, label: `${dsaTopics.length} Topics`, color: '#a855f7' },
               { icon: Zap, label: 'Interactive Operations', color: '#ec4899' },
-              { icon: BarChart2, label: 'Complexity Analysis', color: '#06b6d4' },
+              { icon: BarChart2, label: 'Complexity Analysis', color: '#38bdf8' },
             ].map(stat => (
               <div
                 key={stat.label}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ color: stat.color, background: `${stat.color}10`, border: `1px solid ${stat.color}25` }}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
+                style={{ background: 'rgba(12, 14, 22, 0.8)', border: `1px solid ${stat.color}35` }}
               >
-                <stat.icon className="w-4 h-4" />
-                {stat.label}
+                <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
+                <span>{stat.label}</span>
               </div>
             ))}
           </motion.div>
@@ -406,33 +408,34 @@ export const TopicSelectionPage: React.FC = () => {
 
   /* ── STANDARD LANGUAGE PAGE ────────────────────────────────────────────── */
   return (
-    <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full">
-      <div className="flex flex-col py-10 md:py-14 px-4 max-w-6xl mx-auto w-full min-h-full">
+    <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
+      <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-6xl mx-auto w-full min-h-full relative z-10">
 
         {/* Page Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight" style={{ color: '#f0f2f8', letterSpacing: '-1px' }}>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-white drop-shadow-sm">
             {langDisplay} Topics
           </h1>
-          <p style={{ color: '#8b92a8', fontSize: '15px' }}>
-            Select a topic to start learning through step-by-step visual execution.
+          <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
+            Select a topic to step through code execution and variable tracing.
           </p>
         </motion.div>
 
         {/* Stats Bar */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-3 mb-8 flex-wrap">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2.5 mb-6 flex-wrap">
           {[
             { icon: Layers, label: `${topics.length} Topics`, color: '#6366f1' },
-            { icon: BookOpen, label: `${totalPrograms} Programs`, color: '#8b5cf6' },
-            { icon: BarChart2, label: '3 Difficulty Levels', color: '#06b6d4' },
+            { icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' },
+            { icon: BarChart2, label: '3 Difficulty Levels', color: '#38bdf8' },
           ].map(stat => (
             <div
               key={stat.label}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-              style={{ color: stat.color, background: `${stat.color}10`, border: `1px solid ${stat.color}25` }}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
+              style={{ background: 'rgba(12, 14, 22, 0.8)', border: `1px solid ${stat.color}35` }}
             >
-              <stat.icon className="w-4 h-4" />
-              {stat.label}
+              <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
+              <span>{stat.label}</span>
             </div>
           ))}
         </motion.div>
@@ -454,59 +457,68 @@ export const TopicSelectionPage: React.FC = () => {
                   aria-label={`Select topic ${topic.name}`}
                   onClick={() => handleTopicClick(topic.id)}
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleTopicClick(topic.id)}
-                  className="relative flex flex-col overflow-hidden rounded-xl p-5 min-h-47.5 transition-all duration-200 group"
-                  style={{ background: 'rgba(15, 17, 23, 0.70)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+                  className="relative flex flex-col overflow-hidden rounded-2xl p-5 min-h-48 transition-all duration-300 group select-none"
+                  style={{
+                    background: 'rgba(12, 14, 22, 0.85)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                  }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'rgba(22, 24, 34, 0.88)';
-                    el.style.borderColor = `${topic.accentColor}35`;
-                    el.style.transform = 'translateY(-2px)';
-                    el.style.boxShadow = `0 0 0 1px ${topic.accentColor}25, 0 8px 32px rgba(0,0,0,0.5)`;
+                    el.style.borderColor = `${topic.accentColor}60`;
+                    el.style.transform = 'translateY(-3px)';
+                    el.style.boxShadow = `0 10px 30px -8px ${topic.accentColor}25, 0 0 0 1px ${topic.accentColor}40`;
                     const bar = el.querySelector('.accent-bar') as HTMLElement;
                     if (bar) bar.style.opacity = '1';
                     const num = el.querySelector('.chapter-num') as HTMLElement;
-                    if (num) num.style.color = `${topic.accentColor}30`;
+                    if (num) num.style.color = `${topic.accentColor}40`;
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'rgba(15, 17, 23, 0.70)';
-                    el.style.borderColor = 'rgba(255,255,255,0.06)';
+                    el.style.borderColor = 'rgba(255,255,255,0.1)';
                     el.style.transform = 'translateY(0)';
                     el.style.boxShadow = 'none';
                     const bar = el.querySelector('.accent-bar') as HTMLElement;
                     if (bar) bar.style.opacity = '0';
                     const num = el.querySelector('.chapter-num') as HTMLElement;
-                    if (num) num.style.color = 'rgba(255,255,255,0.06)';
+                    if (num) num.style.color = 'rgba(255,255,255,0.12)';
                   }}
                 >
-                  <div className="accent-bar absolute left-0 top-2 bottom-2 w-0.75 rounded-r-full transition-opacity duration-200" style={{ background: topic.accentColor, opacity: 0 }} />
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="accent-bar absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-opacity duration-200" style={{ background: topic.accentColor, opacity: 0 }} />
+                  
+                  <div className="flex justify-between items-start mb-3">
                     <span
                       className="chapter-num font-black transition-colors duration-200"
-                      style={{ fontSize: '52px', lineHeight: 1, color: 'rgba(255,255,255,0.06)', fontFamily: "'JetBrains Mono', monospace" }}
+                      style={{ fontSize: '46px', lineHeight: 1, color: 'rgba(255,255,255,0.12)', fontFamily: "'JetBrains Mono', monospace" }}
                     >
                       {topic.number}
                     </span>
                     <span
-                      className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0 mt-1"
+                      className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0"
                       style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}
                     >
                       {topic.difficulty}
                     </span>
                   </div>
+
                   <div className="mt-auto">
-                    <h2 className="font-black mb-1.5 leading-tight tracking-tight" style={{ color: '#f0f2f8', fontSize: '20px', letterSpacing: '-0.4px' }}>
+                    <h2 className="text-xl font-black mb-1 leading-tight tracking-tight text-white group-hover:text-indigo-200 transition-colors">
                       {topic.name}
                     </h2>
-                    <p className="text-xs mb-4" style={{ color: '#8b92a8' }}>{topic.subtitle}</p>
-                    <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: '#525870' }}>
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>{topic.programsCount} Programs</span>
+                    <p className="text-xs font-medium mb-4 text-slate-200 line-clamp-1">{topic.subtitle}</p>
+                    
+                    <div className="flex items-center justify-between text-xs font-bold pt-3 border-t text-white" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>{topic.programsCount} Programs</span>
+                      </div>
                       <span
-                        className="ml-auto text-[10px] font-mono px-2 py-0.5 rounded"
-                        style={{ color: topic.accentColor, background: `${topic.accentColor}10` }}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
+                        style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
                       >
-                        {topic.category.toUpperCase()}
+                        {topic.category}
                       </span>
                     </div>
                   </div>

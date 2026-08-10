@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Minus, Square, X } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home } from 'lucide-react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { motion, AnimatePresence } from 'motion/react';
-import { MindTraceLogo } from '@shared/components/ui/MindTraceLogo';
+import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 import { LicenseContext } from '../App';
 
 const GithubIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -218,71 +218,78 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-1000 flex items-start justify-center pt-[12vh] px-4"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+      className="fixed inset-0 z-1000 flex items-start justify-center pt-[14vh] px-4"
+      style={{ background: 'rgba(2, 4, 12, 0.75)', backdropFilter: 'blur(10px)' }}
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.96, opacity: 0, y: -8 }}
+        initial={{ scale: 0.95, opacity: 0, y: -10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.96, opacity: 0, y: -8 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: '#141620', border: '1px solid rgba(255,255,255,0.09)' }}
+        exit={{ scale: 0.95, opacity: 0, y: -10 }}
+        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-xl rounded-2xl overflow-hidden shadow-[0_30px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl bg-[#0c0e17]/95 border border-white/10 relative"
         onClick={e => e.stopPropagation()}
       >
-        {/* Search Input */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-          <Search className="w-5 h-5 shrink-0" style={{ color: '#6366f1' }} />
+        {/* Subtle Top Gradient Accent */}
+        <div className="h-0.5 w-full bg-linear-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+        {/* Search Input Bar */}
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
+          <Search className="w-4.5 h-4.5 shrink-0 text-indigo-400" />
           <input
             autoFocus
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search programs..."
-            className="flex-1 bg-transparent outline-none text-lg placeholder:text-text-muted"
-            style={{ color: '#f0f2f8', fontFamily: "'Inter', sans-serif" }}
+            placeholder="Search 100+ programs across Python, C, C++, Java & DSA..."
+            className="flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-slate-500"
           />
-          <kbd className="text-xs px-2 py-1 rounded-md border font-mono"
-            style={{ color: '#525870', borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}>
+          <kbd className="text-[10px] font-mono font-black text-slate-400 px-2 py-0.5 rounded-md border border-white/10 bg-white/5">
             ESC
           </kbd>
         </div>
 
-        {/* Results */}
-        <div className="max-h-100 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+        {/* Results List */}
+        <div className="max-h-84 overflow-y-auto p-2 space-y-1 custom-scrollbar">
           {query.trim() === '' ? (
-            <div className="py-12 text-center" style={{ color: '#525870' }}>
-              <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Type to search across all 100 programs</p>
+            <div className="py-8 px-4 text-center">
+              <Search className="w-7 h-7 mx-auto mb-2.5 opacity-25 text-indigo-400" />
+              <p className="text-xs font-bold text-slate-400 mb-3">Type any topic or program name to jump instantly</p>
+              
+              {/* Quick Suggestion Chips */}
+              <div className="flex flex-wrap justify-center gap-1.5 max-w-md mx-auto">
+                {['Python', 'C++', 'Java', 'DSA', 'Loops', 'Arrays', 'Recursion'].map(chip => (
+                  <button
+                    key={chip}
+                    onClick={() => setQuery(chip)}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-400/40 text-[11px] font-bold text-slate-300 hover:text-white transition-all"
+                  >
+                    ⚡ {chip}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : results.length === 0 ? (
-            <div className="py-12 text-center" style={{ color: '#525870' }}>
-              <p className="text-sm">No programs found for "<span style={{ color: '#8b92a8' }}>{query}</span>"</p>
+            <div className="py-10 text-center text-slate-400">
+              <p className="text-xs font-semibold">No programs found for "<span className="text-white font-bold">{query}</span>"</p>
             </div>
           ) : (
-            <ul>
+            <ul className="space-y-0.5">
               {results.map((prog, i) => (
                 <li key={`${prog.topicId}-${prog.id}`}>
                   <button
                     onClick={() => handleSelect(prog)}
                     onMouseEnter={() => setFocused(i)}
-                    className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
-                    style={{
-                      background: i === focused ? 'rgba(99,102,241,0.08)' : 'transparent',
-                      borderLeft: i === focused ? '3px solid #6366f1' : '3px solid transparent',
-                    }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all ${
+                      i === focused
+                        ? 'bg-indigo-500/20 text-white border border-indigo-400/40 shadow-sm'
+                        : 'text-slate-300 hover:bg-white/5 border border-transparent'
+                    }`}
                   >
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)' }}
-                    >
-                      <Code2 className="w-4 h-4" style={{ color: '#6366f1' }} />
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-indigo-950/70 border border-indigo-400/30">
+                      <Code2 className="w-3.5 h-3.5 text-indigo-300" />
                     </div>
-                    <span className="flex-1 text-sm font-medium" style={{ color: '#f0f2f8' }}>{prog.name}</span>
-                    <span
-                      className="text-xs px-2.5 py-1 rounded-full shrink-0"
-                      style={{ color: '#8b92a8', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
-                    >
+                    <span className="flex-1 text-xs font-extrabold text-white">{prog.name}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md text-indigo-300 bg-indigo-950/60 border border-indigo-400/30 shrink-0">
                       {prog.topicName}
                     </span>
                   </button>
@@ -292,17 +299,19 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
           )}
         </div>
 
-        {/* Footer hint */}
-        <div className="px-5 py-3 border-t border-white/4 flex gap-4"
-          style={{ color: '#525870' }}>
-          <span className="text-xs flex items-center gap-1">
-            <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>↑↓</kbd>
-            Navigate
-          </span>
-          <span className="text-xs flex items-center gap-1">
-            <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>↵</kbd>
-            Open
-          </span>
+        {/* Minimal Footer */}
+        <div className="px-4 py-2 bg-black/40 border-t border-white/5 flex items-center justify-between text-[10px] font-bold text-slate-400">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <kbd className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-200 font-bold">↑↓</kbd>
+              Navigate
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-200 font-bold">↵</kbd>
+              Open
+            </span>
+          </div>
+          <span className="text-slate-500 font-mono">TreadCode Search</span>
         </div>
       </motion.div>
     </div>
@@ -313,7 +322,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
    GLOBAL APP SHELL
    ========================================================= */
 export const GlobalAppShell: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const breadcrumbs = useBreadcrumbs();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -348,32 +356,27 @@ export const GlobalAppShell: React.FC = () => {
       {/* === HEADER === */}
       <header
         data-tauri-drag-region
-        className="h-13 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none"
-        style={{
-          background: 'rgba(10, 11, 15, 0.90)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-        }}
+        className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-slate-950/80 border-b border-white/5 backdrop-blur-md"
       >
         {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
         <div className="flex items-center gap-3" data-tauri-drag-region>
           <button
             onClick={() => navigate('/languages')}
-            className="flex items-center gap-2 shrink-0 group p-1 rounded-xl hover:bg-white/5 transition-all"
+            className="flex items-center gap-2 shrink-0 group py-1 px-1.5 rounded-lg hover:bg-white/5 transition-all"
             title="Home"
           >
-            <div className="w-8 h-8 rounded-xl bg-slate-900/80 border border-indigo-500/30 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
-              <MindTraceLogo size={24} />
+            <div className="w-7 h-7 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <TreadCodeLogo size={26} />
             </div>
-            <span className="font-extrabold text-sm tracking-tight bg-linear-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent group-hover:to-indigo-200 transition-colors">
-              FlowTrace
+            <span className="font-extrabold text-base tracking-tight select-none">
+              <span className="text-white">Tread</span>
+              <span className="text-indigo-400">Code</span>
             </span>
           </button>
 
           {/* Co-Branding Institution Badge if configured on License Key */}
           {licenseContext?.licenseDetails?.customBranding?.institutionName && (
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-indigo-500/40 bg-indigo-950/40 text-indigo-200 text-xs font-semibold shadow-inner">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-indigo-500/30 bg-indigo-950/30 text-indigo-200 text-[11px] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>{licenseContext.licenseDetails.customBranding.badgeText || `Licensed to: ${licenseContext.licenseDetails.customBranding.institutionName}`}</span>
             </div>
@@ -385,65 +388,42 @@ export const GlobalAppShell: React.FC = () => {
           {breadcrumbs.map((crumb, i) => (
             <React.Fragment key={crumb.path}>
               {i > 0 && (
-                <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: '#525870' }} />
+                <ChevronRight className="w-3 h-3 shrink-0 text-slate-600" />
               )}
               <button
                 onClick={() => i < breadcrumbs.length - 1 ? navigate(crumb.path) : undefined}
-                className="text-sm font-medium transition-colors px-1.5 py-0.5 rounded-md"
-                style={{
-                  color: i === breadcrumbs.length - 1 ? '#f0f2f8' : '#525870',
-                  cursor: i === breadcrumbs.length - 1 ? 'default' : 'pointer',
-                  background: i === breadcrumbs.length - 1 ? 'rgba(99,102,241,0.08)' : 'transparent',
-                }}
+                className={`text-xs font-medium transition-all px-2 py-0.5 rounded-md ${
+                  i === breadcrumbs.length - 1
+                    ? 'text-white font-semibold'
+                    : 'text-slate-400 hover:text-white'
+                }`}
               >
-                {i === 0 && <Home className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
+                {i === 0 && <Home className="w-3 h-3 inline mr-1 -mt-0.5 opacity-70" />}
                 {crumb.label}
               </button>
             </React.Fragment>
           ))}
         </nav>
 
-        {/* RIGHT: Search + Settings */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* RIGHT: Search + GitHub Glass + Settings */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setSearchOpen(true)}
             title="Search programs (Ctrl+K)"
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all"
-            style={{
-              color: '#8b92a8',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.07)',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = '#f0f2f8';
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.3)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = '#8b92a8';
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)';
-            }}
+            className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 bg-white/5 border border-white/10 hover:border-indigo-400/50 hover:bg-white/10 hover:text-white transition-all shadow-sm group"
           >
-            <Search className="w-4 h-4" />
-            <span className="hidden sm:block">Search</span>
-            <kbd
-              className="hidden sm:block text-[10px] font-mono px-1.5 py-0.5 rounded"
-              style={{ color: '#525870', background: 'rgba(255,255,255,0.05)' }}
-            >
-              ⌃K
+            <Search className="w-4 h-4 text-indigo-300 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">Search programs</span>
+            <kbd className="hidden sm:inline-block text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md bg-indigo-950/60 border border-indigo-400/30 text-indigo-200">
+              ⌘K
             </kbd>
           </button>
 
           <style>{`
             @keyframes githubGlassShine {
-              0% {
-                left: -150%;
-              }
-              30% {
-                left: 150%;
-              }
-              100% {
-                left: 150%;
-              }
+              0% { left: -150%; }
+              35% { left: 150%; }
+              100% { left: 150%; }
             }
             .github-shine-btn {
               position: relative;
@@ -453,12 +433,12 @@ export const GlobalAppShell: React.FC = () => {
               content: '';
               position: absolute;
               top: 0;
-              width: 40px;
+              width: 45px;
               height: 100%;
               background: linear-gradient(
                 to right,
                 transparent,
-                rgba(255, 255, 255, 0.3),
+                rgba(255, 255, 255, 0.4),
                 transparent
               );
               transform: skewX(-25deg);
@@ -471,98 +451,22 @@ export const GlobalAppShell: React.FC = () => {
             href="https://github.com/prince19112003"
             target="_blank"
             rel="noopener noreferrer"
-            title="GitHub Profile"
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-all github-shine-btn"
-            style={{
-              color: '#8b92a8',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.07)',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = '#f0f2f8';
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.3)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = '#8b92a8';
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)';
-            }}
+            title="GitHub Profile (prince19112003)"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-200 hover:text-white bg-white/5 border border-white/10 hover:border-indigo-400/50 transition-all github-shine-btn shadow-sm"
           >
-            <GithubIcon className="w-full h-full" />
+            <GithubIcon className="w-6 h-6" />
           </a>
 
           <button
             onClick={() => navigate('/settings')}
             title="Settings"
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-all relative"
-            style={{
-              color: location.pathname === '/settings' ? '#6366f1' : '#8b92a8',
-              background: location.pathname === '/settings' ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${location.pathname === '/settings' ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.07)'}`,
-            }}
-            onMouseEnter={e => {
-              if (location.pathname !== '/settings') {
-                (e.currentTarget as HTMLElement).style.color = '#f0f2f8';
-              }
-            }}
-            onMouseLeave={e => {
-              if (location.pathname !== '/settings') {
-                (e.currentTarget as HTMLElement).style.color = '#8b92a8';
-              }
-            }}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-200 hover:text-white bg-white/5 border border-white/10 hover:border-indigo-400/50 transition-all shadow-sm group relative"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-4.5 h-4.5 transition-transform duration-500 ease-out group-hover:rotate-180 group-active:rotate-90 group-active:scale-90" />
             {hasUpdate && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)] animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)] animate-pulse" />
             )}
           </button>
-
-          {/* FlowTrace Glass Window Control Capsule */}
-          <div className="flex items-center gap-0.5 bg-slate-950/80 border border-indigo-500/30 rounded-xl p-1 shadow-lg ml-1 shrink-0">
-            <button
-              onClick={async () => {
-                try {
-                  const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                  await getCurrentWindow().minimize();
-                } catch (e) {
-                  console.error('Minimize error:', e);
-                }
-              }}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
-              title="Minimize Window"
-            >
-              <Minus size={13} />
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                  await getCurrentWindow().toggleMaximize();
-                } catch (e) {
-                  console.error('Maximize error:', e);
-                }
-              }}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-purple-300 hover:bg-purple-500/20 transition-all cursor-pointer"
-              title="Maximize / Restore Window"
-            >
-              <Square size={11} />
-            </button>
-            <div className="w-px h-3.5 bg-white/10 mx-0.5" />
-            <button
-              onClick={async () => {
-                try {
-                  const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                  await getCurrentWindow().close();
-                } catch (e) {
-                  console.error('Close error:', e);
-                  window.close();
-                }
-              }}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-300 hover:bg-rose-500/25 transition-all cursor-pointer"
-              title="Close Application"
-            >
-              <X size={13} />
-            </button>
-          </div>
         </div>
       </header>
 

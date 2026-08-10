@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "FlowTrace",
-  "version": "2.14.0",
+  "productName": "TreadCode",
+  "version": "1.0.0",
   "identifier": "com.flowtrace.app",
   "build": {
     "frontendDist": "../dist",
@@ -12,12 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "FlowTrace Code Visualizer",
+        "title": "TreadCode Code Visualizer",
         "width": 1280,
         "height": 768,
         "resizable": true,
         "fullscreen": false,
-        "decorations": false
+        "decorations": true
       }
     ],
     "security": {

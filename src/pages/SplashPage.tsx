@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
-import { MindTraceLogo } from '@shared/components/ui/MindTraceLogo';
+import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 
 interface SplashPageProps {
   onComplete?: () => void;
@@ -26,7 +26,7 @@ export const SplashPage: React.FC<SplashPageProps> = ({ onComplete }) => {
       <div className="flex flex-col items-center justify-center z-10 select-none gap-10">
         {/* Minimal Clean Extra Large 3D Logo (320px) — No Background Glows */}
         <div className="relative flex items-center justify-center">
-          <MindTraceLogo size={320} />
+          <TreadCodeLogo size={320} />
         </div>
 
         {/* 3-Second Staggered Blinking Matched Color Dots (. . . .) */}

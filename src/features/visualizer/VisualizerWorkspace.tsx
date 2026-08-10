@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Contrast } from 'lucide-react';
 import { CodeStepPanel } from './components/CodeStepPanel';
 import { StageControls } from './components/StageControls';
 import { OutputConsole } from './components/OutputConsole';
@@ -24,6 +25,15 @@ export const VisualizerWorkspace: React.FC = () => {
   const { lesson, isFullScreen } = useLesson();
   const [isConsoleFullScreen, setIsConsoleFullScreen] = useState(false);
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
+  const [isPureBlack, setIsPureBlack] = useState(() => localStorage.getItem('treadcode_pure_black') === 'true');
+
+  const togglePureBlack = () => {
+    setIsPureBlack(prev => {
+      const next = !prev;
+      localStorage.setItem('treadcode_pure_black', String(next));
+      return next;
+    });
+  };
 
   const isDsa = lesson?.language === 'dsa';
   const isStackTopic = isDsa && lesson?.topic === 'stack';
@@ -44,7 +54,22 @@ export const VisualizerWorkspace: React.FC = () => {
     'binary_tree', 'graph_basics', 'graph_bfs', 'graph_dfs',
   ].includes(lesson?.topic || '');
 
-  /* ── Console FullScreen ─────────────────────────────────────────────────── */
+  /* ── Canvas Background Toggle Button (Bottom-Left next to Full Screen) ── */
+  const pureBlackToggleButton = (
+    <button
+      onClick={togglePureBlack}
+      title={isPureBlack ? "Switch Canvas to Regular Dark Theme" : "Switch Canvas to Pure OLED Black (#000000)"}
+      className={`absolute bottom-4 left-15 z-50 p-2 backdrop-blur-md rounded-xl transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)] flex items-center justify-center border ${
+        isPureBlack
+          ? 'bg-black/90 border-emerald-500/50 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95'
+          : 'bg-[#0d1126]/80 border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:scale-105 active:scale-95'
+      }`}
+    >
+      <Contrast size={16} />
+    </button>
+  );
+
+  /* ── Output Console FullScreen ──────────────────────────────────────────── */
   if (isConsoleFullScreen) {
     return (
       <div className="flex h-screen w-screen overflow-hidden bg-[#050510] text-slate-200 relative p-1.5 gap-1.5">
@@ -59,9 +84,10 @@ export const VisualizerWorkspace: React.FC = () => {
   /* ── Stage FullScreen ───────────────────────────────────────────────────── */
   if (isFullScreen) {
     return (
-      <div className="flex h-screen w-screen overflow-hidden bg-[#050510] text-slate-200 relative p-1.5 gap-1.5">
+      <div className={`flex h-screen w-screen overflow-hidden text-slate-200 relative p-1.5 gap-1.5 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
         {!isDsa && <StageControls />}
         <div className="flex-1 h-full relative overflow-hidden flex flex-col">
+          {pureBlackToggleButton}
           {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
         </div>
         <PenMenu />
@@ -72,15 +98,15 @@ export const VisualizerWorkspace: React.FC = () => {
   /* ── DSA Interactive Layout ─────────────────────────────────────────────── */
   if (isDsa) {
     return (
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#050510] text-slate-200">
-        <div className="flex-1 flex gap-1.5 p-1.5 overflow-hidden bg-[#050510]">
+      <div className={`flex flex-col h-screen w-screen overflow-hidden text-slate-200 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
+        <div className={`flex-1 flex gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
 
           {/* ── Left Column: Operational Dashboard (38%) ── */}
           <div className="w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0">
-            <div className="h-[70%] overflow-hidden flex flex-col">
+            <div className="h-[75%] overflow-hidden flex flex-col">
               {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
             </div>
-            <div className="h-[30%] overflow-hidden flex flex-col">
+            <div className="h-[25%] overflow-hidden flex flex-col">
               <ExplanationBar />
             </div>
           </div>
@@ -90,9 +116,10 @@ export const VisualizerWorkspace: React.FC = () => {
 
           {/* ── Right Column: Visual Stage (62%) ── */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
-            <div className={`relative overflow-hidden flex flex-col rounded-2xl border border-slate-800/30 transition-all duration-300 ${
-              isConsoleCollapsed ? 'flex-1' : 'h-[70%]'
-            }`}>
+            <div className={`relative overflow-hidden flex flex-col rounded-lg border border-slate-800/50 transition-all duration-300 ${
+              isPureBlack ? 'bg-black' : 'bg-[#050510]'
+            } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
+              {pureBlackToggleButton}
               {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
               <PenMenu />
             </div>
@@ -115,15 +142,15 @@ export const VisualizerWorkspace: React.FC = () => {
 
   /* ── Standard Language Layout ───────────────────────────────────────────── */
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#050510] text-slate-200">
-      <div className="flex-1 flex gap-1.5 p-1.5 overflow-hidden bg-[#050510]">
+    <div className={`flex flex-col h-screen w-screen overflow-hidden text-slate-200 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
+      <div className={`flex-1 flex gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
 
         {/* Left: Code Panel (38%) */}
         <div className="w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0">
-          <div className="h-[70%] overflow-hidden flex flex-col">
+          <div className="h-[75%] overflow-hidden flex flex-col">
             <CodeStepPanel />
           </div>
-          <div className="h-[30%] overflow-hidden flex flex-col">
+          <div className="h-[25%] overflow-hidden flex flex-col">
             <ExplanationBar />
           </div>
         </div>
@@ -133,9 +160,10 @@ export const VisualizerWorkspace: React.FC = () => {
 
         {/* Right: Visualization Stage */}
         <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
-          <div className={`relative overflow-hidden flex flex-col transition-all duration-300 ${
-            isConsoleCollapsed ? 'flex-1' : 'h-[70%]'
-          }`}>
+          <div className={`relative overflow-hidden flex flex-col transition-all duration-300 rounded-lg border border-slate-800/50 ${
+            isPureBlack ? 'bg-black' : 'bg-[#050510]'
+          } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
+            {pureBlackToggleButton}
             {isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
             <PenMenu />
           </div>

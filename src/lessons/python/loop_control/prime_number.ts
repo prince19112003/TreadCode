@@ -10,7 +10,7 @@ export const prime_number: LessonProgram = {
   lines: [
     { lineNum: 1, tokens: [{ type: 'variable', value: 'num' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '7' }] },
     { lineNum: 2, tokens: [{ type: 'variable', value: 'is_prime' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'True' }] },
-    { lineNum: 3, tokens: [{ type: 'keyword', value: 'for' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'i' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'in' }, { type: 'text', value: ' ' }, { type: 'function', value: 'range' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '2' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'num' }, { type: 'punctuation', value: ')' }, { type: 'punctuation', value: ':' }] },
+    { lineNum: 3, tokens: [{ type: 'keyword', value: 'for' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'i' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'in' }, { type: 'text', value: ' ' }, { type: 'function', value: 'range' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '2' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'num' }, { type: 'text', value: ' ' }, { type: 'operator', value: '//' }, { type: 'text', value: ' ' }, { type: 'number', value: '2' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ')' }, { type: 'punctuation', value: ':' }] },
     { lineNum: 4, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'num' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'i' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'punctuation', value: ':' }] },
     { lineNum: 5, tokens: [{ type: 'text', value: '        ' }, { type: 'variable', value: 'is_prime' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'False' }] },
     { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'break' }] },
@@ -22,6 +22,7 @@ export const prime_number: LessonProgram = {
   executionSteps: [],
   generateSteps: (variables) => {
     const num = Number(variables?.num || 7);
+    const maxDivisor = Math.floor(num / 2);
     const steps: ExecutionStep[] = [];
     let stepCount = 1;
     let mem: Record<string, string | number> = {};
@@ -46,13 +47,13 @@ export const prime_number: LessonProgram = {
 
     steps.push({
       step: stepCount++, lineNum: 3,
-      explanationEnglish: `The loop will check divisors from 2 to ${num - 1}.`,
-      explanationHinglish: `Loop 2 se ${num - 1} tak divide karke check karega.`,
+      explanationEnglish: `The loop will check divisors from 2 to num // 2 (${maxDivisor}).`,
+      explanationHinglish: `Loop 2 se num // 2 (${maxDivisor}) tak divide karke check karega.`,
       memorySnapshot: { ...mem },
       animationEvent: { type: 'NONE' },
     });
 
-    for (let i = 2; i < num; i++) {
+    for (let i = 2; i <= maxDivisor; i++) {
       mem.i = i;
       steps.push({
         step: stepCount++, lineNum: 3,

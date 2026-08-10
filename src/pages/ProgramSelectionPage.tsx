@@ -444,29 +444,29 @@ export const ProgramSelectionPage: React.FC = () => {
     ? otherProgramsByLang[languageId][topicId]
     : (topicId && mockProgramsByTopic[topicId] ? mockProgramsByTopic[topicId] : []);
 
-  const topicDisplay = topicId
+  const topicDisplayName = topicId
     ? topicId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
     : 'Programs';
+  const langDisplay = languageId?.toUpperCase() || 'Language';
 
   return (
-    <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full">
-      <div className="flex flex-col py-10 md:py-14 px-4 max-w-6xl mx-auto w-full min-h-full">
+    <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
+      <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-7xl mx-auto w-full min-h-full relative z-10">
 
         {/* Page Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-10"
-        >
-          <h1
-            className="text-3xl md:text-4xl font-black mb-2 tracking-tight"
-            style={{ color: '#f0f2f8', letterSpacing: '-1px' }}
-          >
-            {topicDisplay}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6 md:mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[10px] font-mono font-extrabold text-indigo-300 bg-indigo-950/50 border border-indigo-400/30 px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-md shadow-sm">
+              {langDisplay} · {topicDisplayName}
+            </span>
+          </div>
+
+          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-white drop-shadow-sm">
+            {topicDisplayName} Programs
           </h1>
-          <p style={{ color: '#8b92a8', fontSize: '15px' }}>
-            {programs.length} programs — click any to start the visualization.
+          <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
+            Select a program to step through step-by-step visual execution.
           </p>
         </motion.div>
 
@@ -474,8 +474,8 @@ export const ProgramSelectionPage: React.FC = () => {
         {programs.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center py-16">
-              <Code2 className="w-10 h-10 mx-auto mb-4 opacity-20" style={{ color: '#6366f1' }} />
-              <p style={{ color: '#525870' }}>No programs found for this topic.</p>
+              <Code2 className="w-10 h-10 mx-auto mb-4 text-indigo-400 opacity-40" />
+              <p className="text-slate-300 font-medium">No programs found for this topic.</p>
             </div>
           </div>
         ) : (
@@ -493,28 +493,26 @@ export const ProgramSelectionPage: React.FC = () => {
                   aria-label={`Open program ${prog.friendlyName}`}
                   onClick={() => navigate(`/visualizer/${languageId}/${topicId}/${prog.id}`)}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate(`/visualizer/${languageId}/${topicId}/${prog.id}`); }}
-                  className="flex flex-col min-h-50 p-5 rounded-xl transition-all duration-200 group relative overflow-hidden"
+                  className="flex flex-col min-h-50 p-5 rounded-2xl transition-all duration-300 group relative overflow-hidden select-none"
                   style={{
-                    background: 'rgba(15, 17, 23, 0.70)',
-                    border: '1px solid rgba(255,255,255,0.06)',
+                    background: 'rgba(12, 14, 22, 0.85)',
+                    border: '1px solid rgba(255,255,255,0.1)',
                     cursor: 'pointer',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'rgba(22, 24, 34, 0.88)';
-                    el.style.borderColor = 'rgba(99,102,241,0.35)';
-                    el.style.transform = 'translateY(-2px) scale(1.01)';
-                    el.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.2), 0 8px 32px rgba(0,0,0,0.5)';
+                    el.style.borderColor = 'rgba(99,102,241,0.5)';
+                    el.style.transform = 'translateY(-3px)';
+                    el.style.boxShadow = '0 10px 30px -8px rgba(99,102,241,0.25), 0 0 0 1px rgba(99,102,241,0.3)';
                     const arrow = el.querySelector('.arrow-hint') as HTMLElement;
                     if (arrow) arrow.style.opacity = '1';
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'rgba(15, 17, 23, 0.70)';
-                    el.style.borderColor = 'rgba(255,255,255,0.06)';
-                    el.style.transform = 'translateY(0) scale(1)';
+                    el.style.borderColor = 'rgba(255,255,255,0.1)';
+                    el.style.transform = 'translateY(0)';
                     el.style.boxShadow = 'none';
                     const arrow = el.querySelector('.arrow-hint') as HTMLElement;
                     if (arrow) arrow.style.opacity = '0';
@@ -524,53 +522,31 @@ export const ProgramSelectionPage: React.FC = () => {
                   <div className="flex items-start justify-between mb-4 gap-2">
                     <div className="flex items-center gap-3">
                       {/* Icon */}
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.22)' }}
-                      >
-                        <Code2 className="w-5 h-5" style={{ color: '#6366f1' }} />
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-950/60 border border-indigo-400/30">
+                        <Code2 className="w-5 h-5 text-indigo-300" />
                       </div>
                     </div>
 
                     {/* Program number badge */}
-                    <span
-                      className="text-[10px] font-bold shrink-0 px-2.5 py-1 rounded-full font-mono"
-                      style={{
-                        color: '#8b92a8',
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                      }}
-                    >
+                    <span className="text-[10px] font-extrabold shrink-0 px-2.5 py-1 rounded-full font-mono text-slate-200 bg-white/5 border border-white/10">
                       #{prog.number}
                     </span>
                   </div>
 
                   {/* Name */}
-                  <h2
-                    className="font-bold mb-2.5 leading-snug"
-                    style={{ color: '#f0f2f8', fontSize: '16px', letterSpacing: '-0.2px' }}
-                  >
+                  <h2 className="font-extrabold mb-2 leading-snug text-base text-white group-hover:text-indigo-200 transition-colors">
                     {prog.friendlyName}
                   </h2>
 
                   {/* Description — fully visible */}
-                  <p
-                    className="text-sm leading-relaxed flex-1"
-                    style={{ color: '#8b92a8' }}
-                  >
+                  <p className="text-xs font-medium leading-relaxed flex-1 text-slate-200">
                     {prog.description}
                   </p>
 
                   {/* Bottom action hint */}
                   <div
-                    className="arrow-hint flex items-center gap-2 mt-4 pt-3 transition-opacity duration-150"
-                    style={{
-                      opacity: 0,
-                      borderTop: '1px solid rgba(255,255,255,0.05)',
-                      color: '#6366f1',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                    }}
+                    className="arrow-hint flex items-center gap-2 mt-4 pt-3 transition-opacity duration-200 border-t border-white/10 text-indigo-300 text-xs font-bold"
+                    style={{ opacity: 0 }}
                   >
                     <Play className="w-3.5 h-3.5" />
                     <span>Start Visualization</span>

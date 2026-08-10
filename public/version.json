@@ -1,13 +1,12 @@
 {
-  "version": "2.14.0",
-  "buildDate": "2026-08-09",
+  "version": "1.0.0",
+  "buildDate": "2026-08-11",
   "changelog": [
-    "Dynamic Feature Locker — lock/unlock Python, C++, Java, DSA from admin panel",
-    "Admin panel Global Locker controls with real-time Firebase sync",
-    "Mobile-responsive admin panel redesign",
-    "Python bypass routing — free access without license key",
-    "Licensing system upgraded with per-route dynamic gating"
+    "Clean baseline release 1.0.0",
+    "Standalone Monochrome Apple Admin Panel integration",
+    "Dynamic 6-character alphanumeric license keys",
+    "Real-time computer hardware telemetry & 1-click access revocation"
   ],
   "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest",
-  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v2.14.0/FlowTrace_2.14.0_x64-setup.exe"
+  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v1.0.0/FlowTrace_1.0.0_x64-setup.exe"
 }

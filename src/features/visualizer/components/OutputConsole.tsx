@@ -75,7 +75,7 @@ export const OutputConsole: React.FC<OutputConsoleProps> = ({
   }, [displayedChars]);
 
   return (
-    <div className="h-full bg-[#0a0f0a] border border-green-500/20 rounded-2xl flex flex-col overflow-hidden relative transition-all duration-300">
+    <div className="h-full bg-[#0a0f0a] border border-green-500/30 rounded-lg flex flex-col overflow-hidden relative transition-all duration-300">
       {/* Slim Console Header Bar */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-green-500/20 shrink-0 bg-white/2">
         <div className="flex items-center gap-2">

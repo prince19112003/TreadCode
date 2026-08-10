@@ -18,7 +18,7 @@ export const DesktopFirstLayout: React.FC<DesktopFirstLayoutProps> = ({ children
     <div className="flex flex-col h-screen w-screen bg-background text-primary overflow-hidden">
       {/* Top Header Placeholder */}
       <header className="h-14 border-b border-divider flex items-center px-4 bg-paper shrink-0">
-        <h1 className="text-lg font-bold">FlowTrace</h1>
+        <h1 className="text-lg font-extrabold"><span className="text-white">Tread</span><span className="text-indigo-400">Code</span></h1>
       </header>
 
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">

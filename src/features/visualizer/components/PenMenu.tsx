@@ -25,7 +25,7 @@ export const PenMenu: React.FC = () => {
 
   const strokesRef = useRef<Stroke[]>([]);
   const undoneRef = useRef<Stroke[]>([]);
-  const [, forceUpdate] = useState({});
+  const [revision, setRevision] = useState(0);
 
   // Portal target container inside flowchart canvas
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -59,20 +59,24 @@ export const PenMenu: React.FC = () => {
     if (strokesRef.current.length === 0) return;
     const last = strokesRef.current.pop()!;
     undoneRef.current.push(last);
-    forceUpdate({});
+    setRevision(r => r + 1);
   };
 
   const handleRedo = () => {
     if (undoneRef.current.length === 0) return;
     const last = undoneRef.current.pop()!;
     strokesRef.current.push(last);
-    forceUpdate({});
+    setRevision(r => r + 1);
   };
 
   const handleClear = () => {
     strokesRef.current = [];
     undoneRef.current = [];
-    forceUpdate({});
+    setRevision(r => r + 1);
+  };
+
+  const handleStrokeComplete = () => {
+    setRevision(r => r + 1);
   };
 
   const handleDragEnd = (_event: any, info: any) => {
@@ -157,10 +161,13 @@ export const PenMenu: React.FC = () => {
     active: mode === 'pen' && color === c.hex,
   }));
 
+  const canUndo = strokesRef.current.length > 0;
+  const canRedo = undoneRef.current.length > 0;
+
   // Outer Ring: 6 Action Tools
   const outerRingItems = [
-    { id: 'undo', icon: <Undo2 className="w-4 h-4 text-slate-200" />, action: handleUndo, active: false, activeFill: '', activeStroke: '' },
-    { id: 'redo', icon: <Redo2 className="w-4 h-4 text-slate-200" />, action: handleRedo, active: false, activeFill: '', activeStroke: '' },
+    { id: 'undo', icon: <Undo2 className={`w-4 h-4 ${canUndo ? 'text-white font-extrabold' : 'text-slate-600'}`} />, action: handleUndo, active: false, activeFill: '', activeStroke: '' },
+    { id: 'redo', icon: <Redo2 className={`w-4 h-4 ${canRedo ? 'text-emerald-300 font-extrabold' : 'text-slate-600'}`} />, action: handleRedo, active: canRedo, activeFill: 'rgba(16, 185, 129, 0.4)', activeStroke: 'rgba(52, 211, 153, 0.8)' },
     {
       id: 'mode',
       icon: (
@@ -218,6 +225,9 @@ export const PenMenu: React.FC = () => {
       dashStyle={dashStyle}
       mode={mode}
       strokesRef={strokesRef}
+      undoneRef={undoneRef}
+      revision={revision}
+      onStrokeComplete={handleStrokeComplete}
     />
   );
 

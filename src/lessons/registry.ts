@@ -331,8 +331,46 @@ export const lessonRegistry: Record<string, Record<string, Record<string, Lesson
       java_matrix_transpose: javaLessons.java_matrix_transpose,
     },
   },
+  oops: {
+    classes_objects: {},
+    constructors: {},
+    inheritance: {},
+    polymorphism: {},
+    encapsulation: {},
+    abstraction: {},
+  },
+  sql: {
+    basic_queries: {},
+    filtering: {},
+    joins: {},
+    aggregations: {},
+    group_by: {},
+  },
 };
 
 export const getLesson = (languageId: string, topicId: string, programId: string): LessonProgram | undefined => {
   return lessonRegistry[languageId]?.[topicId]?.[programId];
+};
+
+export const getLanguageStats = (languageId: string): { topicsCount: number; programsCount: number } => {
+  const langObj = lessonRegistry[languageId];
+  if (!langObj) return { topicsCount: 0, programsCount: 0 };
+
+  const topicKeys = Object.keys(langObj).filter(k => k !== 't1');
+  const topicsCount = topicKeys.length;
+
+  const seenPrograms = new Set<string>();
+  for (const topicKey of topicKeys) {
+    const topicProgs = langObj[topicKey];
+    if (topicProgs && typeof topicProgs === 'object') {
+      for (const progKey of Object.keys(topicProgs)) {
+        seenPrograms.add(progKey);
+      }
+    }
+  }
+
+  return {
+    topicsCount,
+    programsCount: seenPrograms.size,
+  };
 };

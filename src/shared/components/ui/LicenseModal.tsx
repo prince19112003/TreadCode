@@ -3,9 +3,10 @@ import { motion } from 'motion/react';
 
 interface LicenseModalProps {
   onActivate: (key: string) => Promise<boolean>;
+  onClose?: () => void;
 }
 
-export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate }) => {
+export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose }) => {
   const [key, setKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +20,8 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate }) => {
       const success = await onActivate(key.trim());
       if (!success) {
         setError('Invalid activation key or device limit reached.');
+      } else {
+        if (onClose) onClose();
       }
     } catch (err) {
       setError('Connection error. Please check your internet connection.');
@@ -68,7 +71,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate }) => {
         </div>
 
         <h2 style={{ fontSize: '22px', fontWeight: 600, color: '#ffffff', marginBottom: '8px' }}>
-          Activate FlowTrace
+          Activate TreadCode
         </h2>
         <p style={{ fontSize: '13px', color: '#8e8e93', marginBottom: '24px', lineHeight: '1.5' }}>
           Please enter the software activation license key provided by your institution.
@@ -77,17 +80,18 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate }) => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <input
             type="text"
-            placeholder="XXXX-XXXX-XXXX-XXXX"
+            placeholder="XXXXXX"
             value={key}
-            onChange={(e) => setKey(e.target.value.toUpperCase())}
+            onChange={(e) => setKey(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+            maxLength={6}
             disabled={loading}
             style={{
               padding: '14px', borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.12)',
               background: 'rgba(0,0,0,0.3)',
-              color: '#ffffff', fontSize: '14px',
+              color: '#ffffff', fontSize: '16px',
               fontFamily: 'monospace', textAlign: 'center',
-              letterSpacing: '2px', outline: 'none',
+              letterSpacing: '4px', outline: 'none',
               transition: 'border-color 0.2s',
             }}
             onFocus={(e) => e.target.style.borderColor = 'rgba(165,180,252,0.5)'}
@@ -104,20 +108,39 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate }) => {
             </motion.p>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: '14px', borderRadius: '12px',
-              border: 'none',
-              background: loading ? 'rgba(255,255,255,0.1)' : '#ffffff',
-              color: '#000000', fontSize: '14px', fontWeight: 600,
-              cursor: loading ? 'default' : 'pointer',
-              transition: 'opacity 0.2s',
-            }}
-          >
-            {loading ? 'Verifying Key...' : 'Activate Software'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: '14px', borderRadius: '12px',
+                border: 'none',
+                background: loading ? 'rgba(255,255,255,0.1)' : '#ffffff',
+                color: '#000000', fontSize: '14px', fontWeight: 600,
+                cursor: loading ? 'default' : 'pointer',
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {loading ? 'Verifying Key...' : 'Activate Software'}
+            </button>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                style={{
+                  padding: '14px 20px', borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: '#ffffff', fontSize: '14px', fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
       </motion.div>
     </div>

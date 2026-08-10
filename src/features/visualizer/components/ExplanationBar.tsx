@@ -114,7 +114,7 @@ export const ExplanationBar: React.FC = () => {
   if (!lesson) return null;
 
   return (
-    <div className="h-full flex flex-col bg-[#0b0c14] border border-indigo-500/20 rounded-2xl relative overflow-hidden">
+    <div className="h-full flex flex-col bg-[#050510] border border-indigo-500/30 rounded-lg relative overflow-hidden">
       {/* Slim Header bar */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-indigo-500/20 shrink-0 bg-white/2 relative">
         <div className="flex items-center gap-2 relative">
@@ -183,7 +183,7 @@ export const ExplanationBar: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      <div className="flex-1 overflow-y-auto px-3.5 py-2.5 flex flex-col gap-1.5">
         {/* Event type badge */}
         {currentStep && (
           <AnimatePresence mode="wait">
@@ -193,28 +193,28 @@ export const ExplanationBar: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 shrink-0"
             >
-              <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-black tracking-widest uppercase ${badge.color}`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-black tracking-widest uppercase ${badge.color}`}>
                 {badge.label}
               </span>
-              <span className="text-slate-600 font-mono text-xs">step {currentStep.step}</span>
+              <span className="text-slate-500 font-mono text-[11px] font-bold">step {currentStep.step}</span>
             </motion.div>
           </AnimatePresence>
         )}
 
-        {/* Explanation text */}
+        {/* Explanation text - Larger & High Contrast White */}
         <AnimatePresence mode="wait">
           <motion.div
             key={`${currentStep?.step ?? 0}-${language}`}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
           >
             <p
-              className={`leading-relaxed ${language === 'hi' ? 'text-white font-bold tracking-wide' : 'text-slate-100 font-medium'}`}
-              style={{ fontSize: `${(language === 'hi' ? 1.05 : 0.9) * zoomLevel}rem` }}
+              className="leading-snug text-white font-bold tracking-wide"
+              style={{ fontSize: `${(language === 'hi' ? 1.2 : 1.15) * zoomLevel}rem` }}
             >
               {text}
             </p>

@@ -23,7 +23,7 @@ export interface UpdateStatus {
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
-const CURRENT_VERSION = '2.14.0';
+const CURRENT_VERSION = '1.0.0';
 
 // 100% FREE Firebase RTDB version check URL (works reliably even if GitHub repo is private)
 const VERSION_CHECK_URL =

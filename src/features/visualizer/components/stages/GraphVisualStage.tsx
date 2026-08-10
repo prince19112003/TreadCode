@@ -65,7 +65,7 @@ export const GraphVisualStage: React.FC = () => {
   const isEmpty = nodes.length === 0;
 
   return (
-    <div className="flex-1 w-full h-full bg-[#060814] flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
+    <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
       <div
         className="flex flex-col items-center gap-4 my-auto transition-transform duration-200 ease-out origin-top w-full"
         style={{ transform: `scale(${zoom})`, maxWidth: '800px' }}

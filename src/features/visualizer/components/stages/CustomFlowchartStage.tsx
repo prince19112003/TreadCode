@@ -13,6 +13,8 @@ import { FunctionBlock } from '../elements/FunctionBlock';
 import { RecursiveFunctionBlock } from '../elements/RecursiveFunctionBlock';
 import { FunctionStatementRow } from '../elements/FunctionStatementRow';
 import { DataStructureBox } from '../elements/DataStructureBox';
+import { UserInputPromptBox } from '../elements/UserInputPromptBox';
+import { TypeCastBox } from '../elements/TypeCastBox';
 
 const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = () => {
   return null;
@@ -482,20 +484,6 @@ export const CustomFlowchartStage: React.FC = () => {
             )
           )}
 
-          {!isFunctionBody && ev?.type === 'COMPUTE' && (
-            <ComputeBlock
-              inputs={ev.inputs}
-              operator={ev.operator || '+'}
-              storeIn={ev.storeIn}
-              result={ev.result}
-              memorySnapshot={latestStep.memorySnapshot}
-              prevMemorySnapshot={visibleSteps[visibleSteps.length - 2]?.memorySnapshot || {}}
-              isActive={isLatest}
-              colorTheme={colorTheme}
-              isSmall={isFunctionBody}
-            />
-          )}
-
            {!isFunctionBody && ev?.type === 'UPDATE_ARRAY_INDEX' && (
             (() => {
               const { variant, items } = parseDataStructure(latestStep.memorySnapshot[ev.arrayName]);
@@ -540,12 +528,31 @@ export const CustomFlowchartStage: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-xl shadow-md"
                     >
-                      Target index: {ev.index}
+                      Inspecting index [{ev.index}] (i = {ev.index})
                     </motion.div>
                   )}
                 </div>
               );
             })()
+          )}
+          {!isFunctionBody && ev?.type === 'USER_INPUT_PROMPT' && (
+            <UserInputPromptBox 
+              prompt={ev.prompt} 
+              variableName={ev.variableName} 
+              value={ev.value} 
+              isActive={isLatest} 
+            />
+          )}
+
+          {!isFunctionBody && ev?.type === 'TYPE_CAST_TRANSFORM' && (
+            <TypeCastBox 
+              fromType={ev.fromType} 
+              toType={ev.toType} 
+              fromValue={ev.fromValue} 
+              toValue={ev.toValue} 
+              variableName={ev.variableName} 
+              isActive={isLatest} 
+            />
           )}
 
           {!isFunctionBody && ev?.type === 'PRINT_VALUE' && (
@@ -692,7 +699,7 @@ export const CustomFlowchartStage: React.FC = () => {
 };
 
   return (
-    <div className="flex-1 relative w-full h-full bg-[#060814]">
+    <div className="flex-1 relative w-full h-full bg-transparent">
       {/* Fixed Full Screen Toggle Button at bottom-left */}
       <button
         onClick={toggleFullScreen}
@@ -905,7 +912,7 @@ export const CustomFlowchartStage: React.FC = () => {
                   </div>
                 </motion.div>
               );
-            })() : visibleSteps.length === 0 && !isLoopTopic ? (
+            })() : visibleSteps.length === 0 ? (
               /* ── Step 0: blank canvas ── program hasn't started yet */
               <motion.div
                 key="empty-canvas"
@@ -1147,6 +1154,10 @@ export const CustomFlowchartStage: React.FC = () => {
                       
                       const innerLoopBlockLines = seg.lines || [];
                       const innerHeaderLineNum = seg.headerLineNum || -1;
+                      
+                      // Only render Inner Loop container when execution has reached the inner loop
+                      const hasExecutedInnerLoop = visibleSteps.some(s => innerLoopBlockLines.some(l => l.lineNum === s.lineNum));
+                      if (!hasExecutedInnerLoop) return null;
                       
                       return (
                         <div key={sIdx} className="relative border-2 border-dashed border-fuchsia-500/30 bg-fuchsia-950/5 p-6 rounded-2xl ml-8 flex flex-col items-center gap-10">
