@@ -12,12 +12,18 @@ console.log(`Deploying version v${newVersion}...`);
 
 const EXE_URL = `https://github.com/prince19112003/FlowTrace/releases/download/v${newVersion}/FlowTrace_${newVersion}_x64-setup.exe`;
 
-// 1. Update src-tauri/tauri.conf.json
+// 1. Update src-tauri/tauri.conf.json & package.json
 const tauriConfPath = './src-tauri/tauri.conf.json';
 const tauriConf = JSON.parse(readFileSync(tauriConfPath, 'utf8'));
 tauriConf.version = newVersion;
 writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2));
 console.log('✔ Updated src-tauri/tauri.conf.json');
+
+const packageJsonPath = './package.json';
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+packageJson.version = newVersion;
+writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+console.log('✔ Updated package.json');
 
 // 2. Update updater.json (Tauri's native updater endpoint)
 const updaterPath = './updater.json';
