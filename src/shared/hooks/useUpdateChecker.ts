@@ -23,7 +23,7 @@ export interface UpdateStatus {
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
-const CURRENT_VERSION = '1.0.2';
+const CURRENT_VERSION = '1.0.3';
 
 // 100% FREE Firebase RTDB version check URL (works reliably even if GitHub repo is private)
 const VERSION_CHECK_URL =
@@ -51,8 +51,8 @@ export function useUpdateChecker(): UpdateStatus & {
     latestVersion: null,
     currentVersion: CURRENT_VERSION,
     changelog: [],
-    releaseUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
-    downloadUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
+    releaseUrl: 'https://github.com/prince19112003/TreadCode/releases/latest',
+    downloadUrl: 'https://github.com/prince19112003/TreadCode/releases/latest',
     isChecking: false,
     lastChecked: null,
     error: null,
@@ -83,8 +83,8 @@ export function useUpdateChecker(): UpdateStatus & {
         latestVersion: data.version,
         currentVersion: CURRENT_VERSION,
         changelog: data.changelog || [],
-        releaseUrl: data.releaseUrl || 'https://github.com/prince19112003/FlowTrace/releases/latest',
-        downloadUrl: data.downloadUrl || 'https://github.com/prince19112003/FlowTrace/releases/latest',
+        releaseUrl: data.releaseUrl || 'https://github.com/prince19112003/TreadCode/releases/latest',
+        downloadUrl: data.downloadUrl || 'https://github.com/prince19112003/TreadCode/releases/latest',
         isChecking: false,
         lastChecked: new Date(),
         error: null,

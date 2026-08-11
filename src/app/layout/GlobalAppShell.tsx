@@ -475,8 +475,8 @@ export const GlobalAppShell: React.FC = () => {
               e.preventDefault();
               const targetUrl = "https://github.com/prince19112003";
               try {
-                const { invoke } = await import('@tauri-apps/api/core') as any;
-                await invoke("plugin:shell|open", { path: targetUrl });
+                const { open } = await import('@tauri-apps/plugin-shell');
+                await open(targetUrl);
               } catch (err) {
                 window.open(targetUrl, "_blank", "noopener,noreferrer");
               }

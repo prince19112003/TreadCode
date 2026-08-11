@@ -64,14 +64,14 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
 
     try {
       try {
-        const { invoke } = await import('@tauri-apps/api/core') as any;
-        await invoke('plugin:shell|open', { path: downloadUrl });
+        const { open } = await import('@tauri-apps/plugin-shell');
+        await open(downloadUrl);
       } catch (err) {
         const a = document.createElement('a');
         a.href = downloadUrl;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
-        a.download = `FlowTrace_Setup.exe`;
+        a.download = `TreadCode_Setup.exe`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

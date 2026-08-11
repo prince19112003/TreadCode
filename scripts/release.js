@@ -10,7 +10,9 @@ if (!newVersion) {
 
 console.log(`Deploying version v${newVersion}...`);
 
-const EXE_URL = `https://github.com/prince19112003/FlowTrace/releases/download/v${newVersion}/FlowTrace_${newVersion}_x64-setup.exe`;
+const REPO = 'prince19112003/TreadCode';
+const EXE_URL = `https://github.com/${REPO}/releases/download/v${newVersion}/TreadCode_${newVersion}_x64-setup.exe`;
+const RELEASE_URL = `https://github.com/${REPO}/releases/latest`;
 
 // 1. Update src-tauri/tauri.conf.json & package.json
 const tauriConfPath = './src-tauri/tauri.conf.json';
@@ -40,7 +42,7 @@ const publicVersion = JSON.parse(readFileSync(publicVersionPath, 'utf8'));
 publicVersion.version = newVersion;
 publicVersion.buildDate = new Date().toISOString().split('T')[0];
 publicVersion.downloadUrl = EXE_URL;
-publicVersion.releaseUrl = 'https://github.com/prince19112003/FlowTrace/releases/latest';
+publicVersion.releaseUrl = RELEASE_URL;
 writeFileSync(publicVersionPath, JSON.stringify(publicVersion, null, 2));
 console.log('✔ Updated public/version.json');
 
@@ -51,6 +53,8 @@ hookContent = hookContent.replace(
   /const CURRENT_VERSION = '[^']+';/,
   `const CURRENT_VERSION = '${newVersion}';`
 );
+// Also patch any leftover FlowTrace URLs
+hookContent = hookContent.replace(/prince19112003\/FlowTrace/g, REPO);
 writeFileSync(hookPath, hookContent);
 console.log('✔ Patched CURRENT_VERSION in useUpdateChecker.ts');
 
@@ -70,13 +74,13 @@ async function syncFirebase() {
       version: newVersion,
       buildDate: new Date().toISOString().split('T')[0],
       downloadUrl: EXE_URL,
-      releaseUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
+      releaseUrl: RELEASE_URL,
       changelog: [
-        "SmartBoard v3.0 Apple-quality whiteboard experience",
-        "Hold-to-Snap offline math shape recognition (Lines, Circles, Rectangles)",
-        "Ultra-HD 4K PNG, Multi-page PDF, & JSON project export",
-        "Zero-quality-loss vector 2D canvas pinch-to-zoom",
-        "Workspace session auto-persistence & resume modal"
+        "Fixed GitHub & download links opening in external browser",
+        "SmartBoard workspace session persistence & resume",
+        "Ultra-HD 4K PNG, Multi-page PDF & JSON project export",
+        "Zero-quality-loss vector pinch-to-zoom canvas",
+        "Hold-to-Snap offline shape recognition"
       ]
     };
     const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json', {

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "buildDate": "2026-08-11",
   "changelog": [
     "Clean baseline release 1.0.0",
@@ -7,6 +7,6 @@
     "Dynamic 6-character alphanumeric license keys",
     "Real-time computer hardware telemetry & 1-click access revocation"
   ],
-  "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest",
-  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v1.0.2/FlowTrace_1.0.2_x64-setup.exe"
+  "releaseUrl": "https://github.com/prince19112003/TreadCode/releases/latest",
+  "downloadUrl": "https://github.com/prince19112003/TreadCode/releases/download/v1.0.3/TreadCode_1.0.3_x64-setup.exe"
 }
