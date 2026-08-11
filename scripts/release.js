@@ -54,7 +54,16 @@ hookContent = hookContent.replace(
 writeFileSync(hookPath, hookContent);
 console.log('✔ Patched CURRENT_VERSION in useUpdateChecker.ts');
 
-// 5. Sync to Firebase RTDB node global_update.json
+// 5. Build Native Windows Installer (.exe setup)
+try {
+  console.log('\n⚙️ Building Native Windows Setup Installer (.exe)...');
+  execSync('npx tauri build', { stdio: 'inherit' });
+  console.log('✔ Built Windows Setup Installer!');
+} catch (e) {
+  console.error('Tauri build failed:', e.message);
+}
+
+// 6. Sync to Firebase RTDB node global_update.json
 async function syncFirebase() {
   try {
     const updateData = {
@@ -63,7 +72,7 @@ async function syncFirebase() {
       downloadUrl: EXE_URL,
       releaseUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
       changelog: [
-        "New 3D MindTrace execution tree logo across all platforms",
+        "Optimized 1-click All-in-One Release & Update Pipeline",
         "Display & Projector Tuning with 1-click Faculty Presets",
         "First-launch EULA & Privacy Policy agreement modal",
         "Slim compact headers across all 3 visualizer panels",
@@ -82,14 +91,14 @@ async function syncFirebase() {
     console.warn('Firebase RTDB sync warning:', e.message);
   }
 
-  // 6. Git commit, push, tag
+  // 7. Git commit, push, tag
   try {
     execSync('git add .');
     execSync(`git commit --no-verify -m "bump(version): release v${newVersion}"`);
     execSync('git push origin main');
     execSync(`git tag v${newVersion}`);
     execSync(`git push origin v${newVersion}`);
-    console.log(`\n🚀 Version v${newVersion} successfully pushed and tagged! Remote apps will receive update immediately.`);
+    console.log(`\n🚀 All-in-One Version v${newVersion} successfully compiled, pushed, tagged, & broadcasted globally!`);
   } catch (error) {
     console.error('Error during git operations:', error.message);
   }
