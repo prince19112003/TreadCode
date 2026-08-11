@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "TreadCode",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "identifier": "com.flowtrace.app",
   "build": {
     "frontendDist": "../dist",
@@ -26,6 +26,7 @@
   },
   "bundle": {
     "active": true,
+    "publisher": "Prince",
     "targets": "all",
     "icon": [
       "icons/32x32.png",

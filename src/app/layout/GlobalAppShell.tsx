@@ -471,6 +471,16 @@ export const GlobalAppShell: React.FC = () => {
             href="https://github.com/prince19112003"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={async (e) => {
+              e.preventDefault();
+              const targetUrl = "https://github.com/prince19112003";
+              try {
+                const { invoke } = await import('@tauri-apps/api/core') as any;
+                await invoke("plugin:shell|open", { path: targetUrl });
+              } catch (err) {
+                window.open(targetUrl, "_blank", "noopener,noreferrer");
+              }
+            }}
             title="GitHub Profile (prince19112003)"
             className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-200 hover:text-white bg-white/5 border border-white/10 hover:border-indigo-400/50 transition-all github-shine-btn shadow-sm"
           >

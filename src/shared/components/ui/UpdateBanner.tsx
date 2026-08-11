@@ -63,13 +63,19 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     }, 120);
 
     try {
-      // Trigger direct in-app file download of installer exe
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `FlowTrace_Setup.exe`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      try {
+        const { invoke } = await import('@tauri-apps/api/core') as any;
+        await invoke('plugin:shell|open', { path: downloadUrl });
+      } catch (err) {
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.download = `FlowTrace_Setup.exe`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
 
       setTimeout(() => {
         clearInterval(interval);

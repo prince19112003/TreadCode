@@ -72,11 +72,11 @@ async function syncFirebase() {
       downloadUrl: EXE_URL,
       releaseUrl: 'https://github.com/prince19112003/FlowTrace/releases/latest',
       changelog: [
-        "Optimized 1-click All-in-One Release & Update Pipeline",
-        "Display & Projector Tuning with 1-click Faculty Presets",
-        "First-launch EULA & Privacy Policy agreement modal",
-        "Slim compact headers across all 3 visualizer panels",
-        "Futuristic Glass Window Control Capsule"
+        "SmartBoard v3.0 Apple-quality whiteboard experience",
+        "Hold-to-Snap offline math shape recognition (Lines, Circles, Rectangles)",
+        "Ultra-HD 4K PNG, Multi-page PDF, & JSON project export",
+        "Zero-quality-loss vector 2D canvas pinch-to-zoom",
+        "Workspace session auto-persistence & resume modal"
       ]
     };
     const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json', {
