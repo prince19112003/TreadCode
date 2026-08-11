@@ -28,8 +28,8 @@ const EVENT_LABEL: Record<string, { label: string; color: string }> = {
 export const ExplanationBar: React.FC = () => {
   const { currentStep, lesson, language, toggleLanguage } = useLesson();
   const isDsa = lesson?.language === 'dsa';
-  const [zoomLevel, setZoomLevel] = useState(isDsa ? 1.2 : 0.8);
-  
+  const [zoomLevel, setZoomLevel] = useState(isDsa ? 0.95 : 0.85);
+
   // Always default to Voice OFF on app restart / mount
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -99,52 +99,60 @@ export const ExplanationBar: React.FC = () => {
       // Show "Under Development" popup briefly when turning ON
       setShowUnderDevPopup(true);
       if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-      popupTimerRef.current = setTimeout(() => {
-        setShowUnderDevPopup(false);
-      }, 3000);
-      setIsVoiceEnabled(true);
+      popupTimerRef.current = setTimeout(() => setShowUnderDevPopup(false), 2500);
     } else {
-      synthRef.current?.cancel();
-      setIsSpeaking(false);
-      setIsVoiceEnabled(false);
       setShowUnderDevPopup(false);
     }
+    setIsVoiceEnabled(!isVoiceEnabled);
   };
 
   if (!lesson) return null;
 
-  return (
-    <div className="h-full flex flex-col bg-[#050510] border border-indigo-500/30 rounded-lg relative overflow-hidden">
-      {/* Slim Header bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-indigo-500/20 shrink-0 bg-white/2 relative">
-        <div className="flex items-center gap-2 relative">
-          {/* TTS Voice Toggle Button - Default OFF */}
-          <button
-            onClick={toggleVoice}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all text-xs font-mono font-bold ${
-              isVoiceEnabled
-                ? isSpeaking
-                  ? 'border-emerald-500/60 bg-emerald-950/40 text-emerald-300 ring-2 ring-emerald-500/30 animate-pulse'
-                  : 'border-amber-500/60 bg-amber-950/40 text-amber-300 ring-2 ring-amber-500/30'
-                : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
-            }`}
-            title="AI Voice Feature"
-          >
-            {isVoiceEnabled ? <Volume2 size={14} className={isSpeaking ? 'text-emerald-400' : 'text-amber-400'} /> : <VolumeX size={14} />}
-            <span>{isVoiceEnabled ? (isSpeaking ? 'SPEAKING...' : 'VOICE ON') : 'VOICE OFF'}</span>
-          </button>
+  const isVoiceModeConfigured = localStorage.getItem('treadcode_voice_enabled') === 'true';
 
-          {/* Under Development Small Popup Badge */}
+  return (
+    <div className="flex-1 h-full flex flex-col bg-[#080914] rounded-lg border border-slate-800/60 overflow-hidden shadow-lg">
+      
+      {/* Header controls */}
+      <div className="px-3.5 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="relative flex items-center">
+          {/* Voice Toggle: Only shown when enabled in Settings Page */}
+          {isVoiceModeConfigured && (
+            <button
+              onClick={toggleVoice}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                isVoiceEnabled
+                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]'
+                  : 'bg-slate-800/40 text-slate-400 border border-slate-700/40 hover:bg-slate-700/40 hover:text-slate-200'
+              }`}
+              title="Toggle Audio Explanation"
+            >
+              {isVoiceEnabled ? (
+                <>
+                  <Volume2 className={`w-3.5 h-3.5 ${isSpeaking ? 'animate-pulse text-indigo-400' : 'text-indigo-400'}`} />
+                  <span className="font-mono text-[11px] font-bold">VOICE ON</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-mono text-[11px]">VOICE OFF</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Under Development Toast Popup */}
           <AnimatePresence>
             {showUnderDevPopup && (
               <motion.div
-                initial={{ opacity: 0, y: 6, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 6, scale: 0.9 }}
-                className="absolute left-0 top-9 z-50 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/95 border border-amber-500/50 rounded-xl shadow-2xl backdrop-blur-xl text-[11px] font-mono text-amber-300 whitespace-nowrap"
+                initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                transition={{ duration: 0.15 }}
+                className="absolute left-0 top-full mt-1.5 z-50 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-950/95 border border-indigo-500/50 text-indigo-200 text-xs shadow-xl backdrop-blur-md whitespace-nowrap pointer-events-none"
               >
-                <AlertCircle size={13} className="text-amber-400 shrink-0" />
-                <span>🚧 Voice Feature Under Development</span>
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>Voice explanation is currently under development</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -154,7 +162,7 @@ export const ExplanationBar: React.FC = () => {
           {/* Language toggle */}
           <button
             onClick={toggleLanguage}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-900/20 hover:bg-indigo-500/20 transition-all text-xs font-mono text-indigo-300/60 hover:text-white"
+            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-900/40 transition-all text-[11px] font-mono text-indigo-300"
             title="Toggle language"
           >
             <span className={language === 'en' ? 'text-white font-black' : 'opacity-40'}>EN</span>
@@ -163,58 +171,58 @@ export const ExplanationBar: React.FC = () => {
           </button>
 
           {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-black/40 rounded-lg border border-indigo-500/20 p-0.5">
+          <div className="flex items-center gap-1 bg-black/40 rounded-md border border-slate-800 p-0.5">
             <button
-              onClick={() => setZoomLevel(z => Math.max(z - 0.2, 0.5))}
-              className="p-1 text-indigo-400/50 hover:text-white hover:bg-indigo-500/20 rounded transition-colors"
+              onClick={() => setZoomLevel(z => Math.max(z - 0.1, 0.6))}
+              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
               title="Zoom Out"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/></svg>
             </button>
-            <div className="w-px bg-indigo-500/20 h-4" />
+            <div className="w-px bg-slate-800 h-3.5" />
             <button
-              onClick={() => setZoomLevel(z => Math.min(z + 0.2, 2.5))}
-              className="p-1 text-indigo-400/50 hover:text-white hover:bg-indigo-500/20 rounded transition-colors"
+              onClick={() => setZoomLevel(z => Math.min(z + 0.1, 1.8))}
+              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
               title="Zoom In"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3.5 py-2.5 flex flex-col gap-1.5">
+      <div className="flex-1 overflow-y-auto px-3.5 py-2 flex flex-col gap-1.5">
         {/* Event type badge */}
         {currentStep && (
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep.step}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
               className="flex items-center gap-2 shrink-0"
             >
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-black tracking-widest uppercase ${badge.color}`}>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase ${badge.color}`}>
                 {badge.label}
               </span>
-              <span className="text-slate-500 font-mono text-[11px] font-bold">step {currentStep.step}</span>
+              <span className="text-slate-500 font-mono text-[10px] font-semibold">step {currentStep.step}</span>
             </motion.div>
           </AnimatePresence>
         )}
 
-        {/* Explanation text - Larger & High Contrast White */}
+        {/* Explanation text */}
         <AnimatePresence mode="wait">
           <motion.div
             key={`${currentStep?.step ?? 0}-${language}`}
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
           >
             <p
-              className="leading-snug text-white font-bold tracking-wide"
-              style={{ fontSize: `${(language === 'hi' ? 1.2 : 1.15) * zoomLevel}rem` }}
+              className="leading-relaxed text-slate-100 font-medium tracking-normal"
+              style={{ fontSize: `${(language === 'hi' ? 0.95 : 0.9) * zoomLevel}rem` }}
             >
               {text}
             </p>

@@ -104,7 +104,7 @@ export const DsaOperationalPanel: React.FC = () => {
       `PEEK(): TOP = ${top} [index ${stack.length - 1}]`,
       `PEEK(): TOP = ${top} [index ${stack.length - 1}]`,
       `Peek TOP: ${top}`,
-      { type: 'SET_POINTERS', pointers: { top: stack.length - 1 } }
+      { type: 'STACK_PEEK', peekIndex: stack.length - 1, value: top, pointers: { top: stack.length - 1 } }
     );
   };
 
@@ -229,129 +229,177 @@ export const DsaOperationalPanel: React.FC = () => {
   const isFull = stack.length >= capacity;
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0c16] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
+    <div className="h-full flex flex-col bg-[#0b0d19] border border-slate-800/80 rounded-xl overflow-hidden text-slate-200 shadow-xl">
       
-      {/* Simple Header */}
-      <div className="px-4 py-3 bg-[#0d0f1f] border-b border-slate-800/60 flex items-center justify-between shrink-0 font-mono text-xs">
+      {/* Sleek Minimal Header */}
+      <div className="px-3.5 py-2.5 bg-[#070913] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-300">STACK CONTROLS</span>
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+          <span className="font-bold tracking-wider text-slate-200 text-[11px]">STACK CONTROLS</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>Size:</span>
+        <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 rounded-md px-2 py-0.5">
+            <span className="text-slate-400">Cap:</span>
             <select
               value={capacity}
               onChange={e => handleCapacityChange(Number(e.target.value))}
-              className="bg-slate-900 text-purple-400 border border-slate-700/60 rounded px-1.5 py-0.5 text-xs font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-indigo-400 font-bold focus:outline-none cursor-pointer text-xs"
             >
               {[2, 3, 4, 5, 6, 8].map(n => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n} className="bg-slate-900 text-slate-200">{n}</option>
               ))}
             </select>
           </div>
-          <span className="text-slate-400">TOP: <strong className="text-purple-400">{topIndex}</strong></span>
-          <button onClick={() => handleCapacityChange(capacity)} className="text-slate-500 hover:text-slate-300 p-1" title="Reset">
+          <div className="flex items-center gap-1 bg-slate-900/80 border border-slate-800 rounded-md px-2 py-0.5">
+            <span className="text-slate-400">TOP:</span>
+            <strong className="text-purple-400 font-mono">{topIndex}</strong>
+          </div>
+          <button
+            onClick={() => handleCapacityChange(capacity)}
+            className="text-slate-500 hover:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-colors"
+            title="Reset Stack"
+          >
             <RotateCcw size={13} />
           </button>
         </div>
       </div>
 
-      {/* Simple Clean Body */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      {/* Dashboard Body - Evenly Distributed Well-Proportioned Layout */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-between gap-3">
 
+        {/* Error Alert */}
         {error && (
-          <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono flex items-center justify-between">
-            <span>⚠ {error}</span>
-            <button onClick={() => setError(null)} className="text-red-400/60 hover:text-red-400">✕</button>
+          <div className="px-3.5 py-2 rounded-sm bg-rose-950/90 border border-rose-500/60 text-rose-200 text-xs font-mono flex items-center justify-between shadow-md">
+            <span className="font-medium">⚠ {error}</span>
+            <button onClick={() => setError(null)} className="text-rose-300 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded-none bg-rose-900/60">✕</button>
           </div>
         )}
 
-        {/* PUSH */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Value..."
-            value={pushVal}
-            onChange={e => setPushVal(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handlePush()}
-            className="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:border-indigo-500 text-slate-200 text-xs font-mono focus:outline-none"
-          />
-          <button
-            onClick={handlePush}
-            disabled={isFull}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs font-mono flex items-center gap-1 shrink-0"
-          >
-            <Plus size={14} /> Push
-          </button>
+        {/* Main Controls Stack */}
+        <div className="flex flex-col gap-3.5">
+          
+          {/* Row 1: Push Input & Action */}
+          <div className="flex gap-2.5">
+            <input
+              type="text"
+              placeholder="Value..."
+              value={pushVal}
+              onChange={e => setPushVal(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handlePush()}
+              className="flex-1 px-3.5 py-3 rounded-sm bg-slate-950 border border-slate-700 focus:border-indigo-400 text-slate-100 text-xs font-mono placeholder:text-slate-500 focus:outline-none transition-all shadow-inner"
+            />
+            <button
+              onClick={handlePush}
+              disabled={isFull}
+              className={`px-5 py-3 rounded-sm font-mono font-bold text-xs flex items-center gap-1.5 shadow-md transition-all shrink-0 active:scale-95 ${
+                isFull
+                  ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/40'
+              }`}
+            >
+              <Plus size={14} /> Push
+            </button>
+          </div>
+
+          {/* Row 2: Pop | Peek | Traverse */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <button
+              onClick={handlePop}
+              disabled={isEmpty}
+              className={`py-3 px-2 rounded-sm font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 ${
+                isEmpty
+                  ? 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 hover:text-white'
+              }`}
+            >
+              <ArrowDown size={14} /> Pop
+            </button>
+
+            <button
+              onClick={handlePeek}
+              disabled={isEmpty}
+              className={`py-3 px-2 rounded-sm font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 ${
+                isEmpty
+                  ? 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-amber-950/70 hover:bg-amber-900 border border-amber-500/60 text-amber-300 hover:text-white'
+              }`}
+            >
+              <Eye size={14} /> Peek
+            </button>
+
+            <button
+              onClick={handleTraverse}
+              disabled={isEmpty}
+              className={`py-3 px-2 rounded-sm font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 ${
+                isEmpty
+                  ? 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 hover:text-white'
+              }`}
+            >
+              <Play size={14} /> Traverse
+            </button>
+          </div>
+
+          {/* Row 3: Search Input & Action */}
+          <div className="flex gap-2.5">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              className="flex-1 px-3.5 py-3 rounded-sm bg-slate-950 border border-slate-700 focus:border-purple-400 text-slate-100 text-xs font-mono placeholder:text-slate-500 focus:outline-none transition-all shadow-inner"
+            />
+            <button
+              onClick={handleSearch}
+              disabled={isEmpty}
+              className={`px-5 py-3 rounded-sm font-mono font-bold text-xs flex items-center gap-1.5 shrink-0 shadow-md transition-all active:scale-95 ${
+                isEmpty
+                  ? 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed'
+                  : 'bg-purple-950/70 hover:bg-purple-900 border border-purple-500/60 text-purple-200 hover:text-white'
+              }`}
+            >
+              <Search size={14} /> Search
+            </button>
+          </div>
+
         </div>
 
-        {/* POP & PEEK */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Bottom Utility Stack */}
+        <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-800/80">
+          <div className="grid grid-cols-3 gap-2.5">
+            <button
+              onClick={handleIsEmpty}
+              className="py-2.5 rounded-sm bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-mono text-[11px] font-bold transition-all active:scale-95 shadow-sm"
+            >
+              isEmpty()
+            </button>
+            <button
+              onClick={handleIsFull}
+              className="py-2.5 rounded-sm bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-mono text-[11px] font-bold transition-all active:scale-95 shadow-sm"
+            >
+              isFull()
+            </button>
+            <button
+              onClick={handleSize}
+              className="py-2.5 rounded-sm bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-mono text-[11px] font-bold transition-all active:scale-95 shadow-sm"
+            >
+              Size()
+            </button>
+          </div>
+
           <button
-            onClick={handlePop}
+            onClick={handleClear}
             disabled={isEmpty}
-            className="py-2.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono flex items-center justify-center gap-1.5"
+            className={`w-full py-2.5 rounded-sm font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 ${
+              isEmpty
+                ? 'bg-slate-900/60 border border-slate-800 text-slate-600 cursor-not-allowed'
+                : 'bg-rose-950/90 hover:bg-rose-900 border border-rose-600/70 text-rose-300 hover:text-white'
+            }`}
           >
-            <ArrowDown size={14} /> Pop
-          </button>
-          <button
-            onClick={handlePeek}
-            disabled={isEmpty}
-            className="py-2.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 disabled:opacity-40 text-amber-300 font-bold text-xs font-mono flex items-center justify-center gap-1.5"
-          >
-            <Eye size={14} /> Peek
+            <Trash2 size={14} /> Clear Stack
           </button>
         </div>
-
-        {/* SEARCH */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchVal}
-            onChange={e => setSearchVal(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            className="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:border-purple-500 text-slate-200 text-xs font-mono focus:outline-none"
-          />
-          <button
-            onClick={handleSearch}
-            disabled={isEmpty}
-            className="px-4 py-2 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 disabled:opacity-40 text-purple-200 font-bold text-xs font-mono flex items-center gap-1 shrink-0"
-          >
-            <Search size={14} /> Search
-          </button>
-        </div>
-
-        {/* TRAVERSE */}
-        <button
-          onClick={handleTraverse}
-          disabled={isEmpty}
-          className="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-40 text-cyan-300 font-bold text-xs font-mono flex items-center justify-center gap-1.5"
-        >
-          <Play size={13} /> Traverse
-        </button>
-
-        {/* UTILITIES */}
-        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800/40">
-          <button onClick={handleIsEmpty} className="py-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-[11px]">
-            isEmpty()
-          </button>
-          <button onClick={handleIsFull} className="py-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-[11px]">
-            isFull()
-          </button>
-          <button onClick={handleSize} className="py-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-[11px]">
-            Size()
-          </button>
-        </div>
-
-        {/* CLEAR */}
-        <button
-          onClick={handleClear}
-          disabled={isEmpty}
-          className="w-full py-2 rounded-lg bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 disabled:opacity-30 text-red-400 font-mono text-[11px] flex items-center justify-center gap-1"
-        >
-          <Trash2 size={12} /> Clear Stack
-        </button>
 
       </div>
     </div>

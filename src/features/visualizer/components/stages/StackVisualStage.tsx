@@ -2,7 +2,6 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLesson } from '../../../../lessons/LessonContext';
 
-
 const getStackFromStep = (step: any): { stack: (string | number)[]; capacity: number } => {
   if (!step) return { stack: [], capacity: 4 };
   const mem = step.memorySnapshot;
@@ -10,10 +9,6 @@ const getStackFromStep = (step: any): { stack: (string | number)[]; capacity: nu
   if (Array.isArray(mem?.stack)) return { stack: mem.stack, capacity: cap };
   if (typeof mem?.stack === 'string') {
     try { return { stack: JSON.parse(mem.stack), capacity: cap }; } catch { return { stack: [], capacity: cap }; }
-  }
-  const ev = step.animationEvent;
-  if (ev?.type === 'STACK_PUSH' || ev?.type === 'STACK_POP') {
-    return { stack: (ev as any).stackState ?? [], capacity: cap };
   }
   return { stack: [], capacity: cap };
 };
@@ -24,186 +19,265 @@ export const StackVisualStage: React.FC = () => {
   const { stack: stackItems, capacity: CAPACITY } = getStackFromStep(currentStep);
   const topIndex = stackItems.length - 1;
   const ev = currentStep?.animationEvent;
+  
+  const isPeekEvent = (ev as any)?.type === 'STACK_PEEK' || currentStep?.explanationEnglish?.includes('PEEK()');
+  const isTraverseStep = ev?.type === 'SET_POINTERS' && typeof (ev as any)?.pointers?.curr === 'number';
+  
   const activeHighlight: number | undefined =
     ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA :
-    (ev as any)?.pointers?.curr ?? (typeof currentStep?.memorySnapshot?.i === 'number' ? currentStep.memorySnapshot.i : undefined);
+    isTraverseStep ? (ev as any).pointers.curr :
+    isPeekEvent ? (ev as any)?.peekIndex ?? topIndex :
+    (typeof currentStep?.memorySnapshot?.i === 'number' ? currentStep.memorySnapshot.i : undefined);
 
   const isEmpty = stackItems.length === 0;
   const isFull = stackItems.length >= CAPACITY;
   const isUnderflow = (ev?.type === 'STACK_POP' && isEmpty) || (currentStep?.explanationEnglish?.includes('Underflow'));
 
   return (
-    <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
-      <div
-        className="flex flex-col items-center gap-6 my-auto transition-transform duration-200 ease-out origin-top"
-        style={{ transform: `scale(${zoom})` }}
-      >
+    <div className="flex-1 w-full h-full bg-transparent flex items-center overflow-hidden relative px-6 py-6">
+      
+      {/* ── Extreme Far-Right Corner STACK STATUS Panel (Ultra-Compact Smaller Size) ── */}
+      <div className="absolute right-3 top-4 z-20 w-36 flex flex-col gap-1.5 font-mono text-[10px] text-white bg-slate-950/85 p-2 border border-slate-800/80 rounded">
+        
+        {/* Header */}
+        <div className="flex items-center gap-1 font-black text-white uppercase text-[9px] tracking-wider border-b border-slate-800 pb-1">
+          <div className={`w-1.5 h-1.5 rounded-full ${isEmpty ? 'bg-slate-500' : isFull ? 'bg-rose-400' : 'bg-cyan-400'}`} />
+          <span className="text-white font-extrabold text-[10px]">STACK STATUS</span>
+        </div>
 
-        {/* Stack Header Label */}
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse" />
-          <span className="text-xs font-mono font-black uppercase tracking-[0.3em] text-purple-400/90">
-            Stack (LIFO) — Capacity {CAPACITY}
+        {/* Key Value Stats */}
+        <div className="flex flex-col gap-0.5 text-[9px]">
+          <div className="flex justify-between border-b border-slate-800/50 pb-0.5">
+            <span className="text-slate-400">State:</span>
+            <strong className={isEmpty ? 'text-slate-300' : isFull ? 'text-rose-400' : 'text-cyan-300 font-bold'}>
+              {isEmpty ? 'Empty' : isFull ? 'Full' : 'Active'}
+            </strong>
+          </div>
+          <div className="flex justify-between border-b border-slate-800/50 pb-0.5">
+            <span className="text-slate-400">Capacity:</span>
+            <strong className="text-white font-bold">{CAPACITY}</strong>
+          </div>
+          <div className="flex justify-between border-b border-slate-800/50 pb-0.5">
+            <span className="text-slate-400">Size:</span>
+            <strong className="text-white font-bold">{stackItems.length}/{CAPACITY}</strong>
+          </div>
+          <div className="flex justify-between border-b border-slate-800/50 pb-0.5">
+            <span className="text-slate-400">TOP Index:</span>
+            <strong className="text-cyan-300 font-bold">{topIndex}</strong>
+          </div>
+        </div>
+
+        {/* Active Items List */}
+        <div className="flex flex-col gap-0.5 pt-0.5">
+          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+            DATA (TOP → BOTTOM)
           </span>
-          <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse" />
-        </div>
 
-        {/* OVERFLOW / UNDERFLOW ALERT BANNERS */}
-        <AnimatePresence>
-          {isFull && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="px-4 py-1.5 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 text-[11px] font-mono font-black tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse"
-            >
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              OVERFLOW WARNING: STACK IS FULL ({stackItems.length}/{CAPACITY})
-            </motion.div>
-          )}
-          {isUnderflow && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400 text-[11px] font-mono font-black tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse"
-            >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              UNDERFLOW WARNING: CANNOT POP FROM EMPTY STACK
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Open Top Label */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] font-mono text-slate-600 tracking-widest uppercase">OPEN TOP ▼</span>
-          <div className="w-40 h-px bg-linear-to-r from-transparent via-purple-500/30 to-transparent" />
-        </div>
-
-        {/* Main Stack Frame */}
-        <div
-          className={`relative flex flex-col gap-0 rounded-b-2xl overflow-hidden transition-all duration-300 ${
-            isFull ? 'ring-2 ring-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]' : ''
-          }`}
-          style={{ minWidth: 340 }}
-        >
-          {/* Render slots from index [CAPACITY-1] down to [0] */}
-          {Array.from({ length: CAPACITY }).map((_, i) => {
-            const idx = CAPACITY - 1 - i;
-            const hasValue = idx <= topIndex && stackItems[idx] !== undefined;
-            const value = hasValue ? stackItems[idx] : null;
-            const isTop = idx === topIndex && hasValue;
-            const isHighlighted = idx === activeHighlight;
-            const isSearch = ev?.type === 'COMPARE_INDICES' && idx === (ev as any).indexA;
-            const isFound = isSearch && (ev as any).result === 'found';
-
-            return (
-              <div key={idx} className="flex items-stretch">
-                {/* Left: Index Badge */}
-                <div className="w-12 flex items-center justify-end pr-3 shrink-0 border-r border-slate-800/60 bg-slate-950/60">
-                  <span className="text-[10px] font-mono font-bold text-slate-600">[{idx}]</span>
-                </div>
-
-                {/* Center: Slot */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`slot-${idx}-${hasValue ? 'filled' : 'empty'}`}
-                    layout
-                    initial={hasValue ? { opacity: 0, y: -12, scale: 0.95 } : { opacity: 0.5 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -12, scale: 0.95 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 22, duration: 0.25 }}
-                    className={`flex-1 h-14 flex items-center justify-center font-mono font-bold text-base transition-all duration-300 border-b border-slate-800/40 ${
-                      isFound
-                        ? 'bg-green-500/20 text-green-300 shadow-[inset_0_0_20px_rgba(34,197,94,0.15)]'
-                        : isHighlighted || isSearch
-                        ? 'bg-amber-500/15 text-amber-300 shadow-[inset_0_0_20px_rgba(245,158,11,0.15)]'
-                        : isTop
-                        ? 'bg-purple-500/20 text-purple-200 shadow-[inset_0_0_20px_rgba(168,85,247,0.15)]'
-                        : hasValue
-                        ? 'bg-indigo-950/80 text-slate-300'
-                        : 'bg-slate-950/40 text-slate-800'
+          {stackItems.length === 0 ? (
+            <span className="text-slate-500 text-[9px] italic">Empty</span>
+          ) : (
+            <div className="flex flex-col gap-0.5 max-h-24 overflow-y-auto">
+              {stackItems.slice().reverse().map((item: any, idx: number) => {
+                const actualIndex = stackItems.length - 1 - idx;
+                const isTopItem = actualIndex === topIndex;
+                return (
+                  <div
+                    key={idx}
+                    className={`px-1.5 py-0.5 flex items-center justify-between rounded text-[9px] font-bold font-mono ${
+                      isTopItem
+                        ? 'bg-cyan-400 text-slate-950 font-black'
+                        : 'bg-slate-900 text-slate-200 border border-slate-800'
                     }`}
                   >
-                    {hasValue ? (
-                      <span className={`tracking-wide ${isTop ? 'text-purple-200' : 'text-slate-300'}`}>
-                        {value}
-                      </span>
-                    ) : (
-                      <span className="text-[9px] tracking-[0.3em] uppercase text-slate-800/60 font-sans font-normal select-none">
-                        empty
-                      </span>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
+                    <span>[{actualIndex}]</span>
+                    <span className="font-bold">{item}</span>
+                    {isTopItem && <span className="text-[7px] uppercase font-black bg-slate-950 text-cyan-300 px-1">TOP</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-                {/* Right: Pointer / Status */}
-                <div className="w-20 flex items-center pl-3 shrink-0 border-l border-slate-800/60 bg-slate-950/60">
+      </div>
+
+      {/* ── Left / Center: Stack Visual Bucket (Inside Zoom Wrapper) ── */}
+      <div
+        className="w-full h-full flex items-center relative transition-transform duration-200 ease-out"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'left center' }}
+      >
+        <div className="flex items-center gap-4 pl-4">
+          
+          {/* 1. Array Indexing Column */}
+          <div className="h-62.5 flex flex-col justify-between py-1 font-mono text-xs font-bold text-slate-400 text-right pr-1">
+            {Array.from({ length: CAPACITY }).map((_, i) => {
+              const idx = CAPACITY - 1 - i;
+              const isTop = idx === topIndex;
+              const isTarget = idx === activeHighlight;
+              return (
+                <div key={idx} className="flex-1 flex items-center justify-end">
+                  <span className={isTarget ? 'text-amber-400 font-black text-sm' : isTop ? 'text-cyan-400 font-black text-xs' : 'text-slate-400'}>
+                    [{idx}]
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 2. Middle: Bucket Frame */}
+          <div className="flex flex-col items-center">
+            
+            {/* Alert Banners */}
+            <AnimatePresence>
+              {isFull && (
+                <div className="px-3 py-1 bg-rose-950 border border-rose-500/60 text-rose-300 text-xs font-mono font-bold rounded-md mb-2 animate-pulse shrink-0">
+                  ⚠ STACK OVERFLOW (FULL)
+                </div>
+              )}
+              {isUnderflow && (
+                <div className="px-3 py-1 bg-amber-950 border border-amber-500/60 text-amber-300 text-xs font-mono font-bold rounded-md mb-2 animate-pulse shrink-0">
+                  ⚠ STACK UNDERFLOW
+                </div>
+              )}
+              {isPeekEvent && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="mb-2 font-mono font-black text-xs text-amber-400 flex items-center gap-1.5 shrink-0 tracking-wider"
+                >
+                  <span>👁 PEEK TOP ELEMENT = {stackItems[topIndex]}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Cyan Open Bucket Frame */}
+            <div
+              className="w-60 p-2 border-x-4 border-b-4 border-cyan-400 rounded-b-2xl flex flex-col justify-between gap-2 bg-slate-950/90 shadow-2xl h-62.5"
+            >
+              {/* Render slots from TOP [CAPACITY-1] down to [0] */}
+              {Array.from({ length: CAPACITY }).map((_, i) => {
+                const idx = CAPACITY - 1 - i;
+                const hasValue = idx <= topIndex && stackItems[idx] !== undefined;
+                const value = hasValue ? stackItems[idx] : null;
+                const isTop = idx === topIndex && hasValue;
+                const isPeekTarget = isPeekEvent && isTop;
+                const isTraverseTarget = isTraverseStep && idx === activeHighlight;
+                const isSearch = ev?.type === 'COMPARE_INDICES' && idx === (ev as any).indexA;
+                const isFound = isSearch && (ev as any).result === 'found';
+
+                return (
+                  <div key={idx} className="flex-1 w-full flex items-center justify-center relative">
+                    <AnimatePresence mode="wait">
+                      {hasValue ? (
+                        <motion.div
+                          key={`block-${idx}-${value}`}
+                          initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                          transition={{ type: 'spring', stiffness: 350, damping: 24 }}
+                          className={`w-full h-full rounded-[5px] flex items-center justify-center font-mono font-black text-lg transition-all shadow-md ${
+                            isFound
+                              ? 'bg-emerald-400 text-slate-950 border-2 border-white'
+                              : isPeekTarget
+                              ? 'bg-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg'
+                              : isTraverseTarget
+                              ? 'bg-cyan-400 text-slate-950 border-2 border-white'
+                              : isSearch
+                              ? 'bg-amber-400 text-slate-950 border-2 border-white'
+                              : isTop
+                              ? 'bg-white text-slate-950 border-2 border-cyan-400'
+                              : 'bg-white text-slate-950 border border-slate-300'
+                          }`}
+                        >
+                          {value}
+                        </motion.div>
+                      ) : (
+                        <div className="w-full h-full rounded-[5px] border-2 border-dashed border-slate-800/80 flex items-center justify-center text-[10px] font-mono text-slate-700 font-bold select-none">
+                          EMPTY SLOT
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Right Column: Pointer Badges */}
+          <div className="h-62.5 flex flex-col justify-between py-1 font-mono text-xs pl-1">
+            {Array.from({ length: CAPACITY }).map((_, i) => {
+              const idx = CAPACITY - 1 - i;
+              const hasValue = idx <= topIndex && stackItems[idx] !== undefined;
+              const isTop = idx === topIndex && hasValue;
+              const isPeekTarget = isPeekEvent && isTop;
+              const isTraverseTarget = isTraverseStep && idx === activeHighlight;
+              const isSearch = ev?.type === 'COMPARE_INDICES' && idx === (ev as any).indexA;
+              const isFound = isSearch && (ev as any).result === 'found';
+
+              return (
+                <div key={idx} className="flex-1 flex items-center">
                   <AnimatePresence>
                     {isFound && (
                       <motion.span
-                        initial={{ x: -5, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -5, opacity: 0 }}
-                        className="px-2 py-1 rounded-lg bg-green-500/20 border border-green-400/50 text-green-300 text-[9px] font-mono font-black tracking-wider"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        className="px-2.5 py-0.5 rounded bg-emerald-500 text-slate-950 font-mono font-black text-xs shadow-md"
                       >
-                        FOUND ✓
+                        ← MATCH ✓
                       </motion.span>
                     )}
-                    {!isFound && (isHighlighted || isSearch) && (
+                    {isPeekTarget && (
                       <motion.span
-                        initial={{ x: -5, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -5, opacity: 0 }}
-                        className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[9px] font-mono font-black tracking-wider"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        className="px-2.5 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-xs shadow-lg flex items-center gap-1"
                       >
-                        SCAN ◀
+                        ← PEEK TOP 👁
                       </motion.span>
                     )}
-                    {!isHighlighted && !isSearch && isTop && (
+                    {!isPeekTarget && isTraverseTarget && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        className="px-2.5 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-xs shadow-lg flex items-center gap-1"
+                      >
+                        ← VISITING 🔍
+                      </motion.span>
+                    )}
+                    {!isFound && !isPeekTarget && !isTraverseTarget && isSearch && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-xs"
+                      >
+                        ← SCAN
+                      </motion.span>
+                    )}
+                    {!isFound && !isPeekTarget && !isTraverseTarget && !isSearch && isTop && (
                       <motion.span
                         key={`top-ptr-${idx}`}
-                        initial={{ x: -5, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -5, opacity: 0 }}
-                        className="px-2 py-1 rounded-lg bg-purple-500/20 border border-purple-400/60 text-purple-300 text-[9px] font-mono font-black tracking-wider shadow-sm"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        className="px-2.5 py-0.5 rounded bg-sky-400 text-slate-950 font-mono font-black text-xs shadow-md"
                       >
-                        TOP ◀
+                        ← TOP
                       </motion.span>
                     )}
                   </AnimatePresence>
                 </div>
-              </div>
-            );
-          })}
-
-          {/* Solid Base */}
-          <div className="h-3 bg-linear-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 border-t-2 border-slate-600/60 flex items-center justify-center">
-            <div className="w-24 h-0.5 bg-linear-to-r from-transparent via-slate-500/40 to-transparent" />
+              );
+            })}
           </div>
-        </div>
 
-        {/* Base Label */}
-        <div className="flex flex-col items-center gap-1">
-          <div className="w-40 h-px bg-linear-to-r from-transparent via-slate-700/40 to-transparent" />
-          <span className="text-[10px] font-mono text-slate-700 tracking-widest uppercase">▲ BASE (index 0)</span>
         </div>
-
-        {/* Status Bar */}
-        <div className="flex items-center gap-4 px-5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800/60 text-[10px] font-mono">
-          <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${isEmpty ? 'bg-purple-500' : stackItems.length >= CAPACITY ? 'bg-red-500' : 'bg-green-500'}`} />
-            <span className="text-slate-500">
-              {isEmpty ? 'Empty' : stackItems.length >= CAPACITY ? 'Full (Overflow Risk)' : 'Active'}
-            </span>
-          </div>
-          <span className="text-slate-700">|</span>
-          <span className="text-slate-500">Size: <span className="text-slate-300 font-bold">{stackItems.length}/{CAPACITY}</span></span>
-          <span className="text-slate-700">|</span>
-          <span className="text-slate-500">TOP: <span className="text-purple-300 font-bold">{topIndex}</span></span>
-        </div>
-
       </div>
+
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Pen, Eraser, Undo2, Redo2, Trash2, X, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
+import { Pen, Eraser, Hand, Undo2, Redo2, Trash2, X, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import type { Stroke } from './AnnotationCanvas';
 
@@ -16,8 +16,8 @@ const SIX_COLORS = [
 
 export const PenMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPenActive, setIsPenActive] = useState(false);
-  const [mode, setMode] = useState<'pen' | 'eraser'>('pen');
+  const [isPenActive, setIsPenActive] = useState(true);
+  const [mode, setMode] = useState<'pen' | 'eraser' | 'palm'>('pen');
   const [color, setColor] = useState('#ffffff');
   const [strokeWidth, setStrokeWidth] = useState<number>(4);
   const [dashStyle, setDashStyle] = useState<'solid' | 'dashed' | 'dotted'>('solid');
@@ -171,14 +171,20 @@ export const PenMenu: React.FC = () => {
     {
       id: 'mode',
       icon: (
-        <div className={`p-1 rounded-lg transition-all ${mode === 'eraser' ? 'bg-rose-500/20 ring-2 ring-rose-400' : ''}`}>
-          <Eraser className={`w-4 h-4 ${mode === 'eraser' ? 'text-rose-400 font-bold' : 'text-rose-300'}`} />
+        <div className={`p-1 rounded-lg transition-all ${mode === 'eraser' ? 'bg-rose-500/20 ring-2 ring-rose-400' : mode === 'palm' ? 'bg-amber-500/20 ring-2 ring-amber-400' : ''}`}>
+          {mode === 'eraser' ? (
+            <Eraser className="w-4 h-4 text-rose-400 font-bold" />
+          ) : mode === 'palm' ? (
+            <Hand className="w-4 h-4 text-amber-400 font-bold" />
+          ) : (
+            <Pen className="w-4 h-4 text-cyan-400 font-bold" />
+          )}
         </div>
       ),
-      action: () => { setMode(m => m === 'pen' ? 'eraser' : 'pen'); setActiveSubMenu('none'); },
-      active: mode === 'eraser',
-      activeFill: 'rgba(225, 29, 72, 0.45)',
-      activeStroke: 'rgba(251, 113, 133, 0.9)',
+      action: () => { setMode(m => m === 'pen' ? 'eraser' : m === 'eraser' ? 'palm' : 'pen'); setActiveSubMenu('none'); },
+      active: mode !== 'pen',
+      activeFill: mode === 'eraser' ? 'rgba(225, 29, 72, 0.45)' : 'rgba(245, 158, 11, 0.45)',
+      activeStroke: mode === 'eraser' ? 'rgba(251, 113, 133, 0.9)' : 'rgba(252, 211, 77, 0.9)',
     },
     {
       id: 'thickness',

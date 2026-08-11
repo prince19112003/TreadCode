@@ -76,6 +76,33 @@ npm run release 1.0.1
 
 ---
 
+## 📡 Remote System Auto-Update Push Guide
+
+To push an over-the-air (OTA) software update to all installed remote systems so users receive an on-screen update pop-up:
+
+### Step 1: Update `global_update.json` in Firebase RTDB
+Navigate to [Firebase Realtime Database](https://console.firebase.google.com/) -> Data -> `global_update` node and set the following JSON structure:
+
+```json
+{
+  "version": "1.1.0",
+  "buildDate": "2026-08-11",
+  "changelog": [
+    "Added Graph Animations (DFS & BFS)",
+    "New High-Performance Visualizer Stage",
+    "Optimized Pen & Touch Drawing Response"
+  ],
+  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v1.1.0/TreadCode_Setup.exe",
+  "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest"
+}
+```
+
+### Step 2: How Remote Systems Receive the Update
+1. **Instant On-Screen Pop-Up**: Within 1.2 seconds of launching the desktop app, all remote systems automatically detect `remoteVersion > currentVersion` and display an **On-Screen Update Modal** with release notes and a 1-click **Update Now** button.
+2. **If User Skips ("Remind Me Later")**: The pop-up dismisses to avoid interrupting ongoing classroom lectures, but a persistent **"Software Update Available"** banner remains pinned at the top of **Settings Page** so users can update whenever they wish later.
+
+---
+
 ## 🔑 Licensing & Hardware Access Security
 
 - **6-Digit Alphanumeric Serials**: License keys are formatted as clean 6-character uppercase serials (e.g. `K9P2X8`).

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BookOpen, BarChart2, Layers, Zap, GitBranch, ArrowUpDown, AlignJustify, Network } from 'lucide-react';
+import { BookOpen, BarChart2, Layers } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
 
@@ -79,226 +79,25 @@ const javaTopics = [
    DSA TOPIC DATA — New structure with icons, complexity, tags
    ========================================================= */
 const dsaTopics = [
-  {
-    id: 'bubble_sort', number: '01', name: 'Bubble Sort',
-    subtitle: 'Bubble adjacent elements to sort array',
-    complexity: 'O(N²)', category: 'Algorithm', difficulty: 'Intermediate' as const,
-    accentColor: '#a855f7', Icon: ArrowUpDown,
-    tags: ['Bubble', 'Sort', 'Adjacent', 'Swapping'],
-    interactive: true, programsCount: 1,
-  },
-  {
-    id: 'selection_sort', number: '02', name: 'Selection Sort',
-    subtitle: 'Select minimum element to swap repeatedly',
-    complexity: 'O(N²)', category: 'Algorithm', difficulty: 'Intermediate' as const,
-    accentColor: '#8b5cf6', Icon: ArrowUpDown,
-    tags: ['Selection', 'Minimum', 'Swap', 'Passes'],
-    interactive: true, programsCount: 1,
-  },
-  {
-    id: 'insertion_sort', number: '03', name: 'Insertion Sort',
-    subtitle: 'Insert elements sequentially into sorted sublist',
-    complexity: 'O(N²)', category: 'Algorithm', difficulty: 'Intermediate' as const,
-    accentColor: '#6366f1', Icon: ArrowUpDown,
-    tags: ['Insertion', 'Sorted', 'Sublist', 'Shift'],
-    interactive: true, programsCount: 1,
-  },
-  {
-    id: 'merge_sort', number: '04', name: 'Merge Sort',
-    subtitle: 'Divide and conquer recursive array merge',
-    complexity: 'O(N log N)', category: 'Algorithm', difficulty: 'Advanced' as const,
-    accentColor: '#ec4899', Icon: ArrowUpDown,
-    tags: ['Divide', 'Conquer', 'Recursive', 'Merge'],
-    interactive: true, programsCount: 1,
-  },
-  {
-    id: 'heap_sort', number: '05', name: 'Heap Sort',
-    subtitle: 'Build max heap and swap root repeatedly',
-    complexity: 'O(N log N)', category: 'Algorithm', difficulty: 'Advanced' as const,
-    accentColor: '#f97316', Icon: ArrowUpDown,
-    tags: ['Max Heap', 'Heapify', 'Sorting', 'Tree-like'],
-    interactive: true, programsCount: 1,
-  },
-  {
-    id: 'stack', number: '06', name: 'Stack (LIFO)',
-    subtitle: 'Push, Pop, Peek, Search & Traverse',
-    complexity: 'O(1)', category: 'Data Structure', difficulty: 'Intermediate' as const,
-    accentColor: '#ec4899', Icon: AlignJustify,
-    tags: ['Push', 'Pop', 'Peek', 'Traverse'],
-    interactive: true, programsCount: 9,
-  },
-  {
-    id: 'queue', number: '07', name: 'Queue (FIFO)',
-    subtitle: 'Enqueue, Dequeue & Front/Rear Pointers',
-    complexity: 'O(1)', category: 'Data Structure', difficulty: 'Intermediate' as const,
-    accentColor: '#06b6d4', Icon: AlignJustify,
-    tags: ['Enqueue', 'Dequeue', 'Front', 'Rear'],
-    interactive: true, programsCount: 4,
-  },
-  {
-    id: 'singly_linked_list', number: '08', name: 'Singly Linked List',
-    subtitle: 'Node → Data | Next Pointer Chain',
-    complexity: 'O(N)', category: 'Data Structure', difficulty: 'Intermediate' as const,
-    accentColor: '#8b5cf6', Icon: GitBranch,
-    tags: ['Insert', 'Delete', 'Traverse', 'NULL'],
-    interactive: true, programsCount: 5,
-  },
-  {
-    id: 'doubly_linked_list', number: '09', name: 'Doubly Linked List',
-    subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links',
-    complexity: 'O(N)', category: 'Data Structure', difficulty: 'Advanced' as const,
-    accentColor: '#6366f1', Icon: GitBranch,
-    tags: ['Prev', 'Next', 'Insert', 'Delete'],
-    interactive: true, programsCount: 4,
-  },
-  {
-    id: 'binary_tree', number: '10', name: 'Binary Tree',
-    subtitle: 'Node → Left & Right Children Branches',
-    complexity: 'O(log N)', category: 'Data Structure', difficulty: 'Advanced' as const,
-    accentColor: '#a78bfa', Icon: Network,
-    tags: ['Root', 'Branch', 'DFS', 'Traversals'],
-    interactive: true, programsCount: 4,
-  },
-  {
-    id: 'graph_basics', number: '11', name: 'Graph Fundamentals',
-    subtitle: 'Vertices, Edges & Adjacency Matrix',
-    complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
-    accentColor: '#eab308', Icon: Network,
-    tags: ['Vertices', 'Edges', 'Matrix', 'Adjacency'],
-    interactive: true, programsCount: 2,
-  },
-  {
-    id: 'graph_bfs', number: '12', name: 'Graph BFS Traversal',
-    subtitle: 'Breadth-First Queue-based Level-Order Path Scan',
-    complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
-    accentColor: '#10b981', Icon: Network,
-    tags: ['BFS', 'Queue', 'Level-Order', 'Search'],
-    interactive: true, programsCount: 1,
-  },
-  {
-    id: 'graph_dfs', number: '13', name: 'Graph DFS Traversal',
-    subtitle: 'Depth-First Stack-based Backtracking Path Scan',
-    complexity: 'O(V+E)', category: 'Graph', difficulty: 'Advanced' as const,
-    accentColor: '#8b5cf6', Icon: Network,
-    tags: ['DFS', 'Stack', 'Backtracking', 'Search'],
-    interactive: true, programsCount: 1,
-  },
+  { id: 'bubble_sort', number: '01', name: 'Bubble Sort', subtitle: 'Bubble adjacent elements to sort array', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#a855f7' },
+  { id: 'selection_sort', number: '02', name: 'Selection Sort', subtitle: 'Select minimum element to swap repeatedly', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#8b5cf6' },
+  { id: 'insertion_sort', number: '03', name: 'Insertion Sort', subtitle: 'Insert elements sequentially into sorted sublist', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#6366f1' },
+  { id: 'merge_sort', number: '04', name: 'Merge Sort', subtitle: 'Divide and conquer recursive array merge', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#ec4899' },
+  { id: 'heap_sort', number: '05', name: 'Heap Sort', subtitle: 'Build max heap and swap root repeatedly', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#f97316' },
+  { id: 'stack', number: '06', name: 'Stack (LIFO)', subtitle: 'Push, Pop, Peek, Search & Traverse', complexity: 'O(1)', programsCount: 9, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#ec4899' },
+  { id: 'queue', number: '07', name: 'Queue (FIFO)', subtitle: 'Enqueue, Dequeue & Front/Rear Pointers', complexity: 'O(1)', programsCount: 4, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#06b6d4' },
+  { id: 'singly_linked_list', number: '08', name: 'Singly Linked List', subtitle: 'Node → Data | Next Pointer Chain', complexity: 'O(N)', programsCount: 5, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#8b5cf6' },
+  { id: 'doubly_linked_list', number: '09', name: 'Doubly Linked List', subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links', complexity: 'O(N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#6366f1' },
+  { id: 'binary_tree', number: '10', name: 'Binary Tree', subtitle: 'Node → Left & Right Children Branches', complexity: 'O(log N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
+  { id: 'graph_basics', number: '11', name: 'Graph Fundamentals', subtitle: 'Vertices, Edges & Adjacency Matrix', complexity: 'O(V+E)', programsCount: 2, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#eab308' },
+  { id: 'graph_bfs', number: '12', name: 'Graph BFS Traversal', subtitle: 'Breadth-First Queue-based Level-Order Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
+  { id: 'graph_dfs', number: '13', name: 'Graph DFS Traversal', subtitle: 'Depth-First Stack-based Backtracking Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#8b5cf6' },
 ];
 
 const difficultyConfig = {
   Beginner:     { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.22)' },
   Intermediate: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
   Advanced:     { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)' },
-};
-
-/* =========================================================
-   DSA TOPIC CARD
-   ========================================================= */
-type DsaTopic = typeof dsaTopics[0];
-
-const DsaTopicCard: React.FC<{ topic: DsaTopic; index: number; onClick: () => void }> = ({ topic, index, onClick }) => {
-  const diff = difficultyConfig[topic.difficulty];
-  const { Icon } = topic;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.05, ease: 'easeOut' }}
-    >
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={`Open ${topic.name}`}
-        onClick={onClick}
-        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick()}
-        className="group relative flex flex-col overflow-hidden rounded-2xl cursor-pointer transition-all duration-250"
-        style={{ background: 'rgba(10, 12, 20, 0.85)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = `${topic.accentColor}40`;
-          el.style.transform = 'translateY(-3px)';
-          el.style.boxShadow = `0 0 0 1px ${topic.accentColor}20, 0 12px 40px rgba(0,0,0,0.6), 0 0 40px ${topic.accentColor}08`;
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = 'rgba(255,255,255,0.06)';
-          el.style.transform = 'translateY(0)';
-          el.style.boxShadow = 'none';
-        }}
-      >
-        {/* Accent glow top edge */}
-        <div
-          className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ background: `linear-gradient(to right, transparent, ${topic.accentColor}60, transparent)` }}
-        />
-
-        {/* Card body */}
-        <div className="p-5 flex flex-col gap-4">
-
-          {/* Top: Icon + Number + Badges */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110"
-                style={{ background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}25` }}
-              >
-                <Icon size={18} style={{ color: topic.accentColor }} />
-              </div>
-              <div>
-                <span className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.2em]">{topic.category}</span>
-                <div className="text-[10px] font-mono font-bold" style={{ color: `${topic.accentColor}90` }}>{topic.number}</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-1.5 shrink-0">
-              {topic.interactive && (
-                <span
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-black tracking-wider"
-                  style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
-                >
-                  <Zap size={8} />
-                  INTERACTIVE
-                </span>
-              )}
-              <span
-                className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}
-              >
-                {topic.difficulty}
-              </span>
-            </div>
-          </div>
-
-          {/* Name + Subtitle */}
-          <div>
-            <h2 className="text-base font-black leading-tight mb-1" style={{ color: '#f0f2f8', letterSpacing: '-0.3px' }}>{topic.name}</h2>
-            <p className="text-xs leading-relaxed" style={{ color: '#6b7280' }}>{topic.subtitle}</p>
-          </div>
-
-          {/* Operation Tags */}
-          <div className="flex flex-wrap gap-1.5">
-            {topic.tags.map(tag => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold"
-                style={{ color: `${topic.accentColor}90`, background: `${topic.accentColor}08`, border: `1px solid ${topic.accentColor}15` }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          {/* Footer: complexity */}
-          <div className="flex items-center justify-between border-t pt-3" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-            <span className="text-[9px] font-mono text-slate-600">TIME COMPLEXITY</span>
-            <span className="text-[11px] font-mono font-black" style={{ color: topic.accentColor }}>{topic.complexity}</span>
-          </div>
-
-        </div>
-      </div>
-    </motion.div>
-  );
 };
 
 /* =========================================================
@@ -345,66 +144,7 @@ export const TopicSelectionPage: React.FC = () => {
     }
   };
 
-  /* ── DSA PAGE ──────────────────────────────────────────────────────────── */
-  if (isDsa) {
-    return (
-      <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-purple-600/10 blur-[120px] pointer-events-none rounded-full" />
-        <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-6xl mx-auto w-full min-h-full relative z-10">
 
-          {/* DSA Header */}
-          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6 md:mb-8">
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/50 border border-purple-400/30 shadow-sm backdrop-blur-md">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                <span className="text-[10px] font-mono font-extrabold text-white uppercase tracking-widest">Interactive Operations</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/50 border border-indigo-400/30 shadow-sm backdrop-blur-md">
-                <span className="text-[10px] font-mono font-extrabold text-white uppercase tracking-widest">Visualizer</span>
-              </div>
-            </div>
-            
-            <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-white drop-shadow-sm">
-              Data Structures & Algorithms
-            </h1>
-            <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
-              Interactive step-by-step algorithmic data structure visualizations.
-            </p>
-          </motion.div>
-
-          {/* Stats Bar */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2.5 mb-6 flex-wrap">
-            {[
-              { icon: Layers, label: `${dsaTopics.length} Topics`, color: '#a855f7' },
-              { icon: Zap, label: 'Interactive Operations', color: '#ec4899' },
-              { icon: BarChart2, label: 'Complexity Analysis', color: '#38bdf8' },
-            ].map(stat => (
-              <div
-                key={stat.label}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
-                style={{ background: 'rgba(12, 14, 22, 0.8)', border: `1px solid ${stat.color}35` }}
-              >
-                <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
-                <span>{stat.label}</span>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* DSA Topic Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 pb-12">
-            {dsaTopics.map((topic, index) => (
-              <DsaTopicCard
-                key={topic.id}
-                topic={topic}
-                index={index}
-                onClick={() => handleTopicClick(topic.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </PageTransition>
-    );
-  }
 
   /* ── STANDARD LANGUAGE PAGE ────────────────────────────────────────────── */
   return (
@@ -426,7 +166,7 @@ export const TopicSelectionPage: React.FC = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2.5 mb-6 flex-wrap">
           {[
             { icon: Layers, label: `${topics.length} Topics`, color: '#6366f1' },
-            { icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' },
+            ...(!isDsa ? [{ icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' }] : []),
             { icon: BarChart2, label: '3 Difficulty Levels', color: '#38bdf8' },
           ].map(stat => (
             <div
@@ -510,16 +250,25 @@ export const TopicSelectionPage: React.FC = () => {
                     <p className="text-xs font-medium mb-4 text-slate-200 line-clamp-1">{topic.subtitle}</p>
                     
                     <div className="flex items-center justify-between text-xs font-bold pt-3 border-t text-white" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                      <div className="flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>{topic.programsCount} Programs</span>
-                      </div>
-                      <span
-                        className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
-                        style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
-                      >
-                        {topic.category}
-                      </span>
+                      {'complexity' in topic ? (
+                        <>
+                          <span className="text-[9px] font-mono text-slate-400 font-bold uppercase tracking-wider">TIME COMPLEXITY</span>
+                          <span className="text-[11px] font-mono font-black" style={{ color: topic.accentColor }}>{(topic as any).complexity}</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>{topic.programsCount} Programs</span>
+                          </div>
+                          <span
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
+                            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
+                          >
+                            {topic.category}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -23,8 +23,9 @@ import { useLesson } from '../../lessons/LessonContext';
 
 export const VisualizerWorkspace: React.FC = () => {
   const { lesson, isFullScreen } = useLesson();
+  const isDsa = lesson?.language === 'dsa';
   const [isConsoleFullScreen, setIsConsoleFullScreen] = useState(false);
-  const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
+  const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(() => lesson?.language === 'dsa');
   const [isPureBlack, setIsPureBlack] = useState(() => localStorage.getItem('treadcode_pure_black') === 'true');
 
   const togglePureBlack = () => {
@@ -35,7 +36,6 @@ export const VisualizerWorkspace: React.FC = () => {
     });
   };
 
-  const isDsa = lesson?.language === 'dsa';
   const isStackTopic = isDsa && lesson?.topic === 'stack';
   const isQueueTopic = isDsa && lesson?.topic === 'queue';
   const isSllTopic = isDsa && lesson?.topic === 'singly_linked_list';
@@ -101,8 +101,8 @@ export const VisualizerWorkspace: React.FC = () => {
       <div className={`flex flex-col h-screen w-screen overflow-hidden text-slate-200 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
         <div className={`flex-1 flex gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
 
-          {/* ── Left Column: Operational Dashboard (38%) ── */}
-          <div className="w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0">
+          {/* ── Left Column: Operational Dashboard (30%) ── */}
+          <div className="w-[30%] flex flex-col gap-1.5 overflow-hidden shrink-0">
             <div className="h-[75%] overflow-hidden flex flex-col">
               {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
             </div>

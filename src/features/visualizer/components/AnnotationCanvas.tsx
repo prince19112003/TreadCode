@@ -16,7 +16,7 @@ interface AnnotationCanvasProps {
   strokeWidth: number;
   isDashed: boolean;
   dashStyle?: 'solid' | 'dashed' | 'dotted';
-  mode: 'pen' | 'eraser';
+  mode: 'pen' | 'eraser' | 'palm';
   strokesRef: React.MutableRefObject<Stroke[]>;
   undoneRef?: React.MutableRefObject<Stroke[]>;
   revision?: number;
@@ -48,12 +48,15 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     strokesRef.current.forEach(stroke => {
-      if (stroke.points.length < 2) return;
+      if (stroke.points.length === 0) return;
       const w = stroke.strokeWidth || 4;
       ctx.lineWidth = w;
       ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
       ctx.strokeStyle = stroke.color;
       ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+      ctx.imageSmoothingEnabled = false;
 
       const style = stroke.dashStyle || (stroke.isDashed ? 'dashed' : 'solid');
       if (style === 'dashed') {
@@ -69,7 +72,11 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
       ctx.beginPath();
       ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      stroke.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
+      if (stroke.points.length === 1) {
+        ctx.lineTo(stroke.points[0].x + 0.1, stroke.points[0].y + 0.1);
+      } else {
+        stroke.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
+      }
       ctx.stroke();
     });
   }, [strokesRef]);
@@ -77,20 +84,37 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const getPos = (e: React.PointerEvent): Point => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     };
   };
 
+  // Distance from point pt to line segment p1-p2
+  const distToSegment = (pt: Point, p1: Point, p2: Point) => {
+    const l2 = (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
+    if (l2 === 0) return Math.hypot(pt.x - p1.x, pt.y - p1.y);
+    let t = ((pt.x - p1.x) * (p2.x - p1.x) + (pt.y - p1.y) * (p2.y - p1.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(pt.x - (p1.x + t * (p2.x - p1.x)), pt.y - (p1.y + t * (p2.y - p1.y)));
+  };
+
   const eraseAt = (pt: Point) => {
-    const eraseRadius = 20;
+    const eraseRadius = 30;
     const initialCount = strokesRef.current.length;
     strokesRef.current = strokesRef.current.filter(stroke => {
-      return !stroke.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < eraseRadius);
+      if (stroke.points.length === 0) return false;
+      if (stroke.points.length === 1) {
+        return Math.hypot(stroke.points[0].x - pt.x, stroke.points[0].y - pt.y) > eraseRadius;
+      }
+      for (let i = 0; i < stroke.points.length - 1; i++) {
+        if (distToSegment(pt, stroke.points[i], stroke.points[i + 1]) < eraseRadius) {
+          return false;
+        }
+      }
+      return true;
     });
+
     if (strokesRef.current.length !== initialCount) {
       if (undoneRef) undoneRef.current = [];
       redraw();
@@ -99,7 +123,8 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (!isActive) return;
+    // Only single primary pointer or pen draws; multi-touch acts like palm
+    if (!isActive || mode === 'palm' || !e.isPrimary) return;
     isDrawing.current = true;
     const pt = getPos(e);
     canvasRef.current?.setPointerCapture(e.pointerId);
@@ -108,11 +133,25 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       eraseAt(pt);
     } else {
       currentStroke.current = [pt];
+      // Instant tap drawing (S-Pen responsiveness)
+      redraw();
+      const ctx = getCtx();
+      if (ctx) {
+        ctx.lineWidth = strokeWidth;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = color;
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, strokeWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
     }
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!isActive || !isDrawing.current) return;
+    if (!isActive || !isDrawing.current || mode === 'palm' || !e.isPrimary) return;
     const pt = getPos(e);
 
     if (mode === 'eraser') {
@@ -131,8 +170,11 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     ctx.lineWidth = w;
     ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.strokeStyle = color;
     ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.imageSmoothingEnabled = false;
 
     const style = dashStyle;
     if (style === 'dashed') {
@@ -171,14 +213,21 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     currentStroke.current = [];
   };
 
-  // Resize canvas observer to fit parent container
+  // Resize canvas observer to fit parent container with HD resolution scaling
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const parent = canvas.parentElement || canvas;
     const ro = new ResizeObserver(() => {
-      canvas.width = parent.clientWidth || window.innerWidth;
-      canvas.height = parent.clientHeight || window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      const w = parent.clientWidth || window.innerWidth;
+      const h = parent.clientHeight || window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.scale(dpr, dpr);
       redraw();
     });
     ro.observe(parent);
@@ -189,17 +238,13 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     redraw();
   }, [revision, redraw]);
 
-  const cursorSvg = mode === 'eraser'
-    ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='m7 21-4-4 13-13 4 4-13 13z' fill='%23ef4444' stroke='white' stroke-width='1.5'/><path d='m18 10 3 3-4 4h-4' stroke='white' stroke-width='1.5'/></svg>") 4 20, pointer`
-    : `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z' fill='${encodeURIComponent(color)}' stroke='white' stroke-width='1.5'/><path d='m15 5 4 4' stroke='white' stroke-width='1.5'/></svg>") 2 22, pointer`;
-
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-auto"
       style={{
-        cursor: isActive ? cursorSvg : 'default',
-        pointerEvents: isActive ? 'all' : 'none',
+        cursor: 'default',
+        pointerEvents: (isActive && mode !== 'palm') ? 'all' : 'none',
         touchAction: 'none',
         zIndex: 60,
       }}

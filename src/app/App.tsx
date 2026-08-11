@@ -164,8 +164,10 @@ export const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Verify license key status at startup
+  // Verify license key status at startup & real-time sync with Admin Panel
   React.useEffect(() => {
+    let unsubscribeLicense: (() => void) | null = null;
+
     async function checkLicense() {
       // 1. Fetch HWID from Tauri
       let currentHwid = 'fallback-device-id-xxxx';
@@ -185,12 +187,40 @@ export const App: React.FC = () => {
         const details = await fetchLicenseDetails(cachedKey, currentHwid);
         setLicenseDetails(details);
         setActivated(details.isValid);
+
+        // Real-time listener: Auto-logout immediately if Admin cancels license or removes device
+        const licenseRef = ref(db, `licenses/${cachedKey}`);
+        unsubscribeLicense = onValue(licenseRef, (snapshot) => {
+          if (!snapshot.exists()) {
+            // License key was deleted by admin
+            localStorage.removeItem('flowtrace_license_key');
+            setActivated(false);
+            setLicenseDetails({ isValid: false });
+            return;
+          }
+
+          const val = snapshot.val() || {};
+          const isBlocked = !!val.blocked;
+          const isDeviceRegistered = val.devices && val.devices[currentHwid];
+
+          if (isBlocked || !isDeviceRegistered) {
+            // License blocked or device HWID removed from Admin panel
+            localStorage.removeItem('flowtrace_license_key');
+            setActivated(false);
+            setLicenseDetails({ isValid: false, blocked: isBlocked });
+          }
+        });
       } else {
         setActivated(false);
         setLicenseDetails({ isValid: false });
       }
     }
+
     checkLicense();
+
+    return () => {
+      if (unsubscribeLicense) unsubscribeLicense();
+    };
   }, []);
 
   const handleActivate = async (key: string): Promise<boolean> => {

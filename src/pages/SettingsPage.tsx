@@ -56,6 +56,9 @@ export const SettingsPage: React.FC = () => {
   const [showChangeKeyInput, setShowChangeKeyInput] = useState(false);
 
   // Voice States
+  const [isVoiceModeEnabled, setIsVoiceModeEnabled] = useState(
+    () => localStorage.getItem('treadcode_voice_enabled') === 'true'
+  );
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedEnVoice, setSelectedEnVoice] = useState<string>(
     () => localStorage.getItem('flowtrace_voice_en') || ''
@@ -64,6 +67,14 @@ export const SettingsPage: React.FC = () => {
     () => localStorage.getItem('flowtrace_voice_hi') || ''
   );
   const [isPlayingTestAudio, setIsPlayingTestAudio] = useState(false);
+
+  const toggleVoiceMode = () => {
+    setIsVoiceModeEnabled(prev => {
+      const next = !prev;
+      localStorage.setItem('treadcode_voice_enabled', String(next));
+      return next;
+    });
+  };
 
   // Modals
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -456,6 +467,29 @@ export const SettingsPage: React.FC = () => {
                     <p className="text-xs text-slate-400 mt-1">
                       Choose TTS speech synthesis voices for step-by-step English and Hindi audio narration.
                     </p>
+                  </div>
+
+                  {/* Voice Mode Main Enable Switch */}
+                  <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-white block">Enable Voice Explanation Mode</span>
+                      <span className="text-[11px] text-slate-400">
+                        When enabled, the Voice toggle icon will appear in the explanation bar during execution.
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={toggleVoiceMode}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        isVoiceModeEnabled ? 'bg-indigo-600' : 'bg-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                          isVoiceModeEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
 
                   {/* Audio Test Bar */}
