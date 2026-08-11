@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation } from 'lucide-react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { motion, AnimatePresence } from 'motion/react';
 import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 import { LicenseContext } from '../App';
+import { SmartBoardModal } from '../../features/smartboard/SmartBoardModal';
 
 const GithubIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -325,15 +326,20 @@ export const GlobalAppShell: React.FC = () => {
   const navigate = useNavigate();
   const breadcrumbs = useBreadcrumbs();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [smartBoardOpen, setSmartBoardOpen] = useState(false);
   const licenseContext = React.useContext(LicenseContext);
   const { hasUpdate } = useUpdateChecker();
 
-  // Ctrl+K / Cmd+K to open search
+  // Ctrl+K / Cmd+K to open search & Ctrl+B for SmartBoard
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setSearchOpen(prev => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        setSmartBoardOpen(prev => !prev);
       }
     };
     window.addEventListener('keydown', handler);
@@ -353,11 +359,13 @@ export const GlobalAppShell: React.FC = () => {
         }}
       />
 
-      {/* === HEADER === */}
+      {/* === HEADER (Sleek Glassmorphism Top Bar) === */}
       <header
         data-tauri-drag-region
-        className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-slate-950/80 border-b border-white/5 backdrop-blur-md"
+        className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-linear-to-r from-[#070913]/95 via-[#0b0f24]/95 to-[#070913]/95 border-b border-indigo-500/20 backdrop-blur-xl shadow-lg"
       >
+        {/* Subtle glowing cyan top border accent */}
+        <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
         {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
         <div className="flex items-center gap-3" data-tauri-drag-region>
           <button
@@ -405,8 +413,20 @@ export const GlobalAppShell: React.FC = () => {
           ))}
         </nav>
 
-        {/* RIGHT: Search + GitHub Glass + Settings */}
+        {/* RIGHT: SmartBoard + Search + GitHub Glass + Settings */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setSmartBoardOpen(true)}
+            title="Open Interactive Smart Board (Ctrl+B)"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-200 bg-amber-500/10 border border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/20 hover:text-white transition-all shadow-sm group"
+          >
+            <Presentation className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">Smart Board</span>
+            <kbd className="hidden sm:inline-block text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md bg-amber-950/60 border border-amber-400/30 text-amber-300">
+              ⌘B
+            </kbd>
+          </button>
+
           <button
             onClick={() => setSearchOpen(true)}
             title="Search programs (Ctrl+K)"
@@ -470,10 +490,12 @@ export const GlobalAppShell: React.FC = () => {
         </div>
       </header>
 
-      {/* === GLOBAL SEARCH MODAL === */}
+      {/* === GLOBAL SEARCH & SMART BOARD MODALS === */}
       <AnimatePresence>
         {searchOpen && <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}
       </AnimatePresence>
+
+      <SmartBoardModal isOpen={smartBoardOpen} onClose={() => setSmartBoardOpen(false)} />
 
       {/* === MAIN CONTENT === */}
       <main className="relative z-0 flex-1 overflow-hidden flex flex-col">
