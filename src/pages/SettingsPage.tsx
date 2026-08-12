@@ -206,6 +206,29 @@ export const SettingsPage: React.FC = () => {
               <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-bold">
                 v{displayVersion}
               </span>
+
+              {/* Dynamic Live Web Cloud Version Link (Highlights & Pulses when update is ready!) */}
+              <button
+                onClick={async () => {
+                  const webUrl = "https://tread-code-smoky.vercel.app/";
+                  try {
+                    const { open } = await import('@tauri-apps/plugin-shell');
+                    await open(webUrl);
+                  } catch (err) {
+                    window.open(webUrl, "_blank", "noopener,noreferrer");
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer ${
+                  hasUpdate
+                    ? 'bg-linear-to-r from-amber-500 via-rose-500 to-purple-600 text-white border border-amber-400/60 shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse'
+                    : 'bg-indigo-950/50 hover:bg-indigo-900/80 border border-indigo-500/30 text-indigo-300 hover:text-white'
+                }`}
+                title={hasUpdate ? `Try Latest Release v${latestVersion} Instantly on Web!` : "Open TreadCode Web Cloud Edition"}
+              >
+                <Globe size={13} className={hasUpdate ? "text-amber-200 animate-spin-slow" : "text-indigo-400"} />
+                <span>{hasUpdate ? `Try v${latestVersion} Live Web` : "Launch Cloud Edition"}</span>
+                <ExternalLink size={11} />
+              </button>
             </div>
             <p className="text-slate-400 text-sm">
               Configure display contrast for projectors, voice output, code font size, and license keys.
