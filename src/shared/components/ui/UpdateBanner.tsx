@@ -332,41 +332,73 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                     )}
 
                     {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={handleDismiss}
                         style={{
-                          flex: 1, padding: '11px',
-                          border: '1px solid rgba(99,102,241,0.2)',
+                          flex: 1, padding: '10px 12px',
+                          border: '1px solid rgba(255,255,255,0.1)',
                           borderRadius: '10px',
-                          background: 'rgba(99,102,241,0.06)',
+                          background: 'rgba(255,255,255,0.05)',
                           color: 'rgba(148,163,184,0.8)',
-                          cursor: 'pointer', fontSize: '13px',
+                          cursor: 'pointer', fontSize: '12px', fontWeight: 600,
                           fontFamily: 'system-ui',
                           transition: 'all 0.2s',
                         }}
                       >
                         Later
                       </button>
+
+                      <button
+                        onClick={async () => {
+                          const exeUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+                          try {
+                            const { open } = await import('@tauri-apps/plugin-shell');
+                            await open(exeUrl);
+                          } catch (err) {
+                            window.open(exeUrl, '_blank');
+                          }
+                        }}
+                        style={{
+                          flex: 1.4, padding: '10px 12px',
+                          border: '1px solid rgba(99,102,241,0.3)',
+                          borderRadius: '10px',
+                          background: 'rgba(99,102,241,0.15)',
+                          color: '#a5b4fc',
+                          cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+                          fontFamily: 'system-ui',
+                          transition: 'all 0.2s',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        }}
+                        title="Download .exe installer file directly from Vercel CDN"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Direct .exe Link
+                      </button>
+
                       <motion.button
                         onClick={handleUpdate}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
                         style={{
-                          flex: 2.5, padding: '11px',
+                          flex: 2, padding: '10px 12px',
                           border: 'none', borderRadius: '10px',
                           background: 'linear-gradient(135deg, #6366f1, #a855f7)',
                           color: 'white',
-                          cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                          cursor: 'pointer', fontSize: '12px', fontWeight: 600,
                           fontFamily: 'system-ui',
                           boxShadow: '0 0 24px rgba(99,102,241,0.4)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                           <path d="M12 3v11M8 10l4 4 4-4M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        Download & Update
+                        Auto-Update & Restart
                       </motion.button>
                     </div>
 

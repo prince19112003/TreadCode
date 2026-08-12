@@ -496,6 +496,18 @@ export const GlobalAppShell: React.FC = () => {
             }
           `}</style>
 
+          {/* Persistent Glowing Update Ready Button in Top Header (Remains active until updated!) */}
+          {hasUpdate && (
+            <button
+              onClick={() => navigate('/settings')}
+              title="New software update available! Click to update."
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-white bg-linear-to-r from-rose-600 via-indigo-600 to-purple-600 hover:from-rose-500 hover:to-indigo-500 transition-all shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse shrink-0 cursor-pointer"
+            >
+              <Sparkles size={13} className="animate-spin-slow" />
+              <span>Update Ready</span>
+            </button>
+          )}
+
           <a
             href="https://github.com/prince19112003"
             target="_blank"

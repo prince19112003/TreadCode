@@ -734,6 +734,23 @@ export const SettingsPage: React.FC = () => {
                           <span>{isChecking ? "Checking Server..." : "Check for Updates"}</span>
                         </button>
 
+                        <button
+                          onClick={async () => {
+                            const exeUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+                            try {
+                              const { open } = await import('@tauri-apps/plugin-shell');
+                              await open(exeUrl);
+                            } catch (err) {
+                              window.open(exeUrl, '_blank');
+                            }
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                          title="Permanent direct download channel for installer setup .exe"
+                        >
+                          <Monitor size={13} className="text-indigo-400" />
+                          <span>Direct .exe Download</span>
+                        </button>
+
                         {hasUpdate ? (
                           <button
                             onClick={() => setShowPreviewModal(true)}
