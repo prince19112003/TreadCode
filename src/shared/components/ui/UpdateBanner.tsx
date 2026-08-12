@@ -116,9 +116,16 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
 
   const handleRestart = async () => {
     try {
+      const { relaunch } = await import('@tauri-apps/plugin-process');
       await relaunch();
     } catch (e) {
-      console.error('Relaunch failed:', e);
+      console.warn('Native relaunch plugin failed, trying exit/reload fallback:', e);
+      try {
+        const { exit } = await import('@tauri-apps/plugin-process');
+        await exit(0);
+      } catch (err) {
+        window.location.reload();
+      }
     }
   };
 

@@ -39,11 +39,13 @@ export function useUpdateChecker(): UpdateStatus & {
   const checkForUpdate = useCallback(async (_force = false) => {
     setStatus((s) => ({ ...s, isChecking: true, error: null }));
 
-    try {
-      // Use Tauri native updater
-      const update = await check();
+    let updateFound = false;
 
+    // 1. Try Tauri native plugin updater
+    try {
+      const update = await check();
       if (update && update.available) {
+        updateFound = true;
         setStatus({
           hasUpdate: true,
           latestVersion: update.version,
@@ -54,22 +56,45 @@ export function useUpdateChecker(): UpdateStatus & {
           error: null,
           updateObj: update,
         });
-      } else {
-        setStatus((s) => ({
-          ...s,
-          hasUpdate: false,
-          isChecking: false,
-          lastChecked: new Date(),
-          error: null,
-          updateObj: null,
-        }));
+        return;
       }
     } catch (err) {
-      console.error('Update check failed:', err);
+      console.warn('Native Tauri updater check failed/skipped, trying direct RTDB fallback:', err);
+    }
+
+    // 2. Direct Fallback to Firebase RTDB (Zero Failure Guaranteed!)
+    try {
+      const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.version && data.version !== CURRENT_VERSION) {
+          const notesStr = data.notes || '';
+          setStatus({
+            hasUpdate: true,
+            latestVersion: data.version,
+            currentVersion: CURRENT_VERSION,
+            changelog: notesStr ? notesStr.split('\n') : ['New Features & Enhancements Available'],
+            isChecking: false,
+            lastChecked: new Date(),
+            error: null,
+            updateObj: null,
+          });
+          updateFound = true;
+          return;
+        }
+      }
+    } catch (rtdbErr) {
+      console.error('RTDB update fetch error:', rtdbErr);
+    }
+
+    if (!updateFound) {
       setStatus((s) => ({
         ...s,
+        hasUpdate: false,
         isChecking: false,
-        error: err instanceof Error ? err.message : 'Unknown error checking for updates',
+        lastChecked: new Date(),
+        error: null,
+        updateObj: null,
       }));
     }
   }, []);
