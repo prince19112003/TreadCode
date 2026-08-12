@@ -23,7 +23,7 @@ type SettingTab = 'display' | 'voice' | 'licensing' | 'about';
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const licenseContext = useContext(LicenseContext);
-  const { hasUpdate, latestVersion, currentVersion } = useUpdateChecker();
+  const { hasUpdate, latestVersion, currentVersion, checkNow, isChecking } = useUpdateChecker();
 
   // Dynamic version state
   const [displayVersion, setDisplayVersion] = useState(currentVersion);
@@ -716,6 +716,16 @@ export const SettingsPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={checkNow}
+                        disabled={isChecking}
+                        className="px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                        title="Check Firebase for latest software releases"
+                      >
+                        <RefreshCw size={13} className={isChecking ? "animate-spin text-indigo-400" : ""} />
+                        <span>{isChecking ? "Checking..." : "Check for Updates"}</span>
+                      </button>
+
                       {hasUpdate ? (
                         <button
                           onClick={() => setShowPreviewModal(true)}
