@@ -1,5 +1,5 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "buildDate": "2026-08-12",
   "changelog": [
     "Clean baseline release 1.0.0",
@@ -8,5 +8,5 @@
     "Real-time computer hardware telemetry & 1-click access revocation"
   ],
   "releaseUrl": "https://github.com/prince19112003/TreadCode/releases/latest",
-  "downloadUrl": "https://github.com/prince19112003/TreadCode/releases/download/v1.0.4/TreadCode_1.0.4_x64-setup.exe"
+  "downloadUrl": "https://github.com/prince19112003/TreadCode/releases/download/v1.0.5/TreadCode_1.0.5_x64-setup.exe"
 }
