@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink } from 'lucide-react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { motion, AnimatePresence } from 'motion/react';
 import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
@@ -496,16 +496,39 @@ export const GlobalAppShell: React.FC = () => {
             }
           `}</style>
 
-          {/* Persistent Glowing Update Ready Button in Top Header (Remains active until updated!) */}
+          {/* Persistent Glowing Update Ready & Vercel Web App Link in Top Header (Until updated!) */}
           {hasUpdate && (
-            <button
-              onClick={() => navigate('/settings')}
-              title="New software update available! Click to update."
-              className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-white bg-linear-to-r from-rose-600 via-indigo-600 to-purple-600 hover:from-rose-500 hover:to-indigo-500 transition-all shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse shrink-0 cursor-pointer"
-            >
-              <Sparkles size={13} className="animate-spin-slow" />
-              <span>Update Ready</span>
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => navigate('/settings')}
+                title="New software update available! Click to update."
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-white bg-linear-to-r from-rose-600 via-indigo-600 to-purple-600 hover:from-rose-500 hover:to-indigo-500 transition-all shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse cursor-pointer"
+              >
+                <Sparkles size={13} className="animate-spin-slow" />
+                <span>Update Ready</span>
+              </button>
+
+              <a
+                href="https://tread-code-smoky.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  const targetUrl = "https://tread-code-smoky.vercel.app/";
+                  try {
+                    const { open } = await import('@tauri-apps/plugin-shell');
+                    await open(targetUrl);
+                  } catch (err) {
+                    window.open(targetUrl, "_blank", "noopener,noreferrer");
+                  }
+                }}
+                title="Open Web Version on Vercel"
+                className="flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/40 hover:bg-indigo-900/80 hover:text-white transition-all cursor-pointer"
+              >
+                <span>Web App</span>
+                <ExternalLink size={11} />
+              </a>
+            </div>
           )}
 
           <a

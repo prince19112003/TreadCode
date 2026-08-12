@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { 
   Monitor, Info, Volume2, ArrowLeft, Key, ShieldCheck, Copy, Check, 
   Sun, Tv, Sparkles, Play, VolumeX, 
-  Building2, CheckCircle2, HelpCircle, Eye, RefreshCw
+  Building2, CheckCircle2, HelpCircle, Eye, RefreshCw, ExternalLink, Globe
 } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion, AnimatePresence } from 'motion/react';
@@ -749,6 +749,24 @@ export const SettingsPage: React.FC = () => {
                         >
                           <Monitor size={13} className="text-indigo-400" />
                           <span>Direct .exe Download</span>
+                        </button>
+
+                        <button
+                          onClick={async () => {
+                            const webUrl = 'https://tread-code-smoky.vercel.app/';
+                            try {
+                              const { open } = await import('@tauri-apps/plugin-shell');
+                              await open(webUrl);
+                            } catch (err) {
+                              window.open(webUrl, '_blank');
+                            }
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl border border-purple-500/40 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                          title="Open live web visualizer hosted on Vercel"
+                        >
+                          <Globe size={13} className="text-purple-400" />
+                          <span>Open Web App</span>
+                          <ExternalLink size={11} />
                         </button>
 
                         {hasUpdate ? (
