@@ -10,13 +10,13 @@ import {
   Pencil, Highlighter, Eraser, Square, Circle, Minus, MoveRight,
   Trash2, Undo2, Redo2, Maximize2, Minimize2,
   X, Download, GripHorizontal, ChevronDown, ChevronUp,
-  Droplet, Sparkle,
+  Sparkle,
   SquareCheck, AlignJustify, Plus, Hand, FileText, Image, FileJson,
   FolderOpen, Save, RotateCcw, AlertCircle,
 } from "lucide-react";
 
 // Types
-export type SmartBoardTool = "pen" | "highlighter" | "laser" | "eraser" | "line" | "arrow" | "rect" | "circle" | "pan";
+export type SmartBoardTool = "pen" | "highlighter" | "laser" | "eraser" | "stroke_eraser" | "line" | "arrow" | "rect" | "circle" | "pan";
 export type SmartBoardGrid = "none" | "lines";
 export type SmartBoardBg = "black" | "grey" | "white";
 
@@ -27,15 +27,34 @@ interface SmartBoardModalProps { isOpen: boolean; onClose: () => void; }
 const COLOR_PALETTE = ["#f8fafc","#fbbf24","#38bdf8","#4ade80","#f472b6","#a855f7","#ef4444","#1e293b"];
 const BG_FILL: Record<SmartBoardBg, string> = { black: "#05070d", grey: "#1a2235", white: "#f4f3ef" };
 
-// Bezier smooth path
+// Apple Pencil-style Catmull-Rom & Chaikin Streamline Smoothing for Ink Calligraphy
 function smoothPath(ctx: CanvasRenderingContext2D, pts: Point[]) {
-  if (pts.length < 2) { ctx.arc(pts[0].x, pts[0].y, ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill(); return; }
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length - 1; i++) {
-    const mx = (pts[i].x + pts[i+1].x)/2, my = (pts[i].y + pts[i+1].y)/2;
-    ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+  if (!pts.length) return;
+  if (pts.length < 3) {
+    ctx.beginPath();
+    ctx.arc(pts[0].x, pts[0].y, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return;
   }
-  ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+
+  // Chaikin corner smoothing pass for ultra-smooth handwriting curves
+  const smoothedPts: Point[] = [pts[0]];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i];
+    const p1 = pts[i + 1];
+    const q = { x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y, p: p0.p };
+    const r = { x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y, p: p1.p };
+    smoothedPts.push(q, r);
+  }
+  smoothedPts.push(pts[pts.length - 1]);
+
+  ctx.moveTo(smoothedPts[0].x, smoothedPts[0].y);
+  for (let i = 1; i < smoothedPts.length - 1; i++) {
+    const mx = (smoothedPts[i].x + smoothedPts[i + 1].x) / 2;
+    const my = (smoothedPts[i].y + smoothedPts[i + 1].y) / 2;
+    ctx.quadraticCurveTo(smoothedPts[i].x, smoothedPts[i].y, mx, my);
+  }
+  ctx.lineTo(smoothedPts[smoothedPts.length - 1].x, smoothedPts[smoothedPts.length - 1].y);
 }
 
 // Rectangular Page Thumbnail (Double Size 216px x 136px)
@@ -113,6 +132,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   const [pagesOpen, setPagesOpen] = useState(false);
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(true);
   const [autoSnapEnabled, setAutoSnapEnabled] = useState(false);
+  const [eraserSubmenuOpen, setEraserSubmenuOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [showSessionPrompt, setShowSessionPrompt] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -123,7 +143,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   const [customToPage, setCustomToPage] = useState<number>(1);
   const [bgGrid, setBgGrid] = useState<SmartBoardGrid>("none");
   const [boardBg, setBoardBg] = useState<SmartBoardBg>("black");
-  const [glassMode, setGlassMode] = useState(false);
+  const [glassMode] = useState(false);
   const [tool, setTool] = useState<SmartBoardTool>("pen");
   const [color, setColor] = useState("#f8fafc");
   const [size, setSize] = useState(2);
@@ -170,12 +190,29 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     let hasLaser = false;
 
     ctx.save();
+    // Fill canvas background with selected boardBg color
+    ctx.fillStyle = BG_FILL[boardBg];
+    ctx.fillRect(0, 0, W, H);
+
     ctx.translate(zoomOffset.x, zoomOffset.y);
     ctx.scale(zoom, zoom);
 
     if (bgGrid==="lines") {
-      ctx.save(); ctx.strokeStyle=gridColor; ctx.lineWidth=0.5 / zoom;
-      for (let y=36; y<H / zoom; y+=36) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W / zoom,y); ctx.stroke(); }
+      ctx.save(); 
+      // Dynamic grid color for dark vs light background
+      ctx.strokeStyle = boardBg === "white" ? "rgba(0, 0, 0, 0.15)" : "rgba(255, 255, 255, 0.12)"; 
+      ctx.lineWidth = 0.5 / zoom;
+      const startY = Math.floor(-zoomOffset.y / (zoom * 36)) * 36 - 36;
+      const endY = Math.ceil((H - zoomOffset.y) / (zoom * 36)) * 36 + 36;
+      const startX = Math.floor(-zoomOffset.x / (zoom * 36)) * 36 - 36;
+      const endX = Math.ceil((W - zoomOffset.x) / (zoom * 36)) * 36 + 36;
+
+      for (let y = startY; y < endY; y += 36) { 
+        ctx.beginPath(); 
+        ctx.moveTo(startX, y); 
+        ctx.lineTo(endX, y); 
+        ctx.stroke(); 
+      }
       ctx.restore();
     }
 
@@ -663,7 +700,23 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const factor = e.deltaY < 0 ? 1.08 : 0.92;
-        setZoom(z => Math.min(4, Math.max(0.3, z * factor)));
+        const cv = cvRef.current;
+        if (!cv) return;
+        const r = cv.getBoundingClientRect();
+        const mouseX = e.clientX - r.left;
+        const mouseY = e.clientY - r.top;
+
+        setZoom(oldZoom => {
+          const newZoom = Math.min(4, Math.max(0.3, oldZoom * factor));
+          const zoomRatio = newZoom / oldZoom;
+
+          setZoomOffset(oldOffset => ({
+            x: mouseX - (mouseX - oldOffset.x) * zoomRatio,
+            y: mouseY - (mouseY - oldOffset.y) * zoomRatio,
+          }));
+
+          return newZoom;
+        });
       }
     };
     wrap.addEventListener("wheel", onWheel, { passive: false });
@@ -727,7 +780,15 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     const pt=getPos(e);
     setLive(prev=>{
       if (!prev) return null;
-      if (["pen","highlighter","laser","eraser"].includes(prev.tool)) return {...prev,points:[...prev.points,pt],timestamp:Date.now()};
+      if (["pen","highlighter","laser","eraser","stroke_eraser"].includes(prev.tool)) {
+        // Streamline Low-pass distance filter (filters out micro-jitters < 1.5px)
+        const lastPt = prev.points[prev.points.length - 1];
+        if (lastPt) {
+          const dist = Math.hypot(pt.x - lastPt.x, pt.y - lastPt.y);
+          if (dist < 1.5) return prev; // Filter jitter noise
+        }
+        return {...prev,points:[...prev.points,pt],timestamp:Date.now()};
+      }
       return {...prev,points:[prev.points[0],pt]};
     });
 
@@ -755,7 +816,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     if (!drawing.current) return;
     drawing.current=false; e.currentTarget.releasePointerCapture(e.pointerId);
     if (live) {
-      if (live.tool === "eraser") {
+      if (live.tool === "eraser" || live.tool === "stroke_eraser") {
         eraseLassoArea(live.points);
       } else {
         setStrokes(prev=>[...prev,live]);
@@ -771,7 +832,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     setPageIdx(pages.length);
     setPagesOpen(true);
     setIsFlyAnimating(true);
-    setTimeout(() => setIsFlyAnimating(false), 750);
+    setTimeout(() => setIsFlyAnimating(false), 550);
   };
 
   const deletePage = (idx: number, e: React.MouseEvent) => {
@@ -814,8 +875,8 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
         key="smartboard"
         initial={{opacity:0,scale:0.97,y:8}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:0.97,y:8}}
         transition={{duration:0.18,ease:[0.4,0,0.2,1]}}
-        className={`fixed z-9999 flex flex-col select-none shadow-[0_24px_80px_rgba(0,0,0,0.9)] ${isFullscreen?"inset-0 rounded-none":"rounded-2xl border border-white/7"} ${glassMode?"bg-transparent backdrop-blur-lg":"bg-[#05070d]"} overflow-hidden`}
-        style={isFullscreen?{}:{left:bounds.x,top:bounds.y,width:bounds.w,height:bounds.h}}
+        className={`fixed z-9999 flex flex-col select-none shadow-[0_24px_80px_rgba(0,0,0,0.9)] ${isFullscreen?"inset-0 rounded-none":"rounded-2xl border border-white/7"} overflow-hidden`}
+        style={isFullscreen?{background: BG_FILL[boardBg]}:{left:bounds.x,top:bounds.y,width:bounds.w,height:bounds.h,background: BG_FILL[boardBg]}}
       >
         {/* Resize handles */}
         {!isFullscreen && (["top","bottom","left","right","top-left","top-right","bottom-left","bottom-right"] as const).map(dir=>(
@@ -869,10 +930,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
                 </button>
               </div>
 
-              {/* Glass & Zoom Indicator */}
-              <button onClick={()=>setGlassMode(!glassMode)} className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-all flex items-center gap-1 border ${glassMode?"bg-blue-500/20 text-blue-300 border-blue-400/40":"bg-white/4 text-white/30 border-white/6 hover:text-white/60"}`}>
-                <Droplet size={10}/> Glass
-              </button>
+
 
               <button
                 onClick={() => { setZoom(1); setZoomOffset({ x: 0, y: 0 }); }}
@@ -907,29 +965,29 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
 
         {/* Board */}
         <div className="flex-1 relative overflow-hidden">
-          {/* Pages Cluster: Top + New Page Button, Below: Matching Page Preview Button */}
-          <div className="absolute top-2.5 left-2.5 z-40 flex flex-col gap-1.5 select-none">
-            {/* Top: New Page Button (Squarish Box) */}
+          {/* Pages Cluster: Top + New Page Button, Below: Pages a/b Button */}
+          <div className="absolute top-2.5 left-2.5 z-40 flex flex-col gap-1 select-none">
+            {/* Top: New Page Button */}
             <button
               onClick={addPage}
-              className="h-7 px-2.5 flex items-center justify-center gap-1.5 rounded-md bg-slate-900/85 hover:bg-slate-800 backdrop-blur-md border border-slate-700/60 text-slate-200 hover:text-white text-[11px] font-medium transition-all active:scale-95 shadow-xs"
-              title="New Page"
+              className="h-6 px-2 flex items-center justify-center gap-1 rounded-md bg-slate-900/90 hover:bg-indigo-950 backdrop-blur-md border border-slate-700/60 text-slate-200 hover:text-white text-[10px] font-medium transition-all active:scale-95 shadow-xs"
+              title="Add New Page"
             >
-              <Plus size={12} className="text-indigo-400" />
-              <span>New Page</span>
+              <Plus size={11} className="text-indigo-400" />
+              <span>New</span>
             </button>
 
-            {/* Below: Page Preview Button (Squarish Box, Distinct Subtle Dark Tone) */}
+            {/* Below: Pages a/b Button */}
             <button
               onClick={() => setPagesOpen(!pagesOpen)}
-              className={`h-7 px-2.5 flex items-center justify-center gap-1.5 rounded-md backdrop-blur-md text-[11px] font-medium transition-all active:scale-95 border shadow-xs ${
+              className={`h-6 px-2 flex items-center justify-center gap-1 rounded-md backdrop-blur-md text-[10px] font-medium transition-all active:scale-95 border shadow-xs ${
                 pagesOpen
-                  ? 'bg-indigo-950/60 text-indigo-300 border-indigo-700/60'
-                  : 'bg-[#0d1424]/85 hover:bg-[#162036] text-slate-300 hover:text-white border-slate-800'
+                  ? 'bg-indigo-950/80 text-indigo-300 border-indigo-700/60'
+                  : 'bg-[#0d1424]/90 hover:bg-[#162036] text-slate-300 hover:text-white border-slate-800'
               }`}
-              title="Page Preview"
+              title="View Pages"
             >
-              <span>Page Preview ({pageIdx + 1}/{pages.length})</span>
+              <span>Pages ({pageIdx + 1}/{pages.length})</span>
             </button>
 
             {/* Page Drawer — Rectangular Cards with Proper Gap & Seamless Floating Look */}
@@ -967,18 +1025,21 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
             </AnimatePresence>
           </div>
 
-          {/* Soft Page Creation Flying Card Animation (Smooth 0.75s Apple Easing) */}
+          {/* Apple Keynote-style Smooth Page Creation Fly-to-Drawer Card Animation */}
           <AnimatePresence>
             {isFlyAnimating && (
               <motion.div
                 key="fly-page"
-                initial={{ opacity: 0.9, scale: 0.95, x: 0, y: 0, borderRadius: '16px' }}
-                animate={{ opacity: 0.05, scale: 0.06, x: -330, y: -210, borderRadius: '8px' }}
+                initial={{ opacity: 0.8, scale: 0.96, x: 0, y: 0, borderRadius: '16px' }}
+                animate={{ opacity: 0.2, scale: 0.15, x: -310, y: -190, borderRadius: '10px' }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-8 z-50 pointer-events-none border border-indigo-400/40 bg-slate-900/60 shadow-[0_0_80px_rgba(99,102,241,0.2)] backdrop-blur-md flex items-center justify-center"
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-6 z-50 pointer-events-none border-2 border-indigo-400/60 bg-linear-to-br from-indigo-950/80 to-slate-950/90 shadow-[0_0_100px_rgba(99,102,241,0.35)] backdrop-blur-md flex items-center justify-center overflow-hidden"
               >
-                <span className="text-xs font-medium text-indigo-300 font-mono tracking-wider">New Page</span>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/20 border border-indigo-400/40">
+                  <Plus size={16} className="text-indigo-400 animate-pulse" />
+                  <span className="text-xs font-semibold text-indigo-200 tracking-wider">Adding New Page...</span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1086,35 +1147,85 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
                       { tool: "pen", icon: <Pencil size={15}/>, title: "Pen (P)", angle: -120 },
                       { tool: "highlighter", icon: <Highlighter size={15}/>, title: "Highlighter (H)", angle: -60 },
                       { tool: "laser", icon: <Sparkle size={15}/>, title: "Laser (L)", angle: 0 },
-                      { tool: "eraser", icon: <Eraser size={15}/>, title: "Eraser (E)", angle: 60 },
+                      { tool: "eraser", icon: <Eraser size={15}/>, title: "Eraser Options", angle: 60 },
                       { tool: "pan", icon: <Hand size={15}/>, title: "Palm / Pan (Space)", angle: 120 },
                     ].map((item) => {
                       const rad = (item.angle * Math.PI) / 180;
                       const dist = 52;
                       const x = Math.sin(rad) * dist;
                       const y = Math.cos(rad) * dist;
-                      const isSelected = tool === item.tool;
+                      const isSelected = tool === "eraser" || tool === "stroke_eraser" ? item.tool === "eraser" : tool === item.tool;
 
                       return (
-                        <motion.button
-                          key={item.tool}
-                          initial={{ opacity: 0, x: 0, y: 0, scale: 0.2 }}
-                          animate={{ opacity: 1, x, y, scale: 1 }}
-                          exit={{ opacity: 0, x: 0, y: 0, scale: 0.2 }}
-                          transition={{ duration: 0.22, ease: [0.34, 1.56, 0.64, 1] }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTool(item.tool as SmartBoardTool);
-                          }}
-                          className={`absolute w-8.5 h-8.5 rounded-full flex items-center justify-center transition-all shadow-md backdrop-blur-2xl border ${
-                            isSelected
-                              ? "bg-indigo-600 border-indigo-400 text-white shadow-indigo-500/40 ring-2 ring-indigo-400/60 scale-110 z-20"
-                              : "bg-[#0a0f1e]/90 border-white/10 text-white/60 hover:text-white hover:bg-slate-800 z-10"
-                          }`}
-                          title={item.title}
-                        >
-                          {item.icon}
-                        </motion.button>
+                        <div key={item.tool} className="absolute" style={{ transform: `translate(${x}px, ${y}px)` }}>
+                          <motion.button
+                            initial={{ opacity: 0, scale: 0.2 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.2 }}
+                            transition={{ duration: 0.22, ease: [0.34, 1.56, 0.64, 1] }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (item.tool === "eraser") {
+                                setEraserSubmenuOpen(!eraserSubmenuOpen);
+                                if (tool !== "stroke_eraser") setTool("eraser");
+                              } else {
+                                setEraserSubmenuOpen(false);
+                                setTool(item.tool as SmartBoardTool);
+                              }
+                            }}
+                            className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-all shadow-md backdrop-blur-2xl border ${
+                              isSelected
+                                ? "bg-indigo-600 border-indigo-400 text-white shadow-indigo-500/40 ring-2 ring-indigo-400/60 scale-110 z-20"
+                                : "bg-[#0a0f1e]/90 border-white/10 text-white/60 hover:text-white hover:bg-slate-800 z-10"
+                            }`}
+                            title={item.title}
+                          >
+                            {item.icon}
+                          </motion.button>
+
+                          {/* Linear Sub-Menu Popup when Eraser Clicked */}
+                          {item.tool === "eraser" && eraserSubmenuOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                              className="absolute top-10 -left-12 z-50 flex items-center gap-1 p-1 rounded-xl bg-[#0a0f1e]/95 border border-indigo-500/30 shadow-2xl backdrop-blur-2xl min-w-35"
+                            >
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTool("eraser");
+                                  setEraserSubmenuOpen(false);
+                                }}
+                                className={`flex-1 px-2 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1.5 transition-all ${
+                                  tool === "eraser"
+                                    ? "bg-indigo-600 text-white shadow-sm"
+                                    : "text-white/60 hover:text-white hover:bg-white/5"
+                                }`}
+                                title="Normal Pixel / Freehand Eraser"
+                              >
+                                <Eraser size={12} />
+                                <span>Normal</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTool("stroke_eraser");
+                                  setEraserSubmenuOpen(false);
+                                }}
+                                className={`flex-1 px-2 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1.5 transition-all ${
+                                  tool === "stroke_eraser"
+                                    ? "bg-indigo-600 text-white shadow-sm"
+                                    : "text-white/60 hover:text-white hover:bg-white/5"
+                                }`}
+                                title="Selection / Whole Stroke Eraser"
+                              >
+                                <SquareCheck size={12} />
+                                <span>Selection</span>
+                              </button>
+                            </motion.div>
+                          )}
+                        </div>
                       );
                     })}
                   </>
@@ -1134,7 +1245,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
                 {isToolMenuOpen ? (
                   <X size={16} />
                 ) : (
-                  tool === "pen" ? <Pencil size={16}/> : tool === "highlighter" ? <Highlighter size={16}/> : tool === "laser" ? <Sparkle size={16}/> : tool === "eraser" ? <Eraser size={16}/> : <Hand size={16}/>
+                  tool === "pen" ? <Pencil size={16}/> : tool === "highlighter" ? <Highlighter size={16}/> : tool === "laser" ? <Sparkle size={16}/> : tool === "stroke_eraser" ? <SquareCheck size={16}/> : tool === "eraser" ? <Eraser size={16}/> : <Hand size={16}/>
                 )}
               </button>
             </div>

@@ -217,8 +217,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                             fontSize: '18px', fontWeight: 700, color: '#f1f5f9',
                             fontFamily: 'system-ui, sans-serif',
                           }}>
-                            Update Available
-                          </span>
+                             🚀 New Update Available (v1.0.5)
+                           </span>
                           {/* Pulse badge */}
                           <motion.div
                             animate={{ scale: [1, 1.08, 1] }}

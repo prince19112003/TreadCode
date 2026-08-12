@@ -76,33 +76,53 @@ npm run release 1.0.4
 
 ---
 
-## 📡 Remote System Auto-Update Push Guide (Private Repo & Firebase)
+---
 
-TreadCode uses **Tauri Native Auto-Updater** combined with **Firebase Storage**. Since the repository is **Private**, release `.exe` files are served via Firebase Storage.
+## 📡 Software Auto-Update Guide (Private Repo & Vercel CDN)
 
-### How to Push an Update (Step-by-Step):
+TreadCode uses **Tauri Native Auto-Updater** combined with **Vercel CDN + Firebase RTDB**. Your repository remains **100% Private**.
 
-1. **Build & Release Script Run Karein**:
-   ```bash
-   npm run release 1.0.4
-   ```
-   Ye command `tauri.conf.json`, `package.json`, aur `useUpdateChecker.ts` ko auto-update karegi, native installer build karegi, aur Firebase RTDB ke `tauri_updater` node ko sync karegi.
-
-2. **Upload .exe to Firebase Storage**:
-   - Built installer location: `src-tauri/target/release/bundle/nsis/TreadCode_1.0.4_x64-setup.exe`
-   - [Firebase Console](https://console.firebase.google.com/) -> Storage me jayein.
-   - Installer file ko upload karein aur uska **Public Download URL** copy karein.
-
-3. **Paste URL in Firebase RTDB (`tauri_updater`)**:
-   - [Firebase Console](https://console.firebase.google.com/) -> Realtime Database -> `tauri_updater` -> `platforms` -> `windows-x86_64` me jayein.
-   - `"url"` field me copy kiya gaya **Firebase Storage Download URL** paste kar dein.
+There are **2 Simple Ways** to push software updates to all installed remote devices globally:
 
 ---
 
-### 🔄 Remote App User Flow (Automatic)
-1. **Detection**: Desktop App open hote hi background me Firebase check karti hai.
-2. **Seamless Download**: App ke andar hi **Real Download Progress Bar** chalta hai (Tauri native byte streaming).
-3. **1-Click Restart**: Download complete hote hi **"Restart App Now"** button aata hai. Click karte hi app restart hoti hai aur nayi features ke sath load ho jati hai!
+### ⚡ Method 1: Automatic 1-Command Push (Recommended for Developers)
+
+Whenever you make code changes and want to release a new version (e.g. `1.0.5`):
+
+1. **Run 1-Click Release Command**:
+   ```bash
+   npm run release 1.0.5
+   ```
+   *What this does automatically:*
+   - Auto-patches `tauri.conf.json`, `package.json`, and `useUpdateChecker.ts`
+   - Compiles native `.exe` installer
+   - Copies `.exe` to `public/releases/` folder for Vercel CDN hosting
+   - Syncs version details to Firebase RTDB
+
+2. **Push to Vercel (Deploys Installer Live)**:
+   ```bash
+   git push origin main --tags
+   ```
+
+---
+
+### 🎛️ Method 2: Admin Panel Live Broadcast (No CLI Required)
+
+If your installer `.exe` is already hosted on Vercel, Firebase Storage, or any custom CDN:
+
+1. Open **Admin Panel** -> **TreadCode** -> **Controls (App Settings)**.
+2. Under **🚀 Remote Software OTA Update Dispatcher**:
+   - Enter **Target Version** (e.g. `1.0.5`).
+   - Enter **Download URL** (e.g. `https://tread-code-smoky.vercel.app/releases/TreadCode_1.0.5_x64-setup.exe`).
+3. Click **"Broadcast Update Now"**.
+
+---
+
+### 🔄 How Remote Client Apps Update Automatically
+1. **Background Check**: Desktop App detects new version from Firebase RTDB within 1.2s of startup.
+2. **In-App Byte Download**: Real-time progress bar streams the installer package directly inside the app.
+3. **1-Click Restart**: User clicks **"Restart App Now"**, app relaunches seamlessly with new features applied!
 
 
 ---

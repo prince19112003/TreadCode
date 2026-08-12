@@ -80,31 +80,51 @@ try {
   console.error('Tauri build/copy failed:', e.message);
 }
 
-// Vercel deployment URL format (Replace domain if using custom Vercel domain)
-const VERCEL_DOMAIN = 'treadcode.vercel.app'; 
+// Vercel deployment URL format
+const VERCEL_DOMAIN = 'tread-code-smoky.vercel.app'; 
 const VERCEL_EXE_URL = `https://${VERCEL_DOMAIN}/releases/TreadCode_${newVersion}_x64-setup.exe`;
 
 // 6. Sync to Firebase RTDB node tauri_updater.json
 async function syncFirebase() {
   try {
     const updateData = {
-      version: `v${newVersion}`,
+      version: newVersion,
       notes: "SmartBoard workspace session persistence & resume\nUltra-HD 4K PNG & Multi-page PDF\nHold-to-Snap offline shape recognition",
       pub_date: new Date().toISOString(),
       platforms: {
         "windows-x86_64": {
-          "signature": "",
+          "signature": "NATIVE_UNSIGNED",
           "url": VERCEL_EXE_URL
         }
       }
     };
-    const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json', {
+    // Sync new Tauri v2 native updater format
+    const resTauri = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updateData)
     });
-    if (res.ok) {
-      console.log('✔ Synced tauri_updater.json to Firebase RTDB with Vercel URL');
+
+    // Also sync old legacy format for older builds (v1.0.0 - v1.0.3)
+    const legacyUpdateData = {
+      version: newVersion,
+      buildDate: new Date().toISOString().split('T')[0],
+      downloadUrl: VERCEL_EXE_URL,
+      releaseUrl: RELEASE_URL,
+      changelog: [
+        "SmartBoard workspace session persistence & resume",
+        "Ultra-HD 4K PNG & Multi-page PDF",
+        "Hold-to-Snap offline shape recognition"
+      ]
+    };
+    const resLegacy = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(legacyUpdateData)
+    });
+
+    if (resTauri.ok && resLegacy.ok) {
+      console.log('✔ Synced both tauri_updater & global_update nodes to Firebase RTDB!');
     }
   } catch (e) {
     console.warn('Firebase RTDB sync warning:', e.message);

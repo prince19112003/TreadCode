@@ -330,6 +330,25 @@ export const GlobalAppShell: React.FC = () => {
   const licenseContext = React.useContext(LicenseContext);
   const { hasUpdate } = useUpdateChecker();
 
+  // Real-time Telemetry Heartbeat & Remote Admin Command Listeners
+  useEffect(() => {
+    const hwid = licenseContext?.hwid || 'unknown-device';
+    const key = licenseContext?.licenseDetails?.licenseKey || 'Unregistered';
+
+    // 1. Heartbeat Ping every 25 seconds
+    const interval = setInterval(async () => {
+      try {
+        const { db } = await import('@shared/config/firebase');
+        const { ref, set } = await import('firebase/database');
+        await set(ref(db, `installations/${hwid}/lastSeen`), new Date().toISOString());
+        await set(ref(db, `installations/${hwid}/activeKey`), key);
+        await set(ref(db, `installations/${hwid}/currentPath`), location.pathname);
+      } catch (e) {}
+    }, 25000);
+
+    return () => clearInterval(interval);
+  }, [licenseContext, location.pathname]);
+
   // Ctrl+K / Cmd+K to open search & Ctrl+B for SmartBoard
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
