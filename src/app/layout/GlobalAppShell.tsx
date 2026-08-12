@@ -335,14 +335,24 @@ export const GlobalAppShell: React.FC = () => {
     const hwid = licenseContext?.hwid || 'unknown-device';
     const key = licenseContext?.licenseDetails?.licenseKey || 'Unregistered';
 
-    // 1. Heartbeat Ping every 25 seconds
+    // 1. Heartbeat Ping every 25 seconds (includes exact installed app version)
     const interval = setInterval(async () => {
       try {
         const { db } = await import('@shared/config/firebase');
         const { ref, set } = await import('firebase/database');
+        
+        let versionStr = '1.0.4';
+        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+          try {
+            const { getVersion } = await import('@tauri-apps/api/app');
+            versionStr = await getVersion();
+          } catch (e) {}
+        }
+
         await set(ref(db, `installations/${hwid}/lastSeen`), new Date().toISOString());
         await set(ref(db, `installations/${hwid}/activeKey`), key);
         await set(ref(db, `installations/${hwid}/currentPath`), location.pathname);
+        await set(ref(db, `installations/${hwid}/appVersion`), versionStr);
       } catch (e) {}
     }, 25000);
 
