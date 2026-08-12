@@ -67,29 +67,28 @@ try {
   console.error('Tauri build failed:', e.message);
 }
 
-// 6. Sync to Firebase RTDB node global_update.json
+// 6. Sync to Firebase RTDB node tauri_updater.json
 async function syncFirebase() {
   try {
     const updateData = {
-      version: newVersion,
-      buildDate: new Date().toISOString().split('T')[0],
-      downloadUrl: EXE_URL,
-      releaseUrl: RELEASE_URL,
-      changelog: [
-        "Fixed GitHub & download links opening in external browser",
-        "SmartBoard workspace session persistence & resume",
-        "Ultra-HD 4K PNG, Multi-page PDF & JSON project export",
-        "Zero-quality-loss vector pinch-to-zoom canvas",
-        "Hold-to-Snap offline shape recognition"
-      ]
+      version: `v${newVersion}`,
+      notes: "SmartBoard workspace session persistence & resume\nUltra-HD 4K PNG & Multi-page PDF\nHold-to-Snap offline shape recognition",
+      pub_date: new Date().toISOString(),
+      platforms: {
+        "windows-x86_64": {
+          "signature": "", // Put signature here if you use tauri signer
+          "url": EXE_URL // Important: If repo is private, this must be a Firebase Storage URL!
+        }
+      }
     };
-    const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/global_update.json', {
+    const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updateData)
     });
     if (res.ok) {
-      console.log('✔ Synced global_update to Firebase RTDB');
+      console.log('✔ Synced tauri_updater.json to Firebase RTDB');
+      console.log('⚠️ IMPORTANT: Since your repo is private, make sure to upload the .exe to Firebase Storage and update the "url" in Firebase RTDB manually to point to the storage download link.');
     }
   } catch (e) {
     console.warn('Firebase RTDB sync warning:', e.message);

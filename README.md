@@ -67,39 +67,43 @@ npm run build
 
 ### 3. Releasing a New Version Update
 
-To deploy a new software version (e.g. updating from `1.0.0` to `1.0.1`):
+To deploy a new software version (e.g. updating from `1.0.3` to `1.0.4`):
 
 ```bash
-# Auto-patches tauri.conf.json, version.json, and updater.json in 1-click
-npm run release 1.0.1
+# Auto-patches tauri.conf.json, package.json, builds native .exe, and updates Firebase RTDB
+npm run release 1.0.4
 ```
 
 ---
 
-## 📡 Remote System Auto-Update Push Guide
+## 📡 Remote System Auto-Update Push Guide (Private Repo & Firebase)
 
-To push an over-the-air (OTA) software update to all installed remote systems so users receive an on-screen update pop-up:
+TreadCode uses **Tauri Native Auto-Updater** combined with **Firebase Storage**. Since the repository is **Private**, release `.exe` files are served via Firebase Storage.
 
-### Step 1: Update `global_update.json` in Firebase RTDB
-Navigate to [Firebase Realtime Database](https://console.firebase.google.com/) -> Data -> `global_update` node and set the following JSON structure:
+### How to Push an Update (Step-by-Step):
 
-```json
-{
-  "version": "1.1.0",
-  "buildDate": "2026-08-11",
-  "changelog": [
-    "Added Graph Animations (DFS & BFS)",
-    "New High-Performance Visualizer Stage",
-    "Optimized Pen & Touch Drawing Response"
-  ],
-  "downloadUrl": "https://github.com/prince19112003/FlowTrace/releases/download/v1.1.0/TreadCode_Setup.exe",
-  "releaseUrl": "https://github.com/prince19112003/FlowTrace/releases/latest"
-}
-```
+1. **Build & Release Script Run Karein**:
+   ```bash
+   npm run release 1.0.4
+   ```
+   Ye command `tauri.conf.json`, `package.json`, aur `useUpdateChecker.ts` ko auto-update karegi, native installer build karegi, aur Firebase RTDB ke `tauri_updater` node ko sync karegi.
 
-### Step 2: How Remote Systems Receive the Update
-1. **Instant On-Screen Pop-Up**: Within 1.2 seconds of launching the desktop app, all remote systems automatically detect `remoteVersion > currentVersion` and display an **On-Screen Update Modal** with release notes and a 1-click **Update Now** button.
-2. **If User Skips ("Remind Me Later")**: The pop-up dismisses to avoid interrupting ongoing classroom lectures, but a persistent **"Software Update Available"** banner remains pinned at the top of **Settings Page** so users can update whenever they wish later.
+2. **Upload .exe to Firebase Storage**:
+   - Built installer location: `src-tauri/target/release/bundle/nsis/TreadCode_1.0.4_x64-setup.exe`
+   - [Firebase Console](https://console.firebase.google.com/) -> Storage me jayein.
+   - Installer file ko upload karein aur uska **Public Download URL** copy karein.
+
+3. **Paste URL in Firebase RTDB (`tauri_updater`)**:
+   - [Firebase Console](https://console.firebase.google.com/) -> Realtime Database -> `tauri_updater` -> `platforms` -> `windows-x86_64` me jayein.
+   - `"url"` field me copy kiya gaya **Firebase Storage Download URL** paste kar dein.
+
+---
+
+### 🔄 Remote App User Flow (Automatic)
+1. **Detection**: Desktop App open hote hi background me Firebase check karti hai.
+2. **Seamless Download**: App ke andar hi **Real Download Progress Bar** chalta hai (Tauri native byte streaming).
+3. **1-Click Restart**: Download complete hote hi **"Restart App Now"** button aata hai. Click karte hi app restart hoti hai aur nayi features ke sath load ho jati hai!
+
 
 ---
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 // ─── Update Modal ─────────────────────────────────────────────────────────────
 
@@ -15,7 +16,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     latestVersion: realLatestVersion,
     currentVersion,
     changelog: realChangelog,
-    downloadUrl: realDownloadUrl,
+    updateObj,
     dismiss: realDismiss,
   } = useUpdateChecker();
 
@@ -30,7 +31,6 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
         'Offline Auto-Updater Support'
       ]
     : realChangelog;
-  const downloadUrl = isPreview ? 'https://github.com/prince19112003/FlowTrace/archive/refs/heads/main.zip' : realDownloadUrl;
   const dismiss = () => {
     if (onClosePreview) onClosePreview();
     realDismiss();
@@ -51,40 +51,55 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     setPhase('downloading');
     setProgress(0);
 
-    // Smooth in-app progress bar simulation while binary downloads directly
-    const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 95) {
-          clearInterval(interval);
-          return 95;
-        }
-        return p + 5;
-      });
-    }, 120);
+    if (isPreview) {
+      const interval = setInterval(() => {
+        setProgress((p) => {
+          if (p >= 100) {
+            clearInterval(interval);
+            setPhase('done');
+            return 100;
+          }
+          return p + 10;
+        });
+      }, 300);
+      return;
+    }
 
     try {
-      try {
-        const { open } = await import('@tauri-apps/plugin-shell');
-        await open(downloadUrl);
-      } catch (err) {
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.download = `TreadCode_Setup.exe`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
+      let downloaded = 0;
+      let contentLength = 0;
 
-      setTimeout(() => {
-        clearInterval(interval);
-        setProgress(100);
-        setPhase('done');
-      }, 2500);
+      if (updateObj) {
+        await updateObj.downloadAndInstall((event) => {
+          switch (event.event) {
+            case 'Started':
+              contentLength = event.data.contentLength || 0;
+              break;
+            case 'Progress':
+              downloaded += event.data.chunkLength;
+              if (contentLength > 0) {
+                setProgress(Math.round((downloaded / contentLength) * 100));
+              }
+              break;
+            case 'Finished':
+              setProgress(100);
+              break;
+          }
+        });
+      }
+      setPhase('done');
     } catch (e) {
-      console.error('Direct download error:', e);
-      clearInterval(interval);
+      console.error('Update install error:', e);
+      setPhase('idle');
+      // Should show error to user, but fallback to idle for now
+    }
+  };
+
+  const handleRestart = async () => {
+    try {
+      await relaunch();
+    } catch (e) {
+      console.error('Relaunch failed:', e);
     }
   };
 
@@ -462,37 +477,12 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       fontSize: '12.5px', color: 'rgba(148,163,184,0.75)',
                       marginBottom: '22px', fontFamily: 'system-ui', lineHeight: '1.6',
                     }}>
-                      <strong style={{ color: '#a5b4fc' }}>FlowTrace_Setup.exe</strong> has been downloaded directly inside your downloads.<br />
-                      Run the downloaded installer to instantly apply the update without losing any data.
+                      <strong style={{ color: '#a5b4fc' }}>Update Installed Successfully!</strong><br />
+                      Please restart the application to apply the latest features and improvements.
                     </p>
 
-                    <div style={{
-                      background: 'rgba(0,0,0,0.3)', borderRadius: '10px',
-                      border: '1px solid rgba(99,102,241,0.15)',
-                      padding: '14px 16px', marginBottom: '20px', textAlign: 'left',
-                    }}>
-                      {[
-                        '1. Open your downloaded FlowTrace_Setup.exe',
-                        '2. Click Install / Next',
-                        '3. The app will update seamlessly',
-                      ].map((step, i) => (
-                        <motion.p
-                          key={i}
-                          initial={{ opacity: 0, x: -6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 + i * 0.1 }}
-                          style={{
-                            fontSize: '12px', color: 'rgba(203,213,225,0.85)',
-                            padding: '3px 0', fontFamily: 'system-ui',
-                          }}
-                        >
-                          {step}
-                        </motion.p>
-                      ))}
-                    </div>
-
                     <motion.button
-                      onClick={handleDismiss}
+                      onClick={handleRestart}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
                       style={{
@@ -505,7 +495,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                         boxShadow: '0 0 20px rgba(34,197,94,0.3)',
                       }}
                     >
-                      Got it! Close
+                      Restart App Now
                     </motion.button>
                   </div>
                 )}

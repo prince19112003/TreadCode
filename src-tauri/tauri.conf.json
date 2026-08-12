@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "TreadCode",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "identifier": "com.flowtrace.app",
   "build": {
     "frontendDist": "../dist",
@@ -46,7 +46,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://raw.githubusercontent.com/prince19112003/TreadCode/main/updater.json"
+        "https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json"
       ],
       "pubkey": ""
     }
