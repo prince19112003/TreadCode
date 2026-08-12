@@ -69,6 +69,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
       let contentLength = 0;
 
       if (updateObj) {
+        // Native Tauri Updater available with verified public key signature
         await updateObj.downloadAndInstall((event) => {
           switch (event.event) {
             case 'Started':
@@ -87,26 +88,25 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
         });
         setPhase('done');
       } else {
-        // Fallback for Admin Panel manual update trigger without native update object
-        const fallbackUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+        // Direct RTDB Fallback Update Channel: Open latest executable setup directly to perform real installation!
+        const exeUrl = `https://tread-code-smoky.vercel.app/releases/TreadCode_${realLatestVersion || 'latest'}_x64-setup.exe`;
         try {
           const { open } = await import('@tauri-apps/plugin-shell');
-          await open(fallbackUrl);
+          await open(exeUrl);
         } catch (err) {
-          window.open(fallbackUrl, '_blank');
+          window.open(exeUrl, '_blank');
         }
         setProgress(100);
         setPhase('done');
       }
     } catch (e) {
-      console.error('Update install error, trying fallback link:', e);
-      // Fail-safe: Open fallback Vercel installer download if native update fails
-      const fallbackUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+      console.error('Update install error, opening direct installer setup:', e);
+      const exeUrl = `https://tread-code-smoky.vercel.app/releases/TreadCode_${realLatestVersion || 'latest'}_x64-setup.exe`;
       try {
         const { open } = await import('@tauri-apps/plugin-shell');
-        await open(fallbackUrl);
+        await open(exeUrl);
       } catch (err) {
-        window.open(fallbackUrl, '_blank');
+        window.open(exeUrl, '_blank');
       }
       setProgress(100);
       setPhase('done');
