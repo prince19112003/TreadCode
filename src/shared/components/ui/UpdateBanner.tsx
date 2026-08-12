@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
-import { relaunch } from '@tauri-apps/plugin-process';
 
 // ─── Update Modal ─────────────────────────────────────────────────────────────
 
