@@ -80,12 +80,36 @@ export function useUpdateChecker(): UpdateStatus & {
 
   const checkNow = useCallback(() => checkForUpdate(true), [checkForUpdate]);
 
-  // Check directly 1.2s after app startup (after splash screen)
+  // Check directly 1.2s after app startup & listen to Firebase RTDB for manual Admin Panel forceUpdate toggles
   useEffect(() => {
     if (checkedRef.current) return;
     checkedRef.current = true;
     const t = setTimeout(() => checkForUpdate(true), 1200);
-    return () => clearTimeout(t);
+
+    // Fallback Firebase listener for Admin Panel "Show Update Banner" toggle
+    let unsubSettings: (() => void) | null = null;
+    import('@shared/config/firebase').then(({ db }) => {
+      import('firebase/database').then(({ ref, onValue }) => {
+        const settingsRef = ref(db, 'global_settings');
+        unsubSettings = onValue(settingsRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            if (data.forceUpdate) {
+              setStatus((s) => ({
+                ...s,
+                hasUpdate: true,
+                latestVersion: data.targetVersion || s.latestVersion || CURRENT_VERSION,
+              }));
+            }
+          }
+        });
+      });
+    });
+
+    return () => {
+      clearTimeout(t);
+      if (unsubSettings) unsubSettings();
+    };
   }, [checkForUpdate]);
 
   return { ...status, dismiss, checkNow };
