@@ -86,12 +86,31 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
               break;
           }
         });
+        setPhase('done');
+      } else {
+        // Fallback for Admin Panel manual update trigger without native update object
+        const fallbackUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+        try {
+          const { open } = await import('@tauri-apps/plugin-shell');
+          await open(fallbackUrl);
+        } catch (err) {
+          window.open(fallbackUrl, '_blank');
+        }
+        setProgress(100);
+        setPhase('done');
       }
-      setPhase('done');
     } catch (e) {
-      console.error('Update install error:', e);
-      setPhase('idle');
-      // Should show error to user, but fallback to idle for now
+      console.error('Update install error, trying fallback link:', e);
+      // Fail-safe: Open fallback Vercel installer download if native update fails
+      const fallbackUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+      try {
+        const { open } = await import('@tauri-apps/plugin-shell');
+        await open(fallbackUrl);
+      } catch (err) {
+        window.open(fallbackUrl, '_blank');
+      }
+      setProgress(100);
+      setPhase('done');
     }
   };
 
