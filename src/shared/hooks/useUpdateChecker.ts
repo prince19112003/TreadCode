@@ -15,7 +15,7 @@ export interface UpdateStatus {
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
-const CURRENT_VERSION = '1.0.5';
+const CURRENT_VERSION = '1.0.6';
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 

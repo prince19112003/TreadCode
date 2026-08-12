@@ -1,11 +1,11 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "notes": "Baseline v1.0.0 release.",
-  "pub_date": "2026-08-12T21:08:00.066Z",
+  "pub_date": "2026-08-12T21:43:42.407Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "",
-      "url": "https://github.com/prince19112003/TreadCode/releases/download/v1.0.5/TreadCode_1.0.5_x64-setup.exe"
+      "url": "https://github.com/prince19112003/TreadCode/releases/download/v1.0.6/TreadCode_1.0.6_x64-setup.exe"
     }
   }
 }
