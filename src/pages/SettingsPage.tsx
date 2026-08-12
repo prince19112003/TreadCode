@@ -732,15 +732,41 @@ export const SettingsPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Software Version Card */}
-                  <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-white block">Installed Version</span>
-                        <span className="text-[11px] text-slate-400">TreadCode v{displayVersion}</span>
+                  {/* Software Version Card — Clean Spacious Layout */}
+                  <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col gap-4">
+                    {/* Top Row: Installed Version Info & Up-To-Date Status Badge */}
+                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                          <Monitor size={18} className="text-indigo-400" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-white block">Installed Software Version</span>
+                          <span className="text-xs font-mono font-semibold text-slate-400">TreadCode Desktop v{displayVersion}</span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      {hasUpdate ? (
+                        <button
+                          onClick={() => setShowPreviewModal(true)}
+                          className="px-4 py-1.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 bg-rose-500 hover:bg-rose-600 text-white animate-pulse cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Sparkles size={13} />
+                          <span>Update Ready (v{latestVersion})</span>
+                        </button>
+                      ) : (
+                        <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
+                          <CheckCircle2 size={13} />
+                          <span>Up to Date</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bottom Row: Organized Action Channels */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                      <span className="text-[11px] font-mono text-slate-400 font-medium">Update & Deployment Channels:</span>
+
+                      <div className="flex items-center gap-2.5">
                         <button
                           onClick={async () => {
                             setCheckToast("Checking server for latest version...");
@@ -750,11 +776,11 @@ export const SettingsPage: React.FC = () => {
                             }, 4000);
                           }}
                           disabled={isChecking}
-                          className="px-3.5 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          className="px-3.5 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                           title="Check server for latest software release"
                         >
                           <RefreshCw size={13} className={isChecking ? "animate-spin text-indigo-400" : "text-indigo-400"} />
-                          <span>{isChecking ? "Checking Server..." : "Check for Updates"}</span>
+                          <span>{isChecking ? "Checking..." : "Check Updates"}</span>
                         </button>
 
                         <button
@@ -767,11 +793,11 @@ export const SettingsPage: React.FC = () => {
                               window.open(exeUrl, '_blank');
                             }
                           }}
-                          className="px-3.5 py-1.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                          title="Permanent direct download channel for installer setup .exe"
+                          className="px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                          title="Download setup executable directly"
                         >
-                          <Monitor size={13} className="text-indigo-400" />
-                          <span>Direct .exe Download</span>
+                          <Monitor size={13} className="text-slate-400" />
+                          <span>Direct .exe Link</span>
                         </button>
 
                         <button
@@ -784,38 +810,23 @@ export const SettingsPage: React.FC = () => {
                               window.open(webUrl, '_blank');
                             }
                           }}
-                          className="px-3.5 py-1.5 rounded-xl border border-purple-500/40 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                          title="Open live web visualizer hosted on Vercel"
+                          className="px-3.5 py-2 rounded-xl border border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                          title="Open live web visualizer"
                         >
                           <Globe size={13} className="text-purple-400" />
                           <span>Open Web App</span>
                           <ExternalLink size={11} />
                         </button>
-
-                        {hasUpdate ? (
-                          <button
-                            onClick={() => setShowPreviewModal(true)}
-                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 bg-rose-500 hover:bg-rose-600 text-white animate-pulse cursor-pointer flex items-center gap-1.5"
-                          >
-                            <Sparkles size={13} />
-                            <span>Update Ready (v{latestVersion})</span>
-                          </button>
-                        ) : (
-                          <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
-                            <CheckCircle2 size={13} />
-                            Up to Date
-                          </span>
-                        )}
                       </div>
                     </div>
 
-                    {/* Clear Status Feedback Message */}
+                    {/* Clear Status Feedback Toast */}
                     {checkToast && (
                       <motion.div
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 flex items-center gap-2"
+                        className="text-[11px] font-mono px-3.5 py-2 rounded-xl bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 flex items-center gap-2 mt-1"
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
                         <span>{hasUpdate ? `🚀 New Update Found! Version v${latestVersion} is available.` : `✓ Server Checked: You are running the latest version (v${displayVersion}).`}</span>
