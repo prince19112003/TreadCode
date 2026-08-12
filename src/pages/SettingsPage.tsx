@@ -76,9 +76,10 @@ export const SettingsPage: React.FC = () => {
     });
   };
 
-  // Modals
+  // Modals & Feedback Toasts
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [policyDoc, setPolicyDoc] = useState<'privacy' | 'terms' | null>(null);
+  const [checkToast, setCheckToast] = useState<string | null>(null);
 
   // Load Display Tuning on mount
   useEffect(() => {
@@ -709,37 +710,59 @@ export const SettingsPage: React.FC = () => {
                   </div>
 
                   {/* Software Version Card */}
-                  <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-white block">Installed Version</span>
-                      <span className="text-[11px] text-slate-400">TreadCode v{displayVersion}</span>
-                    </div>
+                  <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-white block">Installed Version</span>
+                        <span className="text-[11px] text-slate-400">TreadCode v{displayVersion}</span>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={checkNow}
-                        disabled={isChecking}
-                        className="px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                        title="Check Firebase for latest software releases"
-                      >
-                        <RefreshCw size={13} className={isChecking ? "animate-spin text-indigo-400" : ""} />
-                        <span>{isChecking ? "Checking..." : "Check for Updates"}</span>
-                      </button>
-
-                      {hasUpdate ? (
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setShowPreviewModal(true)}
-                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 bg-rose-500 hover:bg-rose-600 text-white animate-pulse cursor-pointer"
+                          onClick={async () => {
+                            setCheckToast("Checking server for latest version...");
+                            await checkNow();
+                            setTimeout(() => {
+                              setCheckToast(null);
+                            }, 4000);
+                          }}
+                          disabled={isChecking}
+                          className="px-3.5 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          title="Check server for latest software release"
                         >
-                          Update Ready (v{latestVersion}) 🚀
+                          <RefreshCw size={13} className={isChecking ? "animate-spin text-indigo-400" : "text-indigo-400"} />
+                          <span>{isChecking ? "Checking Server..." : "Check for Updates"}</span>
                         </button>
-                      ) : (
-                        <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
-                          <CheckCircle2 size={13} />
-                          Up to Date
-                        </span>
-                      )}
+
+                        {hasUpdate ? (
+                          <button
+                            onClick={() => setShowPreviewModal(true)}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 bg-rose-500 hover:bg-rose-600 text-white animate-pulse cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Sparkles size={13} />
+                            <span>Update Ready (v{latestVersion})</span>
+                          </button>
+                        ) : (
+                          <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
+                            <CheckCircle2 size={13} />
+                            Up to Date
+                          </span>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Clear Status Feedback Message */}
+                    {checkToast && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 flex items-center gap-2"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
+                        <span>{hasUpdate ? `🚀 New Update Found! Version v${latestVersion} is available.` : `✓ Server Checked: You are running the latest version (v${displayVersion}).`}</span>
+                      </motion.div>
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-400 leading-relaxed">
