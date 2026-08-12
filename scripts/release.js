@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import { execSync } from 'child_process';
 
 const newVersion = process.argv[2];
@@ -63,9 +63,26 @@ try {
   console.log('\n⚙️ Building Native Windows Setup Installer (.exe)...');
   execSync('npx tauri build', { stdio: 'inherit' });
   console.log('✔ Built Windows Setup Installer!');
+
+  // Copy built installer to public/releases/ for Vercel auto-hosting
+  const builtExePath = `./src-tauri/target/release/bundle/nsis/TreadCode_${newVersion}_x64-setup.exe`;
+  const publicReleaseDir = './public/releases';
+  if (!existsSync(publicReleaseDir)) {
+    mkdirSync(publicReleaseDir, { recursive: true });
+  }
+  const publicExePath = `${publicReleaseDir}/TreadCode_${newVersion}_x64-setup.exe`;
+  const latestExePath = `${publicReleaseDir}/TreadCode_latest_x64-setup.exe`;
+  
+  copyFileSync(builtExePath, publicExePath);
+  copyFileSync(builtExePath, latestExePath);
+  console.log('✔ Copied setup executable to public/releases/ for Vercel deployment');
 } catch (e) {
-  console.error('Tauri build failed:', e.message);
+  console.error('Tauri build/copy failed:', e.message);
 }
+
+// Vercel deployment URL format (Replace domain if using custom Vercel domain)
+const VERCEL_DOMAIN = 'treadcode.vercel.app'; 
+const VERCEL_EXE_URL = `https://${VERCEL_DOMAIN}/releases/TreadCode_${newVersion}_x64-setup.exe`;
 
 // 6. Sync to Firebase RTDB node tauri_updater.json
 async function syncFirebase() {
@@ -76,8 +93,8 @@ async function syncFirebase() {
       pub_date: new Date().toISOString(),
       platforms: {
         "windows-x86_64": {
-          "signature": "", // Put signature here if you use tauri signer
-          "url": EXE_URL // Important: If repo is private, this must be a Firebase Storage URL!
+          "signature": "",
+          "url": VERCEL_EXE_URL
         }
       }
     };
@@ -87,8 +104,7 @@ async function syncFirebase() {
       body: JSON.stringify(updateData)
     });
     if (res.ok) {
-      console.log('✔ Synced tauri_updater.json to Firebase RTDB');
-      console.log('⚠️ IMPORTANT: Since your repo is private, make sure to upload the .exe to Firebase Storage and update the "url" in Firebase RTDB manually to point to the storage download link.');
+      console.log('✔ Synced tauri_updater.json to Firebase RTDB with Vercel URL');
     }
   } catch (e) {
     console.warn('Firebase RTDB sync warning:', e.message);
