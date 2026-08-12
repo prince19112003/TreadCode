@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles } from 'lucide-react';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { motion, AnimatePresence } from 'motion/react';
 import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
