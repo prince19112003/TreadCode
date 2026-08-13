@@ -21,6 +21,12 @@ The platform consists of two integrated components:
 
 ## ⚡ Essential Development Commands
 
+```bash
+git add .
+git commit -m "fix: your commit message here" --no-verify
+git push origin main
+```
+
 ### 1. TreadCode Desktop Application (`Code Visualizer`)
 
 Run all commands inside the main project directory:
