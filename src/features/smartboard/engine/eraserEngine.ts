@@ -1,6 +1,6 @@
 // engine/eraserEngine.ts — Lasso + point-hit eraser logic
 
-import { Point, Stroke } from "../types";
+import type { Point, Stroke } from "../types";
 
 type SetStrokes = (fn: (s: Stroke[]) => Stroke[]) => void;
 

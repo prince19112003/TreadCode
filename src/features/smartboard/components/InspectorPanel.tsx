@@ -2,7 +2,8 @@
 
 import React from "react";
 import { Undo2, Redo2, Trash2, Download } from "lucide-react";
-import { COLOR_PALETTE, SmartBoardTool, Stroke } from "../types";
+import type { SmartBoardTool, Stroke } from "../types";
+import { COLOR_PALETTE } from "../types";
 import { ToolBtn } from "./ToolBtn";
 
 interface InspectorPanelProps {

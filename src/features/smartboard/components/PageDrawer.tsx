@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus } from "lucide-react";
-import { Stroke, SmartBoardBg } from "../types";
+import type { Stroke, SmartBoardBg } from "../types";
 import { PageThumbnail } from "./PageThumbnail";
 
 interface PageDrawerProps {

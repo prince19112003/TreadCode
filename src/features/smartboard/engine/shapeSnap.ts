@@ -1,6 +1,6 @@
 // engine/shapeSnap.ts — Hold-to-snap shape recognition
 
-import { Point, Stroke, SmartBoardTool } from "../types";
+import type { Point, Stroke, SmartBoardTool } from "../types";
 
 export function classifyAndSnapShape(
   pts: Point[],

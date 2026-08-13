@@ -9,7 +9,8 @@
  *  5. Natural start/end taper — ink touch/lift feel
  */
 
-import { Point, Stroke, BG_FILL, SmartBoardBg } from "../types";
+import type { Point, Stroke, SmartBoardBg } from "../types";
+import { BG_FILL } from "../types";
 
 // ─── Chaikin Corner Smoothing ─────────────────────────────────────────────────
 // 2 iterations gives Apple Pencil-quality smoothness without over-softening

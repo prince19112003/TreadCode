@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   Pencil, Highlighter, Eraser, X, Sparkle, Hand, SquareCheck,
 } from "lucide-react";
-import { SmartBoardTool } from "../types";
+import type { SmartBoardTool } from "../types";
 
 interface RadialMenuProps {
   tool: SmartBoardTool;

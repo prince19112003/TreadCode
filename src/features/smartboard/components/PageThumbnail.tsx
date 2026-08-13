@@ -2,7 +2,8 @@
 
 import React, { useRef, useEffect } from "react";
 import { Trash2 } from "lucide-react";
-import { Stroke, SmartBoardBg, BG_FILL } from "../types";
+import type { Stroke, SmartBoardBg } from "../types";
+import { BG_FILL } from "../types";
 import { drawStrokeForThumbnail } from "../engine/inkEngine";
 
 const W = 216;
