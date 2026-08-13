@@ -99,23 +99,23 @@ export const VisualizerWorkspace: React.FC = () => {
   if (isDsa) {
     return (
       <div className={`flex flex-col h-screen w-screen overflow-hidden text-slate-200 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
-        <div className={`flex-1 flex gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
+        <div className={`flex-1 flex flex-col md:flex-row gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
 
-          {/* ── Left Column: Operational Dashboard (30%) ── */}
-          <div className="w-[30%] flex flex-col gap-1.5 overflow-hidden shrink-0">
-            <div className="h-[75%] overflow-hidden flex flex-col">
+          {/* ── Left Column: Operational Dashboard (Mobile: flex-1/scrollable, PC: 30%) ── */}
+          <div className="w-full md:w-[30%] flex flex-col gap-1.5 overflow-hidden shrink-0 h-[45%] md:h-full">
+            <div className="h-[65%] md:h-[75%] overflow-hidden flex flex-col">
               {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
             </div>
-            <div className="h-[25%] overflow-hidden flex flex-col">
+            <div className="h-[35%] md:h-[25%] overflow-hidden flex flex-col">
               <ExplanationBar />
             </div>
           </div>
 
-          {/* ── Center: Vertical Control Panel (Zoom, Fit, Reset) ── */}
+          {/* ── Center: Vertical/Horizontal Control Panel (Zoom, Fit, Reset) ── */}
           <StageControls />
 
-          {/* ── Right Column: Visual Stage (62%) ── */}
-          <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
+          {/* ── Right Column: Visual Stage (Mobile: flex-1, PC: 62%) ── */}
+          <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative h-[50%] md:h-full">
             <div className={`relative overflow-hidden flex flex-col rounded-lg border border-slate-800/50 transition-all duration-300 ${
               isPureBlack ? 'bg-black' : 'bg-[#050510]'
             } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
@@ -143,14 +143,14 @@ export const VisualizerWorkspace: React.FC = () => {
   /* ── Standard Language Layout ───────────────────────────────────────────── */
   return (
     <div className={`flex flex-col h-screen w-screen overflow-hidden text-slate-200 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
-      <div className={`flex-1 flex gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
+      <div className={`flex-1 flex flex-col md:flex-row gap-1.5 p-1.5 overflow-hidden ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
 
-        {/* Left: Code Panel (38%) */}
-        <div className="w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0">
-          <div className="h-[75%] overflow-hidden flex flex-col">
+        {/* Left: Code Panel (Mobile: 45% height, PC: 38% width) */}
+        <div className="w-full md:w-[38%] flex flex-col gap-1.5 overflow-hidden shrink-0 h-[45%] md:h-full">
+          <div className="h-[65%] md:h-[75%] overflow-hidden flex flex-col">
             <CodeStepPanel />
           </div>
-          <div className="h-[25%] overflow-hidden flex flex-col">
+          <div className="h-[35%] md:h-[25%] overflow-hidden flex flex-col">
             <ExplanationBar />
           </div>
         </div>
@@ -159,7 +159,7 @@ export const VisualizerWorkspace: React.FC = () => {
         <StageControls />
 
         {/* Right: Visualization Stage */}
-        <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative">
+        <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative h-[50%] md:h-full">
           <div className={`relative overflow-hidden flex flex-col transition-all duration-300 rounded-lg border border-slate-800/50 ${
             isPureBlack ? 'bg-black' : 'bg-[#050510]'
           } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>

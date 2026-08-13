@@ -31,7 +31,7 @@ export const StageControls: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between py-5 h-full w-14 shrink-0 bg-[#0d1126]/80 backdrop-blur-xl border-x border-indigo-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-20">
+    <div className="flex md:flex-col flex-row items-center justify-between py-2 md:py-5 px-3 md:px-0 h-11 md:h-full w-full md:w-14 shrink-0 bg-[#0d1126]/80 backdrop-blur-xl border-y md:border-y-0 md:border-x border-indigo-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-20">
       {/* Top: Progress text / DSA indicator */}
       <div className="flex flex-col items-center gap-4 mt-2">
         <div className="flex flex-col items-center select-none text-center">
