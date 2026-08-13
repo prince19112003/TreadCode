@@ -166,6 +166,7 @@ export const App: React.FC = () => {
   // Verify license key status at startup & real-time sync with Admin Panel
   React.useEffect(() => {
     let unsubscribeLicense: (() => void) | null = null;
+    let unsubscribeBlacklist: (() => void) | null = null;
 
     async function checkLicense() {
       // 1. Fetch HWID from Tauri
@@ -179,6 +180,16 @@ export const App: React.FC = () => {
         }
       }
       setHwid(currentHwid);
+
+      // Real-time HWID Blacklist listener: Auto-logout immediately if Admin blacklists this device HWID
+      const blacklistRef = ref(db, `blacklisted_hwids/${currentHwid}`);
+      unsubscribeBlacklist = onValue(blacklistRef, (snap) => {
+        if (snap.exists() && snap.val()) {
+          localStorage.removeItem('flowtrace_license_key');
+          setActivated(false);
+          setLicenseDetails({ isValid: false, blocked: true });
+        }
+      });
 
       // 2. Check local key
       const cachedKey = localStorage.getItem('flowtrace_license_key');
@@ -219,6 +230,7 @@ export const App: React.FC = () => {
 
     return () => {
       if (unsubscribeLicense) unsubscribeLicense();
+      if (unsubscribeBlacklist) unsubscribeBlacklist();
     };
   }, []);
 

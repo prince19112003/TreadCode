@@ -471,6 +471,31 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                         </p>
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
 
+                          {/* Profile / Website Download Page */}
+                          <button
+                            onClick={() => openUrl(downloadUrl || 'https://github.com/prince19112003/FlowTrace/releases').then(() => setPhase('opened'))}
+                            style={{
+                              flex: 1, minWidth: '130px',
+                              padding: '8px 10px',
+                              border: '1px solid rgba(168,85,247,0.35)',
+                              borderRadius: '8px',
+                              background: 'rgba(168,85,247,0.1)',
+                              color: '#c084fc',
+                              cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                              fontFamily: 'system-ui',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              transition: 'all 0.15s',
+                            }}
+                            title="Open direct releases & installer download page in browser"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/>
+                              <line x1="2" y1="12" x2="22" y2="12"/>
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
+                            </svg>
+                            🌐 Direct Download Page
+                          </button>
+
                           {/* Windows .exe */}
                           <button
                             onClick={handleOpenExe}

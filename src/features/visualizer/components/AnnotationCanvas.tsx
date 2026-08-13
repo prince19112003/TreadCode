@@ -41,45 +41,74 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
   const getCtx = () => canvasRef.current?.getContext('2d') ?? null;
 
+  const drawStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: { points: Point[]; color: string; strokeWidth: number; dashStyle?: string; isDashed?: boolean }) => {
+    if (stroke.points.length === 0) return;
+    const w = stroke.strokeWidth || 4;
+    ctx.lineWidth = w;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = stroke.color;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.imageSmoothingEnabled = false;
+
+    const style = stroke.dashStyle || (stroke.isDashed ? 'dashed' : 'solid');
+    if (style === 'dashed') {
+      ctx.lineCap = 'butt';
+      ctx.setLineDash([w * 3.5, w * 2]);
+    } else if (style === 'dotted') {
+      ctx.lineCap = 'round';
+      ctx.setLineDash([0.1, w * 2]);
+    } else {
+      ctx.lineCap = 'round';
+      ctx.setLineDash([]);
+    }
+
+    ctx.beginPath();
+    const pts = stroke.points;
+    if (pts.length === 1) {
+      ctx.arc(pts[0].x, pts[0].y, w / 2, 0, Math.PI * 2);
+      ctx.fillStyle = stroke.color;
+      ctx.fill();
+      return;
+    }
+
+    ctx.moveTo(pts[0].x, pts[0].y);
+    if (pts.length === 2) {
+      ctx.lineTo(pts[1].x, pts[1].y);
+    } else {
+      for (let i = 1; i < pts.length - 1; i++) {
+        const xc = (pts[i].x + pts[i + 1].x) / 2;
+        const yc = (pts[i].y + pts[i + 1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+      }
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    }
+    ctx.stroke();
+  }, []);
+
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = getCtx();
     if (!canvas || !ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
     strokesRef.current.forEach(stroke => {
-      if (stroke.points.length === 0) return;
-      const w = stroke.strokeWidth || 4;
-      ctx.lineWidth = w;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = stroke.color;
-      ctx.shadowBlur = 0;
-      ctx.shadowColor = 'transparent';
-      ctx.imageSmoothingEnabled = false;
-
-      const style = stroke.dashStyle || (stroke.isDashed ? 'dashed' : 'solid');
-      if (style === 'dashed') {
-        ctx.lineCap = 'butt';
-        ctx.setLineDash([w * 3.5, w * 2]);
-      } else if (style === 'dotted') {
-        ctx.lineCap = 'round';
-        ctx.setLineDash([0.1, w * 2]);
-      } else {
-        ctx.lineCap = 'round';
-        ctx.setLineDash([]);
-      }
-
-      ctx.beginPath();
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      if (stroke.points.length === 1) {
-        ctx.lineTo(stroke.points[0].x + 0.1, stroke.points[0].y + 0.1);
-      } else {
-        stroke.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
-      }
-      ctx.stroke();
+      drawStroke(ctx, stroke);
     });
-  }, [strokesRef]);
+
+    if (isDrawing.current && mode === 'pen' && currentStroke.current.length > 0) {
+      drawStroke(ctx, {
+        points: currentStroke.current,
+        color,
+        strokeWidth,
+        dashStyle,
+        isDashed: dashStyle !== 'solid',
+      });
+    }
+  }, [strokesRef, color, strokeWidth, dashStyle, mode, drawStroke]);
 
   const getPos = (e: React.PointerEvent): Point => {
     const canvas = canvasRef.current!;
@@ -133,20 +162,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       eraseAt(pt);
     } else {
       currentStroke.current = [pt];
-      // Instant tap drawing (S-Pen responsiveness)
       redraw();
-      const ctx = getCtx();
-      if (ctx) {
-        ctx.lineWidth = strokeWidth;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = color;
-        ctx.shadowBlur = 0;
-        ctx.shadowColor = 'transparent';
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, strokeWidth / 2, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-      }
     }
   };
 
@@ -160,40 +176,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
 
     currentStroke.current.push(pt);
-
     redraw();
-
-    const ctx = getCtx();
-    if (!ctx || currentStroke.current.length < 2) return;
-    const pts = currentStroke.current;
-    const w = strokeWidth;
-
-    ctx.lineWidth = w;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = color;
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = 'transparent';
-    ctx.imageSmoothingEnabled = false;
-
-    const style = dashStyle;
-    if (style === 'dashed') {
-      ctx.lineCap = 'butt';
-      ctx.setLineDash([w * 3.5, w * 2]);
-    } else if (style === 'dotted') {
-      ctx.lineCap = 'round';
-      ctx.setLineDash([0.1, w * 2]);
-    } else {
-      ctx.lineCap = 'round';
-      ctx.setLineDash([]);
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) {
-      ctx.lineTo(pts[i].x, pts[i].y);
-    }
-    ctx.stroke();
   };
 
   const onPointerUp = () => {
@@ -211,6 +194,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       if (onStrokeComplete) onStrokeComplete();
     }
     currentStroke.current = [];
+    redraw();
   };
 
   // Resize canvas observer to fit parent container with HD resolution scaling
@@ -226,8 +210,6 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       canvas.height = h * dpr;
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.scale(dpr, dpr);
       redraw();
     });
     ro.observe(parent);
