@@ -448,26 +448,29 @@ export const GlobalAppShell: React.FC = () => {
           )}
         </div>
 
-        {/* CENTER: Breadcrumb */}
-        <nav className="hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2">
-          {breadcrumbs.map((crumb, i) => (
-            <React.Fragment key={crumb.path}>
-              {i > 0 && (
-                <ChevronRight className="w-3 h-3 shrink-0 text-slate-600" />
-              )}
-              <button
-                onClick={() => i < breadcrumbs.length - 1 ? navigate(crumb.path) : undefined}
-                className={`text-xs font-medium transition-all px-2 py-0.5 rounded-md ${
-                  i === breadcrumbs.length - 1
-                    ? 'text-white font-semibold'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {i === 0 && <Home className="w-3 h-3 inline mr-1 -mt-0.5 opacity-70" />}
-                {crumb.label}
-              </button>
-            </React.Fragment>
-          ))}
+        {/* CENTER: Breadcrumb (Flexible bounded container with zero button collision) */}
+        <nav className="hidden md:flex items-center gap-1.5 flex-1 min-w-0 mx-4 overflow-hidden justify-center">
+          <div className="flex items-center gap-1.5 max-w-full overflow-hidden truncate">
+            {breadcrumbs.map((crumb, i) => (
+              <React.Fragment key={crumb.path}>
+                {i > 0 && (
+                  <ChevronRight className="w-3 h-3 shrink-0 text-slate-600" />
+                )}
+                <button
+                  onClick={() => i < breadcrumbs.length - 1 ? navigate(crumb.path) : undefined}
+                  className={`text-xs font-medium transition-all px-1.5 py-0.5 rounded-md truncate max-w-[130px] ${
+                    i === breadcrumbs.length - 1
+                      ? 'text-white font-semibold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title={crumb.label}
+                >
+                  {i === 0 && <Home className="w-3 h-3 inline mr-1 -mt-0.5 opacity-70" />}
+                  <span className="truncate">{crumb.label}</span>
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
         </nav>
 
         {/* RIGHT: SmartBoard + Search + GitHub Glass + Settings */}
