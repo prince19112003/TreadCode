@@ -479,9 +479,9 @@ export const GlobalAppShell: React.FC = () => {
           )}
         </div>
 
-        {/* CENTER: Breadcrumb (Flexible bounded container with zero button collision) */}
-        <nav className="hidden md:flex items-center gap-1.5 flex-1 min-w-0 mx-4 overflow-hidden justify-center">
-          <div className="flex items-center gap-1.5 max-w-full overflow-hidden truncate">
+        {/* CENTER: Breadcrumb (Always Perfectly Centered in Header) */}
+        <nav className="hidden md:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2 max-w-[45vw] overflow-hidden pointer-events-auto justify-center">
+          <div className="flex items-center gap-1.5 max-w-full overflow-hidden truncate justify-center">
             {breadcrumbs.map((crumb, i) => (
               <React.Fragment key={crumb.path}>
                 {i > 0 && (
@@ -489,7 +489,7 @@ export const GlobalAppShell: React.FC = () => {
                 )}
                 <button
                   onClick={() => i < breadcrumbs.length - 1 ? navigate(crumb.path) : undefined}
-                  className={`text-xs font-medium transition-all px-1.5 py-0.5 rounded-md truncate max-w-32 ${
+                  className={`text-xs font-medium transition-all px-1.5 py-0.5 rounded-md truncate max-w-28 ${
                     i === breadcrumbs.length - 1
                       ? 'text-white font-semibold'
                       : 'text-slate-400 hover:text-white'
