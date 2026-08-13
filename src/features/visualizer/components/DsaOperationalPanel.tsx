@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
 import { Plus, ArrowDown, Eye, Search, Play, RotateCcw, Trash2 } from 'lucide-react';
 
@@ -148,7 +149,10 @@ export const DsaOperationalPanel: React.FC = () => {
     }
     setError(null);
     setCustomSteps(steps);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => {
+      goToStep(0);
+      useLessonStore.getState().setIsPlaying(true);
+    }, 30);
   };
 
   const handleTraverse = () => {
@@ -166,7 +170,10 @@ export const DsaOperationalPanel: React.FC = () => {
     }
     setError(null);
     setCustomSteps(steps);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => {
+      goToStep(0);
+      useLessonStore.getState().setIsPlaying(true);
+    }, 30);
   };
 
   const handleIsEmpty = () => {

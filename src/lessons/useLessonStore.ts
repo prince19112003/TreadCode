@@ -16,6 +16,7 @@ export interface LessonStoreType {
   goPrev: () => void;
   goToStep: (index: number) => void;
   togglePlay: () => void;
+  setIsPlaying: (isPlaying: boolean) => void;
   toggleLanguage: () => void;
   toggleFullScreen: () => void;
   reset: () => void;
@@ -28,6 +29,10 @@ export interface LessonStoreType {
   setPlaySpeed: (speed: number) => void;
   customSteps: ExecutionStep[] | null;
   setCustomSteps: (steps: ExecutionStep[] | null | ((prev: ExecutionStep[] | null) => ExecutionStep[] | null)) => void;
+  
+  showCheatSheet: boolean;
+  toggleCheatSheet: () => void;
+  setShowCheatSheet: (show: boolean) => void;
   
   // Internal actions to init/update state from LessonProvider
   initLesson: (lesson: LessonProgram) => void;
@@ -85,8 +90,11 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
       ? state.customSteps
       : (state.lesson.generateSteps ? state.lesson.generateSteps(state.editableValues) : state.lesson.executionSteps);
     const totalSteps = activeSteps.length + 1;
-    const currentStep = state.currentStepIndex === 0 ? null : activeSteps[state.currentStepIndex - 1] ?? null;
-    const isComplete = state.currentStepIndex >= totalSteps - 1;
+    const stepIdx = state.currentStepIndex;
+    const currentStep = state.customSteps
+      ? (activeSteps[stepIdx] ?? activeSteps[Math.max(0, stepIdx - 1)] ?? activeSteps[0] ?? null)
+      : (stepIdx === 0 ? null : activeSteps[stepIdx - 1] ?? null);
+    const isComplete = stepIdx >= totalSteps - 1;
     
     set({ activeSteps, totalSteps, currentStep, isComplete });
   },
@@ -104,9 +112,12 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
   goNext: () => {
     const state = get();
     const nextIndex = Math.min(state.currentStepIndex + 1, state.totalSteps - 1);
+    const currentStep = state.customSteps
+      ? (state.activeSteps[nextIndex] ?? state.activeSteps[Math.max(0, nextIndex - 1)] ?? state.activeSteps[0] ?? null)
+      : (nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null);
     set({
       currentStepIndex: nextIndex,
-      currentStep: nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null,
+      currentStep,
       isComplete: nextIndex >= state.totalSteps - 1
     });
   },
@@ -114,10 +125,13 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
   goPrev: () => {
     const state = get();
     const nextIndex = Math.max(state.currentStepIndex - 1, 0);
+    const currentStep = state.customSteps
+      ? (state.activeSteps[nextIndex] ?? state.activeSteps[Math.max(0, nextIndex - 1)] ?? state.activeSteps[0] ?? null)
+      : (nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null);
     set({
       isPlaying: false,
       currentStepIndex: nextIndex,
-      currentStep: nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null,
+      currentStep,
       isComplete: nextIndex >= state.totalSteps - 1
     });
   },
@@ -125,15 +139,19 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
   goToStep: (index) => {
     const state = get();
     const nextIndex = Math.max(0, Math.min(index, state.totalSteps - 1));
+    const currentStep = state.customSteps
+      ? (state.activeSteps[nextIndex] ?? state.activeSteps[Math.max(0, nextIndex - 1)] ?? state.activeSteps[0] ?? null)
+      : (nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null);
     set({
       isPlaying: false,
       currentStepIndex: nextIndex,
-      currentStep: nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null,
+      currentStep,
       isComplete: nextIndex >= state.totalSteps - 1
     });
   },
 
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+  setIsPlaying: (isPlaying) => set({ isPlaying }),
   toggleLanguage: () => set((state) => ({ language: state.language === 'en' ? 'hi' : 'en' })),
   toggleFullScreen: () => set((state) => ({ isFullScreen: !state.isFullScreen })),
   
@@ -162,4 +180,8 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
     }));
     get().updateActiveSteps();
   },
+
+  showCheatSheet: false,
+  toggleCheatSheet: () => set((state) => ({ showCheatSheet: !state.showCheatSheet })),
+  setShowCheatSheet: (showCheatSheet) => set({ showCheatSheet }),
 }));

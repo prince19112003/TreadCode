@@ -6,7 +6,7 @@ import { useLessonStore } from './useLessonStore';
 // although components can now directly import useLessonStore with a selector.
 export const useLesson = () => useLessonStore();
 
-const AUTO_PLAY_DELAY_MS = 2500;
+const AUTO_PLAY_DELAY_MS = 1200;
 
 export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.ReactNode }> = ({
   lesson,
@@ -17,6 +17,7 @@ export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.R
   const goNext = useLessonStore(s => s.goNext);
   const isComplete = useLessonStore(s => s.isComplete);
   const playSpeed = useLessonStore(s => s.playSpeed);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -24,7 +25,7 @@ export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.R
     initLesson(lesson);
   }, [lesson, initLesson]);
 
-  // Auto-playback logic
+  // Auto-playback logic — subscribes to currentStepIndex to step through all animation steps
   useEffect(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -40,7 +41,7 @@ export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.R
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isPlaying, isComplete, goNext, playSpeed, useLessonStore.getState().currentStepIndex]);
+  }, [isPlaying, isComplete, goNext, playSpeed, currentStepIndex]);
 
   return <>{children}</>;
 };

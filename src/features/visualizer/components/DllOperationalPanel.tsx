@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
 import { Plus, Trash, Search, Play, RotateCcw, Trash2 } from 'lucide-react';
 
@@ -44,7 +45,7 @@ export const DllOperationalPanel: React.FC = () => {
     };
     setList([]);
     setCustomSteps([init]);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => goToStep(0), 30);
   }, [lesson?.id]);
 
   const dispatch = useCallback((
@@ -66,23 +67,52 @@ export const DllOperationalPanel: React.FC = () => {
     };
     setList(newList);
     setCustomSteps([step]);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => goToStep(0), 30);
   }, [setCustomSteps, goToStep, capacity]);
 
   /* ── Doubly Linked List Operations ── */
 
-  const handleInsert = () => {
+  const handleInsertHead = () => {
+    const val = insertVal.trim();
+    if (!val) return setError('Enter value to insert');
+    if (list.length >= capacity) return setError(`List Full (Capacity: ${capacity})`);
+    const parsed = isNaN(Number(val)) ? val : Number(val);
+    const next = [parsed, ...list];
+    dispatch(next,
+      `INSERT HEAD(${parsed}): New node created. prev=NULL, next=old HEAD. HEAD updated.`,
+      `INSERT HEAD(${parsed}): Position 0 pe naya Node insert hua. prev=NULL, next=old HEAD.`,
+      `Inserted Head: ${parsed} | Size: ${next.length}/${capacity}`,
+      { type: 'DLL_INSERT', value: parsed, index: 0, listState: next }
+    );
+    setInsertVal('');
+  };
+
+  const handleInsertTail = () => {
+    const val = insertVal.trim();
+    if (!val) return setError('Enter value to insert');
+    if (list.length >= capacity) return setError(`List Full (Capacity: ${capacity})`);
+    const parsed = isNaN(Number(val)) ? val : Number(val);
+    const next = [...list, parsed];
+    dispatch(next,
+      `INSERT TAIL(${parsed}): New node linked at end. TAIL updated.`,
+      `INSERT TAIL(${parsed}): End pe naya Node insert hua. TAIL update kiya.`,
+      `Inserted Tail: ${parsed} | Size: ${next.length}/${capacity}`,
+      { type: 'DLL_INSERT', value: parsed, index: list.length, listState: next }
+    );
+    setInsertVal('');
+  };
+
+  const handleInsertAtPos = () => {
     const val = insertVal.trim();
     if (!val) return setError('Enter value to insert');
     if (list.length >= capacity) return setError(`List Full (Capacity: ${capacity})`);
     const pos = Math.max(0, Math.min(list.length, Number(insertIdx || 0)));
     const parsed = isNaN(Number(val)) ? val : Number(val);
-    
     const next = [...list];
     next.splice(pos, 0, parsed);
 
     dispatch(next,
-      `INSERT(${parsed}, pos=${pos}): Node inserted. prev & next pointers established.`,
+      `INSERT(${parsed}, pos=${pos}): Node inserted. Both prev & next pointers established.`,
       `INSERT(${parsed}, pos=${pos}): Naya Node insert kiya. prev & next pointers map kiye.`,
       `Inserted: ${parsed} at index ${pos} | Size: ${next.length}/${capacity}`,
       { type: 'DLL_INSERT', value: parsed, index: pos, listState: next }
@@ -90,7 +120,31 @@ export const DllOperationalPanel: React.FC = () => {
     setInsertVal('');
   };
 
-  const handleDelete = () => {
+  const handleDeleteHead = () => {
+    if (list.length === 0) return setError('List is empty');
+    const deletedVal = list[0];
+    const next = list.slice(1);
+    dispatch(next,
+      `DELETE HEAD(): Removed node "${deletedVal}". New HEAD prev set to NULL.`,
+      `DELETE HEAD(): Pos 0 se "${deletedVal}" remove hua. Naye HEAD ka prev NULL set hua.`,
+      `Deleted Head: ${deletedVal} | Size: ${next.length}/${capacity}`,
+      { type: 'DLL_DELETE', index: 0, listState: next }
+    );
+  };
+
+  const handleDeleteTail = () => {
+    if (list.length === 0) return setError('List is empty');
+    const deletedVal = list[list.length - 1];
+    const next = list.slice(0, -1);
+    dispatch(next,
+      `DELETE TAIL(): Removed node "${deletedVal}". New TAIL next set to NULL.`,
+      `DELETE TAIL(): End se "${deletedVal}" remove hua. Naye TAIL ka next NULL set hua.`,
+      `Deleted Tail: ${deletedVal} | Size: ${next.length}/${capacity}`,
+      { type: 'DLL_DELETE', index: list.length - 1, listState: next }
+    );
+  };
+
+  const handleDeleteAtPos = () => {
     if (list.length === 0) return setError('List is empty');
     const pos = Math.max(0, Math.min(list.length - 1, Number(insertIdx || 0)));
     const deletedVal = list[pos];
@@ -98,8 +152,8 @@ export const DllOperationalPanel: React.FC = () => {
     next.splice(pos, 1);
 
     dispatch(next,
-      `DELETE(pos=${pos}): Removed node "${deletedVal}". Neighbour links bound directly.`,
-      `DELETE(pos=${pos}): Node "${deletedVal}" delete kiya aur side links ko direct map kiya.`,
+      `DELETE(pos=${pos}): Removed node "${deletedVal}". Neighbour prev & next mapped directly.`,
+      `DELETE(pos=${pos}): Node "${deletedVal}" delete kiya aur side links direct map kiye.`,
       `Deleted: ${deletedVal} from index ${pos} | Size: ${next.length}/${capacity}`,
       { type: 'DLL_DELETE', index: pos, listState: next }
     );
@@ -145,7 +199,10 @@ export const DllOperationalPanel: React.FC = () => {
     }
     setError(null);
     setCustomSteps(steps);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => {
+      goToStep(0);
+      useLessonStore.getState().setIsPlaying(true);
+    }, 30);
   };
 
   const handleTraverse = () => {
@@ -154,7 +211,7 @@ export const DllOperationalPanel: React.FC = () => {
     for (let i = 0; i < list.length; i++) {
       steps.push({
         step: steps.length + 1, lineNum: steps.length + 1,
-        explanationEnglish: `Traverse Forward: node [${i}] = ${list[i]} <-> next`,
+        explanationEnglish: `Traverse Forward: node [${i}] = ${list[i]} ⇄ next`,
         explanationHinglish: `Traverse: forward node [${i}] = ${list[i]} visit kiya`,
         memorySnapshot: { capacity, list, i },
         consoleOutput: `> Visiting Node [${i}]: ${list[i]}`,
@@ -163,7 +220,29 @@ export const DllOperationalPanel: React.FC = () => {
     }
     setError(null);
     setCustomSteps(steps);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => {
+      goToStep(0);
+      useLessonStore.getState().setIsPlaying(true);
+    }, 30);
+  };
+
+  const handleIsEmpty = () => {
+    const empty = list.length === 0;
+    dispatch(list,
+      `isEmpty() = ${empty}`,
+      `isEmpty() = ${empty}`,
+      `isEmpty() = ${empty}`,
+      { type: 'NONE' } as any
+    );
+  };
+
+  const handleSize = () => {
+    dispatch(list,
+      `Size() = ${list.length}/${capacity}`,
+      `Size() = ${list.length}/${capacity}`,
+      `Size = ${list.length}/${capacity}`,
+      { type: 'NONE' } as any
+    );
   };
 
   const handleClear = () => {
@@ -189,7 +268,7 @@ export const DllOperationalPanel: React.FC = () => {
       animationEvent: { type: 'NONE' } as any,
     };
     setCustomSteps([step]);
-    setTimeout(() => goToStep(1), 30);
+    setTimeout(() => goToStep(0), 30);
   };
 
   const isEmpty = list.length === 0;
@@ -197,122 +276,178 @@ export const DllOperationalPanel: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-[#0a0c16] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
-      {/* Header */}
-      <div className="px-4 py-3 bg-[#0d0f1f] border-b border-slate-800/60 flex items-center justify-between shrink-0 font-mono text-xs">
-        <span className="font-bold text-slate-300 font-mono">DOUBLY LIST CONTROLS</span>
-        <div className="flex items-center gap-3 font-mono">
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>Size:</span>
+      
+      {/* Sleek Minimal Header - Matching Stack, Queue & SLL Control Panels */}
+      <div className="px-3.5 py-2.5 bg-[#070913] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+          <span className="font-bold tracking-wider text-slate-200 text-[11px]">DLL CONTROLS</span>
+        </div>
+        <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 rounded-md px-2 py-0.5">
+            <span className="text-slate-400">Cap:</span>
             <select
               value={capacity}
               onChange={e => handleCapacityChange(Number(e.target.value))}
-              className="bg-slate-900 text-indigo-400 border border-slate-700/60 rounded px-1.5 py-0.5 text-xs font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-indigo-400 font-bold focus:outline-none cursor-pointer text-xs"
             >
               {[3, 4, 5, 6, 8, 10].map(n => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n} className="bg-slate-900 text-slate-200">{n}</option>
               ))}
             </select>
           </div>
-          <button onClick={() => handleCapacityChange(capacity)} className="text-slate-500 hover:text-slate-300 p-1" title="Reset">
+          <div className="flex items-center gap-1 bg-slate-900/80 border border-slate-800 rounded-md px-2 py-0.5">
+            <span className="text-slate-400">HEAD:</span>
+            <strong className="text-indigo-400 font-mono">{isEmpty ? 'NULL' : 0}</strong>
+          </div>
+          <button
+            onClick={() => handleCapacityChange(capacity)}
+            className="text-slate-500 hover:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-colors"
+            title="Reset List"
+          >
             <RotateCcw size={13} />
           </button>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      {/* Dashboard Body - Evenly Distributed Layout */}
+      <div className="flex-1 overflow-y-auto p-3 flex flex-col justify-between gap-2">
+
+        {/* Error Alert */}
         {error && (
-          <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono flex items-center justify-between">
-            <span>⚠ {error}</span>
-            <button onClick={() => setError(null)} className="text-red-400/60 hover:text-red-400">✕</button>
+          <div className="px-3 py-1.5 rounded bg-rose-950/90 border border-rose-500/60 text-rose-200 text-xs font-mono flex items-center justify-between shadow-md">
+            <span className="font-medium">⚠ {error}</span>
+            <button onClick={() => setError(null)} className="text-rose-300 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded-none bg-rose-900/60">✕</button>
           </div>
         )}
 
-        {/* Node Insertion Input */}
-        <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Insert Node</span>
-          <div className="flex gap-2">
+        {/* Main Controls Stack */}
+        <div className="flex flex-col gap-2">
+          
+          {/* Quick Insert Head / Tail Buttons */}
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={handleInsertHead}
+              disabled={isFull || !insertVal.trim()}
+              className="py-1.5 px-2 rounded font-mono font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/60 text-indigo-300 disabled:opacity-40"
+            >
+              <Plus size={13} /> Insert Head
+            </button>
+            <button
+              onClick={handleInsertTail}
+              disabled={isFull || !insertVal.trim()}
+              className="py-1.5 px-2 rounded font-mono font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 disabled:opacity-40"
+            >
+              <Plus size={13} /> Insert Tail
+            </button>
+          </div>
+
+          {/* Row 1: Insert Input & Position Action */}
+          <div className="flex gap-1.5">
             <input
               type="text"
-              placeholder="Val..."
+              placeholder="Value..."
               value={insertVal}
               onChange={e => setInsertVal(e.target.value)}
-              className="w-1/2 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
+              className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-700 focus:border-indigo-400 text-slate-100 text-xs font-mono placeholder:text-slate-500 focus:outline-none transition-all shadow-inner"
             />
             <input
               type="number"
-              placeholder="Pos..."
+              placeholder="Pos"
               value={insertIdx}
               onChange={e => setInsertIdx(e.target.value)}
-              className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
+              className="w-12 px-1.5 py-1.5 rounded bg-slate-950 border border-slate-700 text-center text-slate-100 text-xs font-mono focus:outline-none"
             />
             <button
-              onClick={handleInsert}
-              disabled={isFull}
-              className="flex-1 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs font-mono flex items-center justify-center gap-1"
+              onClick={handleInsertAtPos}
+              disabled={isFull || !insertVal.trim()}
+              className="px-3 py-1.5 rounded font-mono font-bold text-xs flex items-center gap-1 shadow-md transition-all shrink-0 bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/40 disabled:opacity-40 active:scale-95"
             >
-              <Plus size={14} /> Insert
+              <Plus size={13} /> At Pos
             </button>
           </div>
-        </div>
 
-        {/* Delete Node Control */}
-        <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Delete Node</span>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder="Pos..."
-              value={insertIdx}
-              onChange={e => setInsertIdx(e.target.value)}
-              className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-            />
+          {/* Row 2: Delete Head | Delete Tail | Delete Pos Grid */}
+          <div className="grid grid-cols-3 gap-1.5">
             <button
-              onClick={handleDelete}
+              onClick={handleDeleteHead}
               disabled={isEmpty}
-              className="px-4 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono flex items-center justify-center gap-1"
+              className="py-1.5 px-1 rounded font-mono font-bold text-[10px] flex items-center justify-center gap-1 shadow-sm transition-all bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 disabled:opacity-40 active:scale-95"
             >
-              <Trash size={14} /> Delete
+              <Trash size={11} /> Del Head
+            </button>
+            <button
+              onClick={handleDeleteTail}
+              disabled={isEmpty}
+              className="py-1.5 px-1 rounded font-mono font-bold text-[10px] flex items-center justify-center gap-1 shadow-sm transition-all bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 disabled:opacity-40 active:scale-95"
+            >
+              <Trash size={11} /> Del Tail
+            </button>
+            <button
+              onClick={handleDeleteAtPos}
+              disabled={isEmpty}
+              className="py-1.5 px-1 rounded font-mono font-bold text-[10px] flex items-center justify-center gap-1 shadow-sm transition-all bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 disabled:opacity-40 active:scale-95"
+            >
+              <Trash size={11} /> Del Pos
             </button>
           </div>
+
+          {/* Row 3: Search Input & Action */}
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-700 focus:border-purple-400 text-slate-100 text-xs font-mono placeholder:text-slate-500 focus:outline-none transition-all shadow-inner"
+            />
+            <button
+              onClick={handleSearch}
+              disabled={isEmpty}
+              className="px-3 py-1.5 rounded font-mono font-bold text-xs flex items-center gap-1 shrink-0 bg-purple-950/70 hover:bg-purple-900 border border-purple-500/60 text-purple-200 disabled:opacity-40 active:scale-95 shadow-md"
+            >
+              <Search size={13} /> Search
+            </button>
+          </div>
+
+          {/* Row 4: Traverse Action */}
+          <button
+            onClick={handleTraverse}
+            disabled={isEmpty}
+            className="w-full py-1.5 rounded bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/60 disabled:opacity-40 text-cyan-300 font-bold text-xs font-mono flex items-center justify-center gap-1 shadow-sm active:scale-95"
+          >
+            <Play size={12} /> Traverse List (Forward & Backward)
+          </button>
+
         </div>
 
-        {/* SEARCH */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search val..."
-            value={searchVal}
-            onChange={e => setSearchVal(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            className="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 focus:border-purple-500 text-slate-200 text-xs font-mono focus:outline-none"
-          />
+        {/* Bottom Utility Stack */}
+        <div className="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800/80">
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={handleIsEmpty}
+              className="py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[10px] font-bold shadow-sm"
+            >
+              isEmpty()
+            </button>
+            <button
+              onClick={handleSize}
+              className="py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[10px] font-bold shadow-sm"
+            >
+              Size()
+            </button>
+          </div>
+
           <button
-            onClick={handleSearch}
+            onClick={handleClear}
             disabled={isEmpty}
-            className="px-4 py-2 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 disabled:opacity-40 text-purple-200 font-bold text-xs font-mono flex items-center gap-1 shrink-0"
+            className="w-full py-1.5 rounded bg-rose-950/90 hover:bg-rose-900 border border-rose-600/70 disabled:opacity-30 text-rose-300 font-mono text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm active:scale-95"
           >
-            <Search size={14} /> Search
+            <Trash2 size={12} /> Clear List
           </button>
         </div>
 
-        {/* TRAVERSE */}
-        <button
-          onClick={handleTraverse}
-          disabled={isEmpty}
-          className="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-40 text-cyan-300 font-bold text-xs font-mono flex items-center justify-center gap-1.5"
-        >
-          <Play size={13} /> Traverse List
-        </button>
-
-        {/* CLEAR */}
-        <button
-          onClick={handleClear}
-          disabled={isEmpty}
-          className="w-full py-2 rounded-lg bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 disabled:opacity-30 text-red-400 font-mono text-[11px] flex items-center justify-center gap-1"
-        >
-          <Trash2 size={12} /> Clear List
-        </button>
       </div>
     </div>
   );

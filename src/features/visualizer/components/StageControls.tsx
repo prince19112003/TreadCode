@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, ZoomIn, ZoomOut, Maximize, Gauge } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, ZoomIn, ZoomOut, Maximize, Gauge, BookOpen } from 'lucide-react';
 import { useLessonStore } from '../../../lessons/useLessonStore';
 
 export const StageControls: React.FC = () => {
@@ -19,8 +19,20 @@ export const StageControls: React.FC = () => {
   const hasEdited = useLessonStore(s => s.hasEdited);
   const playSpeed = useLessonStore(s => s.playSpeed);
   const setPlaySpeed = useLessonStore(s => s.setPlaySpeed);
+  const showCheatSheet = useLessonStore(s => s.showCheatSheet);
+  const toggleCheatSheet = useLessonStore(s => s.toggleCheatSheet);
 
   const isDsa = lesson?.language === 'dsa';
+  const [showHint, setShowHint] = useState(false);
+
+  // Trigger subtle open hint gesture animation whenever a DSA lesson loads
+  useEffect(() => {
+    if (isDsa && lesson?.id) {
+      setShowHint(true);
+      const timer = setTimeout(() => setShowHint(false), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [lesson?.id, isDsa]);
 
   const canPrev = currentStepIndex > 0;
   const canNext = currentStepIndex < totalSteps - 1;
@@ -46,13 +58,57 @@ export const StageControls: React.FC = () => {
 
   return (
     <div className="flex md:flex-col flex-row items-center justify-between py-1.5 md:py-5 px-3 md:px-0 h-12 md:h-full w-full md:w-14 shrink-0 bg-[#0d1126]/90 backdrop-blur-xl border-y md:border-y-0 md:border-x border-indigo-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-20 overflow-x-auto md:overflow-visible">
-      {/* Step counter / DSA badge */}
-      <div className="flex md:flex-col flex-row items-center gap-2 md:gap-4 shrink-0">
-        <div className="flex flex-col items-center select-none text-center">
+      {/* Step counter / DSA badge & CheatSheet button */}
+      <div className="flex md:flex-col flex-row items-center gap-2 md:gap-3 shrink-0">
+        <div className="flex flex-col items-center gap-1.5 select-none text-center relative">
           {isDsa ? (
-            <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
-              DSA
-            </span>
+            <>
+              <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                DSA
+              </span>
+              
+              <div className="relative">
+                {/* Pulsing Ring Indicator when DSA lesson opens */}
+                {showHint && !showCheatSheet && (
+                  <span className="absolute -inset-1 rounded-xl bg-amber-400/40 animate-ping pointer-events-none" />
+                )}
+
+                <motion.button
+                  onClick={() => {
+                    toggleCheatSheet();
+                    setShowHint(false);
+                  }}
+                  animate={showHint && !showCheatSheet ? { scale: [1, 1.15, 1], rotate: [0, -5, 5, 0] } : {}}
+                  transition={{ repeat: showHint ? 3 : 0, duration: 0.8 }}
+                  className={`w-9 h-9 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer active:scale-95 border relative z-10 ${
+                    showCheatSheet
+                      ? 'bg-amber-500/25 border-amber-400 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.5)]'
+                      : showHint
+                      ? 'bg-amber-500/30 border-amber-400 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.7)]'
+                      : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300'
+                  }`}
+                  title="Toggle DSA CheatSheet Notes"
+                >
+                  <BookOpen size={14} className="text-amber-400" />
+                  <span className="text-[7px] font-black tracking-tighter uppercase text-amber-200 leading-none">NOTES</span>
+                </motion.button>
+
+                {/* Floating Micro Tooltip Hint */}
+                <AnimatePresence>
+                  {showHint && !showCheatSheet && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -8, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -8, scale: 0.9 }}
+                      className="absolute left-12 top-0 z-30 whitespace-nowrap px-2 py-1 rounded-md bg-amber-950/95 border border-amber-400/80 text-amber-200 font-mono text-[9px] font-bold shadow-xl flex items-center gap-1.5 pointer-events-none"
+                    >
+                      <span>📝 Notes Here!</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </>
           ) : (
             <span className="text-[10px] md:text-[11px] font-black text-indigo-300 drop-shadow-md tracking-wider">
               {currentStepIndex}/{totalSteps - 1}

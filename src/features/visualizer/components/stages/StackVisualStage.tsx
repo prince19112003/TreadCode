@@ -35,7 +35,7 @@ export const StackVisualStage: React.FC = () => {
 
   return (
     <div className="flex-1 w-full h-full bg-transparent flex items-center overflow-hidden relative px-6 py-6">
-      
+
       {/* ── Extreme Far-Right Corner STACK STATUS Panel (Ultra-Compact Smaller Size) ── */}
       <div className="absolute right-3 top-4 z-20 w-36 flex flex-col gap-1.5 font-mono text-[10px] text-white bg-slate-950/85 p-2 border border-slate-800/80 rounded">
         
@@ -153,7 +153,7 @@ export const StackVisualStage: React.FC = () => {
 
             {/* Cyan Open Bucket Frame */}
             <div
-              className="w-60 p-2 border-x-4 border-b-4 border-cyan-400 rounded-b-2xl flex flex-col justify-between gap-2 bg-slate-950/90 shadow-2xl h-62.5"
+              className="w-60 p-2 border-x-4 border-cyan-400 flex flex-col justify-between gap-2 bg-slate-950/90 shadow-2xl h-62.5"
             >
               {/* Render slots from TOP [CAPACITY-1] down to [0] */}
               {Array.from({ length: CAPACITY }).map((_, i) => {

@@ -26,13 +26,14 @@ export const dsaRegistry: Record<string, any> = {
   },
   queue: {
     dsa_queue_enq_deq: dsaLessons.dsa_queue_enq_deq,
+    dsa_queue_array_impl: dsaLessons.dsa_queue_array_impl,
   },
   singly_linked_list: {
     dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
     dsa_sll_reverse: dsaLessons.dsa_sll_reverse,
   },
   doubly_linked_list: {
-    dsa_sll_traverse: dsaLessons.dsa_sll_traverse,
+    dsa_dll_traverse: dsaLessons.dsa_dll_traverse,
   },
   binary_tree: {
     dsa_binary_tree: dsaLessons.dsa_binary_tree,

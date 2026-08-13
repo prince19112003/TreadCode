@@ -327,7 +327,7 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'dsa_stack_push_pop', number: '04', friendlyName: 'Balanced Parentheses Checker', description: 'Use a stack to match every opening bracket with its closing bracket.' },
     ],
     queue: [
-      { id: 'dsa_queue_enq_deq', number: '01', friendlyName: 'Queue Implementation Using Array', description: 'Build a queue with a fixed array and maintain front and rear pointer indices.' },
+      { id: 'dsa_queue_array_impl', number: '01', friendlyName: 'Queue Implementation Using Array', description: 'Build a queue with a fixed array and maintain front and rear pointer indices.' },
       { id: 'dsa_queue_enq_deq', number: '02', friendlyName: 'Queue Enqueue (Insert at Rear)', description: 'Add element to the rear of the queue and advance the rear pointer.' },
       { id: 'dsa_queue_enq_deq', number: '03', friendlyName: 'Queue Dequeue (Remove from Front)', description: 'Remove element from the front of the queue and advance the front pointer.' },
       { id: 'dsa_queue_enq_deq', number: '04', friendlyName: 'Circular Queue (Ring Buffer)', description: 'Wrap around the array when rear reaches end using modulo arithmetic.' },
@@ -340,10 +340,10 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'dsa_sll_reverse', number: '05', friendlyName: 'Reverse a Singly Linked List', description: 'Use three pointers (prev, curr, next) to reverse all next pointer links.' },
     ],
     doubly_linked_list: [
-      { id: 'dsa_sll_traverse', number: '01', friendlyName: 'Doubly Linked List — Node Structure', description: 'Create nodes with prev, data, and next pointers for bidirectional traversal.' },
-      { id: 'dsa_sll_traverse', number: '02', friendlyName: 'Insert Node at Head (Doubly)', description: 'Prepend node: set new node next = head, update head prev = new node.' },
-      { id: 'dsa_sll_reverse', number: '03', friendlyName: 'Traverse Forward & Backward', description: 'Traverse doubly linked list using next pointers, then using prev pointers.' },
-      { id: 'dsa_sll_reverse', number: '04', friendlyName: 'Delete Node from Doubly Linked List', description: 'Update both prev and next pointers of neighboring nodes to unlink a node.' },
+      { id: 'dsa_dll_traverse', number: '01', friendlyName: 'Doubly Linked List — Node Structure', description: 'Create nodes with prev, data, and next pointers for bidirectional traversal.' },
+      { id: 'dsa_dll_traverse', number: '02', friendlyName: 'Insert Node at Head (Doubly)', description: 'Prepend node: set new node next = head, update head prev = new node.' },
+      { id: 'dsa_dll_traverse', number: '03', friendlyName: 'Traverse Forward & Backward', description: 'Traverse doubly linked list using next pointers, then using prev pointers.' },
+      { id: 'dsa_dll_traverse', number: '04', friendlyName: 'Delete Node from Doubly Linked List', description: 'Update both prev and next pointers of neighboring nodes to unlink a node.' },
     ],
     binary_tree: [
       { id: 'dsa_sll_traverse', number: '01', friendlyName: 'Binary Tree — Node Structure', description: 'Create tree nodes with value, left pointer, and right pointer.' },

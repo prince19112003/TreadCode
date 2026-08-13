@@ -259,7 +259,7 @@ export const dsa_binary_search: LessonProgram = {
 // ─── TOPIC 03: SORTING ────────────────────────────────────────────────────────
 
 export const dsa_bubble_sort: LessonProgram = {
-  id: 'dsa_bubble_sort', language: 'dsa', topic: 'sorting', lessonNumber: 1,
+  id: 'dsa_bubble_sort', language: 'dsa', topic: 'bubble_sort', lessonNumber: 1,
   friendlyName: 'Bubble Sort Algorithm (O(N²))',
   learningObjective: 'Repeatedly compare adjacent elements. If left > right, swap. After each pass, largest element "bubbles up" to its correct position.',
   lines: [
@@ -606,6 +606,41 @@ export const dsa_queue_enq_deq: LessonProgram = {
         consoleOutput: 'Queue initialized (Empty).',
         animationEvent: { type: 'NONE' },
       },
+    ];
+  },
+  executionSteps: [],
+};
+
+export const dsa_queue_array_impl: LessonProgram = {
+  id: 'dsa_queue_array_impl', language: 'dsa', topic: 'queue', lessonNumber: 2,
+  friendlyName: 'Queue using Arrays',
+  learningObjective: 'Implement a Queue using an array, tracking front and rear pointers.',
+  lines: [
+    line(1, [kw('int'), tx(' '), va('queue'), pu('['), nu('4'), pu(']'), pu(';')]),
+    line(2, [kw('int'), tx(' '), va('front'), tx(' '), op('='), tx(' '), op('-'), nu('1'), pu(','), tx(' '), va('rear'), tx(' '), op('='), tx(' '), op('-'), nu('1'), pu(';')]),
+    line(3, [cm('// Enqueue 10')]),
+    line(4, [kw('if'), pu('('), va('front'), tx(' '), op('=='), tx(' '), op('-'), nu('1'), pu(')'), tx(' '), va('front'), tx(' '), op('='), tx(' '), nu('0'), pu(';')]),
+    line(5, [va('rear'), op('++'), pu(';')]),
+    line(6, [va('queue'), pu('['), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('10'), pu(';')]),
+    line(7, [cm('// Enqueue 20')]),
+    line(8, [va('rear'), op('++'), pu(';')]),
+    line(9, [va('queue'), pu('['), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('20'), pu(';')]),
+    line(10, [cm('// Dequeue')]),
+    line(11, [kw('int'), tx(' '), va('val'), tx(' '), op('='), tx(' '), va('queue'), pu('['), va('front'), pu(']'), pu(';')]),
+    line(12, [va('front'), op('++'), pu(';')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      { step: 1, lineNum: 1, explanationEnglish: 'Array for queue is declared with capacity 4.', explanationHinglish: 'Queue array capacity 4 ke sath declare hua.', memorySnapshot: { capacity: 4, queue: [], front: -1, rear: -1 }, animationEvent: { type: 'NONE' } },
+      { step: 2, lineNum: 2, explanationEnglish: 'Pointers initialized. front = -1, rear = -1 means empty queue.', explanationHinglish: 'Front aur rear -1 par set hain (Empty queue).', memorySnapshot: { capacity: 4, queue: [], front: -1, rear: -1 }, animationEvent: { type: 'NONE' } },
+      { step: 3, lineNum: 4, explanationEnglish: 'First element being enqueued. Set front = 0.', explanationHinglish: 'Pehla element enqueue ho raha hai, front = 0 set.', memorySnapshot: { capacity: 4, queue: [], front: 0, rear: -1 }, animationEvent: { type: 'NONE' } },
+      { step: 4, lineNum: 5, explanationEnglish: 'Increment rear to 0 to insert element.', explanationHinglish: 'Rear ko 0 pe aage badhaya.', memorySnapshot: { capacity: 4, queue: [], front: 0, rear: 0 }, animationEvent: { type: 'NONE' } },
+      { step: 5, lineNum: 6, explanationEnglish: 'queue[0] = 10. Enqueue complete.', explanationHinglish: 'queue[0] me 10 dal diya. Enqueue pura hua.', memorySnapshot: { capacity: 4, queue: [10], front: 0, rear: 0 }, animationEvent: { type: 'QUEUE_ENQUEUE', value: 10, queueState: [10] } },
+      { step: 6, lineNum: 8, explanationEnglish: 'Enqueue next element. Increment rear to 1.', explanationHinglish: 'Dusra element. Rear = 1.', memorySnapshot: { capacity: 4, queue: [10], front: 0, rear: 1 }, animationEvent: { type: 'NONE' } },
+      { step: 7, lineNum: 9, explanationEnglish: 'queue[1] = 20. Enqueue complete.', explanationHinglish: 'queue[1] = 20.', memorySnapshot: { capacity: 4, queue: [10, 20], front: 0, rear: 1 }, animationEvent: { type: 'QUEUE_ENQUEUE', value: 20, queueState: [10, 20] } },
+      { step: 8, lineNum: 11, explanationEnglish: 'Dequeue starts. Read queue[front]. val = queue[0] = 10.', explanationHinglish: 'Dequeue karna hai. val = queue[0] (jo ki 10 hai) read kiya.', memorySnapshot: { capacity: 4, queue: [10, 20], front: 0, rear: 1, val: 10 }, animationEvent: { type: 'NONE' } },
+      { step: 9, lineNum: 12, explanationEnglish: 'Increment front to 1. Element removed from queue logic.', explanationHinglish: 'Front ko badha kar 1 kar diya, matlab element remove ho gaya.', memorySnapshot: { capacity: 4, queue: [null, 20], front: 1, rear: 1, val: 10 }, animationEvent: { type: 'QUEUE_DEQUEUE', dequeuedValue: 10, queueState: [null, 20] } },
     ];
   },
   executionSteps: [],
@@ -971,6 +1006,37 @@ export const dsa_binary_tree: LessonProgram = {
   executionSteps: [],
 };
 
+export const dsa_dll_traverse: LessonProgram = {
+  id: 'dsa_dll_traverse',
+  language: 'dsa',
+  topic: 'doubly_linked_list',
+  lessonNumber: 1,
+  friendlyName: 'Doubly Linked List Implementation & Bidirectional Operations',
+  learningObjective: 'Understand how nodes link with both prev and next pointers in dynamic heap memory.',
+  lines: [
+    line(1, [kw('struct'), tx(' '), va('Node'), tx(' {')]),
+    line(2, [tx('    '), kw('int'), tx(' '), va('data'), pu(';')]),
+    line(3, [tx('    '), va('Node'), op('*'), tx(' '), va('prev'), pu(';')]),
+    line(4, [tx('    '), va('Node'), op('*'), tx(' '), va('next'), pu(';')]),
+    line(5, [pu('}')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: 'Doubly Linked List initialized. Nodes contain prev and next pointer links.',
+        explanationHinglish: 'Doubly Linked List initialize hui hai. Nodes me prev aur next pointers hain.',
+        memorySnapshot: { capacity: 6, list: [] },
+        consoleOutput: '> Doubly Linked List workspace initialized.',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
+
 // ─── EXPORT ────────────────────────────────────────────────────────────────────
 
 export const dsaLessons: Record<string, LessonProgram> = {
@@ -988,8 +1054,10 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_recursion_sum,
   dsa_stack_push_pop,
   dsa_queue_enq_deq,
+  dsa_queue_array_impl,
   dsa_sll_traverse,
   dsa_sll_reverse,
+  dsa_dll_traverse,
   dsa_graph_basics,
   dsa_graph_bfs,
   dsa_graph_dfs,

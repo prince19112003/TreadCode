@@ -45,6 +45,9 @@ export type AnimationEvent =
   | { type: 'STACK_POP'; poppedValue: string | number; stackState: (string | number)[] }
   | { type: 'ENQUEUE'; value: string | number; queueState: (string | number)[] }
   | { type: 'DEQUEUE'; dequeuedValue: string | number; queueState: (string | number)[] }
+  | { type: 'QUEUE_ENQUEUE'; value: string | number; queueState: (string | number | null)[] }
+  | { type: 'QUEUE_DEQUEUE'; dequeuedValue: string | number; queueState: (string | number | null)[] }
+  | { type: 'QUEUE_PEEK'; peekValue: string | number; peekIndex: number }
   | { type: 'SET_POINTERS'; pointers: Record<string, number | null> }
   | { type: 'COMPARE_INDICES'; arrayName: string; indexA: number; indexB: number; result: 'swap' | 'no-swap' | 'found' | 'not-found' }
   | { type: 'NODE_TRAVERSE'; nodeId: string | number; fromId?: string | number }
