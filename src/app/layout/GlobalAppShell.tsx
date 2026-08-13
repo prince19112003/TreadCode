@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -423,7 +423,7 @@ export const GlobalAppShell: React.FC = () => {
       >
         {/* Subtle glowing cyan top border accent */}
         <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
-        {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
+        {/* LEFT: Logo Icon + App Title Name + Navigation Control Group */}
         <div className="flex items-center gap-3" data-tauri-drag-region>
           <button
             onClick={() => navigate('/languages')}
@@ -438,6 +438,32 @@ export const GlobalAppShell: React.FC = () => {
               <span className="text-indigo-400">Code</span>
             </span>
           </button>
+
+          {/* App Navigation Controls: Back (←), Forward (→), Home (🏠) */}
+          <div className="flex items-center gap-0.5 bg-slate-950/70 border border-slate-800/80 rounded-xl p-0.5 shrink-0 shadow-inner">
+            <button
+              onClick={() => navigate(-1)}
+              title="Go Back (Alt + Left Arrow)"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => navigate(1)}
+              title="Go Forward (Alt + Right Arrow)"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px h-3.5 bg-slate-800 my-auto mx-0.5" />
+            <button
+              onClick={() => navigate('/languages')}
+              title="Go to Home (Languages)"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
+            >
+              <Home className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           {/* Co-Branding Institution Badge if configured on License Key */}
           {licenseContext?.licenseDetails?.customBranding?.institutionName && (
