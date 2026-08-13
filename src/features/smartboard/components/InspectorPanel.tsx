@@ -38,11 +38,11 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   };
 
   return (
-    <div className="absolute top-3 right-3 z-40 flex flex-col items-end gap-2 select-none">
+    <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-40 flex flex-col items-end gap-1.5 sm:gap-2 select-none max-h-[calc(100vh-60px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
       {/* Action cluster + Tool status */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Undo / Redo / Clear / Export */}
-        <div className="flex items-center gap-0.5 p-1 rounded-xl bg-[#0a0f1e]/90 backdrop-blur-2xl border border-white/10 shadow-lg">
+        <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-xl bg-[#0a0f1e]/90 backdrop-blur-2xl border border-white/10 shadow-lg">
           <ToolBtn icon={<Undo2 size={13} />} active={false} onClick={undo} disabled={!strokes.length} title="Undo (⌘Z)" />
           <ToolBtn icon={<Redo2 size={13} />} active={false} onClick={redo} disabled={!redoStack.length} title="Redo" />
           <ToolBtn icon={<Trash2 size={13} />} active={false} onClick={clearPage} title="Clear Page" accent="rose" />
@@ -50,7 +50,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         </div>
 
         {/* Tool status badge */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#0a0f1e]/90 backdrop-blur-2xl border border-white/10 text-[10px] font-medium text-white/60 shadow-lg">
+        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#0a0f1e]/90 backdrop-blur-2xl border border-white/10 text-[10px] font-medium text-white/60 shadow-lg">
           <div
             className="rounded-full transition-all"
             style={{
@@ -64,16 +64,16 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         </div>
       </div>
 
-      {/* Vertical Inspector: Size + Colors */}
-      <div className="flex flex-col items-center gap-2.5 p-2 rounded-2xl bg-[#0a0f1e]/90 backdrop-blur-2xl border border-white/10 shadow-2xl">
+      {/* Vertical Inspector Box (Thickness Presets + Colors) */}
+      <div className="flex flex-col items-center gap-1.5 sm:gap-2.5 p-1.5 sm:p-2 rounded-2xl bg-[#0a0f1e]/90 backdrop-blur-2xl border border-white/10 shadow-2xl">
         {/* Thickness presets */}
-        <div className="flex flex-col items-center gap-1 py-0.5">
-          <span className="text-[8px] font-mono text-white/30 uppercase tracking-wider mb-0.5">Px</span>
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1 py-0.5">
+          <span className="text-[7px] sm:text-[8px] font-mono text-white/30 uppercase tracking-wider mb-0.5">Px</span>
           {[2, 3, 5, 7, 9].map((s) => (
             <button
               key={s}
               onClick={() => setSize(s)}
-              className={`w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] font-mono font-bold transition-all duration-150 active:scale-90 ${
+              className={`w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-md flex items-center justify-center text-[9px] sm:text-[10px] font-mono font-bold transition-all duration-150 active:scale-90 ${
                 size === s
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30 ring-1 ring-indigo-400/80 scale-105"
                   : "bg-white/4 hover:bg-white/10 text-white/40 hover:text-white/90 border border-white/6"

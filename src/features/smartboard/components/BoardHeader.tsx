@@ -61,25 +61,26 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
           onPointerDown={(e) => startDrag(e, "move")}
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
-          className={`h-10 px-3 flex items-center justify-between border-b border-white/6 ${
+          className={`h-10 px-2 sm:px-3 flex items-center justify-between border-b border-white/6 gap-2 ${
             glassMode ? "bg-black/30 backdrop-blur-xl" : "bg-[#080c18]/95"
           } ${!isFullscreen ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
           {/* Left: Logo */}
-          <div className="flex items-center gap-2 pointer-events-none">
-            {!isFullscreen && <GripHorizontal size={13} className="text-white/20" />}
-            <span className="text-[11px] font-semibold tracking-wider text-white/60 uppercase">SmartBoard</span>
-            <span className="text-[9px] text-white/25 font-mono">v4</span>
+          <div className="flex items-center gap-1.5 shrink-0 pointer-events-none">
+            {!isFullscreen && <GripHorizontal size={13} className="text-white/20 hidden sm:inline" />}
+            <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-white/60 uppercase">SmartBoard</span>
+            <span className="text-[8px] sm:text-[9px] text-white/25 font-mono">v4</span>
           </div>
 
           {/* Right: Controls */}
           <div
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden py-1 max-w-[calc(100vw-90px)] sm:max-w-none"
+            style={{ scrollbarWidth: "none" }}
             onPointerDown={(e) => e.stopPropagation()}
           >
             {/* Background color selector */}
-            <div className="flex items-center gap-1 px-1.5 py-1 rounded-lg bg-white/4 border border-white/6">
-              <span className="text-[9px] text-white/30 mr-0.5 uppercase tracking-wider">Bg</span>
+            <div className="flex items-center gap-1 px-1 sm:px-1.5 py-1 rounded-lg bg-white/4 border border-white/6 shrink-0">
+              <span className="text-[8px] sm:text-[9px] text-white/30 mr-0.5 uppercase tracking-wider hidden sm:inline">Bg</span>
               {(["black", "grey", "white"] as SmartBoardBg[]).map((b) => (
                 <button
                   key={b}
@@ -97,23 +98,23 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
             </div>
 
             {/* Grid selector */}
-            <div className="flex items-center rounded-lg bg-white/4 border border-white/6 p-0.5">
+            <div className="flex items-center rounded-lg bg-white/4 border border-white/6 p-0.5 shrink-0">
               {(["none", "lines"] as SmartBoardGrid[]).map((g) => (
                 <button
                   key={g}
                   onClick={() => setBgGrid(g)}
-                  className={`px-2 py-0.5 text-[10px] font-medium rounded-md transition-all flex items-center gap-1 ${
+                  className={`px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium rounded-md transition-all flex items-center gap-1 ${
                     bgGrid === g ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
                   }`}
                 >
                   {g === "none" ? <SquareCheck size={10} /> : <AlignJustify size={10} />}
-                  {g === "none" ? "Blank" : "Lines"}
+                  <span>{g === "none" ? "Blank" : "Lines"}</span>
                 </button>
               ))}
             </div>
 
             {/* Shape tools + Auto-Snap */}
-            <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-lg bg-white/4 border border-white/6">
+            <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-lg bg-white/4 border border-white/6 shrink-0">
               <ToolBtn icon={<Minus size={13} />} active={tool === "line"} onClick={() => setTool("line")} title="Line" />
               <ToolBtn icon={<MoveRight size={13} />} active={tool === "arrow"} onClick={() => setTool("arrow")} title="Arrow" />
               <ToolBtn icon={<Square size={13} />} active={tool === "rect"} onClick={() => setTool("rect")} title="Rectangle" />
@@ -121,7 +122,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
               <div className="w-px h-3.5 bg-white/10 mx-0.5" />
               <button
                 onClick={() => setAutoSnapEnabled(!autoSnapEnabled)}
-                className={`px-1.5 py-0.5 text-[9.5px] font-medium rounded-md transition-all flex items-center gap-1 border ${
+                className={`px-1.5 py-0.5 text-[9px] sm:text-[9.5px] font-medium rounded-md transition-all flex items-center gap-1 border ${
                   autoSnapEnabled
                     ? "bg-amber-500/20 text-amber-300 border-amber-400/40 shadow-xs shadow-amber-500/20 font-semibold"
                     : "bg-white/4 text-white/30 border-white/6 hover:text-white/60"
@@ -129,14 +130,14 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
                 title="Toggle Auto-Snap Shape Recognition"
               >
                 <Sparkle size={10} className={autoSnapEnabled ? "text-amber-400" : ""} />
-                <span>Auto-Snap</span>
+                <span className="hidden xs:inline sm:inline">Auto-Snap</span>
               </button>
             </div>
 
             {/* ★ Velocity Ink Toggle (default OFF) */}
             <button
               onClick={() => setVelocityMode(!velocityMode)}
-              className={`px-1.5 py-0.5 text-[9.5px] font-medium rounded-md transition-all flex items-center gap-1 border ${
+              className={`px-1.5 py-0.5 text-[9px] sm:text-[9.5px] font-medium rounded-md transition-all flex items-center gap-1 border shrink-0 ${
                 velocityMode
                   ? "bg-violet-500/20 text-violet-300 border-violet-400/40 shadow-xs shadow-violet-500/20 font-semibold"
                   : "bg-white/4 text-white/30 border-white/6 hover:text-white/60"
@@ -144,13 +145,13 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
               title="Velocity Ink: Fast = thin line, Slow = thick line (calligraphic mode)"
             >
               <Zap size={10} className={velocityMode ? "text-violet-400" : ""} />
-              <span>Velocity Ink</span>
+              <span className="hidden xs:inline sm:inline">Velocity Ink</span>
             </button>
 
             {/* Zoom reset */}
             <button
               onClick={() => { setZoom(1); setZoomOffset({ x: 0, y: 0 }); }}
-              className={`px-2 py-1 text-[10px] font-mono font-medium rounded-lg transition-all flex items-center gap-1 border ${
+              className={`px-1.5 sm:px-2 py-1 text-[9px] sm:text-[10px] font-mono font-medium rounded-lg transition-all flex items-center gap-1 border shrink-0 ${
                 zoom !== 1
                   ? "bg-amber-500/20 text-amber-300 border-amber-400/40 font-bold"
                   : "bg-white/4 text-white/30 border-white/6 hover:text-white/60"
@@ -158,17 +159,17 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
               title="Reset Zoom"
             >
               <span>{Math.round(zoom * 100)}%</span>
-              {zoom !== 1 && <span className="text-[8.5px] font-sans text-amber-400">Reset</span>}
+              {zoom !== 1 && <span className="text-[8.5px] font-sans text-amber-400 hidden sm:inline">Reset</span>}
             </button>
 
-            <div className="w-px h-4 bg-white/8 mx-0.5" />
-            <button onClick={() => setHeaderCollapsed(true)} className="p-1 rounded-lg text-white/25 hover:text-white/70 hover:bg-white/6 transition-all">
+            <div className="w-px h-4 bg-white/8 mx-0.5 shrink-0" />
+            <button onClick={() => setHeaderCollapsed(true)} className="p-1 rounded-lg text-white/25 hover:text-white/70 hover:bg-white/6 transition-all shrink-0">
               <ChevronUp size={12} />
             </button>
-            <button onClick={() => setIsFullscreen(!isFullscreen)} className="p-1 rounded-lg text-white/25 hover:text-white/70 hover:bg-white/6 transition-all">
+            <button onClick={() => setIsFullscreen(!isFullscreen)} className="p-1 rounded-lg text-white/25 hover:text-white/70 hover:bg-white/6 transition-all shrink-0">
               {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
             </button>
-            <button onClick={handleCloseAttempt} className="p-1 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-all">
+            <button onClick={handleCloseAttempt} className="p-1 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0">
               <X size={12} />
             </button>
           </div>

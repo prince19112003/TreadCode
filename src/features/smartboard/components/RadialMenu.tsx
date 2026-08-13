@@ -52,16 +52,16 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({
     <motion.div
       drag
       dragMomentum={false}
-      className="absolute top-3.5 left-1/2 -translate-x-1/2 z-40 cursor-grab active:cursor-grabbing select-none"
+      className="absolute top-12 sm:top-3.5 left-1/2 -translate-x-1/2 z-40 cursor-grab active:cursor-grabbing select-none"
     >
-      <div className="relative w-12 h-12 flex items-center justify-center">
+      <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
         {/* Fan-out items */}
         <AnimatePresence>
           {isToolMenuOpen && (
             <>
               {TOOL_ITEMS.map((item) => {
                 const rad = (item.angle * Math.PI) / 180;
-                const dist = 52;
+                const dist = typeof window !== "undefined" && window.innerWidth < 640 ? 44 : 52;
                 const x = Math.sin(rad) * dist;
                 const y = Math.cos(rad) * dist;
                 const isSelected = activeTool === item.tool;

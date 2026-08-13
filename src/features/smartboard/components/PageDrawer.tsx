@@ -32,21 +32,21 @@ export const PageDrawer: React.FC<PageDrawerProps> = ({
   return (
     <>
       {/* Page controls (top-left) */}
-      <div className="absolute top-2.5 left-2.5 z-40 flex flex-col gap-1 select-none">
+      <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 z-40 flex flex-col gap-1 select-none">
         {/* New page button */}
         <button
           onClick={addPage}
-          className="h-6 px-2 flex items-center justify-center gap-1 rounded-md bg-slate-900/90 hover:bg-indigo-950 backdrop-blur-md border border-slate-700/60 text-slate-200 hover:text-white text-[10px] font-medium transition-all active:scale-95 shadow-xs"
+          className="h-5.5 sm:h-6 px-1.5 sm:px-2 flex items-center justify-center gap-1 rounded-md bg-slate-900/90 hover:bg-indigo-950 backdrop-blur-md border border-slate-700/60 text-slate-200 hover:text-white text-[9px] sm:text-[10px] font-medium transition-all active:scale-95 shadow-xs"
           title="Add New Page"
         >
-          <Plus size={11} className="text-indigo-400" />
+          <Plus size={10} className="text-indigo-400 sm:w-2.5 sm:h-2.5" />
           <span>New</span>
         </button>
 
         {/* Pages toggle button */}
         <button
           onClick={() => setPagesOpen(!pagesOpen)}
-          className={`h-6 px-2 flex items-center justify-center gap-1 rounded-md backdrop-blur-md text-[10px] font-medium transition-all active:scale-95 border shadow-xs ${
+          className={`h-5.5 sm:h-6 px-1.5 sm:px-2 flex items-center justify-center gap-1 rounded-md backdrop-blur-md text-[9px] sm:text-[10px] font-medium transition-all active:scale-95 border shadow-xs ${
             pagesOpen
               ? "bg-indigo-950/80 text-indigo-300 border-indigo-700/60"
               : "bg-[#0d1424]/90 hover:bg-[#162036] text-slate-300 hover:text-white border-slate-800"
