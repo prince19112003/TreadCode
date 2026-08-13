@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-route
 import { AnimatePresence } from 'motion/react';
 import { GlobalAppShell } from './layout/GlobalAppShell';
 import { LoadingSpinner } from '@shared/components/ui/LoadingSpinner';
-import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { EulaModal } from '@shared/components/ui/EulaModal';
 import { SplashPage } from '../pages/SplashPage';
 import { fetchLicenseDetails, type LicenseValidationResult } from '../shared/config/firebase';
@@ -256,8 +255,7 @@ export const App: React.FC = () => {
       }}
     >
       <BrowserRouter>
-        {/* Global in-app update & initial setup EULA agreement modals */}
-        <UpdateModal />
+        {/* EULA agreement modal — runs once on first launch */}
         <EulaModal />
 
         {showSplash ? (

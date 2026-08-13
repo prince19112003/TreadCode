@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink } from 'lucide-react';
-import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
+import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
+import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
 import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 import { LicenseContext } from '../App';
@@ -329,6 +330,12 @@ export const GlobalAppShell: React.FC = () => {
   const [smartBoardOpen, setSmartBoardOpen] = useState(false);
   const licenseContext = React.useContext(LicenseContext);
   const { hasUpdate } = useUpdateChecker();
+  const [showUpdateModal, setShowUpdateModal] = React.useState(false);
+
+  // When Firebase signals an update, auto-show the modal (ONLY in native app)
+  React.useEffect(() => {
+    if (hasUpdate && isNativeApp()) setShowUpdateModal(true);
+  }, [hasUpdate]);
 
   // Real-time Telemetry Heartbeat & Remote Admin Command Listeners
   useEffect(() => {
@@ -496,11 +503,11 @@ export const GlobalAppShell: React.FC = () => {
             }
           `}</style>
 
-          {/* Persistent Glowing Update Ready & Vercel Web App Link in Top Header (Until updated!) */}
+          {/* Persistent Glowing Update Ready button in header (Tauri-only, until user updates) */}
           {hasUpdate && (
             <div className="flex items-center gap-1.5 shrink-0">
               <button
-                onClick={() => navigate('/settings')}
+                onClick={() => setShowUpdateModal(true)}
                 title="New software update available! Click to update."
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-white bg-linear-to-r from-rose-600 via-indigo-600 to-purple-600 hover:from-rose-500 hover:to-indigo-500 transition-all shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse cursor-pointer"
               >
@@ -563,6 +570,11 @@ export const GlobalAppShell: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Update Modal — opened by header button or auto when hasUpdate fires */}
+      {showUpdateModal && (
+        <UpdateModal forceShow={false} onClosePreview={() => setShowUpdateModal(false)} />
+      )}
 
       {/* === GLOBAL SEARCH & SMART BOARD MODALS === */}
       <AnimatePresence>

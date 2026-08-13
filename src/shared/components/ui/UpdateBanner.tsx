@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
+import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
 
 // ─── Update Modal ─────────────────────────────────────────────────────────────
 
@@ -16,37 +16,59 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     currentVersion,
     changelog: realChangelog,
     updateObj,
+    downloadUrl: realDownloadUrl,
+    apkUrl: realApkUrl,
+    macUrl: realMacUrl,
     dismiss: realDismiss,
   } = useUpdateChecker();
 
+  const isNative = isNativeApp();
   const isPreview = Boolean(forceShow);
-  const hasUpdate = isPreview || realHasUpdate;
-  const latestVersion = isPreview ? '1.2.0' : (realLatestVersion || '1.2.0');
+
+  // STRICT GUARD: Only allow showing if running inside native app OR explicitly previewed in settings
+  const hasUpdate = (isNative && realHasUpdate) || isPreview;
+  const latestVersion = isPreview ? '1.2.0' : (realLatestVersion || currentVersion);
   const changelog = isPreview
     ? [
         'Added Graphs (DFS & BFS Animations)',
         'Polyglot Code Switcher (Python, C++, Java, C)',
         'New High-Performance Desktop Visualizer Stage',
-        'Offline Auto-Updater Support'
+        'Offline Auto-Updater Support',
+        'Android Remote Desktop Support',
       ]
     : realChangelog;
+
+  // Download URLs — GitHub Releases fallback instead of non-existent Vercel setup path
+  const fallbackWinUrl = `https://github.com/prince19112003/FlowTrace/releases/latest`;
+  const downloadUrl = isPreview ? fallbackWinUrl : (realDownloadUrl || fallbackWinUrl);
+  const apkUrl = isPreview ? null : realApkUrl;
+  const macUrl = isPreview ? null : realMacUrl;
+
   const dismiss = () => {
     if (onClosePreview) onClosePreview();
-    realDismiss();
+    realDismiss(); // persists dismissed version to localStorage
   };
 
-  const [phase, setPhase] = useState<'idle' | 'downloading' | 'done'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'downloading' | 'done' | 'opened'>('idle');
   const [progress, setProgress] = useState(0);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Detect current OS hint
+  const isWindows = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('win');
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
+  const platformHint = isWindows ? 'Windows x64' : isMac ? 'macOS' : 'Windows x64';
 
   // Reset phase when modal appears for new update
   useEffect(() => {
     if (hasUpdate) {
       setPhase('idle');
       setProgress(0);
+      setCopiedLink(false);
     }
   }, [hasUpdate]);
 
-  const handleUpdate = async () => {
+  // ── Action: Tauri native auto-update ────────────────────────────────────────
+  const handleAutoUpdate = async () => {
     setPhase('downloading');
     setProgress(0);
 
@@ -88,43 +110,82 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
         });
         setPhase('done');
       } else {
-        // Direct RTDB Fallback Update Channel: Open latest executable setup directly to perform real installation!
-        const exeUrl = `https://tread-code-smoky.vercel.app/releases/TreadCode_${realLatestVersion || 'latest'}_x64-setup.exe`;
-        try {
-          const { open } = await import('@tauri-apps/plugin-shell');
-          await open(exeUrl);
-        } catch (err) {
-          window.open(exeUrl, '_blank');
-        }
+        // Fallback: open installer directly
+        await openUrl(downloadUrl);
         setProgress(100);
-        setPhase('done');
+        setPhase('opened');
       }
     } catch (e) {
-      console.error('Update install error, opening direct installer setup:', e);
-      const exeUrl = `https://tread-code-smoky.vercel.app/releases/TreadCode_${realLatestVersion || 'latest'}_x64-setup.exe`;
-      try {
-        const { open } = await import('@tauri-apps/plugin-shell');
-        await open(exeUrl);
-      } catch (err) {
-        window.open(exeUrl, '_blank');
-      }
+      console.error('Auto-update install error, opening direct installer:', e);
+      await openUrl(downloadUrl);
       setProgress(100);
-      setPhase('done');
+      setPhase('opened');
     }
   };
 
+  // ── Action: Open a URL via Tauri shell or browser ───────────────────────────
+  const openUrl = async (url: string) => {
+    if (!url) return;
+    try {
+      const { open } = await import('@tauri-apps/plugin-shell');
+      await open(url);
+    } catch {
+      window.open(url, '_blank');
+    }
+  };
+
+  // ── Action: Open Windows .exe installer ─────────────────────────────────────
+  const handleOpenExe = async () => {
+    await openUrl(downloadUrl);
+    setPhase('opened');
+  };
+
+  // ── Action: Open Android APK ────────────────────────────────────────────────
+  const handleOpenApk = async () => {
+    if (!apkUrl) return;
+    await openUrl(apkUrl);
+    setPhase('opened');
+  };
+
+  // ── Action: Copy download link to clipboard ──────────────────────────────────
+  const handleCopyLink = () => {
+    const link = downloadUrl;
+    if (!link) return;
+    try {
+      navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch {
+      /* silent */
+    }
+  };
+
+  // ── Action: Restart / relaunch (native Tauri auto-update done) ───────────────
   const handleRestart = async () => {
     try {
+      // Try native relaunch first (this works after native Tauri auto-update)
       const { relaunch } = await import('@tauri-apps/plugin-process');
       await relaunch();
     } catch (e) {
-      console.warn('Native relaunch plugin failed, trying exit/reload fallback:', e);
+      console.warn('Native relaunch failed, trying exit so installer can finish:', e);
       try {
+        // Exit cleanly so user can run the installer that was opened
         const { exit } = await import('@tauri-apps/plugin-process');
         await exit(0);
-      } catch (err) {
+      } catch {
         window.location.reload();
       }
+    }
+  };
+
+  // ── Action: Close app so installer can run (manual download flow) ───────────
+  const handleExitForInstaller = async () => {
+    try {
+      const { exit } = await import('@tauri-apps/plugin-process');
+      await exit(0);
+    } catch {
+      // If exit fails, just dismiss modal — user can close manually
+      handleDismiss();
     }
   };
 
@@ -174,7 +235,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 350, damping: 25 }}
               style={{
-                width: 'min(500px, 100%)',
+                width: 'min(540px, 100%)',
                 maxHeight: '90vh',
                 overflowY: 'auto',
                 pointerEvents: 'auto',
@@ -242,8 +303,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                             fontSize: '18px', fontWeight: 700, color: '#f1f5f9',
                             fontFamily: 'system-ui, sans-serif',
                           }}>
-                             🚀 New Update Available (v1.0.5)
-                           </span>
+                            🚀 New Update Available
+                          </span>
                           {/* Pulse badge */}
                           <motion.div
                             animate={{ scale: [1, 1.08, 1] }}
@@ -259,7 +320,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                             NEW
                           </motion.div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px', color: 'rgba(148,163,184,0.7)', fontFamily: 'monospace' }}>
                             v{currentVersion}
                           </span>
@@ -271,6 +332,17 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                           }}>
                             v{latestVersion}
                           </span>
+                        </div>
+                        {/* Platform hint */}
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          padding: '2px 8px', borderRadius: '6px',
+                          background: 'rgba(99,102,241,0.08)',
+                          border: '1px solid rgba(99,102,241,0.2)',
+                          fontSize: '10px', color: 'rgba(148,163,184,0.7)', fontFamily: 'monospace',
+                        }}>
+                          <span style={{ color: '#6366f1' }}>◉</span>
+                          Detected: {platformHint}
                         </div>
                       </div>
 
@@ -311,7 +383,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                           ✦ &nbsp;What's New in v{latestVersion}
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {changelog.map((item, i) => (
+                          {changelog.filter(Boolean).map((item, i) => (
                             <motion.div
                               key={i}
                               initial={{ opacity: 0, x: -8 }}
@@ -337,83 +409,182 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       </div>
                     )}
 
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={handleDismiss}
-                        style={{
-                          flex: 1, padding: '10px 12px',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '10px',
-                          background: 'rgba(255,255,255,0.05)',
-                          color: 'rgba(148,163,184,0.8)',
-                          cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-                          fontFamily: 'system-ui',
-                          transition: 'all 0.2s',
-                        }}
-                      >
-                        Later
-                      </button>
+                    {/* ── Multiple Download Options ── */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
 
-                      <button
-                        onClick={async () => {
-                          const exeUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
-                          try {
-                            const { open } = await import('@tauri-apps/plugin-shell');
-                            await open(exeUrl);
-                          } catch (err) {
-                            window.open(exeUrl, '_blank');
-                          }
-                        }}
-                        style={{
-                          flex: 1.4, padding: '10px 12px',
-                          border: '1px solid rgba(99,102,241,0.3)',
-                          borderRadius: '10px',
-                          background: 'rgba(99,102,241,0.15)',
-                          color: '#a5b4fc',
-                          cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-                          fontFamily: 'system-ui',
-                          transition: 'all 0.2s',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        }}
-                        title="Download .exe installer file directly from Vercel CDN"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                        Direct .exe Link
-                      </button>
+                      {/* Row 1: Auto-Update + Dismiss */}
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {/* Dismiss */}
+                        <button
+                          onClick={handleDismiss}
+                          style={{
+                            padding: '10px 12px',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '10px',
+                            background: 'rgba(255,255,255,0.05)',
+                            color: 'rgba(148,163,184,0.8)',
+                            cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+                            fontFamily: 'system-ui',
+                            transition: 'all 0.2s',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Later
+                        </button>
 
-                      <motion.button
-                        onClick={handleUpdate}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        style={{
-                          flex: 2, padding: '10px 12px',
-                          border: 'none', borderRadius: '10px',
-                          background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                          color: 'white',
-                          cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-                          fontFamily: 'system-ui',
-                          boxShadow: '0 0 24px rgba(99,102,241,0.4)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        }}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                          <path d="M12 3v11M8 10l4 4 4-4M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        Auto-Update & Restart
-                      </motion.button>
+                        {/* Auto-Update & Restart — native Tauri, only useful for signed builds */}
+                        <motion.button
+                          onClick={handleAutoUpdate}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          style={{
+                            flex: 2, padding: '10px 12px',
+                            border: 'none', borderRadius: '10px',
+                            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                            color: 'white',
+                            cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+                            fontFamily: 'system-ui',
+                            boxShadow: '0 0 24px rgba(99,102,241,0.4)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                          }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3v11M8 10l4 4 4-4M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Auto-Update & Restart
+                        </motion.button>
+                      </div>
+
+                      {/* Row 2: Manual download options */}
+                      <div style={{
+                        padding: '10px 12px',
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: '10px',
+                      }}>
+                        <p style={{
+                          fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em',
+                          textTransform: 'uppercase', color: 'rgba(148,163,184,0.5)',
+                          fontFamily: 'system-ui', marginBottom: '8px',
+                        }}>
+                          Manual Download Options
+                        </p>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+
+                          {/* Windows .exe */}
+                          <button
+                            onClick={handleOpenExe}
+                            style={{
+                              flex: 1, minWidth: '130px',
+                              padding: '8px 10px',
+                              border: '1px solid rgba(56,189,248,0.3)',
+                              borderRadius: '8px',
+                              background: 'rgba(56,189,248,0.08)',
+                              color: '#7dd3fc',
+                              cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                              fontFamily: 'system-ui',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              transition: 'all 0.15s',
+                            }}
+                            title={`Download Windows installer: ${downloadUrl}`}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                              <polyline points="7 10 12 15 17 10"/>
+                              <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            🖥️ Windows .exe
+                          </button>
+
+                          {/* Android APK — only shown if URL is set */}
+                          {apkUrl && (
+                            <button
+                              onClick={handleOpenApk}
+                              style={{
+                                flex: 1, minWidth: '130px',
+                                padding: '8px 10px',
+                                border: '1px solid rgba(74,222,128,0.3)',
+                                borderRadius: '8px',
+                                background: 'rgba(74,222,128,0.08)',
+                                color: '#86efac',
+                                cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                                fontFamily: 'system-ui',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                                transition: 'all 0.15s',
+                              }}
+                              title={`Download Android APK: ${apkUrl}`}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                                <line x1="12" y1="18" x2="12" y2="18"/>
+                              </svg>
+                              📱 Android APK
+                            </button>
+                          )}
+
+                          {/* macOS — only shown if URL is set */}
+                          {macUrl && (
+                            <button
+                              onClick={() => openUrl(macUrl).then(() => setPhase('opened'))}
+                              style={{
+                                flex: 1, minWidth: '130px',
+                                padding: '8px 10px',
+                                border: '1px solid rgba(192,132,252,0.3)',
+                                borderRadius: '8px',
+                                background: 'rgba(192,132,252,0.08)',
+                                color: '#d8b4fe',
+                                cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                                fontFamily: 'system-ui',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                                transition: 'all 0.15s',
+                              }}
+                              title={`Download macOS: ${macUrl}`}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d8b4fe" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 9c-.64.64-1.521.954-2.402 1.165A6.301 6.301 0 0 0 2 16c0 3.314 2.686 6 6 6h8c3.314 0 6-2.686 6-6a6.301 6.301 0 0 0-4.599-6.065C16.52 9.954 15.64 9.64 15 9"/>
+                                <path d="M12 2v7"/>
+                              </svg>
+                              🍎 macOS
+                            </button>
+                          )}
+
+                          {/* Copy Link */}
+                          <button
+                            onClick={handleCopyLink}
+                            style={{
+                              padding: '8px 12px',
+                              border: '1px solid rgba(255,255,255,0.12)',
+                              borderRadius: '8px',
+                              background: copiedLink ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
+                              color: copiedLink ? '#86efac' : 'rgba(148,163,184,0.7)',
+                              cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                              fontFamily: 'system-ui',
+                              display: 'flex', alignItems: 'center', gap: '4px',
+                              transition: 'all 0.2s',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title="Copy Windows installer download link to clipboard"
+                          >
+                            {copiedLink ? '✓ Copied!' : (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                                Copy Link
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <p style={{
-                      textAlign: 'center', marginTop: '12px',
-                      fontSize: '10.5px', color: 'rgba(100,116,139,0.8)',
+                      textAlign: 'center',
+                      fontSize: '10.5px', color: 'rgba(100,116,139,0.7)',
                       fontFamily: 'system-ui',
                     }}>
-                      A .zip file will be downloaded. Extract and replace your current folder.
+                      Run the installer file after download — your settings and license are preserved.
                     </p>
                   </>
                 )}
@@ -464,7 +635,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       fontSize: '12px', color: 'rgba(148,163,184,0.7)',
                       marginBottom: '20px', fontFamily: 'system-ui',
                     }}>
-                      Downloading FlowTrace v{latestVersion}
+                      Downloading TreadCode v{latestVersion}
                     </p>
 
                     {/* Progress bar */}
@@ -485,7 +656,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
                       <span style={{ fontSize: '10px', color: 'rgba(100,116,139,0.7)', fontFamily: 'monospace' }}>
-                        FlowTrace-latest.zip
+                        TreadCode-v{latestVersion}-setup.exe
                       </span>
                       <span style={{ fontSize: '10px', color: '#818cf8', fontFamily: 'monospace' }}>
                         {progress < 100 ? 'Downloading...' : 'Complete!'}
@@ -494,7 +665,76 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                   </div>
                 )}
 
-                {/* ── DONE PHASE ─────────────────────────────────────────── */}
+                {/* ── OPENED PHASE (manual installer opened) ─────────────── */}
+                {phase === 'opened' && (
+                  <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                      style={{
+                        width: '72px', height: '72px', margin: '0 auto 18px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, rgba(56,189,248,0.2), rgba(99,102,241,0.2))',
+                        border: '2px solid rgba(56,189,248,0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 0 30px rgba(56,189,248,0.2)',
+                        fontSize: '28px',
+                      }}
+                    >
+                      ↗
+                    </motion.div>
+
+                    <p style={{
+                      fontSize: '16px', fontWeight: 700, color: '#f1f5f9',
+                      marginBottom: '8px', fontFamily: 'system-ui',
+                    }}>
+                      Installer Opened!
+                    </p>
+                    <p style={{
+                      fontSize: '12.5px', color: 'rgba(148,163,184,0.75)',
+                      marginBottom: '22px', fontFamily: 'system-ui', lineHeight: '1.6',
+                    }}>
+                      The setup file has opened in your browser/downloads.<br />
+                      <strong style={{ color: '#a5b4fc' }}>Close this app first</strong>, then run the installer.<br />
+                      Your license key and settings will be preserved.
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={handleDismiss}
+                        style={{
+                          flex: 1, padding: '11px',
+                          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px',
+                          background: 'rgba(255,255,255,0.05)',
+                          color: 'rgba(148,163,184,0.8)', cursor: 'pointer',
+                          fontSize: '12px', fontWeight: 600,
+                          fontFamily: 'system-ui',
+                        }}
+                      >
+                        Keep App Open
+                      </button>
+                      <button
+                        onClick={handleExitForInstaller}
+                        style={{
+                          flex: 1.5, padding: '11px',
+                          border: 'none', borderRadius: '10px',
+                          background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                          color: 'white', cursor: 'pointer',
+                          fontSize: '12px', fontWeight: 700,
+                          fontFamily: 'system-ui',
+                          boxShadow: '0 0 20px rgba(14,165,233,0.3)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        }}
+                      >
+                        🔒 Close App & Run Installer
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+
+                {/* ── DONE PHASE (native auto-update complete) ───────────── */}
                 {phase === 'done' && (
                   <div style={{ textAlign: 'center', padding: '8px 0' }}>
                     <motion.div
@@ -528,14 +768,14 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                       fontSize: '16px', fontWeight: 700, color: '#f1f5f9',
                       marginBottom: '8px', fontFamily: 'system-ui',
                     }}>
-                      Download Complete!
+                      Update Installed!
                     </p>
                     <p style={{
                       fontSize: '12.5px', color: 'rgba(148,163,184,0.75)',
                       marginBottom: '22px', fontFamily: 'system-ui', lineHeight: '1.6',
                     }}>
-                      <strong style={{ color: '#a5b4fc' }}>Update Installed Successfully!</strong><br />
-                      Please restart the application to apply the latest features and improvements.
+                      <strong style={{ color: '#4ade80' }}>TreadCode v{latestVersion} is ready.</strong><br />
+                      Restart the app to apply the latest features and improvements.
                     </p>
 
                     <motion.button
@@ -560,9 +800,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
               </div>
             </div>
           </motion.div>
-        </div>
-      </>
-    )}
-  </AnimatePresence>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
