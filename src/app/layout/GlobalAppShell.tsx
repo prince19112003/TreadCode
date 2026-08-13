@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X } from 'lucide-react';
 import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -387,9 +387,9 @@ export const GlobalAppShell: React.FC = () => {
     return () => clearInterval(interval);
   }, [licenseContext, location.pathname]);
 
-  // Ctrl+K / Cmd+K to open search & Ctrl+B for SmartBoard
+  // Global Shortcuts & Trackpad/Gesture Navigation (Alt+Left: Back, Alt+Right: Forward, Alt+Home: Home, Mouse Side Buttons)
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const keyHandler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setSearchOpen(prev => !prev);
@@ -398,10 +398,41 @@ export const GlobalAppShell: React.FC = () => {
         e.preventDefault();
         setSmartBoardOpen(prev => !prev);
       }
+      // Alt+Left or Cmd+Left -> Back
+      if ((e.altKey || e.metaKey) && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigate(-1);
+      }
+      // Alt+Right or Cmd+Right -> Forward
+      if ((e.altKey || e.metaKey) && e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigate(1);
+      }
+      // Alt+Home -> Home
+      if (e.altKey && e.key === 'Home') {
+        e.preventDefault();
+        navigate('/languages');
+      }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
+
+    // Trackpad / Gaming Mouse Back & Forward side buttons
+    const mouseHandler = (e: MouseEvent) => {
+      if (e.button === 3) {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.button === 4) {
+        e.preventDefault();
+        navigate(1);
+      }
+    };
+
+    window.addEventListener('keydown', keyHandler);
+    window.addEventListener('mouseup', mouseHandler);
+    return () => {
+      window.removeEventListener('keydown', keyHandler);
+      window.removeEventListener('mouseup', mouseHandler);
+    };
+  }, [navigate]);
 
   return (
     <div
@@ -423,8 +454,8 @@ export const GlobalAppShell: React.FC = () => {
       >
         {/* Subtle glowing cyan top border accent */}
         <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
-        {/* LEFT: Logo Icon + App Title Name + App Navigation Pill */}
-        <div className="flex items-center gap-2.5 shrink-0" data-tauri-drag-region>
+        {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
+        <div className="flex items-center gap-3 shrink-0" data-tauri-drag-region>
           <button
             onClick={() => navigate('/languages')}
             className="flex items-center gap-2 shrink-0 group py-1 px-1.5 rounded-lg hover:bg-white/5 transition-all"
@@ -438,32 +469,6 @@ export const GlobalAppShell: React.FC = () => {
               <span className="text-indigo-400">Code</span>
             </span>
           </button>
-
-          {/* Integrated Header Navigation Pill (Back ←, Forward →, Home 🏠) */}
-          <div className="flex items-center gap-0.5 bg-slate-950/70 border border-slate-800/80 rounded-xl p-0.5 shrink-0 shadow-inner">
-            <button
-              onClick={() => navigate(-1)}
-              title="Go Back (Alt + Left Arrow)"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => navigate(1)}
-              title="Go Forward (Alt + Right Arrow)"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px h-3.5 bg-slate-800 my-auto mx-0.5" />
-            <button
-              onClick={() => navigate('/languages')}
-              title="Go to Home (Languages)"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
-            >
-              <Home className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
           {/* Co-Branding Institution Badge if configured on License Key */}
           {licenseContext?.licenseDetails?.customBranding?.institutionName && (
