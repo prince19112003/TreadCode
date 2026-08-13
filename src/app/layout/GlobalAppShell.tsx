@@ -600,7 +600,7 @@ export const GlobalAppShell: React.FC = () => {
             animate={{ height: 'auto', opacity: 1, y: 0 }}
             exit={{ height: 0, opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="z-40 shrink-0 overflow-hidden relative border-b border-amber-500/30 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(245,158,11,0.15)]"
+            className="z-40 shrink-0 overflow-hidden relative border-b border-amber-500/30 bg-linear-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(245,158,11,0.15)]"
           >
             <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
