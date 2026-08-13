@@ -31,26 +31,27 @@ export const StageControls: React.FC = () => {
   };
 
   return (
-    <div className="flex md:flex-col flex-row items-center justify-between py-2 md:py-5 px-3 md:px-0 h-11 md:h-full w-full md:w-14 shrink-0 bg-[#0d1126]/80 backdrop-blur-xl border-y md:border-y-0 md:border-x border-indigo-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-20">
-      {/* Top: Progress text / DSA indicator */}
-      <div className="flex flex-col items-center gap-4 mt-2">
+  return (
+    <div className="flex md:flex-col flex-row items-center justify-between py-1.5 md:py-5 px-3 md:px-0 h-12 md:h-full w-full md:w-14 shrink-0 bg-[#0d1126]/90 backdrop-blur-xl border-y md:border-y-0 md:border-x border-indigo-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-20 overflow-x-auto md:overflow-visible">
+      {/* Step counter / DSA badge */}
+      <div className="flex md:flex-col flex-row items-center gap-2 md:gap-4 shrink-0">
         <div className="flex flex-col items-center select-none text-center">
           {isDsa ? (
-            <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest px-1 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+            <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
               DSA
             </span>
           ) : (
-            <span className="text-[11px] font-black text-indigo-300 drop-shadow-md tracking-wider">
+            <span className="text-[10px] md:text-[11px] font-black text-indigo-300 drop-shadow-md tracking-wider">
               {currentStepIndex}/{totalSteps - 1}
             </span>
           )}
         </div>
       </div>
 
-      {/* Center: Vertical Progress Bar (Hidden in DSA mode) */}
+      {/* Progress Bar (Desktop: Vertical fill, Mobile: Horizontal fill) */}
       {!isDsa ? (
         <div
-          className="flex-1 flex flex-col items-center py-4 w-full relative group cursor-pointer"
+          className="hidden md:flex flex-1 flex-col items-center py-4 w-full relative group cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const y = e.clientY - rect.top;
@@ -59,9 +60,7 @@ export const StageControls: React.FC = () => {
             goToStep(targetStep);
           }}
         >
-          {/* Track background */}
           <div className="w-1.5 h-full bg-indigo-950 rounded-full overflow-hidden relative shadow-inner">
-            {/* Fill indicator */}
             <motion.div 
               className="absolute top-0 left-0 right-0 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,1)] rounded-full"
               initial={false}
@@ -69,26 +68,39 @@ export const StageControls: React.FC = () => {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           </div>
-          
-          {/* Hover hint thumb */}
-          <div className="absolute inset-y-4 left-1/2 -translate-x-1/2 w-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <motion.div 
-              className="w-4 h-4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)] absolute left-0 -ml-0.5 -mt-2 pointer-events-none"
-              initial={false}
-              animate={{ top: `${progressPercent}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            />
-          </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="hidden md:flex flex-1 items-center justify-center">
           <div className="w-px h-full bg-linear-to-b from-transparent via-purple-500/20 to-transparent" />
         </div>
       )}
 
-      {/* Bottom Area: Retry, Zoom, Playback */}
-      <div className="flex flex-col items-center gap-3 w-full">
-        {/* Retry */}
+      {/* Mobile Horizontal Progress Track */}
+      {!isDsa && (
+        <div
+          className="flex md:hidden flex-1 items-center px-2 cursor-pointer h-full"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(1, x / rect.width));
+            const targetStep = Math.round(percentage * (totalSteps - 1));
+            goToStep(targetStep);
+          }}
+        >
+          <div className="h-1.5 w-full bg-indigo-950 rounded-full overflow-hidden relative shadow-inner">
+            <motion.div
+              className="absolute top-0 bottom-0 left-0 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,1)] rounded-full"
+              initial={false}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Bottom/Right Area: Retry, Zoom, Playback */}
+      <div className="flex md:flex-col flex-row items-center gap-1.5 md:gap-3 shrink-0">
+        {/* Reset button */}
         <motion.button
           onClick={reset}
           animate={hasEdited ? {
@@ -101,52 +113,50 @@ export const StageControls: React.FC = () => {
             backgroundColor: "rgba(0, 0, 0, 0)"
           }}
           transition={{ duration: 0.3 }}
-          className={`flex flex-col items-center gap-0.5 p-2 rounded-xl text-slate-400 hover:text-white transition-all group mb-1 border`}
+          className="p-1.5 md:p-2 rounded-xl text-slate-400 hover:text-white transition-all border shrink-0"
           title="Reset Stage"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
         </motion.button>
 
-        {/* Zoom Controls for Visual Panel */}
-        <div className="flex flex-col items-center gap-2 mb-2 bg-black/20 p-1.5 rounded-full border border-indigo-500/10">
+        {/* Zoom Controls */}
+        <div className="flex md:flex-col flex-row items-center gap-1 md:gap-2 bg-black/20 p-1 rounded-full border border-indigo-500/10 shrink-0">
           <button 
             onClick={() => setZoom(z => Math.min(z + 0.15, 2.5))} 
-            className="p-1.5 hover:bg-indigo-500/30 rounded-full text-indigo-300 transition-colors"
+            className="p-1 hover:bg-indigo-500/30 rounded-full text-indigo-300 transition-colors"
             title="Zoom In"
           >
-             <ZoomIn size={14} />
+             <ZoomIn size={13} />
           </button>
           <button 
             onClick={handleResetZoom} 
-            className="p-1.5 hover:bg-indigo-500/30 rounded-full text-indigo-400/70 transition-colors"
+            className="p-1 hover:bg-indigo-500/30 rounded-full text-indigo-400/70 transition-colors"
             title="Fit to Screen / Reset Zoom"
           >
-             <Maximize size={12} />
+             <Maximize size={11} />
           </button>
           <button 
             onClick={() => setZoom(z => Math.max(z - 0.15, 0.3))} 
-            className="p-1.5 hover:bg-indigo-500/30 rounded-full text-indigo-300 transition-colors"
+            className="p-1 hover:bg-indigo-500/30 rounded-full text-indigo-300 transition-colors"
             title="Zoom Out"
           >
-             <ZoomOut size={14} />
+             <ZoomOut size={13} />
           </button>
         </div>
 
-        {/* Playback step buttons (Only shown for standard code lessons, hidden in DSA mode) */}
+        {/* Playback controls */}
         {!isDsa && (
-          <div className="flex flex-col items-center gap-3 mb-2">
-            {/* Prev */}
+          <div className="flex md:flex-col flex-row items-center gap-1.5 md:gap-3 shrink-0">
             <motion.button
               onClick={goPrev}
               disabled={!canPrev}
               whileTap={canPrev ? { scale: 0.85 } : {}}
-              className="p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
+              className="p-1 md:p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
               title="Previous Step"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
             </motion.button>
 
-            {/* Play/Pause */}
             <div className="relative">
               {isPlaying && (
                 <motion.div 
@@ -159,7 +169,7 @@ export const StageControls: React.FC = () => {
                 onClick={togglePlay}
                 whileTap={{ scale: 0.85 }}
                 disabled={isComplete}
-                className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                className={`relative w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${
                   isComplete
                     ? 'bg-green-500/20 text-green-300 cursor-not-allowed border border-green-500/30'
                     : isPlaying
@@ -168,45 +178,44 @@ export const StageControls: React.FC = () => {
                 }`}
                 title={isPlaying ? "Pause" : "Auto Play"}
               >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
+                {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 ml-0.5 md:ml-1" />}
               </motion.button>
             </div>
 
-            {/* Next */}
             <motion.button
               onClick={goNext}
               disabled={!canNext}
               whileTap={canNext ? { scale: 0.85 } : {}}
-              className="p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
+              className="p-1 md:p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
               title="Next Step"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
             </motion.button>
 
-            {/* Playback speed toggle */}
             <button
               onClick={() => {
                 const speeds = [1.0, 2.0, 3.0, 4.0];
                 const nextIdx = (speeds.indexOf(playSpeed) + 1) % speeds.length;
                 setPlaySpeed(speeds[nextIdx]);
               }}
-              className={`px-1.5 py-1 text-[10px] font-black font-mono tracking-wider border rounded transition-all duration-300 shrink-0 select-none shadow-sm flex flex-col items-center gap-0.5 min-w-10 ${
+              className={`px-1 py-0.5 text-[9px] md:text-[10px] font-black font-mono tracking-wider border rounded transition-all duration-300 shrink-0 select-none shadow-sm flex items-center justify-center gap-0.5 ${
                 playSpeed === 1.0
-                  ? 'border-indigo-500/20 text-indigo-300 bg-[#0b0c16] hover:bg-indigo-500/10'
+                  ? 'border-indigo-500/20 text-indigo-300 bg-[#0b0c16]'
                   : playSpeed === 2.0
-                  ? 'border-indigo-400 text-indigo-200 bg-indigo-500/10 shadow-[0_0_8px_rgba(99,102,241,0.25)] hover:bg-indigo-500/20'
+                  ? 'border-indigo-400 text-indigo-200 bg-indigo-500/10'
                   : playSpeed === 3.0
-                  ? 'border-orange-500 text-orange-300 bg-orange-500/10 shadow-[0_0_8px_rgba(249,115,22,0.25)] hover:bg-orange-500/20'
-                  : 'border-red-500 text-red-400 bg-red-500/15 shadow-[0_0_12px_rgba(239,68,68,0.4)] animate-pulse hover:bg-red-500/20'
+                  ? 'border-orange-500 text-orange-300 bg-orange-500/10'
+                  : 'border-red-500 text-red-400 bg-red-500/15 animate-pulse'
               }`}
               title="Cycling playback speed (1x, 2x, 3x, 4x)"
             >
-              <Gauge className="w-3.5 h-3.5" />
+              <Gauge className="w-3 h-3" />
               <span>{Math.round(playSpeed)}x</span>
             </button>
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
