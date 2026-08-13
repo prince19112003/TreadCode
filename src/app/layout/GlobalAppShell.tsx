@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X } from 'lucide-react';
 import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -331,6 +331,27 @@ export const GlobalAppShell: React.FC = () => {
   const licenseContext = React.useContext(LicenseContext);
   const { hasUpdate } = useUpdateChecker();
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
+  const [dismissedAnnouncement, setDismissedAnnouncement] = useState<string | null>(() => {
+    return localStorage.getItem('flowtrace_dismissed_announcement');
+  });
+
+  const rawAnnouncement = licenseContext?.settings?.announcementText?.trim() || '';
+  const isAnnouncementVisible = Boolean(rawAnnouncement && rawAnnouncement !== dismissedAnnouncement);
+
+  const handleDismissAnnouncement = () => {
+    if (rawAnnouncement) {
+      localStorage.setItem('flowtrace_dismissed_announcement', rawAnnouncement);
+      setDismissedAnnouncement(rawAnnouncement);
+    }
+  };
+
+  // If new announcement text arrives from Admin Panel, reset dismissal so user sees it
+  useEffect(() => {
+    if (rawAnnouncement && dismissedAnnouncement && rawAnnouncement !== dismissedAnnouncement) {
+      // Admin changed the message to something new
+      setDismissedAnnouncement(null);
+    }
+  }, [rawAnnouncement, dismissedAnnouncement]);
 
   // When Firebase signals an update, auto-show the modal (ONLY in native app)
   React.useEffect(() => {
@@ -348,7 +369,7 @@ export const GlobalAppShell: React.FC = () => {
         const { db } = await import('@shared/config/firebase');
         const { ref, set } = await import('firebase/database');
         
-        let versionStr = '1.0.7';
+        let versionStr = '1.0.8';
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
           try {
             const { getVersion } = await import('@tauri-apps/api/app');
@@ -570,6 +591,43 @@ export const GlobalAppShell: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* === REAL-TIME BROADCAST MESSAGE BANNER (Controlled Live via Admin Panel) === */}
+      <AnimatePresence>
+        {isAnnouncementVisible && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, y: -10 }}
+            animate={{ height: 'auto', opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="z-40 shrink-0 overflow-hidden relative border-b border-amber-500/30 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(245,158,11,0.15)]"
+          >
+            <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-5 h-5 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-300">
+                  <Megaphone size={12} className="animate-pulse" />
+                </div>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="font-extrabold text-[10px] uppercase tracking-wider text-amber-400 font-mono bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 shrink-0">
+                    Announcement
+                  </span>
+                  <p className="text-amber-100 font-medium truncate tracking-wide text-xs">
+                    {rawAnnouncement}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleDismissAnnouncement}
+                title="Dismiss message"
+                className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 text-amber-300/70 hover:text-white hover:bg-amber-500/20 transition-all cursor-pointer"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Update Modal — opened by header button or auto when hasUpdate fires */}
       {showUpdateModal && (

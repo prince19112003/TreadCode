@@ -15,11 +15,10 @@ const VisualizerPage = lazy(() => import('@pages/VisualizerPage').then(m => ({ d
 const SettingsPage = lazy(() => import('@pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const NotFoundPage = lazy(() => import('@pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
-// Context hook values to expose activation states globally
 export const LicenseContext = React.createContext<{
   activated: boolean;
   hwid: string;
-  settings: Record<string, boolean>;
+  settings: Record<string, any>;
   licenseDetails: LicenseValidationResult;
   handleActivate: (key: string) => Promise<boolean>;
   deactivateLicense: () => void;
@@ -134,7 +133,7 @@ export const App: React.FC = () => {
   const [showSplash, setShowSplash] = React.useState(true);
   const [activated, setActivated] = React.useState<boolean | null>(null);
   const [hwid, setHwid] = React.useState('fallback-device-id-xxxx');
-  const [settings, setSettings] = React.useState<Record<string, boolean>>({});
+  const [settings, setSettings] = React.useState<Record<string, any>>({});
   const [licenseDetails, setLicenseDetails] = React.useState<LicenseValidationResult>({ isValid: false });
 
   // Sync global settings from firebase database
