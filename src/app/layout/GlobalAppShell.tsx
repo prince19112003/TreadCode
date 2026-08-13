@@ -423,7 +423,7 @@ export const GlobalAppShell: React.FC = () => {
       >
         {/* Subtle glowing cyan top border accent */}
         <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
-        {/* LEFT: Logo Icon + App Title Name + Navigation Control Group */}
+        {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
         <div className="flex items-center gap-3" data-tauri-drag-region>
           <button
             onClick={() => navigate('/languages')}
@@ -438,32 +438,6 @@ export const GlobalAppShell: React.FC = () => {
               <span className="text-indigo-400">Code</span>
             </span>
           </button>
-
-          {/* App Navigation Controls: Back (←), Forward (→), Home (🏠) */}
-          <div className="flex items-center gap-0.5 bg-slate-950/70 border border-slate-800/80 rounded-xl p-0.5 shrink-0 shadow-inner">
-            <button
-              onClick={() => navigate(-1)}
-              title="Go Back (Alt + Left Arrow)"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => navigate(1)}
-              title="Go Forward (Alt + Right Arrow)"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px h-3.5 bg-slate-800 my-auto mx-0.5" />
-            <button
-              onClick={() => navigate('/languages')}
-              title="Go to Home (Languages)"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 transition-all active:scale-95 flex items-center justify-center"
-            >
-              <Home className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
           {/* Co-Branding Institution Badge if configured on License Key */}
           {licenseContext?.licenseDetails?.customBranding?.institutionName && (
@@ -674,6 +648,32 @@ export const GlobalAppShell: React.FC = () => {
       <main className="relative z-0 flex-1 overflow-hidden flex flex-col">
         <Outlet />
       </main>
+
+      {/* Floating Vertical Navigation Dock (Bottom-Left: Back ←, Forward →, Home 🏠) */}
+      <div className="fixed bottom-5 left-5 z-50 flex flex-col items-center gap-1 bg-[#090d20]/90 backdrop-blur-xl border border-indigo-500/30 p-1.5 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.7)] group">
+        <button
+          onClick={() => navigate(-1)}
+          title="Go Back (Alt + Left)"
+          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-indigo-600/30 hover:border hover:border-indigo-500/40 transition-all active:scale-95 flex items-center justify-center"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => navigate(1)}
+          title="Go Forward (Alt + Right)"
+          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-indigo-600/30 hover:border hover:border-indigo-500/40 transition-all active:scale-95 flex items-center justify-center"
+        >
+          <ArrowRight className="w-4 h-4" />
+        </button>
+        <div className="w-4 h-px bg-slate-800/80 my-0.5" />
+        <button
+          onClick={() => navigate('/languages')}
+          title="Go to Home (Languages)"
+          className="p-2 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-indigo-600/30 hover:border hover:border-indigo-500/40 transition-all active:scale-95 flex items-center justify-center"
+        >
+          <Home className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* Portal roots */}
       <div id="notification-root" className="fixed top-20 right-4 z-1060 flex flex-col gap-2 pointer-events-none" />
