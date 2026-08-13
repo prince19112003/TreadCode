@@ -458,7 +458,7 @@ export const GlobalAppShell: React.FC = () => {
                 )}
                 <button
                   onClick={() => i < breadcrumbs.length - 1 ? navigate(crumb.path) : undefined}
-                  className={`text-xs font-medium transition-all px-1.5 py-0.5 rounded-md truncate max-w-[130px] ${
+                  className={`text-xs font-medium transition-all px-1.5 py-0.5 rounded-md truncate max-w-32 ${
                     i === breadcrumbs.length - 1
                       ? 'text-white font-semibold'
                       : 'text-slate-400 hover:text-white'
