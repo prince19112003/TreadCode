@@ -5,7 +5,7 @@ import { GlobalAppShell } from './layout/GlobalAppShell';
 import { LoadingSpinner } from '@shared/components/ui/LoadingSpinner';
 import { EulaModal } from '@shared/components/ui/EulaModal';
 import { SplashPage } from '../pages/SplashPage';
-import { fetchLicenseDetails, type LicenseValidationResult } from '../shared/config/firebase';
+import { fetchLicenseDetails, clearLicenseCache, type LicenseValidationResult } from '../shared/config/firebase';
 
 // Lazy loaded routes for scalability
 const LanguageSelectionPage = lazy(() => import('@pages/LanguageSelectionPage').then(m => ({ default: m.LanguageSelectionPage })));
@@ -198,12 +198,13 @@ export const App: React.FC = () => {
         setLicenseDetails(details);
         setActivated(details.isValid);
 
-        // Real-time listener: Auto-logout immediately if Admin cancels license or removes device
+        // Real-time listener: Auto-logout immediately if Admin cancels license, removes device, blocks, or license expires
         const licenseRef = ref(db, `licenses/${cachedKey}`);
         unsubscribeLicense = onValue(licenseRef, (snapshot) => {
           if (!snapshot.exists()) {
             // License key was deleted by admin
             localStorage.removeItem('flowtrace_license_key');
+            clearLicenseCache();
             setActivated(false);
             setLicenseDetails({ isValid: false });
             return;
@@ -213,11 +214,24 @@ export const App: React.FC = () => {
           const isBlocked = !!val.blocked;
           const isDeviceRegistered = val.devices && val.devices[currentHwid];
 
-          if (isBlocked || !isDeviceRegistered) {
-            // License blocked or device HWID removed from Admin panel
+          // Expiry date check — admin can extend this anytime to re-activate
+          let isExpired = false;
+          if (val.expiresAt) {
+            const expiry = new Date(val.expiresAt);
+            if (!isNaN(expiry.getTime()) && new Date() > expiry) {
+              isExpired = true;
+            }
+          }
+
+          if (isBlocked || !isDeviceRegistered || isExpired) {
+            // License blocked, device removed, or expired — clear offline cache immediately
             localStorage.removeItem('flowtrace_license_key');
+            clearLicenseCache();
             setActivated(false);
-            setLicenseDetails({ isValid: false, blocked: isBlocked });
+            setLicenseDetails({ isValid: false, blocked: isBlocked, expired: isExpired, expiresAt: val.expiresAt });
+          } else if (val.expiresAt) {
+            // License is valid and has expiry — update local state with latest expiry info
+            setLicenseDetails(prev => ({ ...prev, expiresAt: val.expiresAt }));
           }
         });
       } else {
@@ -247,6 +261,7 @@ export const App: React.FC = () => {
 
   const deactivateLicense = () => {
     localStorage.removeItem('flowtrace_license_key');
+    clearLicenseCache();
     setActivated(false);
     setLicenseDetails({ isValid: false });
   };

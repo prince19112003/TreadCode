@@ -39,7 +39,9 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const isDrawing = useRef(false);
   const currentStroke = useRef<Point[]>([]);
 
-  const getCtx = () => canvasRef.current?.getContext('2d') ?? null;
+  // desynchronized: true — OS writes directly to screen buffer, bypassing V-Sync compositor delay
+  const getCtx = () => canvasRef.current?.getContext('2d', { desynchronized: true }) ?? null;
+
 
   const drawStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: { points: Point[]; color: string; strokeWidth: number; dashStyle?: string; isDashed?: boolean }) => {
     if (stroke.points.length === 0) return;

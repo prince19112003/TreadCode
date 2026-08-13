@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { CodeLine } from '../../../lessons/types';
 import { usePinchZoom } from '../../../shared/hooks/usePinchZoom';
 
@@ -32,7 +32,8 @@ const EditableVariableToken: React.FC<{
 }> = ({ value, defaultValue, min, max, type = 'number', noQuotes = false, onCommit }) => {
   const [draft, setDraft] = useState(String(value).replace(/['"]/g, '')); // Strip quotes for editing
   const inputRef = useRef<HTMLInputElement>(null);
-  const { reset, hasEdited } = useLesson();
+  const reset = useLessonStore(s => s.reset);
+  const hasEdited = useLessonStore(s => s.hasEdited);
 
   // Sync draft if external value changes
   React.useEffect(() => {
@@ -206,7 +207,10 @@ const CodeLineRow: React.FC<{
 };
 
 export const CodeStepPanel: React.FC = () => {
-  const { lesson, currentStep, editableValues, setEditableValue } = useLesson();
+  const lesson = useLessonStore(s => s.lesson);
+  const currentStep = useLessonStore(s => s.currentStep);
+  const editableValues = useLessonStore(s => s.editableValues);
+  const setEditableValue = useLessonStore(s => s.setEditableValue);
   const [zoomLevel, setZoomLevel] = useState(0.8);
   const containerRef = usePinchZoom(setZoomLevel, 0.4, 2.5);
 

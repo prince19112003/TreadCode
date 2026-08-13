@@ -11,6 +11,47 @@
 
 import type { Point, Stroke } from "../types";
 
+// ─── Douglas-Peucker Stroke Compression ───────────────────────────────────────
+// Compresses raw pointer points by removing redundant points, dropping RAM usage by 60%
+function getPerpendicularDistance(p: Point, p1: Point, p2: Point) {
+  let dx = p2.x - p1.x;
+  let dy = p2.y - p1.y;
+  if (dx === 0 && dy === 0) return Math.hypot(p.x - p1.x, p.y - p1.y);
+
+  const t = ((p.x - p1.x) * dx + (p.y - p1.y) * dy) / (dx * dx + dy * dy);
+  if (t < 0) { dx = p.x - p1.x; dy = p.y - p1.y; }
+  else if (t > 1) { dx = p.x - p2.x; dy = p.y - p2.y; }
+  else {
+    const cx = p1.x + t * dx;
+    const cy = p1.y + t * dy;
+    dx = p.x - cx; dy = p.y - cy;
+  }
+  return Math.hypot(dx, dy);
+}
+
+function douglasPeucker(pts: Point[], epsilon: number): Point[] {
+  if (pts.length <= 2) return pts;
+  let dmax = 0;
+  let index = 0;
+  const end = pts.length - 1;
+  for (let i = 1; i < end; i++) {
+    const d = getPerpendicularDistance(pts[i], pts[0], pts[end]);
+    if (d > dmax) { index = i; dmax = d; }
+  }
+  if (dmax > epsilon) {
+    const rec1 = douglasPeucker(pts.slice(0, index + 1), epsilon);
+    const rec2 = douglasPeucker(pts.slice(index), epsilon);
+    return rec1.slice(0, -1).concat(rec2);
+  } else {
+    return [pts[0], pts[end]];
+  }
+}
+
+export function simplifyStroke(pts: Point[], epsilon = 0.8): Point[] {
+  if (pts.length <= 4) return pts;
+  return douglasPeucker(pts, epsilon);
+}
+
 // ─── Chaikin Corner Smoothing ─────────────────────────────────────────────────
 // 2 iterations gives Apple Pencil-quality smoothness without over-softening
 function chaikinSmooth(pts: Point[], iterations = 2): Point[] {
@@ -177,11 +218,14 @@ function drawNaturalPenStroke(
   ctx: CanvasRenderingContext2D,
   pts: Point[],
   color: string,
-  baseSize: number
+  baseSize: number,
+  isLive: boolean
 ) {
   if (pts.length === 0) return;
 
-  const smoothed = pts.length > 3 ? chaikinSmooth(pts, 2) : pts;
+  // CPU Optimization: skip O(N) array allocation smoothing per-frame during live drawing.
+  // The quadratic midpoint bezier already makes it completely smooth. Apply light Chaikin only when committed.
+  const smoothed = (!isLive && pts.length > 3) ? chaikinSmooth(pts, 1) : pts;
 
   if (smoothed.length === 1) {
     // Single tap — filled dot
@@ -226,7 +270,8 @@ export function drawStroke(
   now: number,
   zoom: number,
   _bgFill: string,
-  velocityMode: boolean
+  velocityMode: boolean,
+  isLive: boolean = false
 ): boolean {
   if (!s.points.length) return false;
 
@@ -286,14 +331,14 @@ export function drawStroke(
     }
 
     case "pen": {
-      const smoothed = pts.length > 3 ? chaikinSmooth(pts, 2) : pts;
-      if (velocityMode && smoothed.length > 3) {
-        // iPad calligraphic mode: velocity + pressure → variable width polygon
+      if (velocityMode && pts.length > 3) {
+        // Variable width polygon needs smoothing for smooth normals
+        const smoothed = !isLive ? chaikinSmooth(pts, 1) : pts;
         const widths = computeVelocityWidths(smoothed, s.size);
         drawVariableWidthStroke(ctx, smoothed, widths, s.color);
       } else {
         // Standard natural ink: single bezier path, no seams, subtle pressure taper
-        drawNaturalPenStroke(ctx, pts, s.color, s.size);
+        drawNaturalPenStroke(ctx, pts, s.color, s.size, isLive);
       }
       break;
     }

@@ -19,10 +19,11 @@ import { SllOperationalPanel } from './components/SllOperationalPanel';
 import { DllOperationalPanel } from './components/DllOperationalPanel';
 import { TreeOperationalPanel } from './components/TreeOperationalPanel';
 import { GraphOperationalPanel } from './components/GraphOperationalPanel';
-import { useLesson } from '../../lessons/LessonContext';
+import { useLessonStore } from '../../lessons/useLessonStore';
 
 export const VisualizerWorkspace: React.FC = () => {
-  const { lesson, isFullScreen } = useLesson();
+  const lesson = useLessonStore(s => s.lesson);
+  const isFullScreen = useLessonStore(s => s.isFullScreen);
   const isDsa = lesson?.language === 'dsa';
   const [isConsoleFullScreen, setIsConsoleFullScreen] = useState(false);
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(() => lesson?.language === 'dsa');

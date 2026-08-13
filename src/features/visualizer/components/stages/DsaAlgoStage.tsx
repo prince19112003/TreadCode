@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useLesson } from '../../../../lessons/LessonContext';
+import { useLessonStore } from '../../../../lessons/useLessonStore';
 import type { AnimationEvent } from '../../../../lessons/types';
 
 /* ─── Color Palette ──────────────────────────────────────────────────────── */
@@ -310,7 +310,9 @@ const LinkedListViz: React.FC<{ nodes: LLNode[]; activeNodeId?: string | number 
 
 /* ─── Main DSA Stage ─────────────────────────────────────────────────────── */
 export const DsaAlgoStage: React.FC = () => {
-  const { lesson, currentStep, currentStepIndex } = useLesson();
+  const lesson = useLessonStore(s => s.lesson);
+  const currentStep = useLessonStore(s => s.currentStep);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
 
   const step = currentStep;
   const event: AnimationEvent | undefined = step?.animationEvent as AnimationEvent | undefined;

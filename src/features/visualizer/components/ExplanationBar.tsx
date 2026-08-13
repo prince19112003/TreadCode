@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
-import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 
 // Map event type to a short human label + color
 const EVENT_LABEL: Record<string, { label: string; color: string }> = {
@@ -26,7 +26,10 @@ const EVENT_LABEL: Record<string, { label: string; color: string }> = {
 };
 
 export const ExplanationBar: React.FC = () => {
-  const { currentStep, lesson, language, toggleLanguage } = useLesson();
+  const currentStep = useLessonStore(s => s.currentStep);
+  const lesson = useLessonStore(s => s.lesson);
+  const language = useLessonStore(s => s.language);
+  const toggleLanguage = useLessonStore(s => s.toggleLanguage);
   const isDsa = lesson?.language === 'dsa';
   const [zoomLevel, setZoomLevel] = useState(isDsa ? 0.95 : 0.85);
 

@@ -1,140 +1,368 @@
-# TreadCode Visualizer 💻
+# TreadCode (Code Visualizer & SmartBoard) — Developer Manual & Architecture Guide
 
-> **Classroom Animation & Code Visualization Platform for Colleges & Universities**
-
-TreadCode is an animation-first, interactive code visualizer built for computer science faculty, classroom projectors, and beginner students. It converts abstract programming code (Python, C/C++, Java, DSA) into step-by-step visual execution flows—showing variable allocations, loop iterations, memory arrays, function call stacks, and flowchart logic in real time.
+> **Internal Developer Manual**: This document is a complete technical guide for software engineers, maintainers, and contributors working on the **TreadCode** codebase. It covers architecture, state management, adding new programs/languages, building and testing, licensing, and the update pipeline.
 
 ---
 
-## 🏗️ System Architecture
+## Table of Contents
 
-The platform consists of two integrated components:
-
-1. **TreadCode Desktop Application** (`Code Visualizer`):
-   - **Stack**: React 19, TypeScript, Vite, Tailwind CSS, Tauri v2 (Native Windows Desktop `.exe`).
-   - **Features**: Step-by-step visualizer, inline code parameter editor, classroom projector display presets, AI voice narration, and 6-digit license verification.
-2. **Standalone Admin Control Panel** (`admin panel`):
-   - **Stack**: React, TypeScript, Tailwind CSS, Firebase Realtime Database.
-   - **Features**: Issue 6-digit serial keys, track installed desktop computers, 1-click computer access revocation (`HWID` blacklisting), broadcast live announcements, and remote course feature locks.
+1. [Project Overview & Architecture](#1-project-overview--architecture)
+2. [Technology Stack](#2-technology-stack)
+3. [Directory & Module Structure](#3-directory--module-structure)
+4. [State Management (Zustand Architecture)](#4-state-management-zustand-architecture)
+5. [Lesson Program System (How to Add/Edit Lessons)](#5-lesson-program-system-how-to-addedit-lessons)
+6. [SmartBoard & Ink Engine Architecture](#6-smartboard--ink-engine-architecture)
+7. [Licensing, Telemetry & Security Engine](#7-licensing-telemetry--security-engine)
+8. [Multi-Channel Update & Release Pipeline](#8-multi-channel-update--release-pipeline)
+9. [Development, Build & Verification Commands](#9-development-build--verification-commands)
+10. [Troubleshooting & Gotchas](#10-troubleshooting--gotchas)
 
 ---
 
-## ⚡ Essential Development Commands
+## 1. Project Overview & Architecture
 
-```bash
-git add .
-git commit -m "fix: your commit message here" --no-verify
-git push origin main
+TreadCode is a dual-target application:
+- **Desktop Application**: Built with **Tauri v2 + Rust** (Windows `.exe`, Android APK, macOS `.dmg`).
+- **Web Application**: Static Single-Page App (SPA) deployable on **Vercel** / CDN.
+
+It combines an **animation-first code execution visualizer** for polyglot programming (Python, C, C++, Java, DSA) with a **low-latency interactive teaching whiteboard (SmartBoard)** and an integrated **remote licensing / telemetry system**.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        TreadCode Client Layer                          │
+│                                                                        │
+│   ┌──────────────────────┐  ┌──────────────────┐  ┌────────────────┐  │
+│   │ Visualizer Workspace │  │ SmartBoard (Ink) │  │ Licensing/EULA │  │
+│   │ (Zustand Store)      │  │ (Dual-Layer RAF) │  │ (Firebase RTDB)│  │
+│   └──────────┬───────────┘  └────────┬─────────┘  └───────┬────────┘  │
+└──────────────┼───────────────────────┼────────────────────┼───────────┘
+               │                       │                    │
+┌──────────────▼───────────────────────▼────────────────────▼───────────┐
+│                      Tauri v2 Native Rust Backend                     │
+│  - HWID Generation (Machine GUID / CPU Hash)                          │
+│  - Native Auto-Updater & Shell Invocation                             │
+│  - Window Management & Native Process Exit/Relaunch                   │
+└──────────────────────────────────────┬────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼────────────────────────────────┐
+│                         Cloud Infrastructure                           │
+│  - Firebase Realtime Database: Licensing, Telemetry, OTA Config       │
+│  - Vercel CDN: Web Deployment & Binaries Hosting                      │
+│  - GitHub Releases: Installer Binaries & Source Tracking              │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1. TreadCode Desktop Application (`Code Visualizer`)
+---
 
-Run all commands inside the main project directory:
+## 2. Technology Stack
+
+- **Frontend**: React 19, TypeScript, Vite 8, Tailwind CSS v4, Motion (Framer Motion v12)
+- **State Management**: Zustand v5 (with isolated component selectors)
+- **Native Wrapper**: Tauri v2, Rust 1.77+, `@tauri-apps/api`, `@tauri-apps/plugin-updater`, `@tauri-apps/plugin-shell`, `@tauri-apps/plugin-process`
+- **Database & Sync**: Firebase Realtime Database (RTDB v12)
+- **Audio / Canvas**: HTML5 2D Context (`desynchronized: true`, Chaikin smoothing, Douglas-Peucker point decimation), Howler.js
+
+---
+
+## 3. Directory & Module Structure
+
+```
+Code Visualizer/
+├── public/                       # Static public assets, favicon, version.json
+│   ├── releases/                 # Local staging directory for built setup binaries
+│   └── version.json              # Public version metadata
+├── src/
+│   ├── app/                      # Main application entry, routes, GlobalAppShell
+│   │   ├── App.tsx               # Root component with routing and license gatekeeper
+│   │   └── layout/
+│   │       └── GlobalAppShell.tsx # Top navigation bar, search modal, update trigger
+│   ├── features/
+│   │   ├── smartboard/           # SmartBoard modal and rendering engine
+│   │   │   ├── components/       # Toolbars, PageDrawer, RadialMenu, InspectorPanel
+│   │   │   ├── engine/           # inkEngine.ts, eraserEngine.ts, shapeSnap.ts
+│   │   │   └── SmartBoardModal.tsx # Dual-layer canvas coordinator
+│   │   └── visualizer/           # Visualizer Workspace & Animation Stages
+│   │       ├── components/       # CodeStepPanel, StageControls, ExplanationBar, OutputConsole
+│   │       │   └── stages/       # CustomFlowchartStage, DsaAlgoStage, StackVisualStage, etc.
+│   │       └── VisualizerWorkspace.tsx # Visualizer layout container
+│   ├── lessons/                  # Lesson Registry and language data
+│   │   ├── types.ts              # CodeLine, ExecutionStep, AnimationEvent definitions
+│   │   ├── registry.ts           # Dynamic import chunk loader & statistics
+│   │   ├── useLessonStore.ts     # Global Zustand store for playback & execution
+│   │   ├── LessonContext.tsx     # Backward-compatible initialization wrapper
+│   │   ├── python/               # Python topics & registry chunk
+│   │   ├── c/                    # C topics & registry chunk
+│   │   ├── cpp/                  # C++ topics & registry chunk
+│   │   ├── java/                 # Java topics & registry chunk
+│   │   └── dsa/                  # DSA structures & registry chunk
+│   └── shared/                   # Shared UI, hooks, and Firebase client
+│       ├── config/firebase.ts    # Firebase client instance, license validation, offline cache
+│       ├── hooks/
+│       │   ├── useUpdateChecker.ts # Multi-channel update polling & detection
+│       │   └── usePinchZoom.ts   # Gesture zooming hook
+│       └── components/ui/        # LicenseModal, EulaModal, UpdateBanner
+├── src-tauri/                    # Tauri v2 native desktop source
+│   ├── src/main.rs               # Rust entry point (HWID, commands)
+│   ├── tauri.conf.json           # Window setup, bundle identifiers, updater endpoints
+│   └── Cargo.toml                # Rust dependencies
+├── scripts/
+│   └── release.js                # One-command release and deployment broadcaster
+├── updater.json                  # Native Tauri updater manifest endpoint
+└── package.json
+```
+
+---
+
+## 4. State Management (Zustand Architecture)
+
+To ensure smooth 60 FPS playback on low-end devices, the visualizer uses **Zustand** (`src/lessons/useLessonStore.ts`).
+
+### Key Store State & Actions
+
+```typescript
+// Accessing store in components: ALWAYS use selectors for render isolation!
+import { useLessonStore } from '../../lessons/useLessonStore';
+
+// GOOD: Only re-renders when currentStep changes
+const currentStep = useLessonStore((s) => s.currentStep);
+
+// AVOID in heavy visual components: Subscribes to full store
+const { currentStep, isPlaying, zoom } = useLessonStore();
+```
+
+### Store Capabilities:
+- `currentStepIndex`: 0-indexed step counter (`0` is initial setup before line 1).
+- `activeSteps`: Array of `ExecutionStep` objects (either pre-calculated or dynamically generated via `generateSteps`).
+- `editableValues`: Key-value pairs for user-customizable input variables.
+- `goNext()`, `goPrev()`, `goToStep(n)`, `togglePlay()`, `reset()`.
+- `initLesson(lesson)`: Resets step pointer and generates active steps.
+
+---
+
+## 5. Lesson Program System (How to Add/Edit Lessons)
+
+All lesson content is statically defined with structured tokens and deterministic animation events.
+
+### Step 1: Define the Program Data Structure
+
+Every program must implement `LessonProgram` (`src/lessons/types.ts`):
+
+```typescript
+import type { LessonProgram } from '../../types';
+
+export const myNewProgram: LessonProgram = {
+  id: 'my_program_id',
+  language: 'python', // 'python' | 'c' | 'cpp' | 'java' | 'dsa'
+  topic: 'variables',
+  lessonNumber: 1,
+  friendlyName: 'Calculate Compound Interest',
+  learningObjective: 'Understand multi-variable computation and power operators.',
+  learningObjectiveHinglish: 'Samjhein multi-variable computation kaise execute hota hai.',
+  
+  // Syntax-highlighted tokenized code lines
+  lines: [
+    {
+      lineNum: 1,
+      tokens: [
+        { type: 'variable', value: 'principal' },
+        { type: 'operator', value: ' = ' },
+        { type: 'number', value: '1000' }
+      ]
+    },
+    {
+      lineNum: 2,
+      tokens: [
+        { type: 'function', value: 'print' },
+        { type: 'punctuation', value: '(' },
+        { type: 'variable', value: 'principal' },
+        { type: 'punctuation', value: ')' }
+      ]
+    }
+  ],
+
+  // Step-by-step memory, animation events, and bilingual explanations
+  executionSteps: [
+    {
+      step: 1,
+      lineNum: 1,
+      explanationEnglish: 'Create variable principal and assign 1000.',
+      explanationHinglish: 'Principal variable bana aur usme 1000 store kiya.',
+      memorySnapshot: { principal: 1000 },
+      animationEvent: {
+        type: 'CREATE_VARIABLE',
+        name: 'principal',
+        value: 1000
+      }
+    },
+    {
+      step: 2,
+      lineNum: 2,
+      explanationEnglish: 'Print principal value to console.',
+      explanationHinglish: 'Console screen par 1000 print kiya.',
+      memorySnapshot: { principal: 1000 },
+      consoleOutput: '1000\n',
+      animationEvent: {
+        type: 'PRINT_VALUE',
+        variableName: 'principal',
+        outputValue: 1000
+      }
+    }
+  ],
+
+  // (Optional) Dynamic Interactive Variables
+  editableVariables: {
+    principal: { default: 1000, min: 100, max: 100000, type: 'number' }
+  },
+
+  // (Optional) Pure function generating steps when user edits input values
+  generateSteps: (vars) => {
+    const p = vars.principal ?? 1000;
+    return [
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: `Create variable principal with ${p}.`,
+        explanationHinglish: `Principal variable bana aur value ${p} store hui.`,
+        memorySnapshot: { principal: p },
+        animationEvent: { type: 'CREATE_VARIABLE', name: 'principal', value: p }
+      }
+    ];
+  }
+};
+```
+
+### Step 2: Register the Program in Language Chunk
+
+Open the corresponding language chunk (e.g. `src/lessons/python/registry.ts`) and export the program:
+
+```typescript
+export const pythonRegistry = {
+  variables: {
+    single_variable: singleVariableLesson,
+    my_program_id: myNewProgram, // <-- Add here
+  },
+  // ...
+};
+```
+
+Because `src/lessons/registry.ts` uses dynamic chunking (`getLessonAsync`), Vite automatically splits the new program into its language bundle without bloating the main bundle!
+
+---
+
+## 6. SmartBoard & Ink Engine Architecture
+
+The SmartBoard (`src/features/smartboard/`) is engineered for iPad-level low-latency stylus drawing and large session memory retention.
+
+### Key Architectural Pillars:
+1. **Dual-Layer Canvas (`SmartBoardModal.tsx`)**:
+   - `cvCommitted` (Bottom canvas): Holds completed, permanent strokes. Only redrawn when undo/redo/page switch occurs.
+   - `cvLive` (Top canvas): Renders active stroke under the stylus on every `requestAnimationFrame`. Completely decoupled from React render cycle (`liveRef`).
+   - Both canvases use `{ desynchronized: true }` context to bypass browser compositor V-Sync wait times.
+2. **Ink Math Engine (`src/features/smartboard/engine/inkEngine.ts`)**:
+   - **Chaikin Smoothing**: 2-pass corner cutting removes jitter from low-cost pen digitizers.
+   - **Midpoint Quadratic Bezier**: Creates single continuous smooth paths without overlapping circle artifact seams.
+   - **Douglas-Peucker Compression (`simplifyStroke`)**: On pointer up, automatically removes redundant collinear points (80% RAM reduction per stroke).
+3. **Shape Recognition (`shapeSnap.ts`)**:
+   - Hold-to-snap: If user pauses pen movement for >300ms, automatically classifies line into Circle, Rectangle, Arrow, or Straight Line.
+
+---
+
+## 7. Licensing, Telemetry & Security Engine
+
+TreadCode includes a hardware-locked licensing client (`src/shared/config/firebase.ts`) connected to Firebase Realtime Database.
+
+### Validation Pipeline:
+1. **HWID Generation**: On desktop, calls Tauri command `get_hwid` (retrieving Machine GUID/Motherboard hash). On web, uses persistent browser token.
+2. **Blacklist Check**: Queries `blacklisted_hwids/{hwid}`. If `true`, revokes cache and locks workspace.
+3. **License Verification**: Checks `licenses/{licenseKey}`:
+   - Verifies `blocked` status.
+   - Verifies `expiresAt` ISO date (Admin can extend anytime).
+   - Atomic device slot counter registration (`runTransaction`).
+4. **Offline Grace Cache**: On successful verification, writes payload to `localStorage['flowtrace_license_cache']`. If user goes offline, app continues working until admin revokes access or expiry date passes.
+5. **Heartbeat Telemetry**: Sends ping every 25 seconds to `installations/{hwid}` with `appVersion`, `lastSeen`, `activeKey`, and `currentPath`.
+
+---
+
+## 8. Multi-Channel Update & Release Pipeline
+
+The update detection engine (`src/shared/hooks/useUpdateChecker.ts`) uses 3 fallback mechanisms:
+
+```
+Channel 1: Tauri Native Plugin check()
+            │ (If fails or unverified signature)
+            ▼
+Channel 2: Direct HTTP Fetch to Firebase RTDB (/tauri_updater.json)
+            │ (If offline or background instant push)
+            ▼
+Channel 3: Realtime Firebase onValue Listener (/global_settings/forceUpdate)
+```
+
+### Performing an Official App Release
+
+To release a new version globally:
 
 ```bash
-# Install dependencies
-npm install
+# Example: Deploy version 1.0.8
+npm run release 1.0.8
+```
 
-# Start local web development server (React + Vite)
+### What `scripts/release.js` Does Automatically:
+1. Updates `package.json` to `1.0.8`.
+2. Updates `src-tauri/tauri.conf.json` to `1.0.8`.
+3. Updates `updater.json` with timestamp and binary URLs.
+4. Updates `public/version.json` with build date and changelog.
+5. Patches `CURRENT_VERSION` in `useUpdateChecker.ts`.
+6. Executes `npx tauri build` to compile the Windows `.exe` setup installer.
+7. Copies setup installer to `public/releases/` for Vercel deployment.
+8. Writes update payload directly to Firebase RTDB (`tauri_updater` and `global_update`).
+9. Commits, tags `v1.0.8`, and pushes to GitHub.
+
+---
+
+## 9. Development, Build & Verification Commands
+
+### Development Server
+```bash
+# Start Vite development server
 npm run dev
 
-# Start local Tauri Desktop App in development mode
+# Run desktop app in Tauri window (Hot Reload enabled)
 npm run tauri dev
+```
 
-# Test TypeScript compilation & build production web bundle
+### Code Quality & Type Checks
+```bash
+# Verify TypeScript types across entire repository without emit
+npx tsc -b --noEmit
+
+# Run ESLint & Oxlint
+npm run lint
+
+# Format code with Prettier
+npm run format
+```
+
+### Production Builds
+```bash
+# Build web production bundle (outputs to /dist)
 npm run build
 
-# Build Native Windows Installer (.exe setup package)
+# Build Windows desktop installer (.exe)
 npx tauri build
 ```
-> *Output Installer Location*: `src-tauri/target/release/bundle/nsis/TreadCode_1.0.0_x64-setup.exe`
 
 ---
 
-### 2. Standalone Admin Control Panel (`admin panel`)
+## 10. Troubleshooting & Gotchas
 
-Run commands inside the `c:\Users\princ\Desktop\admin panel` folder:
-
-```bash
-# Navigate to Admin Panel folder
-cd "..\admin panel"
-
-# Install dependencies
-npm install
-
-# Start local Admin Panel server (Runs on http://localhost:5178)
-npm run dev
-
-# Test TypeScript compilation & build production bundle
-npm run build
-```
+| Symptom | Cause | Solution |
+|---|---|---|
+| Large bundle size (>800KB main chunk) | Synchronous imports in `registry.ts` | Use `getLessonAsync()` and place programs in their respective language chunk folders. |
+| Whiteboard pen input lagging on high zoom | Canvas redrawing entire stroke history in React state | Ensure live drawing writes to `liveRef` and only committed strokes go to `setStrokes`. |
+| "License Expired" showing offline | Stored cache passed `expiresAt` date | Admin panel must update `expiresAt` or remove expiry constraint in Firebase console. |
+| Update banner appearing in web browser | `isNativeApp()` check bypassed | Ensure `useUpdateChecker()` checks `isNativeApp()` before toggling update UI. |
+| Re-render drops frames on Step change | Component consuming full `useLesson()` object | Refactor to `useLessonStore(s => s.myValue)` with targeted selector. |
 
 ---
 
-### 3. Releasing a New Version Update
-
-To deploy a new software version (e.g. updating from `1.0.3` to `1.0.4`):
-
-```bash
-# Auto-patches tauri.conf.json, package.json, builds native .exe, and updates Firebase RTDB
-npm run release 1.0.4
-```
-
----
-
----
-
-## 📡 Software Auto-Update Guide (Private Repo & Vercel CDN)
-
-TreadCode uses **Tauri Native Auto-Updater** combined with **Vercel CDN + Firebase RTDB**. Your repository remains **100% Private**.
-
-There are **2 Simple Ways** to push software updates to all installed remote devices globally:
-
----
-
-### ⚡ Method 1: Automatic 1-Command Push (Recommended for Developers)
-
-Whenever you make code changes and want to release a new version (e.g. `1.0.5`):
-
-1. **Run 1-Click Release Command**:
-   ```bash
-   npm run release 1.0.5
-   ```
-   *What this does automatically:*
-   - Auto-patches `tauri.conf.json`, `package.json`, and `useUpdateChecker.ts`
-   - Compiles native `.exe` installer
-   - Copies `.exe` to `public/releases/` folder for Vercel CDN hosting
-   - Syncs version details to Firebase RTDB
-
-2. **Push to Vercel (Deploys Installer Live)**:
-   ```bash
-   git push origin main --tags
-   ```
-
----
-
-### 🎛️ Method 2: Admin Panel Live Broadcast (No CLI Required)
-
-If your installer `.exe` is already hosted on Vercel, Firebase Storage, or any custom CDN:
-
-1. Open **Admin Panel** -> **TreadCode** -> **Controls (App Settings)**.
-2. Under **🚀 Remote Software OTA Update Dispatcher**:
-   - Enter **Target Version** (e.g. `1.0.5`).
-   - Enter **Download URL** (e.g. `https://tread-code-smoky.vercel.app/releases/TreadCode_1.0.5_x64-setup.exe`).
-3. Click **"Broadcast Update Now"**.
-
----
-
-### 🔄 How Remote Client Apps Update Automatically
-1. **Background Check**: Desktop App detects new version from Firebase RTDB within 1.2s of startup.
-2. **In-App Byte Download**: Real-time progress bar streams the installer package directly inside the app.
-3. **1-Click Restart**: User clicks **"Restart App Now"**, app relaunches seamlessly with new features applied!
-
-
----
-
-## 🔑 Licensing & Hardware Access Security
-
-- **6-Digit Alphanumeric Serials**: License keys are formatted as clean 6-character uppercase serials (e.g. `K9P2X8`).
-- **Surgical Device Seat Inspector**: Each key tracks bound device hardware signatures (`HWID`).
-- **Access Revocation Superpower**: Blacklist any computer signature in 1-click from the Admin Panel. Blacklisted machines are immediately blocked from running TreadCode on their next sync or startup.
+*Documentation maintained by Prince Thakur & Core Development Team.*

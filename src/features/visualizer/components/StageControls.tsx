@@ -1,10 +1,24 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, ZoomIn, ZoomOut, Maximize, Gauge } from 'lucide-react';
-import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 
 export const StageControls: React.FC = () => {
-  const { lesson, currentStepIndex, totalSteps, isPlaying, isComplete, goNext, goPrev, togglePlay, reset, goToStep, setZoom, zoom, hasEdited, playSpeed, setPlaySpeed } = useLesson();
+  const lesson = useLessonStore(s => s.lesson);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
+  const totalSteps = useLessonStore(s => s.totalSteps);
+  const isPlaying = useLessonStore(s => s.isPlaying);
+  const isComplete = useLessonStore(s => s.isComplete);
+  const goNext = useLessonStore(s => s.goNext);
+  const goPrev = useLessonStore(s => s.goPrev);
+  const togglePlay = useLessonStore(s => s.togglePlay);
+  const reset = useLessonStore(s => s.reset);
+  const goToStep = useLessonStore(s => s.goToStep);
+  const setZoom = useLessonStore(s => s.setZoom);
+  const zoom = useLessonStore(s => s.zoom);
+  const hasEdited = useLessonStore(s => s.hasEdited);
+  const playSpeed = useLessonStore(s => s.playSpeed);
+  const setPlaySpeed = useLessonStore(s => s.setPlaySpeed);
 
   const isDsa = lesson?.language === 'dsa';
 

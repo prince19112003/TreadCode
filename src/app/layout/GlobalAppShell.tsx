@@ -348,7 +348,7 @@ export const GlobalAppShell: React.FC = () => {
         const { db } = await import('@shared/config/firebase');
         const { ref, set } = await import('firebase/database');
         
-        let versionStr = '1.0.4';
+        let versionStr = '1.0.7';
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
           try {
             const { getVersion } = await import('@tauri-apps/api/app');

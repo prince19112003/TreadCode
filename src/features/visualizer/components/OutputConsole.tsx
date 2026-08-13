@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expand, Shrink, ChevronDown, ChevronUp } from 'lucide-react';
-import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 
 interface OutputConsoleProps {
   isFullScreen?: boolean;
@@ -16,7 +16,9 @@ export const OutputConsole: React.FC<OutputConsoleProps> = ({
   isCollapsed = false,
   onToggleCollapse,
 }) => {
-  const { currentStep, currentStepIndex, activeSteps } = useLesson();
+  const currentStep = useLessonStore(s => s.currentStep);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
+  const activeSteps = useLessonStore(s => s.activeSteps);
   const [outputLines, setOutputLines] = useState<string[]>([]);
   const [displayedChars, setDisplayedChars] = useState<Record<number, number>>({});
   const [zoomLevel, setZoomLevel] = useState(0.8);

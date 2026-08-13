@@ -31,7 +31,58 @@ export interface LicenseValidationResult {
   customBranding?: CustomBranding;
   features?: Record<string, boolean>;
   blocked?: boolean;
+  /** ISO date string — if set, license expires on this date. Admin can extend anytime. */
+  expiresAt?: string;
+  /** True if license is expired based on expiresAt */
+  expired?: boolean;
 }
+
+// ─── Offline License Cache ────────────────────────────────────────────────────
+// Stores last successful validation so offline app keeps working
+// until admin explicitly revokes or blocks via real-time listener.
+
+const CACHE_KEY = 'flowtrace_license_cache';
+
+export function saveLicenseCache(result: LicenseValidationResult): void {
+  try {
+    const payload = {
+      ...result,
+      _cachedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch { /* silent */ }
+}
+
+export function loadLicenseCache(): LicenseValidationResult | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Remove internal cache metadata before returning
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _cachedAt: _, ...result } = parsed;
+
+    // Even from cache, honour expiry date — admin controls this
+    if (result.expiresAt) {
+      const expiry = new Date(result.expiresAt);
+      if (!isNaN(expiry.getTime()) && new Date() > expiry) {
+        return { isValid: false, expired: true };
+      }
+    }
+
+    return result as LicenseValidationResult;
+  } catch {
+    return null;
+  }
+}
+
+export function clearLicenseCache(): void {
+  try {
+    localStorage.removeItem(CACHE_KEY);
+  } catch { /* silent */ }
+}
+
+// ─── License Validation ───────────────────────────────────────────────────────
 
 /**
  * Validate License Key, record HWID registration, and return rich custom branding & tier details
@@ -47,6 +98,7 @@ export async function fetchLicenseDetails(licenseKey: string, hwid: string): Pro
     const blacklistRef = ref(db, `blacklisted_hwids/${hwid}`);
     const blacklistSnap = await get(blacklistRef);
     if (blacklistSnap.exists() && blacklistSnap.val()) {
+      clearLicenseCache();
       return { isValid: false, blocked: true };
     }
 
@@ -76,7 +128,19 @@ export async function fetchLicenseDetails(licenseKey: string, hwid: string): Pro
     if (!snapshot.exists()) return { isValid: false };
     
     const licenseData = snapshot.val();
-    if (licenseData.blocked) return { isValid: false, blocked: true };
+    if (licenseData.blocked) {
+      clearLicenseCache();
+      return { isValid: false, blocked: true };
+    }
+
+    // ── Expiry Date Check (Admin Panel extendable anytime) ──────────────────
+    if (licenseData.expiresAt) {
+      const expiry = new Date(licenseData.expiresAt);
+      if (!isNaN(expiry.getTime()) && new Date() > expiry) {
+        clearLicenseCache();
+        return { isValid: false, expired: true, expiresAt: licenseData.expiresAt };
+      }
+    }
 
     let devices = licenseData.devices || {};
     let activeDevicesCount = Object.keys(devices).length;
@@ -98,7 +162,7 @@ export async function fetchLicenseDetails(licenseKey: string, hwid: string): Pro
       activeDevicesCount += 1;
     }
 
-    return {
+    const result: LicenseValidationResult = {
       isValid: true,
       licenseKey,
       tier: licenseData.tier || 'standard',
@@ -106,9 +170,23 @@ export async function fetchLicenseDetails(licenseKey: string, hwid: string): Pro
       activeDevicesCount,
       customBranding: licenseData.customBranding || {},
       features: licenseData.features || {},
+      expiresAt: licenseData.expiresAt || undefined,
     };
+
+    // Save successful validation to offline cache
+    saveLicenseCache(result);
+    return result;
   } catch (err) {
-    console.error('License validation failed:', err);
+    console.warn('License validation failed (network issue?), checking offline cache:', err);
+
+    // ── Offline Fallback: Use cached license if available ───────────────────
+    const cached = loadLicenseCache();
+    if (cached && cached.isValid) {
+      console.info('Using offline license cache — app will re-validate when online.');
+      return cached;
+    }
+
     return { isValid: false };
   }
 }
+

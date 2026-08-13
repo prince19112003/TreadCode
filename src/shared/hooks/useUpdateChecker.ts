@@ -21,7 +21,7 @@ export interface UpdateStatus {
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
-const CURRENT_VERSION = '1.0.7';
+const CURRENT_VERSION = '1.0.8';
 
 // ── Native Desktop / Mobile context guard ─────────────────────────────────────
 // Only show update UI when running inside native desktop app (Tauri) or Android APK. Never in web browsers (Vercel).

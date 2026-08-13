@@ -17,7 +17,7 @@ import {
 
 import type { SmartBoardTool, SmartBoardGrid, SmartBoardBg, Point, Stroke } from "./types";
 import { BG_FILL } from "./types";
-import { drawStroke } from "./engine/inkEngine";
+import { drawStroke, simplifyStroke } from "./engine/inkEngine";
 import { classifyAndSnapShape } from "./engine/shapeSnap";
 import { eraseLassoArea } from "./engine/eraserEngine";
 import { BoardHeader } from "./components/BoardHeader";
@@ -61,11 +61,10 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   // ★ Velocity Ink mode — OFF by default
   const [velocityMode, setVelocityMode] = useState(false);
 
-  // ─── Pages ─────────────────────────────────────────────────────────────────
   const [pages, setPages] = useState<Stroke[][]>([[]]);
   const [pageIdx, setPageIdx] = useState(0);
   const [redos, setRedos] = useState<Stroke[][]>([[]]);
-  const [live, setLive] = useState<Stroke | null>(null);
+  // No more `live` React state — using liveRef instead for zero-latency drawing
   const [isFlyAnimating, setIsFlyAnimating] = useState(false);
 
   const strokes = pages[pageIdx] ?? [];
@@ -76,20 +75,29 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
   const wrapRef = useRef<HTMLDivElement>(null);
-  const cvRef = useRef<HTMLCanvasElement>(null);
+  const cvCommittedRef = useRef<HTMLCanvasElement>(null); // bottom: all committed strokes
+  const cvLiveRef = useRef<HTMLCanvasElement>(null);       // top: current stroke only (zero React)
   const drawing = useRef(false);
   const isPalmRef = useRef(false);
   const palmAnchor = useRef<{ y: number; st: number } | null>(null);
   const panAnchor = useRef<{ x: number; y: number; sl: number; st: number } | null>(null);
   const dragRef = useRef<{ action: string; sx: number; sy: number; ib: typeof bounds } | null>(null);
-  const rafRef = useRef(0);
   const holdTimerRef = useRef<number | null>(null);
   const touchPinchRef = useRef<{ dist: number; zoom: number } | null>(null);
   const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
 
+  // Live stroke as pure mutable ref — zero React state during drawing = iPad-level latency
+  const liveRef = useRef<Stroke | null>(null);
+  const rafLiveRef = useRef(0); // RAF id for live canvas loop
+
   // ─── Zoom ───────────────────────────────────────────────────────────────────
   const [zoom, setZoom] = useState(1);
   const [zoomOffset, setZoomOffset] = useState({ x: 0, y: 0 });
+  // Keep zoom/offset in refs for use inside RAF callbacks (avoids stale closure)
+  const zoomRef = useRef(1);
+  const zoomOffsetRef = useRef({ x: 0, y: 0 });
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { zoomOffsetRef.current = zoomOffset; }, [zoomOffset]);
 
   // ─── Page Helpers ────────────────────────────────────────────────────────────
   const setStrokes = useCallback(
@@ -153,95 +161,136 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, undo, redo, onClose]);
 
-  // ─── Canvas Draw Loop (RAF) ───────────────────────────────────────────────────
-  const draw = useCallback(() => {
-    const cv = cvRef.current;
-    if (!cv) return;
-    const ctx = cv.getContext("2d");
-    if (!ctx) return;
+  // ─── Helper: get DPR-corrected context ──────────────────────────────────────
+  const getScaledCtx = (canvas: HTMLCanvasElement | null) => {
+    if (!canvas) return null;
+    // desynchronized: true — bypass browser compositor & V-Sync wait.
+    // OS pushes frames directly to screen buffer → pen input registers ~1-2 frames sooner.
+    const ctx = canvas.getContext('2d', { desynchronized: true });
+
+    if (!ctx) return null;
+    const dpr = window.devicePixelRatio || 1;
+    // Always reset transform to identity first, then apply DPR scale
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  };
+
+  // ─── Draw committed canvas (all saved strokes) — called only when dirty ─────
+  const drawCommitted = useCallback(() => {
+    const cv = cvCommittedRef.current;
+    const ctx = getScaledCtx(cv);
+    if (!cv || !ctx) return;
     const dpr = window.devicePixelRatio || 1;
     const W = cv.width / dpr;
     const H = cv.height / dpr;
-    ctx.clearRect(0, 0, W, H);
-    const now = Date.now();
-    let hasLaser = false;
 
+    ctx.clearRect(0, 0, W, H);
     ctx.save();
     ctx.fillStyle = BG_FILL[boardBg];
     ctx.fillRect(0, 0, W, H);
-    ctx.translate(zoomOffset.x, zoomOffset.y);
-    ctx.scale(zoom, zoom);
+    ctx.translate(zoomOffsetRef.current.x, zoomOffsetRef.current.y);
+    ctx.scale(zoomRef.current, zoomRef.current);
 
-    // Grid lines
-    if (bgGrid === "lines") {
+    // Grid
+    if (bgGrid === 'lines') {
       ctx.save();
       ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 0.5 / zoom;
-      const startY = Math.floor(-zoomOffset.y / (zoom * 36)) * 36 - 36;
-      const endY = Math.ceil((H - zoomOffset.y) / (zoom * 36)) * 36 + 36;
-      const startX = Math.floor(-zoomOffset.x / (zoom * 36)) * 36 - 36;
-      const endX = Math.ceil((W - zoomOffset.x) / (zoom * 36)) * 36 + 36;
+      ctx.lineWidth = 0.5 / zoomRef.current;
+      const zo = zoomOffsetRef.current;
+      const z = zoomRef.current;
+      const startY = Math.floor(-zo.y / (z * 36)) * 36 - 36;
+      const endY = Math.ceil((H - zo.y) / (z * 36)) * 36 + 36;
+      const startX = Math.floor(-zo.x / (z * 36)) * 36 - 36;
+      const endX = Math.ceil((W - zo.x) / (z * 36)) * 36 + 36;
       for (let y = startY; y < endY; y += 36) {
-        ctx.beginPath();
-        ctx.moveTo(startX, y);
-        ctx.lineTo(endX, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(startX, y); ctx.lineTo(endX, y); ctx.stroke();
       }
       ctx.restore();
     }
 
-    // Render all committed strokes
-    strokes.forEach((s) => {
-      if (drawStroke(ctx, s, now, zoom, fillColor, velocityMode)) hasLaser = true;
-    });
-    // Render live (in-progress) stroke
-    if (live) {
-      if (drawStroke(ctx, live, now, zoom, fillColor, velocityMode)) hasLaser = true;
-    }
-
+    const now = Date.now();
+    strokes.forEach((s) => { drawStroke(ctx, s, now, zoomRef.current, fillColor, velocityMode); });
     ctx.restore();
+  }, [strokes, bgGrid, boardBg, gridColor, fillColor, velocityMode]);
 
-    if (hasLaser) {
-      setStrokes((prev) => prev.filter((s) => s.tool !== "laser" || (now - (s.timestamp ?? now)) <= 2000));
-    }
-  }, [strokes, live, bgGrid, boardBg, gridColor, fillColor, zoom, zoomOffset, velocityMode, setStrokes]);
+  // ─── Draw live canvas (current stroke only) — called every RAF frame ────────
+  const drawLive = useCallback(() => {
+    const cv = cvLiveRef.current;
+    const ctx = getScaledCtx(cv);
+    if (!cv || !ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const W = cv.width / dpr;
+    const H = cv.height / dpr;
 
-  const loop = useCallback(() => {
-    draw();
-    rafRef.current = requestAnimationFrame(loop);
-  }, [draw]);
+    ctx.clearRect(0, 0, W, H);
 
+    const s = liveRef.current;
+    if (!s || !s.points.length) return;
+
+    ctx.save();
+    ctx.translate(zoomOffsetRef.current.x, zoomOffsetRef.current.y);
+    ctx.scale(zoomRef.current, zoomRef.current);
+    drawStroke(ctx, s, Date.now(), zoomRef.current, fillColor, velocityMode, true);
+    ctx.restore();
+  }, [fillColor, velocityMode]);
+
+  // Redraw committed canvas whenever strokes/bg/grid change
+  useEffect(() => {
+    drawCommitted();
+  }, [drawCommitted]);
+
+
+  // Live RAF loop — only redraws the top (live) canvas each frame
   useEffect(() => {
     if (!isOpen) return;
-    rafRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [isOpen, loop]);
+    const loop = () => {
+      drawLive();
+      rafLiveRef.current = requestAnimationFrame(loop);
+    };
+    rafLiveRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafLiveRef.current);
+  }, [isOpen, drawLive]);
+
+  // Laser cleanup — still needs to check per frame
+  useEffect(() => {
+    if (!isOpen) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const hasExpiredLaser = strokes.some(
+        (s) => s.tool === 'laser' && (now - (s.timestamp ?? now)) > 2000
+      );
+      if (hasExpiredLaser) {
+        setStrokes((prev) => prev.filter((s) => s.tool !== 'laser' || (now - (s.timestamp ?? now)) <= 2000));
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isOpen, strokes, setStrokes]);
 
   // ─── Canvas Resize ────────────────────────────────────────────────────────────
   const resizeCanvas = useCallback(() => {
-    const cv = cvRef.current;
-    if (!cv) return;
-    const r = cv.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    cv.width = r.width * dpr;
-    cv.height = r.height * dpr;
-    const ctx = cv.getContext("2d");
-    if (ctx) ctx.scale(dpr, dpr);
-  }, []);
+    [cvCommittedRef.current, cvLiveRef.current].forEach((cv) => {
+      if (!cv) return;
+      const r = cv.getBoundingClientRect();
+      cv.width = r.width * dpr;
+      cv.height = r.height * dpr;
+      // No ctx.scale() here — getScaledCtx() handles it via setTransform
+    });
+    drawCommitted();
+  }, [drawCommitted]);
 
   useEffect(() => {
     if (!isOpen) return;
     resizeCanvas();
     const ro = new ResizeObserver(resizeCanvas);
-    const cv = cvRef.current;
-    if (cv) ro.observe(cv);
+    [cvCommittedRef.current, cvLiveRef.current].forEach((cv) => { if (cv) ro.observe(cv); });
     return () => ro.disconnect();
   }, [isOpen, resizeCanvas]);
 
   // ─── Export/Render ────────────────────────────────────────────────────────────
   const renderSlideToDataUrl = useCallback(
     (pageStrokes: Stroke[], scale = 2): string => {
-      const cv = cvRef.current;
+      const cv = cvCommittedRef.current;
       if (!cv) return "";
       const dpr = window.devicePixelRatio || 1;
       const W = cv.width / dpr;
@@ -274,7 +323,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const factor = e.deltaY < 0 ? 1.08 : 0.92;
-        const cv = cvRef.current;
+        const cv = cvLiveRef.current;
         if (!cv) return;
         const r = cv.getBoundingClientRect();
         const mx = e.clientX - r.left;
@@ -292,14 +341,14 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   }, []);
 
   // ─── Pointer Input ────────────────────────────────────────────────────────────
-  const getPos = (e: React.PointerEvent): Point => {
-    const cv = cvRef.current!;
+  const getPos = (e: React.PointerEvent | PointerEvent): Point => {
+    const cv = cvLiveRef.current!;
     const r = cv.getBoundingClientRect();
     return {
-      x: (e.clientX - r.left - zoomOffset.x) / zoom,
-      y: (e.clientY - r.top - zoomOffset.y) / zoom,
+      x: (e.clientX - r.left - zoomOffsetRef.current.x) / zoomRef.current,
+      y: (e.clientY - r.top - zoomOffsetRef.current.y) / zoomRef.current,
       p: e.pressure > 0 ? e.pressure : 0.5,
-      t: Date.now(), // ★ timestamp for velocity computation
+      t: e.timeStamp ? performance.timeOrigin + e.timeStamp : Date.now(),
     };
   };
 
@@ -337,7 +386,8 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     e.currentTarget.setPointerCapture(e.pointerId);
     drawing.current = true;
     if (pagesOpen) setPagesOpen(false);
-    setLive({ tool, color, size, points: [getPos(e)], timestamp: Date.now() });
+    // ★ Write directly to liveRef — zero React state update during stroke
+    liveRef.current = { tool, color, size, points: [getPos(e)], timestamp: Date.now() };
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -367,42 +417,42 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
 
     // ★ Coalesced events — capture ALL intermediate pointer positions from OS
     const events = e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent];
-    const cv = cvRef.current!;
+    const cv = cvLiveRef.current!;
     const r = cv.getBoundingClientRect();
 
-    setLive((prev) => {
-      if (!prev) return null;
-      if (["pen", "highlighter", "laser", "eraser", "stroke_eraser"].includes(prev.tool)) {
-        const newPts: Point[] = [];
-        for (const ev of events) {
-          const pt: Point = {
-            x: (ev.clientX - r.left - zoomOffset.x) / zoom,
-            y: (ev.clientY - r.top - zoomOffset.y) / zoom,
-            p: ev.pressure > 0 ? ev.pressure : 0.5,
-            t: ev.timeStamp ? performance.timeOrigin + ev.timeStamp : Date.now(),
-          };
-          // Low-pass jitter filter
-          const last = newPts[newPts.length - 1] ?? prev.points[prev.points.length - 1];
-          if (last && Math.hypot(pt.x - last.x, pt.y - last.y) < 1.2) continue;
-          newPts.push(pt);
-        }
-        if (!newPts.length) return prev;
-        return { ...prev, points: [...prev.points, ...newPts], timestamp: Date.now() };
+    const prev = liveRef.current;
+    if (prev && ["pen", "highlighter", "laser", "eraser", "stroke_eraser"].includes(prev.tool)) {
+      const newPts: Point[] = [];
+      for (const ev of events) {
+        const pt: Point = {
+          x: (ev.clientX - r.left - zoomOffsetRef.current.x) / zoomRef.current,
+          y: (ev.clientY - r.top - zoomOffsetRef.current.y) / zoomRef.current,
+          p: ev.pressure > 0 ? ev.pressure : 0.5,
+          t: ev.timeStamp ? performance.timeOrigin + ev.timeStamp : Date.now(),
+        };
+        // Jitter filter: 0.5px — tight enough for fast strokes, keeps slow deliberate marks
+        const last = newPts[newPts.length - 1] ?? prev.points[prev.points.length - 1];
+        if (last && Math.hypot(pt.x - last.x, pt.y - last.y) < 0.5) continue;
+        newPts.push(pt);
       }
+      if (newPts.length) {
+        // Direct mutation of liveRef — no setState, no React render, pure speed
+        liveRef.current = { ...prev, points: [...prev.points, ...newPts], timestamp: Date.now() };
+      }
+    } else if (prev) {
       // Shape tools: only start + current endpoint
       const pt = getPos(e);
-      return { ...prev, points: [prev.points[0], pt] };
-    });
+      liveRef.current = { ...prev, points: [prev.points[0], pt] };
+    }
 
     // Auto-Snap hold timer
     if (autoSnapEnabled && tool === "pen") {
       clearHoldTimer();
       holdTimerRef.current = setTimeout(() => {
-        setLive((prev) => {
-          if (!prev || prev.tool !== "pen" || prev.points.length < 6) return prev;
-          const snapped = classifyAndSnapShape(prev.points, prev.size, prev.color);
-          return snapped || prev;
-        });
+        const s = liveRef.current;
+        if (!s || s.tool !== "pen" || s.points.length < 6) return;
+        const snapped = classifyAndSnapShape(s.points, s.size, s.color);
+        if (snapped) liveRef.current = snapped;
       }, 300);
     }
   };
@@ -418,14 +468,19 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     drawing.current = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
 
-    if (live) {
-      if (live.tool === "eraser" || live.tool === "stroke_eraser") {
-        eraseLassoArea(live.points, size, setStrokes);
+    const s = liveRef.current;
+    if (s) {
+      if (s.tool === "eraser" || s.tool === "stroke_eraser") {
+        eraseLassoArea(s.points, size, setStrokes);
       } else {
-        setStrokes((prev) => [...prev, live]);
+        // Compress the stroke points using Douglas-Peucker to save RAM before committing
+        const compressedPoints = simplifyStroke(s.points, 0.8);
+        const finalStroke = { ...s, points: compressedPoints };
+        // Commit stroke to React state — triggers committed canvas redraw
+        setStrokes((prev) => [...prev, finalStroke]);
       }
       setRedo(() => []);
-      setLive(null);
+      liveRef.current = null; // clear live immediately
     }
   };
 
@@ -654,15 +709,23 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
             isFlyAnimating={isFlyAnimating} boardBg={boardBg}
           />
 
-          {/* Canvas */}
+          {/* Two-layer canvas: committed (bottom) + live (top, zero-React latency) */}
           <div ref={wrapRef} className="absolute inset-0 overflow-auto" style={{ scrollbarWidth: "none" }}>
+            {/* Bottom: all committed strokes + background */}
             <canvas
-              ref={cvRef}
+              ref={cvCommittedRef}
+              className="block absolute inset-0 w-full min-h-[3200px] touch-none pointer-events-none"
+              style={{ zIndex: 1 }}
+            />
+            {/* Top: live stroke only — receives pointer events */}
+            <canvas
+              ref={cvLiveRef}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              className={`block w-full min-h-[3200px] touch-none ${cursor}`}
+              className={`block absolute inset-0 w-full min-h-[3200px] touch-none ${cursor}`}
+              style={{ zIndex: 2, background: 'transparent' }}
             />
           </div>
 
