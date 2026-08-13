@@ -7,7 +7,8 @@ import {
   Minus, MoveRight, Square, Circle, Sparkle, AlignJustify, SquareCheck,
   Zap,
 } from "lucide-react";
-import { SmartBoardBg, SmartBoardGrid, SmartBoardTool, BG_FILL } from "../types";
+import type { SmartBoardBg, SmartBoardGrid, SmartBoardTool } from "../types";
+import { BG_FILL } from "../types";
 import { ToolBtn } from "./ToolBtn";
 
 interface BoardHeaderProps {

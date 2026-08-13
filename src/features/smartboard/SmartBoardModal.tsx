@@ -12,13 +12,11 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Download, Image, FileText, FileJson,
-  FolderOpen, Save, RotateCcw, AlertCircle, Plus,
+  FolderOpen, Save, RotateCcw, AlertCircle,
 } from "lucide-react";
 
-import {
-  SmartBoardTool, SmartBoardGrid, SmartBoardBg,
-  Point, Stroke, BG_FILL,
-} from "./types";
+import type { SmartBoardTool, SmartBoardGrid, SmartBoardBg, Point, Stroke } from "./types";
+import { BG_FILL } from "./types";
 import { drawStroke } from "./engine/inkEngine";
 import { classifyAndSnapShape } from "./engine/shapeSnap";
 import { eraseLassoArea } from "./engine/eraserEngine";
