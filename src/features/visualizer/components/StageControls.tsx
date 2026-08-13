@@ -31,7 +31,6 @@ export const StageControls: React.FC = () => {
   };
 
   return (
-  return (
     <div className="flex md:flex-col flex-row items-center justify-between py-1.5 md:py-5 px-3 md:px-0 h-12 md:h-full w-full md:w-14 shrink-0 bg-[#0d1126]/90 backdrop-blur-xl border-y md:border-y-0 md:border-x border-indigo-500/20 shadow-[0_0_30px_rgba(0,0,0,0.5)] relative z-20 overflow-x-auto md:overflow-visible">
       {/* Step counter / DSA badge */}
       <div className="flex md:flex-col flex-row items-center gap-2 md:gap-4 shrink-0">
@@ -215,7 +214,6 @@ export const StageControls: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
     </div>
   );
 };
