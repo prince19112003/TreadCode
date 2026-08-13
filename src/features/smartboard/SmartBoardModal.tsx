@@ -35,7 +35,7 @@ interface SmartBoardModalProps {
 
 export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClose }) => {
   // ─── UI State ──────────────────────────────────────────────────────────────
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(true);
   const [bounds, setBounds] = useState({ x: 80, y: 60, w: 940, h: 620 });
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
