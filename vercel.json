@@ -2,16 +2,16 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/public/admin/admin.html"
-    },
-    {
       "source": "/admin",
-      "destination": "/public/admin/admin.html"
+      "destination": "/admin/admin.html"
     },
     {
-      "source": "/admin/",
-      "destination": "/public/admin/admin.html"
+      "source": "/admin/(.*)",
+      "destination": "/admin/admin.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
