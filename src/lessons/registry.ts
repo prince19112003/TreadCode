@@ -47,7 +47,7 @@ export const getLessonAsync = async (languageId: string, topicId: string, progra
     // 2. Fallback search across all topics in the language registry
     const allProgramsInLang = Object.values(registry).flatMap((t: any) => Object.values(t));
     const found = allProgramsInLang.find((p: any) => p && (p.id === programId || p.id === `dsa_${programId}`));
-    if (found) return found;
+    if (found) return found as LessonProgram;
 
     return undefined;
   } catch (error) {
