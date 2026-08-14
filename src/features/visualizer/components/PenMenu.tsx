@@ -16,7 +16,7 @@ const SIX_COLORS = [
 
 export const PenMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPenActive, setIsPenActive] = useState(true);
+  const [isPenActive, setIsPenActive] = useState(false);
   const [mode, setMode] = useState<'pen' | 'eraser' | 'palm'>('pen');
   const [color, setColor] = useState('#ffffff');
   const [strokeWidth, setStrokeWidth] = useState<number>(4);
@@ -157,7 +157,7 @@ export const PenMenu: React.FC = () => {
     id: `color-${c.hex}`,
     hex: c.hex,
     icon: <Pen className="w-4 h-4" style={{ color: c.hex }} />,
-    action: () => { setColor(c.hex); setMode('pen'); setActiveSubMenu('none'); },
+    action: () => { setColor(c.hex); setMode('pen'); setIsPenActive(true); setActiveSubMenu('none'); },
     active: mode === 'pen' && color === c.hex,
   }));
 
@@ -433,10 +433,11 @@ export const PenMenu: React.FC = () => {
             className={`absolute inset-0 rounded-full flex items-center justify-center shadow-xl transition-all z-30 ${
               isPenActive
                 ? mode === 'eraser'
-                  ? 'bg-rose-600 text-white ring-2 ring-rose-400'
-                  : 'bg-indigo-600 text-white border border-indigo-400/40'
-                : 'bg-indigo-600 text-white hover:bg-indigo-500 border border-indigo-400/30'
+                  ? 'bg-rose-600 text-white ring-4 ring-rose-400/60 shadow-lg shadow-rose-500/50 border border-rose-300'
+                  : 'bg-blue-600 text-white ring-4 ring-blue-400/60 shadow-lg shadow-blue-500/50 border border-blue-300 animate-pulse'
+                : 'bg-slate-900/95 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/80 shadow-md'
             }`}
+            title={isPenActive ? 'Deactivate Pen Mode' : 'Activate Pen Mode (Click to Draw)'}
           >
             {isOpen ? <X className="w-5.5 h-5.5 pointer-events-none" /> : mode === 'eraser' ? <Eraser className="w-5.5 h-5.5 pointer-events-none" /> : <Pen className="w-5.5 h-5.5 pointer-events-none" />}
           </motion.button>
