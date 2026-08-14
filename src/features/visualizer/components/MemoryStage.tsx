@@ -508,6 +508,7 @@ export const MemoryStage: React.FC = () => {
 
     const ev = currentStep.animationEvent;
     setMemory({ ...currentStep.memorySnapshot });
+    if (!ev) return;
     setEvType(ev.type);
 
     let active: string | undefined;
@@ -532,7 +533,7 @@ export const MemoryStage: React.FC = () => {
     );
   }
 
-  const ev = currentStep.animationEvent;
+  const ev = currentStep.animationEvent ?? ({ type: 'NONE' } as any);
   const e = getEv(evType);
 
   return (

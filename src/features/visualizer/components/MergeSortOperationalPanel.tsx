@@ -3,7 +3,7 @@ import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
 import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft } from 'lucide-react';
 
-export const InsertionSortOperationalPanel: React.FC = () => {
+export const MergeSortOperationalPanel: React.FC = () => {
   const lesson = useLessonStore(s => s.lesson);
   const setCustomSteps = useLessonStore(s => s.setCustomSteps);
   const goToStep = useLessonStore(s => s.goToStep);
@@ -15,85 +15,131 @@ export const InsertionSortOperationalPanel: React.FC = () => {
   const totalSteps = useLessonStore(s => s.totalSteps);
 
   // 6 separate input boxes state
-  const [boxes, setBoxes] = useState<string[]>(['12', '11', '13', '5', '6', '20']);
+  const [boxes, setBoxes] = useState<string[]>(['38', '27', '43', '3', '9', '82']);
 
-  // Generate full Insertion Sort execution steps for 6 elements
-  const generateInsertionSortSteps = useCallback((initialArr: number[]): ExecutionStep[] => {
+  // Generate Merge Sort Execution Steps
+  const generateMergeSortSteps = useCallback((initialArr: number[]): ExecutionStep[] => {
     const arr = [...initialArr];
-    const n = arr.length;
     const steps: ExecutionStep[] = [];
     let stepNum = 1;
 
-    // Initial State
+    // Step 1: Initial State
     steps.push({
       step: stepNum++,
       lineNum: 1,
-      explanationEnglish: `Insertion Sort initialized with elements: [${arr.join(', ')}]. Index [0] (${arr[0]}) is trivially sorted.`,
-      explanationHinglish: `Elements ke saath Insertion Sort initialize hua: [${arr.join(', ')}]. Index [0] (${arr[0]}) pehle se sorted hai.`,
-      memorySnapshot: { arr: [...arr], pass: 1, i: 1, key: arr[1], j: 0, sortedCount: 1 },
-      consoleOutput: `> Insertion Sort initialized: [${arr.join(', ')}]`,
+      explanationEnglish: `Merge Sort initialized: [${arr.join(', ')}]. Divide array into smaller halves.`,
+      explanationHinglish: `Merge Sort initialize hua: [${arr.join(', ')}]. Array ko halves me divide karenge.`,
+      memorySnapshot: { arr: [...arr], phase: 'DIVIDE_START', level: 0, activeRange: [0, 5] },
+      consoleOutput: `> Merge Sort initialized: [${arr.join(', ')}]`,
       animationEvent: { type: 'NONE' } as any,
     });
 
-    for (let i = 1; i < n; i++) {
-      const key = arr[i];
-      let j = i - 1;
+    // Helper recursive merge sort simulator to log step snapshots
+    const mergeSort = (a: number[], left: number, right: number, level: number) => {
+      if (left >= right) return;
 
-      // Pick Key step
+      const mid = Math.floor((left + right) / 2);
+
+      // Divide Step Left
       steps.push({
         step: stepNum++,
         lineNum: 3,
-        explanationEnglish: `Pass ${i}: Pick KEY = arr[${i}] (${key}). Compare with sorted subarray [0..${i - 1}].`,
-        explanationHinglish: `Pass ${i}: KEY = arr[${i}] (${key}) ko pick karo aur left side sorted region se compare karo.`,
-        memorySnapshot: { arr: [...arr], pass: i, i, key, j, sortedCount: i, keyIdx: i },
-        consoleOutput: `> Pass ${i} | Picked KEY = arr[${i}] (${key})`,
+        explanationEnglish: `DIVIDE [${left}..${right}]: Split into Left [${left}..${mid}] and Right [${mid + 1}..${right}].`,
+        explanationHinglish: `DIVIDE [${left}..${right}]: Left [${left}..${mid}] aur Right [${mid + 1}..${right}] me divide kiya.`,
+        memorySnapshot: {
+          arr: [...a],
+          phase: 'DIVIDE',
+          level,
+          left,
+          mid,
+          right,
+          subLeft: a.slice(left, mid + 1),
+          subRight: a.slice(mid + 1, right + 1),
+        },
+        consoleOutput: `> Split range [${left}..${right}] → [${left}..${mid}] & [${mid + 1}..${right}]`,
         animationEvent: { type: 'NONE' } as any,
       });
 
-      let shiftedCount = 0;
-      while (j >= 0 && arr[j] > key) {
-        // Compare & Shift step
-        steps.push({
-          step: stepNum++,
-          lineNum: 5,
-          explanationEnglish: `Pass ${i}: arr[${j}] (${arr[j]}) > KEY (${key}) → Shift arr[${j}] right to index [${j + 1}].`,
-          explanationHinglish: `Pass ${i}: arr[${j}] (${arr[j]}) > KEY (${key}) → arr[${j}] (${arr[j]}) ko right index [${j + 1}] par shift kiya.`,
-          memorySnapshot: { arr: [...arr], pass: i, i, key, j, sortedCount: i, comparing: [j, j + 1] },
-          consoleOutput: `> Shifting arr[${j}] (${arr[j]}) right`,
-          animationEvent: {
-            type: 'COMPARE_INDICES',
-            arrayName: 'arr',
-            indexA: j,
-            indexB: j + 1,
-          } as any,
-        });
+      mergeSort(a, left, mid, level + 1);
+      mergeSort(a, mid + 1, right, level + 1);
 
-        arr[j + 1] = arr[j];
-        j = j - 1;
-        shiftedCount++;
+      // Merge Step
+      const leftArr = a.slice(left, mid + 1);
+      const rightArr = a.slice(mid + 1, right + 1);
+
+      steps.push({
+        step: stepNum++,
+        lineNum: 6,
+        explanationEnglish: `MERGE: Combining sorted halves [${leftArr.join(', ')}] and [${rightArr.join(', ')}].`,
+        explanationHinglish: `MERGE: Sorted halves [${leftArr.join(', ')}] aur [${rightArr.join(', ')}] ko combine kar rahe hain.`,
+        memorySnapshot: {
+          arr: [...a],
+          phase: 'MERGE_START',
+          level,
+          left,
+          mid,
+          right,
+          leftArr,
+          rightArr,
+        },
+        consoleOutput: `> Merging [${leftArr.join(', ')}] and [${rightArr.join(', ')}]`,
+        animationEvent: { type: 'NONE' } as any,
+      });
+
+      // Perform Merge
+      let i = 0, j = 0, k = left;
+      while (i < leftArr.length && j < rightArr.length) {
+        if (leftArr[i] <= rightArr[j]) {
+          a[k] = leftArr[i];
+          i++;
+        } else {
+          a[k] = rightArr[j];
+          j++;
+        }
+        k++;
       }
 
-      // Insert Key step
-      arr[j + 1] = key;
+      while (i < leftArr.length) {
+        a[k] = leftArr[i];
+        i++;
+        k++;
+      }
+
+      while (j < rightArr.length) {
+        a[k] = rightArr[j];
+        j++;
+        k++;
+      }
+
+      const mergedSub = a.slice(left, right + 1);
       steps.push({
         step: stepNum++,
         lineNum: 8,
-        explanationEnglish: `Pass ${i}: Insert KEY (${key}) at position arr[${j + 1}]. Subarray [0..${i}] is now sorted.`,
-        explanationHinglish: `Pass ${i}: KEY (${key}) ko uski sahi jagah arr[${j + 1}] par insert kar diya.`,
-        memorySnapshot: { arr: [...arr], pass: i, i: i + 1, key: null, j: -1, sortedCount: i + 1, insertedIdx: j + 1 },
-        consoleOutput: `> Inserted KEY (${key}) at index [${j + 1}] | Current: [${arr.join(', ')}]`,
+        explanationEnglish: `MERGED RESULT [${left}..${right}]: [${mergedSub.join(', ')}] sorted in place!`,
+        explanationHinglish: `MERGED RESULT [${left}..${right}]: [${mergedSub.join(', ')}] in-place sort ho gaya!`,
+        memorySnapshot: {
+          arr: [...a],
+          phase: 'MERGED_DONE',
+          level,
+          left,
+          right,
+          mergedSub,
+        },
+        consoleOutput: `> Merged range [${left}..${right}]: [${mergedSub.join(', ')}]`,
         animationEvent: { type: 'NONE' } as any,
       });
-    }
+    };
+
+    mergeSort(arr, 0, arr.length - 1, 1);
 
     // Final Complete Step
     steps.push({
       step: stepNum,
-      lineNum: 9,
-      explanationEnglish: `✓ INSERTION SORT COMPLETE! Array is fully sorted.`,
-      explanationHinglish: `✓ INSERTION SORT COMPLETE! Array poori tarah sort ho gayi hai.`,
-      memorySnapshot: { arr: [...arr], pass: n - 1, i: n, key: null, j: -1, sortedCount: n },
-      consoleOutput: `✓ Insertion Sort Complete: [${arr.join(', ')}]`,
+      lineNum: 10,
+      explanationEnglish: `✓ MERGE SORT COMPLETE! Array is fully sorted.`,
+      explanationHinglish: `✓ MERGE SORT COMPLETE! Array poori tarah sort ho gayi hai.`,
+      memorySnapshot: { arr: [...arr], phase: 'COMPLETE', level: 0 },
+      consoleOutput: `✓ Merge Sort Complete: [${arr.join(', ')}]`,
       animationEvent: { type: 'NONE' } as any,
     });
 
@@ -112,7 +158,7 @@ export const InsertionSortOperationalPanel: React.FC = () => {
       return isNaN(parsed) ? 0 : parsed;
     });
 
-    const steps = generateInsertionSortSteps(nums);
+    const steps = generateMergeSortSteps(nums);
     setCustomSteps(steps);
     setIsPlaying(false);
     setTimeout(() => goToStep(0), 20);
@@ -120,12 +166,12 @@ export const InsertionSortOperationalPanel: React.FC = () => {
 
   // Initialize default array on component load
   useEffect(() => {
-    const initialArr = [12, 11, 13, 5, 6, 20];
-    const steps = generateInsertionSortSteps(initialArr);
+    const initialArr = [38, 27, 43, 3, 9, 82];
+    const steps = generateMergeSortSteps(initialArr);
     setCustomSteps(steps);
     setIsPlaying(false);
     setTimeout(() => goToStep(0), 30);
-  }, [lesson?.id, generateInsertionSortSteps, setCustomSteps, goToStep, setIsPlaying]);
+  }, [lesson?.id, generateMergeSortSteps, setCustomSteps, goToStep, setIsPlaying]);
 
   return (
     <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
@@ -133,9 +179,9 @@ export const InsertionSortOperationalPanel: React.FC = () => {
       {/* Sleek Minimal Header */}
       <div className="px-4 py-3 bg-[#050711] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-indigo-400" />
+          <span className="w-2 h-2 rounded-full bg-purple-400" />
           <span className="font-extrabold tracking-wider text-slate-200 text-[11px] uppercase">
-            INSERTION SORT
+            MERGE SORT
           </span>
         </div>
       </div>
@@ -158,7 +204,7 @@ export const InsertionSortOperationalPanel: React.FC = () => {
                   type="text"
                   value={val}
                   onChange={e => handleBoxChange(idx, e.target.value)}
-                  className="w-full text-center py-2 rounded-lg bg-slate-900 border border-slate-700/80 focus:border-indigo-400 focus:bg-slate-950 text-slate-100 text-xs font-mono font-bold tracking-tight focus:outline-none transition-colors"
+                  className="w-full text-center py-2 rounded-lg bg-slate-900 border border-slate-700/80 focus:border-purple-400 focus:bg-slate-950 text-slate-100 text-xs font-mono font-bold tracking-tight focus:outline-none transition-colors"
                 />
               </div>
             ))}
@@ -182,7 +228,7 @@ export const InsertionSortOperationalPanel: React.FC = () => {
               onClick={() => setIsPlaying(!isPlaying)}
               className={`py-2 rounded-xl font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
                 isPlaying
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white'
               }`}
             >
@@ -216,5 +262,3 @@ export const InsertionSortOperationalPanel: React.FC = () => {
     </div>
   );
 };
-
-

@@ -68,6 +68,18 @@ export const dsaRegistry: Record<string, any> = {
     dsa_graph_dfs: dsaLessons.dsa_graph_dfs,
     graph_dfs: dsaLessons.dsa_graph_dfs,
   },
+  graph_dijkstra: {
+    dsa_graph_dijkstra: dsaLessons.dsa_graph_dijkstra,
+    graph_dijkstra: dsaLessons.dsa_graph_dijkstra,
+  },
+  graph_kruskal: {
+    dsa_graph_kruskal: dsaLessons.dsa_graph_kruskal,
+    graph_kruskal: dsaLessons.dsa_graph_kruskal,
+  },
+  graph_prims: {
+    dsa_graph_prims: dsaLessons.dsa_graph_prims,
+    graph_prims: dsaLessons.dsa_graph_prims,
+  },
   bubble_sort: {
     dsa_bubble_sort: dsaLessons.dsa_bubble_sort,
     bubble_sort: dsaLessons.dsa_bubble_sort,

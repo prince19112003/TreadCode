@@ -13,6 +13,8 @@ import { DllVisualStage } from './components/stages/DllVisualStage';
 import { BubbleSortVisualStage } from './components/stages/BubbleSortVisualStage';
 import { SelectionSortVisualStage } from './components/stages/SelectionSortVisualStage';
 import { InsertionSortVisualStage } from './components/stages/InsertionSortVisualStage';
+import { MergeSortVisualStage } from './components/stages/MergeSortVisualStage';
+import { HeapSortVisualStage } from './components/stages/HeapSortVisualStage';
 import { TreeVisualStage } from './components/stages/TreeVisualStage';
 import { GraphVisualStage } from './components/stages/GraphVisualStage';
 import { DsaAlgoStage } from './components/stages/DsaAlgoStage';
@@ -23,6 +25,8 @@ import { DllOperationalPanel } from './components/DllOperationalPanel';
 import { BubbleSortOperationalPanel } from './components/BubbleSortOperationalPanel';
 import { SelectionSortOperationalPanel } from './components/SelectionSortOperationalPanel';
 import { InsertionSortOperationalPanel } from './components/InsertionSortOperationalPanel';
+import { MergeSortOperationalPanel } from './components/MergeSortOperationalPanel';
+import { HeapSortOperationalPanel } from './components/HeapSortOperationalPanel';
 import { TreeOperationalPanel } from './components/TreeOperationalPanel';
 import { GraphOperationalPanel } from './components/GraphOperationalPanel';
 import { QuickHandwrittenNote } from './components/QuickHandwrittenNote';
@@ -58,8 +62,11 @@ export const VisualizerWorkspace: React.FC = () => {
   const isBubbleSortTopic = isDsa && (lesson?.topic === 'bubble_sort' || lesson?.id === 'dsa_bubble_sort');
   const isSelectionSortTopic = isDsa && (lesson?.topic === 'selection_sort' || lesson?.id === 'dsa_selection_sort');
   const isInsertionSortTopic = isDsa && (lesson?.topic === 'insertion_sort' || lesson?.id === 'dsa_insertion_sort');
+  const isMergeSortTopic = isDsa && (lesson?.topic === 'merge_sort' || lesson?.id === 'dsa_merge_sort');
+  const isHeapSortTopic = isDsa && (lesson?.topic === 'heap_sort' || lesson?.id === 'dsa_heap_sort');
+  const isSortingTopic = isBubbleSortTopic || isSelectionSortTopic || isInsertionSortTopic || isMergeSortTopic || isHeapSortTopic;
   const isTreeTopic = isDsa && lesson?.topic === 'binary_tree';
-  const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs');
+  const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs' || lesson?.topic === 'graph_dijkstra' || lesson?.topic === 'graph_kruskal' || lesson?.topic === 'graph_prims');
 
   const isFlowchartTopic = !isDsa && [
     'variables', 'type_casting', 'operators', 'operators_expressions', 'user_input', 'data_types',
@@ -104,7 +111,7 @@ export const VisualizerWorkspace: React.FC = () => {
         {!isDsa && <StageControls />}
         <div className="flex-1 h-full relative overflow-hidden flex flex-col">
           {pureBlackToggleButton}
-          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
         </div>
         <PenMenu />
       </div>
@@ -119,10 +126,14 @@ export const VisualizerWorkspace: React.FC = () => {
 
           {/* ── Left Column: Operational Dashboard (Mobile: flex-1/scrollable, PC: 30%) ── */}
           <div className="w-full md:w-[30%] flex flex-col gap-1.5 overflow-hidden shrink-0 h-[45%] md:h-full">
-            <div className="h-[65%] md:h-[75%] overflow-hidden flex flex-col">
-              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isInsertionSortTopic ? <InsertionSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
+            <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
+              isSortingTopic ? 'h-[48%] md:h-[46%]' : 'h-[60%] md:h-[66%]'
+            }`}>
+              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isInsertionSortTopic ? <InsertionSortOperationalPanel /> : isMergeSortTopic ? <MergeSortOperationalPanel /> : isHeapSortTopic ? <HeapSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
             </div>
-            <div className="h-[35%] md:h-[25%] overflow-hidden flex flex-col">
+            <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
+              isSortingTopic ? 'h-[52%] md:h-[54%]' : 'h-[40%] md:h-[34%]'
+            }`}>
               <ExplanationBar />
             </div>
           </div>
@@ -136,7 +147,7 @@ export const VisualizerWorkspace: React.FC = () => {
               isPureBlack ? 'bg-black' : 'bg-[#050510]'
             } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
               {pureBlackToggleButton}
-              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
+              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
               <PenMenu />
               <QuickHandwrittenNote topic={lesson?.topic ?? 'stack'} />
             </div>

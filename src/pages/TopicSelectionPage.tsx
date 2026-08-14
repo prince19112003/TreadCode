@@ -88,10 +88,13 @@ const dsaTopics = [
   { id: 'queue', number: '07', name: 'Queue (FIFO)', subtitle: 'Enqueue, Dequeue & Front/Rear Pointers', complexity: 'O(1)', programsCount: 4, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#06b6d4' },
   { id: 'singly_linked_list', number: '08', name: 'Singly Linked List', subtitle: 'Node → Data | Next Pointer Chain', complexity: 'O(N)', programsCount: 5, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#8b5cf6' },
   { id: 'doubly_linked_list', number: '09', name: 'Doubly Linked List', subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links', complexity: 'O(N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#6366f1' },
-  { id: 'binary_tree', number: '10', name: 'Binary Tree', subtitle: 'Node → Left & Right Children Branches', complexity: 'O(log N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
+  { id: 'binary_tree', number: '10', name: 'Binary Search Tree (BST)', subtitle: 'Insert, Delete, Search & Traversals (Inorder, Preorder, Postorder)', complexity: 'O(log N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
   { id: 'graph_basics', number: '11', name: 'Graph Fundamentals', subtitle: 'Vertices, Edges & Adjacency Matrix', complexity: 'O(V+E)', programsCount: 2, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#eab308' },
   { id: 'graph_bfs', number: '12', name: 'Graph BFS Traversal', subtitle: 'Breadth-First Queue-based Level-Order Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
   { id: 'graph_dfs', number: '13', name: 'Graph DFS Traversal', subtitle: 'Depth-First Stack-based Backtracking Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#8b5cf6' },
+  { id: 'graph_dijkstra', number: '14', name: "Dijkstra's Algorithm", subtitle: 'Single-Source Shortest Path in Weighted Graph', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#38bdf8' },
+  { id: 'graph_kruskal', number: '15', name: "Kruskal's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Disjoint Set Union', complexity: 'O(E log E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#f59e0b' },
+  { id: 'graph_prims', number: '16', name: "Prim's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Priority Queue', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
 ];
 
 const difficultyConfig = {
@@ -133,6 +136,9 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'graph_basics') programId = 'dsa_graph_basics';
       else if (topicId === 'graph_bfs') programId = 'dsa_graph_bfs';
       else if (topicId === 'graph_dfs') programId = 'dsa_graph_dfs';
+      else if (topicId === 'graph_dijkstra') programId = 'dsa_graph_dijkstra';
+      else if (topicId === 'graph_kruskal') programId = 'dsa_graph_kruskal';
+      else if (topicId === 'graph_prims') programId = 'dsa_graph_prims';
       else if (topicId === 'bubble_sort') programId = 'dsa_bubble_sort';
       else if (topicId === 'selection_sort') programId = 'dsa_selection_sort';
       else if (topicId === 'insertion_sort') programId = 'dsa_insertion_sort';

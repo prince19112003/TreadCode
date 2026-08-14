@@ -361,10 +361,37 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'dsa_sll_traverse', number: '04', friendlyName: 'Level Order (BFS on Tree)', description: 'Visit tree nodes level by level using a queue data structure.' },
     ],
     graph_basics: [
-      { id: 'dsa_array_max_min', number: '01', friendlyName: 'Graph — Adjacency Matrix Representation', description: 'Represent an undirected graph as a 2D N×N matrix of 0s and 1s.' },
-      { id: 'dsa_array_max_min', number: '02', friendlyName: 'Graph — Adjacency List Representation', description: 'Represent graph as array of linked lists (space efficient for sparse graphs).' },
-      { id: 'dsa_linear_search', number: '03', friendlyName: 'Breadth First Search (BFS)', description: 'Level-order graph traversal using a queue; shortest path in unweighted graphs.' },
-      { id: 'dsa_linear_search', number: '04', friendlyName: 'Depth First Search (DFS)', description: 'Explore as far as possible along each branch before backtracking.' },
+      { id: 'dsa_graph_basics', number: '01', friendlyName: 'Graph — Adjacency Matrix & List', description: 'Represent an undirected graph as a 2D N×N matrix and adjacency list.' },
+    ],
+    graph_bfs: [
+      { id: 'dsa_graph_bfs', number: '01', friendlyName: 'Graph BFS Level-Order Traversal', description: 'Breadth-First Search queue simulation with level-order traversal result path.' },
+    ],
+    graph_dfs: [
+      { id: 'dsa_graph_dfs', number: '01', friendlyName: 'Graph DFS Stack Traversal', description: 'Depth-First Search LIFO stack simulation with backtracking path.' },
+    ],
+    graph_dijkstra: [
+      { id: 'dsa_graph_dijkstra', number: '01', friendlyName: "Dijkstra's Shortest Path Algorithm", description: 'Single-source shortest path calculation on weighted graph with distance table & edge relaxation.' },
+    ],
+    graph_kruskal: [
+      { id: 'dsa_graph_kruskal', number: '01', friendlyName: "Kruskal's Minimum Spanning Tree (MST)", description: 'Greedy Minimum Spanning Tree construction using edge weight sorting & Disjoint Set Union.' },
+    ],
+    graph_prims: [
+      { id: 'dsa_graph_prims', number: '01', friendlyName: "Prim's Minimum Spanning Tree (MST)", description: 'Greedy Minimum Spanning Tree construction using Priority Queue & vertex expansion.' },
+    ],
+    bubble_sort: [
+      { id: 'dsa_bubble_sort', number: '01', friendlyName: 'Bubble Sort Algorithm', description: 'Sort array by repeatedly swapping adjacent out-of-order elements.' },
+    ],
+    selection_sort: [
+      { id: 'dsa_selection_sort', number: '01', friendlyName: 'Selection Sort Algorithm', description: 'Find minimum element from unsorted subarray and swap to sorted portion.' },
+    ],
+    insertion_sort: [
+      { id: 'dsa_insertion_sort', number: '01', friendlyName: 'Insertion Sort Algorithm', description: 'Build sorted array one element at a time by shifting elements.' },
+    ],
+    merge_sort: [
+      { id: 'dsa_merge_sort', number: '01', friendlyName: 'Merge Sort Algorithm', description: 'Divide and conquer recursive array splitting and two-way merging.' },
+    ],
+    heap_sort: [
+      { id: 'dsa_heap_sort', number: '01', friendlyName: 'Heap Sort Algorithm', description: 'Build Max-Heap binary tree and extract maximum element iteratively.' },
     ],
   },
   java: {

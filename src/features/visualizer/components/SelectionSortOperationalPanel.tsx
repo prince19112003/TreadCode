@@ -1,51 +1,52 @@
-import React, { useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack, RefreshCw, Sparkles, Shuffle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
+import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export const SelectionSortOperationalPanel: React.FC = () => {
-  const [arrayInput, setArrayInput] = useState<string>('64, 25, 12, 22, 11');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const lesson = useLessonStore(s => s.lesson);
+  const setCustomSteps = useLessonStore(s => s.setCustomSteps);
+  const goToStep = useLessonStore(s => s.goToStep);
+  const goNext = useLessonStore(s => s.goNext);
+  const goPrev = useLessonStore(s => s.goPrev);
+  const isPlaying = useLessonStore(s => s.isPlaying);
+  const setIsPlaying = useLessonStore(s => s.setIsPlaying);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
+  const totalSteps = useLessonStore(s => s.totalSteps);
 
-  // Store bindings
-  const setCustomSteps = useLessonStore((state) => state.setCustomSteps);
-  const goToStep = useLessonStore((state) => state.goToStep);
-  const goNext = useLessonStore((state) => state.goNext);
-  const goPrev = useLessonStore((state) => state.goPrev);
-  const isPlaying = useLessonStore((state) => state.isPlaying);
-  const setIsPlaying = useLessonStore((state) => state.setIsPlaying);
-  const playSpeed = useLessonStore((state) => state.playSpeed);
-  const setPlaySpeed = useLessonStore((state) => state.setPlaySpeed);
-  const currentStepIndex = useLessonStore((state) => state.currentStepIndex);
-  const activeSteps = useLessonStore((state) => state.activeSteps);
+  // 6 separate input boxes state
+  const [boxes, setBoxes] = useState<string[]>(['64', '25', '12', '22', '11', '90']);
 
-  // Generate Step-by-Step Selection Sort Execution Steps
-  const generateSelectionSortSteps = (arrInput: number[]): ExecutionStep[] => {
-    const arr = [...arrInput];
+  // Generate full Selection Sort execution steps for 6 elements
+  const generateSelectionSortSteps = useCallback((initialArr: number[]): ExecutionStep[] => {
+    const arr = [...initialArr];
     const n = arr.length;
     const steps: ExecutionStep[] = [];
+    let stepNum = 1;
 
-    // Step 1: Initial Array
+    // Initial State
     steps.push({
-      step: 1,
+      step: stepNum++,
       lineNum: 1,
-      explanationEnglish: `Initial Array: [${arr.join(', ')}] with ${n} unsorted elements.`,
-      explanationHinglish: `Shuruati Array: [${arr.join(', ')}] — Total ${n} unsorted elements.`,
-      memorySnapshot: { arr: `[${arr.join(',')}]`, i: 0, minIdx: -1, j: -1 },
+      explanationEnglish: `Selection Sort initialized with elements: [${arr.join(', ')}].`,
+      explanationHinglish: `Elements ke saath Selection Sort initialize hua: [${arr.join(', ')}].`,
+      memorySnapshot: { arr: [...arr], pass: 1, i: 0, minIdx: 0, j: -1, sortedCount: 0 },
+      consoleOutput: `> Selection Sort initialized: [${arr.join(', ')}]`,
+      animationEvent: { type: 'NONE' } as any,
     });
-
-    let stepNum = 2;
 
     for (let i = 0; i < n - 1; i++) {
       let minIdx = i;
 
-      // Pass boundary start
+      // Pass start step
       steps.push({
         step: stepNum++,
         lineNum: 3,
-        explanationEnglish: `Pass ${i + 1}: Assume minIdx = ${i} (arr[${i}] = ${arr[i]}).`,
-        explanationHinglish: `Pass ${i + 1}: minIdx = ${i} (arr[${i}] = ${arr[i]}) ko sabse chhota man lo.`,
-        memorySnapshot: { arr: `[${arr.join(',')}]`, i, minIdx, j: i + 1 },
+        explanationEnglish: `Pass ${i + 1}: Assume index [${i}] (${arr[i]}) as minimum (minIdx = ${i}).`,
+        explanationHinglish: `Pass ${i + 1}: index [${i}] (${arr[i]}) ko pehle minimum maan lo (minIdx = ${i}).`,
+        memorySnapshot: { arr: [...arr], pass: i + 1, i, minIdx, j: i + 1, sortedCount: i },
+        consoleOutput: `> Pass ${i + 1} | Initial minIdx = [${i}] (${arr[i]})`,
+        animationEvent: { type: 'NONE' } as any,
       });
 
       for (let j = i + 1; j < n; j++) {
@@ -53,45 +54,53 @@ export const SelectionSortOperationalPanel: React.FC = () => {
         steps.push({
           step: stepNum++,
           lineNum: 4,
-          explanationEnglish: `Compare arr[${j}] = ${arr[j]} with current minimum arr[${minIdx}] = ${arr[minIdx]}.`,
-          explanationHinglish: `Compare karo: arr[${j}] = ${arr[j]} aur min element arr[${minIdx}] = ${arr[minIdx]}.`,
-          memorySnapshot: { arr: `[${arr.join(',')}]`, i, minIdx, j },
+          explanationEnglish: `Pass ${i + 1}: Compare arr[${j}] (${arr[j]}) with min arr[${minIdx}] (${arr[minIdx]}).`,
+          explanationHinglish: `Pass ${i + 1}: arr[${j}] (${arr[j]}) ko min element arr[${minIdx}] (${arr[minIdx]}) se compare kiya.`,
+          memorySnapshot: { arr: [...arr], pass: i + 1, i, minIdx, j, sortedCount: i, comparing: [j, minIdx] },
+          consoleOutput: `> Comparing arr[${j}] (${arr[j]}) vs min arr[${minIdx}] (${arr[minIdx]})`,
+          animationEvent: {
+            type: 'COMPARE_INDICES',
+            arrayName: 'arr',
+            indexA: j,
+            indexB: minIdx,
+          } as any,
         });
 
         if (arr[j] < arr[minIdx]) {
-          const prevMin = minIdx;
           minIdx = j;
-          // New Minimum Found step
+          // New Min Found
           steps.push({
             step: stepNum++,
             lineNum: 5,
-            explanationEnglish: `New Minimum Found! arr[${j}] (${arr[j]}) < arr[${prevMin}] (${arr[prevMin]}) → Update minIdx = ${minIdx}.`,
-            explanationHinglish: `Naya Minimum mil gaya! arr[${j}] (${arr[j]}) chhota hai → minIdx = ${minIdx} kar do.`,
-            memorySnapshot: { arr: `[${arr.join(',')}]`, i, minIdx, j },
+            explanationEnglish: `New Minimum Found! arr[${j}] (${arr[j]}) < min element → Update minIdx = ${minIdx}.`,
+            explanationHinglish: `Naya Minimum mila! arr[${j}] (${arr[j]}) chhota hai → minIdx = ${minIdx} kar do.`,
+            memorySnapshot: { arr: [...arr], pass: i + 1, i, minIdx, j, sortedCount: i },
+            consoleOutput: `> New minIdx = [${minIdx}] (${arr[minIdx]})`,
+            animationEvent: { type: 'NONE' } as any,
           });
         }
       }
 
-      // Swap step if minIdx changed
+      // Swap step if minIdx !== i
       if (minIdx !== i) {
+        const valA = arr[i];
+        const valB = arr[minIdx];
+        arr[i] = valB;
+        arr[minIdx] = valA;
+
         steps.push({
           step: stepNum++,
           lineNum: 7,
-          explanationEnglish: `Swap smallest element arr[${minIdx}] (${arr[minIdx]}) to boundary arr[${i}] (${arr[i]}).`,
-          explanationHinglish: `Sabse chhote element arr[${minIdx}] (${arr[minIdx]}) ko arr[${i}] (${arr[i]}) ke sath swap karo.`,
-          memorySnapshot: { arr: `[${arr.join(',')}]`, i, minIdx, j: -1 },
-        });
-
-        // Perform swap
-        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
-
-        // After swap state
-        steps.push({
-          step: stepNum++,
-          lineNum: 7,
-          explanationEnglish: `After Swap: arr = [${arr.join(', ')}]. Index [0..${i}] is now sorted.`,
-          explanationHinglish: `Swap ke baad: arr = [${arr.join(', ')}]. Index [0..${i}] ab sorted hai.`,
-          memorySnapshot: { arr: `[${arr.join(',')}]`, i: i + 1, minIdx: -1, j: -1 },
+          explanationEnglish: `Swap min element arr[${minIdx}] (${valB}) into sorted position arr[${i}] (${valA}).`,
+          explanationHinglish: `Min element arr[${minIdx}] (${valB}) ko sorted position arr[${i}] (${valA}) ke saath swap kiya.`,
+          memorySnapshot: { arr: [...arr], pass: i + 1, i, minIdx, j: -1, sortedCount: i + 1, swapping: [i, minIdx] },
+          consoleOutput: `> Swapped: ${valA} ⇄ ${valB} | Current: [${arr.join(', ')}]`,
+          animationEvent: {
+            type: 'SWAP',
+            arrayName: 'arr',
+            indexA: i,
+            indexB: minIdx,
+          } as any,
         });
       } else {
         steps.push({
@@ -99,190 +108,142 @@ export const SelectionSortOperationalPanel: React.FC = () => {
           lineNum: 7,
           explanationEnglish: `arr[${i}] (${arr[i]}) is already the minimum. No swap needed.`,
           explanationHinglish: `arr[${i}] (${arr[i]}) pehle se hi minimum hai. Swap zaroori nahi.`,
-          memorySnapshot: { arr: `[${arr.join(',')}]`, i: i + 1, minIdx: -1, j: -1 },
+          memorySnapshot: { arr: [...arr], pass: i + 1, i, minIdx: i, j: -1, sortedCount: i + 1 },
+          consoleOutput: `> arr[${i}] (${arr[i]}) already in correct position`,
+          animationEvent: { type: 'NONE' } as any,
         });
       }
     }
 
-    // Final Sorted Step
+    // Final Complete Step
     steps.push({
       step: stepNum,
       lineNum: 8,
-      explanationEnglish: `✓ Selection Sort Complete! Sorted Array = [${arr.join(', ')}].`,
-      explanationHinglish: `✓ Selection Sort Complete! Sorted Array = [${arr.join(', ')}].`,
-      memorySnapshot: { arr: `[${arr.join(',')}]`, i: n, minIdx: -1, j: -1 },
-      consoleOutput: `Sorted: [${arr.join(', ')}]`,
+      explanationEnglish: `✓ SELECTION SORT COMPLETE! Array is fully sorted.`,
+      explanationHinglish: `✓ SELECTION SORT COMPLETE! Array poori tarah sort ho gayi hai.`,
+      memorySnapshot: { arr: [...arr], pass: n - 1, i: n, minIdx: -1, j: -1, sortedCount: n },
+      consoleOutput: `✓ Selection Sort Complete: [${arr.join(', ')}]`,
+      animationEvent: { type: 'NONE' } as any,
     });
 
     return steps;
-  };
+  }, []);
 
-  // Handle Input Submission & Visualization Trigger
-  const handleStartSort = () => {
-    setErrorMsg(null);
-    const parsed = arrayInput
-      .split(',')
-      .map((v) => parseInt(v.trim(), 10))
-      .filter((v) => !isNaN(v));
+  // Update visualization immediately whenever a box is changed
+  const handleBoxChange = (index: number, val: string) => {
+    const cleaned = val.replace(/\D/g, '').slice(0, 3);
+    const nextBoxes = [...boxes];
+    nextBoxes[index] = cleaned;
+    setBoxes(nextBoxes);
 
-    if (parsed.length < 4 || parsed.length > 6) {
-      setErrorMsg('Please enter between 4 to 6 numbers max (e.g., 64, 25, 12, 22, 11).');
-      return;
-    }
+    const nums = nextBoxes.map((b) => {
+      const parsed = parseInt(b.trim(), 10);
+      return isNaN(parsed) ? 0 : parsed;
+    });
 
-    const steps = generateSelectionSortSteps(parsed);
+    const steps = generateSelectionSortSteps(nums);
     setCustomSteps(steps);
-    goToStep(0);
     setIsPlaying(false);
+    setTimeout(() => goToStep(0), 20);
   };
 
-  // Presets
-  const setRandomPreset = () => {
-    const count = Math.floor(Math.random() * 3) + 4; // 4 to 6
-    const randomVals = Array.from({ length: count }, () => Math.floor(Math.random() * 85) + 10);
-    const str = randomVals.join(', ');
-    setArrayInput(str);
-    setErrorMsg(null);
-  };
-
-  const setReversePreset = () => {
-    setArrayInput('90, 70, 50, 30, 10');
-    setErrorMsg(null);
-  };
-
-  const setAlmostSortedPreset = () => {
-    setArrayInput('15, 25, 45, 35, 55');
-    setErrorMsg(null);
-  };
+  // Initialize default array on component load
+  useEffect(() => {
+    const initialArr = [64, 25, 12, 22, 11, 90];
+    const steps = generateSelectionSortSteps(initialArr);
+    setCustomSteps(steps);
+    setIsPlaying(false);
+    setTimeout(() => goToStep(0), 30);
+  }, [lesson?.id, generateSelectionSortSteps, setCustomSteps, goToStep, setIsPlaying]);
 
   return (
-    <div className="w-full h-full flex flex-col p-4 bg-slate-950 text-white font-mono select-none overflow-y-auto">
-      {/* Title */}
-      <div className="flex items-center gap-2 pb-3 mb-3 border-b border-slate-800">
-        <Sparkles className="w-4 h-4 text-purple-400" />
-        <h2 className="text-xs font-black tracking-wider text-slate-100 uppercase">SELECTION SORT CONTROLS</h2>
-      </div>
-
-      {/* Input Array Section */}
-      <div className="space-y-3 mb-4">
-        <label className="text-[11px] font-bold text-slate-400 block">
-          INPUT ARRAY <span className="text-purple-400">(4 to 6 Elements Max)</span>:
-        </label>
-
+    <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
+      
+      {/* Sleek Minimal Header */}
+      <div className="px-4 py-3 bg-[#050711] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={arrayInput}
-            onChange={(e) => setArrayInput(e.target.value)}
-            placeholder="e.g. 64, 25, 12, 22, 11"
-            className="flex-1 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors shadow-inner"
-          />
+          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <span className="font-extrabold tracking-wider text-slate-200 text-[11px] uppercase">
+            SELECTION SORT
+          </span>
         </div>
-
-        {errorMsg && (
-          <p className="text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-lg">
-            ⚠️ {errorMsg}
-          </p>
-        )}
-
-        {/* Preset Buttons */}
-        <div className="grid grid-cols-3 gap-1.5 pt-1">
-          <button
-            onClick={setRandomPreset}
-            className="py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold text-slate-300 transition-colors flex items-center justify-center gap-1"
-          >
-            <Shuffle size={12} className="text-purple-400" /> Random
-          </button>
-          <button
-            onClick={setReversePreset}
-            className="py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold text-slate-300 transition-colors flex items-center justify-center gap-1"
-          >
-            📉 Reverse
-          </button>
-          <button
-            onClick={setAlmostSortedPreset}
-            className="py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold text-slate-300 transition-colors flex items-center justify-center gap-1"
-          >
-            📈 Almost
-          </button>
-        </div>
-
-        {/* Main Action Button */}
-        <button
-          onClick={handleStartSort}
-          className="w-full py-2.5 rounded-xl font-mono font-black text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white shadow-purple-500/20"
-        >
-          <Sparkles size={14} /> ▶ START SELECTION SORT VISUALIZATION
-        </button>
       </div>
 
-      {/* Step Playback Controls */}
-      <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2.5">
-        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
-          STEP PLAYBACK CONTROLS
-        </span>
+      {/* Control Panel Body */}
+      <div className="flex-1 overflow-y-auto p-3.5 flex flex-col justify-between gap-4">
 
-        {/* Play/Pause & Prev/Next */}
-        <div className="grid grid-cols-4 gap-1.5">
-          <button
-            onClick={() => goToStep(0)}
-            className="py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center transition-all active:scale-95"
-            title="Reset to Start"
-          >
-            <RefreshCw size={14} />
-          </button>
+        {/* Minimal Array Inputs Section */}
+        <div className="flex flex-col gap-2.5">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold px-0.5">
+            Array Input
+          </span>
 
-          <button
-            onClick={goPrev}
-            disabled={currentStepIndex === 0}
-            className="py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-40 flex items-center justify-center transition-all active:scale-95"
-            title="Previous Step"
-          >
-            <SkipBack size={14} />
-          </button>
-
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className={`py-2 rounded-xl border font-bold flex items-center justify-center transition-all active:scale-95 ${
-              isPlaying
-                ? 'bg-amber-500/20 border-amber-400 text-amber-300'
-                : 'bg-purple-600 hover:bg-purple-500 border-purple-400 text-white shadow-lg shadow-purple-500/30'
-            }`}
-            title={isPlaying ? 'Pause' : 'Auto Play'}
-          >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-          </button>
-
-          <button
-            onClick={goNext}
-            disabled={!activeSteps || currentStepIndex >= activeSteps.length - 1}
-            className="py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-40 flex items-center justify-center transition-all active:scale-95"
-            title="Next Step"
-          >
-            <SkipForward size={14} />
-          </button>
-        </div>
-
-        {/* Playback Speed Selector */}
-        <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400">
-          <span>SPEED:</span>
-          <div className="flex items-center gap-1">
-            {[0.5, 1, 2].map((spd) => (
-              <button
-                key={spd}
-                onClick={() => setPlaySpeed(spd)}
-                className={`px-2 py-0.5 rounded-lg border font-mono transition-all ${
-                  playSpeed === spd
-                    ? 'bg-purple-500/20 border-purple-400 text-purple-300 font-bold'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {spd}x
-              </button>
+          {/* 6 Input Boxes Grid */}
+          <div className="grid grid-cols-6 gap-1.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80">
+            {boxes.map((val, idx) => (
+              <div key={idx} className="flex flex-col items-center gap-1">
+                <span className="text-[9px] font-mono font-medium text-slate-500">[{idx}]</span>
+                <input
+                  type="text"
+                  value={val}
+                  onChange={e => handleBoxChange(idx, e.target.value)}
+                  className="w-full text-center py-2 rounded-lg bg-slate-900 border border-slate-700/80 focus:border-cyan-400 focus:bg-slate-950 text-slate-100 text-xs font-mono font-bold tracking-tight focus:outline-none transition-colors"
+                />
+              </div>
             ))}
           </div>
         </div>
+
+        {/* Clean Step Controls Footer */}
+        <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-800/80">
+          
+          {/* Main Controls: Prev / Play-Pause / Next */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={goPrev}
+              disabled={currentStepIndex === 0}
+              className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-35 text-slate-200 font-mono text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+            >
+              <ChevronLeft size={14} /> Prev
+            </button>
+
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className={`py-2 rounded-xl font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
+                isPlaying
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+              }`}
+            >
+              {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+
+            <button
+              onClick={goNext}
+              disabled={currentStepIndex >= totalSteps - 1}
+              className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-35 text-slate-200 font-mono text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+            >
+              Next <ChevronRight size={14} />
+            </button>
+          </div>
+
+          {/* Reset Action */}
+          <button
+            onClick={() => {
+              setIsPlaying(false);
+              goToStep(0);
+            }}
+            className="w-full py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 text-slate-400 hover:text-slate-200 font-mono text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all"
+          >
+            <RotateCcw size={12} /> Reset to Start
+          </button>
+
+        </div>
+
       </div>
     </div>
   );
 };
+
+

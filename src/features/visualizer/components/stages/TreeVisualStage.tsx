@@ -1,220 +1,236 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useLesson } from '../../../../lessons/LessonContext';
+import React, { useRef, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { useLessonStore } from '../../../../lessons/useLessonStore';
 
-interface TreeNode {
-  val: string | number;
-  left?: TreeNode;
-  right?: TreeNode;
-  x?: number;
-  y?: number;
+interface StaticBstNode {
+  val: number;
+  x: number; // percentage
+  y: number; // px offset
+  parentVal: number | null;
+  side?: 'L' | 'R';
 }
 
-// Convert flat BST array to Tree Node hierarchy
-const buildTreeFromList = (list: (string | number)[]): TreeNode | null => {
-  if (list.length === 0) return null;
-  const nodes = list.map(v => (v === null || v === undefined ? null : { val: v } as TreeNode));
-
-  // BST Insertion logic for interactive list
-  const root = nodes[0];
-  if (!root) return null;
-
-  for (let i = 1; i < nodes.length; i++) {
-    const node = nodes[i];
-    if (!node) continue;
-    insertBST(root, node);
-  }
-
-  // Calculate coordinates recursively
-  calculateCoords(root, 0, 800, 40, 60);
-  return root;
-};
-
-const insertBST = (parent: TreeNode, node: TreeNode) => {
-  if (Number(node.val) < Number(parent.val)) {
-    if (!parent.left) {
-      parent.left = node;
-    } else {
-      insertBST(parent.left, node);
-    }
-  } else {
-    if (!parent.right) {
-      parent.right = node;
-    } else {
-      insertBST(parent.right, node);
-    }
-  }
-};
-
-const calculateCoords = (
-  node: TreeNode | undefined,
-  leftBoundary: number,
-  rightBoundary: number,
-  y: number,
-  levelGap: number
-) => {
-  if (!node) return;
-  const midX = (leftBoundary + rightBoundary) / 2;
-  node.x = midX;
-  node.y = y;
-
-  calculateCoords(node.left, leftBoundary, midX, y + levelGap, levelGap);
-  calculateCoords(node.right, midX, rightBoundary, y + levelGap, levelGap);
-};
-
-// Render links and nodes lists flatly
-const collectTreeVisualElements = (
-  node: TreeNode | null,
-  elements: { nodes: TreeNode[]; links: { fromX: number; fromY: number; toX: number; toY: number }[] } = { nodes: [], links: [] }
-) => {
-  if (!node) return elements;
-  elements.nodes.push(node);
-
-  if (node.left && typeof node.x === 'number' && typeof node.y === 'number' && typeof node.left.x === 'number' && typeof node.left.y === 'number') {
-    elements.links.push({ fromX: node.x, fromY: node.y, toX: node.left.x, toY: node.left.y });
-    collectTreeVisualElements(node.left, elements);
-  }
-  if (node.right && typeof node.x === 'number' && typeof node.y === 'number' && typeof node.right.x === 'number' && typeof node.right.y === 'number') {
-    elements.links.push({ fromX: node.x, fromY: node.y, toX: node.right.x, toY: node.right.y });
-    collectTreeVisualElements(node.right, elements);
-  }
-  return elements;
-};
-
-const getListFromStep = (step: any): { list: (string | number)[]; capacity: number } => {
-  if (!step) return { list: [], capacity: 7 };
-  const mem = step.memorySnapshot;
-  const cap = typeof mem?.capacity === 'number' ? mem.capacity : 7;
-  if (Array.isArray(mem?.list)) return { list: mem.list, capacity: cap };
-  if (typeof mem?.list === 'string') {
-    try { return { list: JSON.parse(mem.list), capacity: cap }; } catch { return { list: [], capacity: cap }; }
-  }
-  const ev = step.animationEvent;
-  if (ev?.listState) return { list: ev.listState, capacity: cap };
-  return { list: [], capacity: cap };
-};
+const STATIC_BST_HIERARCHY: StaticBstNode[] = [
+  { val: 25, x: 50, y: 35, parentVal: null },
+  { val: 15, x: 26, y: 105, parentVal: 25, side: 'L' },
+  { val: 50, x: 74, y: 105, parentVal: 25, side: 'R' },
+  { val: 10, x: 14, y: 175, parentVal: 15, side: 'L' },
+  { val: 22, x: 38, y: 175, parentVal: 15, side: 'R' },
+  { val: 35, x: 62, y: 175, parentVal: 50, side: 'L' },
+  { val: 70, x: 86, y: 175, parentVal: 50, side: 'R' },
+];
 
 export const TreeVisualStage: React.FC = () => {
-  const { currentStep, zoom } = useLesson();
+  const currentStep = useLessonStore(s => s.currentStep);
+  const activeSteps = useLessonStore(s => s.activeSteps);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
+  const zoom = useLessonStore(s => s.zoom);
 
-  const { list: listItems, capacity: CAPACITY } = getListFromStep(currentStep);
-  const ev = currentStep?.animationEvent as any;
-  const activeVal: string | number | undefined = ev?.activeNodeValue ?? currentStep?.memorySnapshot?.activeNodeValue;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const root = buildTreeFromList(listItems);
-  const { nodes: treeNodes, links: treeLinks } = collectTreeVisualElements(root);
+  // Extract snapshot reliably from activeSteps[currentStepIndex]
+  const stepSnapshot = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
 
-  const isEmpty = listItems.length === 0;
-  const isFull = listItems.length >= CAPACITY;
-  const isUnderflow = (ev?.type === 'TREE_DELETE' && isEmpty) || (currentStep?.explanationEnglish?.includes('Underflow'));
+  const mem = (stepSnapshot?.memorySnapshot as any) || {};
+  const activeVal = typeof mem.activeNodeValue === 'number' ? mem.activeNodeValue : undefined;
+  const visitedPath = Array.isArray(mem.visitedPath) ? mem.visitedPath : [];
+  const traversalSeq = Array.isArray(mem.traversalSeq) ? mem.traversalSeq : [];
+  const actionName = typeof mem.actionName === 'string' ? mem.actionName : 'INIT';
+  const isMatch = mem.isMatch === true;
+  const notFound = mem.notFound === true;
+
+  const maxSteps = activeSteps ? activeSteps.length : 1;
+
+  // Combination of path or traversal sequence for highlighting visited nodes
+  const activeSequence = traversalSeq.length > 0 ? traversalSeq : visitedPath;
+
+  // Auto-scroll on step change
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [currentStepIndex]);
 
   return (
-    <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-auto relative py-8 px-4">
+    <div
+      ref={scrollContainerRef}
+      className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-y-auto p-4 md:p-6 select-none custom-scrollbar"
+    >
       <div
-        className="flex flex-col items-center gap-4 my-auto transition-transform duration-200 ease-out origin-top w-full"
-        style={{ transform: `scale(${zoom})`, maxWidth: '800px' }}
+        className="w-full max-w-4xl flex flex-col items-center gap-6 transition-transform duration-200 ease-out py-2"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
       >
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.8)] animate-pulse" />
-          <span className="text-xs font-mono font-black uppercase tracking-[0.3em] text-violet-400/90">
-            Binary Search Tree (BST) — Max Nodes {CAPACITY}
-          </span>
-          <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.8)] animate-pulse" />
+        
+        {/* Minimal Header Status Bar */}
+        <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2.5 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse shadow-[0_0_8px_rgba(139,92,246,0.8)]" />
+            <span className="font-extrabold text-violet-300 tracking-wider">
+              BINARY SEARCH TREE (STATIC 7-NODE BST)
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-slate-300 font-mono text-xs">
+            <div>
+              <span className="text-slate-500">Mode:</span>{' '}
+              <span className="font-bold text-violet-400 uppercase">{actionName}</span>
+            </div>
+            <div>
+              <span className="text-slate-500">Step:</span>{' '}
+              <span className="font-bold text-amber-400">{currentStepIndex + 1} / {maxSteps}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Alerts */}
-        <AnimatePresence>
-          {isFull && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="px-4 py-1.5 rounded-full bg-red-500/15 border border-red-500/40 text-red-400 text-[11px] font-mono font-black tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-            >
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              MAX TREE NODES LIMIT ({listItems.length}/{CAPACITY})
-            </motion.div>
-          )}
-          {isUnderflow && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400 text-[11px] font-mono font-black tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse"
-            >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              UNDERFLOW: TREE IS EMPTY
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Tree Interactive SVG Stage */}
+        <div className="w-full bg-slate-950/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col items-center relative overflow-hidden shadow-2xl min-h-75">
+          
+          <div className="w-full flex items-center justify-between font-mono text-[11px] text-slate-400 pb-2 border-b border-slate-900">
+            <span className="font-bold text-violet-300 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+              BST STRUCTURE (ROOT = 25 | LEFT &lt; PARENT &lt; RIGHT)
+            </span>
+            
+            {activeVal !== undefined && (
+              <span className={`font-mono font-bold ${
+                isMatch ? 'text-emerald-400' : 'text-amber-300 animate-pulse'
+              }`}>
+                {isMatch ? `✓ MATCH FOUND [${activeVal}]` : `Inspecting Node [${activeVal}]`}
+              </span>
+            )}
+            {notFound && (
+              <span className="text-rose-400 font-mono font-bold">
+                ✕ NODE NOT FOUND
+              </span>
+            )}
+          </div>
 
-        {/* Tree Render Canvas Area */}
-        <div
-          className="relative border border-slate-800/40 bg-slate-950/20 rounded-2xl overflow-hidden py-4"
-          style={{ width: '800px', height: '340px' }}
-        >
-          {isEmpty ? (
-            <div className="absolute inset-0 flex items-center justify-center text-slate-700 text-xs font-mono">
-              [EMPTY TREE - INSERT NODES TO START BRANCHING]
-            </div>
-          ) : (
-            <svg className="w-full h-full pointer-events-none">
-              {/* Render branches */}
-              {treeLinks.map((link, idx) => (
-                <line
-                  key={idx}
-                  x1={link.fromX}
-                  y1={link.fromY}
-                  x2={link.toX}
-                  y2={link.toY}
-                  stroke="#334155"
-                  strokeWidth="2"
-                  strokeDasharray="4 2"
-                  className="transition-all duration-300"
-                />
-              ))}
+          {/* SVG Canvas for Tree Links */}
+          <div className="w-full h-70 relative mt-2">
+            <svg className="w-full h-full absolute inset-0 pointer-events-none stroke-violet-500/50" style={{ zIndex: 1 }}>
+              {STATIC_BST_HIERARCHY.map(node => {
+                if (node.parentVal === null) return null;
+                const parent = STATIC_BST_HIERARCHY.find(p => p.val === node.parentVal);
+                if (!parent) return null;
 
-              {/* Render Nodes as SVG foreignObjects to enable HTML styling inside SVG map */}
-              {treeNodes.map((node, idx) => {
-                const isActive = activeVal !== undefined && node.val === activeVal;
+                const isPathActive = activeSequence.includes(parent.val) && activeSequence.includes(node.val);
+
                 return (
-                  <g key={idx}>
-                    <circle
-                      cx={node.x}
-                      cy={node.y}
-                      r="19"
-                      className={`transition-all duration-300 ${
-                        isActive
-                          ? 'fill-violet-950/80 stroke-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.5)]'
-                          : 'fill-slate-900 stroke-slate-700'
-                      }`}
-                      strokeWidth="2.5"
+                  <g key={`edge-${node.val}`}>
+                    <line
+                      x1={`${parent.x}%`}
+                      y1={parent.y + 16}
+                      x2={`${node.x}%`}
+                      y2={node.y + 16}
+                      strokeWidth={isPathActive ? 3 : 2}
+                      className={isPathActive ? 'stroke-amber-400' : 'stroke-violet-500/50'}
                     />
+                    {/* Sub-label for Left/Right branch indicator */}
                     <text
-                      x={node.x}
-                      y={(node.y ?? 0) + 4}
+                      x={`${(parent.x + node.x) / 2}%`}
+                      y={(parent.y + node.y) / 2 + 10}
+                      fill="#94a3b8"
+                      fontSize="9"
+                      fontFamily="monospace"
                       textAnchor="middle"
-                      className="fill-slate-200 text-xs font-mono font-black select-none pointer-events-none"
                     >
-                      {node.val}
+                      {node.side}
                     </text>
                   </g>
                 );
               })}
             </svg>
-          )}
+
+            {/* Tree Nodes */}
+            {STATIC_BST_HIERARCHY.map(node => {
+              const val = node.val;
+              const isActive = val === activeVal;
+              const isVisited = activeSequence.includes(val);
+
+              return (
+                <motion.div
+                  key={`node-${val}`}
+                  animate={{ scale: isActive ? 1.25 : 1 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    position: 'absolute',
+                    left: `${node.x}%`,
+                    top: `${node.y}px`,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                  }}
+                  className="flex flex-col items-center"
+                >
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center font-mono font-black text-sm transition-all duration-200 shadow-xl border-2 ${
+                    isActive && isMatch
+                      ? 'bg-emerald-950 border-emerald-400 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.9)] ring-2 ring-emerald-400'
+                      : isActive
+                      ? 'bg-amber-950 border-amber-400 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.9)] ring-2 ring-amber-400'
+                      : isVisited
+                      ? 'bg-emerald-950/90 border-emerald-400 text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.7)]'
+                      : 'bg-slate-900 border-violet-400/80 text-slate-100 shadow-[0_0_12px_rgba(139,92,246,0.3)]'
+                  }`}>
+                    {val}
+                  </div>
+                </motion.div>
+              );
+            })}
+
+          </div>
+
         </div>
 
-        {/* Status Bar */}
-        <div className="flex items-center gap-4 px-5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800/60 text-[10px] font-mono">
-          <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${isEmpty ? 'bg-slate-500' : isFull ? 'bg-red-500' : 'bg-violet-500'}`} />
-            <span className="text-slate-500">{isEmpty ? 'Empty' : isFull ? 'Full' : 'Active'}</span>
+        {/* Visited Sequence / Search Path Result Bar */}
+        {activeSequence.length > 0 && (
+          <div className="w-full flex flex-col items-center gap-2 bg-slate-950/90 border border-slate-800/80 rounded-2xl p-4 shadow-xl font-mono text-xs">
+            <div className="w-full flex items-center justify-between border-b border-slate-900 pb-2 text-[11px] text-slate-400">
+              <span className="font-bold text-amber-400 uppercase">
+                {traversalSeq.length > 0 ? 'TRAVERSAL SEQUENCE RESULT' : 'SEARCH PATH TRACE'}:
+              </span>
+              <span className="text-slate-500">
+                {activeSequence.length} Nodes Visited
+              </span>
+            </div>
+
+            {/* Sharp Square Contiguous Sequence Blocks */}
+            <div className="inline-flex rounded-none border border-white/80 bg-slate-950/90 shadow-xl divide-x divide-white/80 mt-1">
+              {activeSequence.map((val: number, idx: number) => (
+                <div
+                  key={idx}
+                  className={`w-12 h-11 flex items-center justify-center font-mono font-black text-sm ${
+                    val === activeVal
+                      ? isMatch ? 'bg-emerald-950 text-emerald-300' : 'bg-amber-950 text-amber-300'
+                      : 'bg-emerald-950/80 text-emerald-200'
+                  }`}
+                >
+                  {val}
+                </div>
+              ))}
+            </div>
           </div>
-          <span className="text-slate-700">|</span>
-          <span className="text-slate-500">Nodes count: <span className="text-slate-300 font-bold">{listItems.length}/{CAPACITY}</span></span>
+        )}
+
+        {/* Minimal Legend Footer */}
+        <div className="flex items-center justify-center gap-6 font-mono text-[11px] text-slate-400 pt-3 border-t border-slate-800/60 w-full">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-violet-400" />
+            <span>BST Node</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-950 border border-amber-400" />
+            <span>Inspected Node</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-950 border border-emerald-400" />
+            <span>Visited / Match Node</span>
+          </div>
         </div>
+
       </div>
     </div>
   );

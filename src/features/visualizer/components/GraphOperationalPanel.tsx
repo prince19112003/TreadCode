@@ -1,515 +1,971 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLesson } from '../../../lessons/LessonContext';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
-import { Plus, RotateCcw, Trash2, ArrowLeftRight } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft, Eye, PlayCircle } from 'lucide-react';
 
-interface GraphNode {
-  id: string;
-  x: number;
-  y: number;
-}
+const GRAPH_7_NODES = ['0', '1', '2', '3', '4', '5', '6'];
+const DIJKSTRA_NODES = ['0', '1', '2', '3', '4', '5'];
 
-interface GraphEdge {
-  u: string;
-  v: string;
-}
-
-const getGraphDataFromStep = (step: any): { nodes: GraphNode[]; edges: GraphEdge[] } => {
-  if (!step) return { nodes: [], edges: [] };
-  const mem = step.memorySnapshot;
-  let nodes: GraphNode[] = [];
-  let edges: GraphEdge[] = [];
-  if (Array.isArray(mem?.nodes)) nodes = mem.nodes;
-  if (Array.isArray(mem?.edges)) edges = mem.edges;
-
-  // Fallback layout mapping if initial setup is loaded
-  if (nodes.length === 0) {
-    const defaultNodes = ['A', 'B', 'C', 'D', 'E'];
-    const radius = 110;
-    const cx = 400;
-    const cy = 170;
-    nodes = defaultNodes.map((id, index) => {
-      const angle = (index * 2 * Math.PI) / defaultNodes.length - Math.PI / 2;
-      return {
-        id,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle)
-      };
-    });
-    // Default connecting edges
-    edges = [
-      { u: 'A', v: 'B' },
-      { u: 'A', v: 'C' },
-      { u: 'B', v: 'D' },
-      { u: 'C', v: 'D' },
-      { u: 'D', v: 'E' }
-    ];
-  }
-  return { nodes, edges };
+// Coordinates layout for 7 unweighted nodes (520x340 Canvas)
+const GRAPH_NODE_POSITIONS: Record<string, { x: number; y: number }> = {
+  '0': { x: 80, y: 70 },
+  '3': { x: 300, y: 70 },
+  '6': { x: 440, y: 150 },
+  '2': { x: 220, y: 170 },
+  '1': { x: 80, y: 270 },
+  '4': { x: 270, y: 280 },
+  '5': { x: 400, y: 250 },
 };
 
+// Coordinates layout for 6-node Weighted Graph (Spacious 520x340 Canvas)
+const DIJKSTRA_NODE_POSITIONS: Record<string, { x: number; y: number }> = {
+  '0': { x: 75, y: 170 },
+  '1': { x: 200, y: 65 },
+  '2': { x: 200, y: 275 },
+  '3': { x: 345, y: 65 },
+  '4': { x: 345, y: 275 },
+  '5': { x: 465, y: 170 },
+};
+
+const GRAPH_7_EDGES = [
+  { u: '0', v: '1' },
+  { u: '0', v: '2' },
+  { u: '0', v: '3' },
+  { u: '1', v: '2' },
+  { u: '1', v: '4' },
+  { u: '2', v: '4' },
+  { u: '2', v: '5' },
+  { u: '3', v: '6' },
+  { u: '5', v: '6' },
+];
+
+// Weighted Edges for Dijkstra, Kruskal & Prim's Graphs
+const DIJKSTRA_EDGES = [
+  { u: '0', v: '1', weight: 4 },
+  { u: '0', v: '2', weight: 2 },
+  { u: '1', v: '2', weight: 1 },
+  { u: '1', v: '3', weight: 5 },
+  { u: '2', v: '3', weight: 8 },
+  { u: '2', v: '4', weight: 10 },
+  { u: '3', v: '4', weight: 2 },
+  { u: '3', v: '5', weight: 6 },
+  { u: '4', v: '5', weight: 3 },
+];
+
 export const GraphOperationalPanel: React.FC = () => {
-  const { lesson, setCustomSteps, currentStep, goToStep } = useLesson();
+  const lesson = useLessonStore(s => s.lesson);
+  const setCustomSteps = useLessonStore(s => s.setCustomSteps);
+  const goToStep = useLessonStore(s => s.goToStep);
+  const goNext = useLessonStore(s => s.goNext);
+  const goPrev = useLessonStore(s => s.goPrev);
+  const isPlaying = useLessonStore(s => s.isPlaying);
+  const setIsPlaying = useLessonStore(s => s.setIsPlaying);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
+  const totalSteps = useLessonStore(s => s.totalSteps);
 
-  const [nodes, setNodes] = useState<GraphNode[]>([]);
-  const [edges, setEdges] = useState<GraphEdge[]>([]);
+  const isBfs = lesson?.topic === 'graph_bfs';
+  const isDfs = lesson?.topic === 'graph_dfs';
+  const isDijkstra = lesson?.topic === 'graph_dijkstra';
+  const isKruskal = lesson?.topic === 'graph_kruskal';
+  const isPrims = lesson?.topic === 'graph_prims';
 
-  const [nodeId, setNodeId] = useState('');
-  const [edgeU, setEdgeU] = useState('');
-  const [edgeV, setEdgeV] = useState('');
-  const [startVertex, setStartVertex] = useState('A');
-  const [error, setError] = useState<string | null>(null);
+  const [selectedInspectNode, setSelectedInspectNode] = useState<string>('0');
+  const [startNode, setStartNode] = useState<string>('0');
+  const [targetNode, setTargetNode] = useState<string>('5');
+  const [edgesList] = useState(GRAPH_7_EDGES);
 
-  useEffect(() => {
-    const { nodes: n, edges: e } = getGraphDataFromStep(currentStep);
-    setNodes(n);
-    setEdges(e);
-  }, [currentStep]);
-
-  useEffect(() => {
-    const defaultNodes = ['A', 'B', 'C', 'D', 'E'];
-    const radius = 110;
-    const cx = 400;
-    const cy = 170;
-    const initialNodes = defaultNodes.map((id, index) => {
-      const angle = (index * 2 * Math.PI) / defaultNodes.length - Math.PI / 2;
-      return {
-        id,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle)
-      };
-    });
-    const initialEdges = [
-      { u: 'A', v: 'B' },
-      { u: 'A', v: 'C' },
-      { u: 'B', v: 'D' },
-      { u: 'C', v: 'D' },
-      { u: 'D', v: 'E' }
-    ];
-
-    const initStep: ExecutionStep = {
-      step: 1, lineNum: 1,
-      explanationEnglish: 'Graph Mesh workspace initialized with default vertices A, B, C, D, E.',
-      explanationHinglish: 'Graph Mesh workspace initialized hua. default vertices A, B, C, D, E set hain.',
-      memorySnapshot: { nodes: initialNodes, edges: initialEdges, visitedNodes: [] },
-      consoleOutput: '> Graph Initialized.',
-      animationEvent: { type: 'NONE' } as any
-    };
-
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-    setCustomSteps([initStep]);
-    setTimeout(() => goToStep(1), 30);
-  }, [lesson?.id]);
-
-  const dispatch = useCallback((
-    newNodes: GraphNode[],
-    newEdges: GraphEdge[],
-    explanationEn: string,
-    explanationHi: string,
-    consoleOut: string,
-    event: any
+  // Dispatch Fundamentals Graph Steps
+  const updateGraphState = useCallback((
+    edges: { u: string; v: string }[],
+    inspectNode: string,
+    actionMsg: string
   ) => {
-    setError(null);
+    const neighbors = edges
+      .filter(e => e.u === inspectNode || e.v === inspectNode)
+      .map(e => (e.u === inspectNode ? e.v : e.u));
+
     const step: ExecutionStep = {
-      step: 1, lineNum: 1,
-      explanationEnglish: explanationEn,
-      explanationHinglish: explanationHi,
-      memorySnapshot: { nodes: newNodes, edges: newEdges, visitedNodes: [] },
-      consoleOutput: `> ${consoleOut}`,
-      animationEvent: event
+      step: 1,
+      lineNum: 1,
+      explanationEnglish: `Graph Fundamentals: Inspecting Node [${inspectNode}]. Connected Neighbors: [${neighbors.length > 0 ? neighbors.join(', ') : 'None'}]. ${actionMsg}`,
+      explanationHinglish: `Graph Fundamentals: Node [${inspectNode}] inspect kiya. Connected Neighbors: [${neighbors.length > 0 ? neighbors.join(', ') : 'Koi nahi'}]. ${actionMsg}`,
+      memorySnapshot: {
+        nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+        edges,
+        inspectNode,
+        neighbors,
+      },
+      consoleOutput: `> Node [${inspectNode}] Degree = ${neighbors.length} (Neighbors: ${neighbors.join(', ') || 'None'})`,
+      animationEvent: { type: 'NONE' } as any,
     };
-    setNodes(newNodes);
-    setEdges(newEdges);
+
+    setSelectedInspectNode(inspectNode);
     setCustomSteps([step]);
-    setTimeout(() => goToStep(1), 30);
-  }, [setCustomSteps, goToStep]);
+    setIsPlaying(false);
+    setTimeout(() => goToStep(0), 20);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
 
-  /* ── Vertex / Edge Operations ── */
-
-  const handleAddVertex = () => {
-    const id = nodeId.trim().toUpperCase();
-    if (!id) return setError('Enter a vertex ID');
-    if (id.length > 3) return setError('Vertex ID too long (Max 3 chars)');
-    if (nodes.some(n => n.id === id)) return setError(`Vertex ${id} already exists`);
-
-    // Circular layout alignment map
-    const nextNodes = [...nodes, { id, x: 400, y: 170 }];
-    const radius = 110;
-    const cx = 400;
-    const cy = 170;
-    const repositionedNodes = nextNodes.map((node, index) => {
-      const angle = (index * 2 * Math.PI) / nextNodes.length - Math.PI / 2;
-      return {
-        id: node.id,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle)
-      };
+  // Generate BFS Steps
+  const handleRunBfs = useCallback((startV: string) => {
+    const adjMap: Record<string, string[]> = {};
+    GRAPH_7_NODES.forEach(n => { adjMap[n] = []; });
+    GRAPH_7_EDGES.forEach(e => {
+      adjMap[e.u].push(e.v);
+      adjMap[e.v].push(e.u);
     });
-
-    dispatch(repositionedNodes, edges,
-      `ADD VERTEX(${id}): New vertex added. Realigned graph circular nodes map.`,
-      `ADD VERTEX(${id}): Naya vertex add hua. Nodes ko circular alignment di.`,
-      `Added Vertex: ${id}`,
-      { type: 'GRAPH_ADD_VERTEX', id }
-    );
-    setNodeId('');
-  };
-
-  const handleRemoveVertex = () => {
-    const id = nodeId.trim().toUpperCase();
-    if (!id) return setError('Enter a vertex ID to delete');
-    if (!nodes.some(n => n.id === id)) return setError(`Vertex ${id} not found`);
-
-    const nextNodes = nodes.filter(n => n.id !== id);
-    const nextEdges = edges.filter(e => e.u !== id && e.v !== id);
-
-    // Realign remaining nodes
-    const radius = 110;
-    const cx = 400;
-    const cy = 170;
-    const repositionedNodes = nextNodes.map((node, index) => {
-      const angle = (index * 2 * Math.PI) / nextNodes.length - Math.PI / 2;
-      return {
-        id: node.id,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle)
-      };
-    });
-
-    dispatch(repositionedNodes, nextEdges,
-      `REMOVE VERTEX(${id}): Removed vertex and unlinked all adjacent edges.`,
-      `REMOVE VERTEX(${id}): Vertex delete kiya aur edges links clear kiye.`,
-      `Removed Vertex: ${id}`,
-      { type: 'GRAPH_REMOVE_VERTEX', id }
-    );
-    setNodeId('');
-  };
-
-  const handleAddEdge = () => {
-    const u = edgeU.trim().toUpperCase();
-    const v = edgeV.trim().toUpperCase();
-    if (!u || !v) return setError('Enter both vertex IDs to link');
-    if (u === v) return setError('Cannot create self loop edge');
-    if (!nodes.some(n => n.id === u) || !nodes.some(n => n.id === v)) return setError('Vertex not found in graph');
-
-    const edgeExists = edges.some(e => (e.u === u && e.v === v) || (e.u === v && e.v === u));
-    if (edgeExists) return setError(`Edge ${u}-${v} already exists`);
-
-    const nextEdges = [...edges, { u, v }];
-    dispatch(nodes, nextEdges,
-      `ADD EDGE(${u} - ${v}): Bidirectional edge created between ${u} and ${v}.`,
-      `ADD EDGE(${u} - ${v}): Vertices ke beech edge created link map.`,
-      `Added Edge: ${u} - ${v}`,
-      { type: 'GRAPH_ADD_EDGE', u, v }
-    );
-    setEdgeU('');
-    setEdgeV('');
-  };
-
-  const handleRemoveEdge = () => {
-    const u = edgeU.trim().toUpperCase();
-    const v = edgeV.trim().toUpperCase();
-    if (!u || !v) return setError('Enter both vertex IDs to unlink');
-
-    const nextEdges = edges.filter(e => !((e.u === u && e.v === v) || (e.u === v && e.v === u)));
-    dispatch(nodes, nextEdges,
-      `REMOVE EDGE(${u} - ${v}): Removed connection between ${u} and ${v}.`,
-      `REMOVE EDGE(${u} - ${v}): Connections boundary links remove kiye.`,
-      `Removed Edge: ${u} - ${v}`,
-      { type: 'GRAPH_REMOVE_EDGE', u, v }
-    );
-    setEdgeU('');
-    setEdgeV('');
-  };
-
-  /* ── Traversals Algorithms (BFS & DFS) ── */
-
-  const handleBFS = () => {
-    const start = startVertex.trim().toUpperCase();
-    if (!nodes.some(n => n.id === start)) return setError(`Start vertex ${start} not found`);
+    GRAPH_7_NODES.forEach(n => adjMap[n].sort((a, b) => parseInt(a) - parseInt(b)));
 
     const steps: ExecutionStep[] = [];
-    const visited: string[] = [];
-    const queue: string[] = [start];
+    const queueBuffer: (string | null)[] = Array(7).fill(null);
+    let frontIdx = 0;
+    let rearIdx = 0;
 
-    // Build Adjacency List representation
-    const adj: Record<string, string[]> = {};
-    nodes.forEach(n => adj[n.id] = []);
-    edges.forEach(e => {
-      adj[e.u].push(e.v);
-      adj[e.v].push(e.u);
-    });
-    // Sort adjacency nodes alphabetically for deterministic traversal
-    Object.keys(adj).forEach(k => adj[k].sort());
+    queueBuffer[rearIdx++] = startV;
+    const visitedList: string[] = [startV];
+    const bfsOrder: string[] = [];
 
-    visited.push(start);
+    let stepCount = 1;
+
     steps.push({
-      step: 1, lineNum: 1,
-      explanationEnglish: `BFS Initialized: Start at vertex ${start}. Queue: [${queue.join(', ')}]`,
-      explanationHinglish: `BFS Start: vertex ${start} se shuru. Queue: [${queue.join(', ')}]`,
-      memorySnapshot: { nodes, edges, activeNodeId: start, visitedNodes: [...visited] },
-      consoleOutput: `> BFS Starting Node: ${start}`,
-      animationEvent: { type: 'HIGHLIGHT_NODE', activeNodeId: start, visitedNodes: [...visited] } as any
+      step: stepCount++,
+      lineNum: 1,
+      explanationEnglish: `BFS Step 1: Start node [${startV}] added to Visited array & Enqueued into Queue at position [0].`,
+      explanationHinglish: `BFS Step 1: Start node [${startV}] ko Visited list me dala aur Queue me Enqueue kiya.`,
+      memorySnapshot: {
+        nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+        edges: GRAPH_7_EDGES,
+        queue: [...queueBuffer],
+        frontIdx,
+        rearIdx: rearIdx - 1,
+        visited: [...visitedList],
+        activeNode: undefined,
+        inspectingNeighbors: [],
+        bfsOrder: [...bfsOrder],
+        isBfs: true,
+      },
+      consoleOutput: `> BFS Start: Enqueued Node [${startV}]`,
+      animationEvent: { type: 'NONE' } as any,
     });
 
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      
-      const neighbors = adj[curr] || [];
-      neighbors.forEach(neighbor => {
-        if (!visited.includes(neighbor)) {
-          visited.push(neighbor);
-          queue.push(neighbor);
-          
-          steps.push({
-            step: steps.length + 1, lineNum: steps.length + 1,
-            explanationEnglish: `BFS: Discovered neighbor node ${neighbor} from node ${curr}. Queue: [${queue.join(', ')}]`,
-            explanationHinglish: `BFS: Node ${curr} se neighbor node ${neighbor} mila. Queue: [${queue.join(', ')}]`,
-            memorySnapshot: { nodes, edges, activeNodeId: neighbor, visitedNodes: [...visited] },
-            consoleOutput: `> Visited: ${neighbor} (discovered from ${curr})`,
-            animationEvent: { type: 'HIGHLIGHT_NODE', activeNodeId: neighbor, visitedNodes: [...visited] } as any
-          });
+    while (frontIdx < rearIdx) {
+      const curr = queueBuffer[frontIdx]!;
+      bfsOrder.push(curr);
+
+      const allNbrs = adjMap[curr] || [];
+      const newlyAdded: string[] = [];
+
+      allNbrs.forEach(nbr => {
+        if (!visitedList.includes(nbr)) {
+          newlyAdded.push(nbr);
         }
       });
+
+      steps.push({
+        step: stepCount++,
+        lineNum: 2,
+        explanationEnglish: `BFS Dequeue: Processing Node [${curr}]. Inspecting connected edges to neighbors ➔ [${allNbrs.join(', ')}]. Unvisited to add: [${newlyAdded.join(', ') || 'None'}].`,
+        explanationHinglish: `BFS Dequeue: Node [${curr}] process ho raha hai. Connected edges/neighbors [${allNbrs.join(', ')}] highlight hue. Unvisited: [${newlyAdded.join(', ') || 'Koi nahi'}].`,
+        memorySnapshot: {
+          nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+          edges: GRAPH_7_EDGES,
+          queue: [...queueBuffer],
+          frontIdx,
+          rearIdx: rearIdx - 1,
+          visited: [...visitedList],
+          activeNode: curr,
+          inspectingNeighbors: allNbrs,
+          bfsOrder: [...bfsOrder],
+          isBfs: true,
+        },
+        consoleOutput: `> Dequeued: Node [${curr}]. Inspecting neighbors: [${allNbrs.join(', ')}]`,
+        animationEvent: { type: 'HIGHLIGHT_NODE', activeNodeId: curr } as any,
+      });
+
+      if (newlyAdded.length > 0) {
+        newlyAdded.forEach(nbr => {
+          visitedList.push(nbr);
+          if (rearIdx < 7) {
+            queueBuffer[rearIdx++] = nbr;
+          }
+        });
+
+        steps.push({
+          step: stepCount++,
+          lineNum: 3,
+          explanationEnglish: `BFS Enqueue: Added unvisited neighbors [${newlyAdded.join(', ')}] to Visited array & Enqueued into Queue.`,
+          explanationHinglish: `BFS Enqueue: Unvisited neighbors [${newlyAdded.join(', ')}] Visited aur Queue memory blocks me store ho gaye.`,
+          memorySnapshot: {
+            nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+            edges: GRAPH_7_EDGES,
+            queue: [...queueBuffer],
+            frontIdx,
+            rearIdx: rearIdx - 1,
+            visited: [...visitedList],
+            activeNode: curr,
+            inspectingNeighbors: [],
+            bfsOrder: [...bfsOrder],
+            isBfs: true,
+          },
+          consoleOutput: `> Enqueued to Queue & Visited: [${newlyAdded.join(', ')}]`,
+          animationEvent: { type: 'NONE' } as any,
+        });
+      }
+
+      frontIdx++;
     }
 
-    setError(null);
-    setCustomSteps(steps);
-    setTimeout(() => goToStep(1), 30);
-  };
+    steps.push({
+      step: stepCount,
+      lineNum: 4,
+      explanationEnglish: `BFS Complete! All 7 nodes visited in Level-Order: [${bfsOrder.join(' ➔ ')}]`,
+      explanationHinglish: `BFS Traversal Complete! Sabhi 7 nodes visited: [${bfsOrder.join(' ➔ ')}]`,
+      memorySnapshot: {
+        nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+        edges: GRAPH_7_EDGES,
+        queue: [...queueBuffer],
+        frontIdx: Math.min(frontIdx, 6),
+        rearIdx: rearIdx - 1,
+        visited: [...visitedList],
+        activeNode: undefined,
+        inspectingNeighbors: [],
+        bfsOrder: [...bfsOrder],
+        isBfs: true,
+        isComplete: true,
+      },
+      consoleOutput: `> BFS Complete Path: ${bfsOrder.join(' -> ')}`,
+      animationEvent: { type: 'NONE' } as any,
+    });
 
-  const handleDFS = () => {
-    const start = startVertex.trim().toUpperCase();
-    if (!nodes.some(n => n.id === start)) return setError(`Start vertex ${start} not found`);
+    setCustomSteps(steps);
+    setIsPlaying(true);
+    setTimeout(() => goToStep(0), 20);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
+
+  // Generate DFS Steps
+  const handleRunDfs = useCallback((startV: string) => {
+    const adjMap: Record<string, string[]> = {};
+    GRAPH_7_NODES.forEach(n => { adjMap[n] = []; });
+    GRAPH_7_EDGES.forEach(e => {
+      adjMap[e.u].push(e.v);
+      adjMap[e.v].push(e.u);
+    });
+    GRAPH_7_NODES.forEach(n => adjMap[n].sort((a, b) => parseInt(b) - parseInt(a)));
 
     const steps: ExecutionStep[] = [];
-    const visited: string[] = [];
+    const stackBuffer: (string | null)[] = Array(7).fill(null);
+    let topIdx = -1;
 
-    // Build Adjacency List representation
-    const adj: Record<string, string[]> = {};
-    nodes.forEach(n => adj[n.id] = []);
-    edges.forEach(e => {
-      adj[e.u].push(e.v);
-      adj[e.v].push(e.u);
+    topIdx++;
+    stackBuffer[topIdx] = startV;
+    const visitedList: string[] = [startV];
+    const dfsOrder: string[] = [];
+
+    let stepCount = 1;
+
+    steps.push({
+      step: stepCount++,
+      lineNum: 1,
+      explanationEnglish: `DFS Step 1: Start node [${startV}] added to Visited array & Pushed onto Top of Stack at index [0].`,
+      explanationHinglish: `DFS Step 1: Start node [${startV}] Visited list me store hua aur Stack me Push kiya.`,
+      memorySnapshot: {
+        nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+        edges: GRAPH_7_EDGES,
+        stack: [...stackBuffer],
+        topIdx,
+        visited: [...visitedList],
+        activeNode: undefined,
+        inspectingNeighbors: [],
+        dfsOrder: [...dfsOrder],
+        isDfs: true,
+      },
+      consoleOutput: `> DFS Start: Pushed Node [${startV}] onto Stack`,
+      animationEvent: { type: 'NONE' } as any,
     });
-    Object.keys(adj).forEach(k => adj[k].sort());
 
-    const dfsHelper = (curr: string) => {
-      visited.push(curr);
-      steps.push({
-        step: steps.length + 1, lineNum: steps.length + 1,
-        explanationEnglish: `DFS Visited Node: ${curr}. DFS stack depth path growing.`,
-        explanationHinglish: `DFS Visited: Node ${curr} traverse kiya.`,
-        memorySnapshot: { nodes, edges, activeNodeId: curr, visitedNodes: [...visited] },
-        consoleOutput: `> DFS Visited Node: ${curr}`,
-        animationEvent: { type: 'HIGHLIGHT_NODE', activeNodeId: curr, visitedNodes: [...visited] } as any
+    while (topIdx >= 0) {
+      const curr = stackBuffer[topIdx]!;
+      stackBuffer[topIdx] = null;
+      topIdx--;
+
+      dfsOrder.push(curr);
+
+      const allNbrs = adjMap[curr] || [];
+      const newlyAdded: string[] = [];
+
+      allNbrs.forEach(nbr => {
+        if (!visitedList.includes(nbr)) {
+          newlyAdded.push(nbr);
+        }
       });
 
-      const neighbors = adj[curr] || [];
-      for (const neighbor of neighbors) {
-        if (!visited.includes(neighbor)) {
-          dfsHelper(neighbor);
+      steps.push({
+        step: stepCount++,
+        lineNum: 2,
+        explanationEnglish: `DFS Pop: Popped Top Node [${curr}] from Stack. Inspecting connected edges to neighbors ➔ [${allNbrs.join(', ')}]. Unvisited to push: [${newlyAdded.join(', ') || 'None'}].`,
+        explanationHinglish: `DFS Pop: Stack se Top Node [${curr}] pop kiya. Connected edges/neighbors [${allNbrs.join(', ')}] inspect kiye. Unvisited: [${newlyAdded.join(', ') || 'Koi nahi'}].`,
+        memorySnapshot: {
+          nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+          edges: GRAPH_7_EDGES,
+          stack: [...stackBuffer],
+          topIdx: Math.max(0, topIdx),
+          visited: [...visitedList],
+          activeNode: curr,
+          inspectingNeighbors: allNbrs,
+          dfsOrder: [...dfsOrder],
+          isDfs: true,
+        },
+        consoleOutput: `> Popped: Node [${curr}]. Inspecting neighbors: [${allNbrs.join(', ')}]`,
+        animationEvent: { type: 'HIGHLIGHT_NODE', activeNodeId: curr } as any,
+      });
+
+      if (newlyAdded.length > 0) {
+        newlyAdded.forEach(nbr => {
+          visitedList.push(nbr);
+          topIdx++;
+          if (topIdx < 7) {
+            stackBuffer[topIdx] = nbr;
+          }
+        });
+
+        steps.push({
+          step: stepCount++,
+          lineNum: 3,
+          explanationEnglish: `DFS Push: Added unvisited neighbors [${newlyAdded.join(', ')}] to Visited array & Pushed onto Stack Top [${topIdx}].`,
+          explanationHinglish: `DFS Push: Unvisited neighbors [${newlyAdded.join(', ')}] Stack ke Top par push kar diye gaye.`,
+          memorySnapshot: {
+            nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+            edges: GRAPH_7_EDGES,
+            stack: [...stackBuffer],
+            topIdx,
+            visited: [...visitedList],
+            activeNode: curr,
+            inspectingNeighbors: [],
+            dfsOrder: [...dfsOrder],
+            isDfs: true,
+          },
+          consoleOutput: `> Pushed to Stack & Visited: [${newlyAdded.join(', ')}]`,
+          animationEvent: { type: 'NONE' } as any,
+        });
+      }
+    }
+
+    steps.push({
+      step: stepCount,
+      lineNum: 4,
+      explanationEnglish: `DFS Traversal Complete! Stack is empty. Depth-First Path: [${dfsOrder.join(' ➔ ')}]`,
+      explanationHinglish: `DFS Traversal Complete! Stack khali ho gayi. Depth-First Path: [${dfsOrder.join(' ➔ ')}]`,
+      memorySnapshot: {
+        nodes: GRAPH_7_NODES.map(id => ({ id, x: GRAPH_NODE_POSITIONS[id].x, y: GRAPH_NODE_POSITIONS[id].y })),
+        edges: GRAPH_7_EDGES,
+        stack: [...stackBuffer],
+        topIdx: 0,
+        visited: [...visitedList],
+        activeNode: undefined,
+        inspectingNeighbors: [],
+        dfsOrder: [...dfsOrder],
+        isDfs: true,
+        isComplete: true,
+      },
+      consoleOutput: `> DFS Complete Path: ${dfsOrder.join(' -> ')}`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    setCustomSteps(steps);
+    setIsPlaying(true);
+    setTimeout(() => goToStep(0), 20);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
+
+  // Generate Dijkstra's Algorithm Steps
+  const handleRunDijkstra = useCallback((startV: string, destV: string) => {
+    const distMap: Record<string, number> = {};
+    const parentMap: Record<string, string | null> = {};
+    const settledSet: string[] = [];
+
+    DIJKSTRA_NODES.forEach(n => {
+      distMap[n] = Infinity;
+      parentMap[n] = null;
+    });
+    distMap[startV] = 0;
+
+    const steps: ExecutionStep[] = [];
+    let stepCount = 1;
+
+    steps.push({
+      step: stepCount++,
+      lineNum: 1,
+      explanationEnglish: `Dijkstra Initialization: Set distance of Start Node [${startV}] = 0, and all other nodes to Infinity (∞).`,
+      explanationHinglish: `Dijkstra Start: Node [${startV}] ka distance 0 set hua, baki sabhi nodes ka distance Infinity (∞) initialize hua.`,
+      memorySnapshot: {
+        nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+        edges: DIJKSTRA_EDGES,
+        distMap: { ...distMap },
+        parentMap: { ...parentMap },
+        settledSet: [...settledSet],
+        activeNode: startV,
+        relaxingEdge: undefined,
+        isDijkstra: true,
+      },
+      consoleOutput: `> Dijkstra Init: dist[${startV}] = 0, all others = ∞`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    const unvisited = [...DIJKSTRA_NODES];
+
+    while (unvisited.length > 0) {
+      unvisited.sort((a, b) => distMap[a] - distMap[b]);
+      const u = unvisited.shift()!;
+
+      if (distMap[u] === Infinity) break;
+
+      settledSet.push(u);
+
+      steps.push({
+        step: stepCount++,
+        lineNum: 2,
+        explanationEnglish: `Select Min Node: Node [${u}] has smallest distance = ${distMap[u]}. Settling Node [${u}].`,
+        explanationHinglish: `Min Node Picked: Node [${u}] ka distance minimum (${distMap[u]}) hai. Node [${u}] ko Settled mark kiya.`,
+        memorySnapshot: {
+          nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+          edges: DIJKSTRA_EDGES,
+          distMap: { ...distMap },
+          parentMap: { ...parentMap },
+          settledSet: [...settledSet],
+          activeNode: u,
+          relaxingEdge: undefined,
+          isDijkstra: true,
+        },
+        consoleOutput: `> Settled Node [${u}] with dist = ${distMap[u]}`,
+        animationEvent: { type: 'HIGHLIGHT_NODE', activeNodeId: u } as any,
+      });
+
+      const outgoing = DIJKSTRA_EDGES.filter(e => e.u === u || e.v === u);
+
+      for (const edge of outgoing) {
+        const v = edge.u === u ? edge.v : edge.u;
+        if (settledSet.includes(v)) continue;
+
+        const weight = edge.weight;
+        const newDist = distMap[u] + weight;
+        const oldDist = distMap[v];
+
+        if (newDist < oldDist) {
+          distMap[v] = newDist;
+          parentMap[v] = u;
+
+          steps.push({
+            step: stepCount++,
+            lineNum: 3,
+            explanationEnglish: `Edge Relaxation [${u} ➔ ${v}]: dist[${u}] (${distMap[u] - weight}) + weight (${weight}) = ${newDist} < dist[${v}] (${oldDist === Infinity ? '∞' : oldDist}). Updated dist[${v}] = ${newDist}!`,
+            explanationHinglish: `Edge Relaxed [${u} ➔ ${v}]: ${distMap[u] - weight} + ${weight} = ${newDist} < ${oldDist === Infinity ? '∞' : oldDist}. Node [${v}] ka naya shortest distance = ${newDist}!`,
+            memorySnapshot: {
+              nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+              edges: DIJKSTRA_EDGES,
+              distMap: { ...distMap },
+              parentMap: { ...parentMap },
+              settledSet: [...settledSet],
+              activeNode: u,
+              relaxingEdge: { u, v, weight, updated: true },
+              isDijkstra: true,
+            },
+            consoleOutput: `> Relaxed (${u}->${v}): dist[${v}] updated from ${oldDist === Infinity ? '∞' : oldDist} to ${newDist}`,
+            animationEvent: { type: 'NONE' } as any,
+          });
+        } else {
+          steps.push({
+            step: stepCount++,
+            lineNum: 3,
+            explanationEnglish: `Check Edge [${u} ➔ ${v}]: dist[${u}] (${distMap[u]}) + weight (${weight}) = ${newDist} ≥ dist[${v}] (${oldDist}). No update needed.`,
+            explanationHinglish: `Check Edge [${u} ➔ ${v}]: ${distMap[u]} + ${weight} = ${newDist} ≥ ${oldDist}. Naya path chhota nahi hai.`,
+            memorySnapshot: {
+              nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+              edges: DIJKSTRA_EDGES,
+              distMap: { ...distMap },
+              parentMap: { ...parentMap },
+              settledSet: [...settledSet],
+              activeNode: u,
+              relaxingEdge: { u, v, weight, updated: false },
+              isDijkstra: true,
+            },
+            consoleOutput: `> Checked (${u}->${v}): dist[${v}] remains ${oldDist}`,
+            animationEvent: { type: 'NONE' } as any,
+          });
         }
+      }
+    }
+
+    const shortestPath: string[] = [];
+    let curr: string | null = destV;
+    while (curr !== null) {
+      shortestPath.unshift(curr);
+      curr = parentMap[curr];
+    }
+
+    steps.push({
+      step: stepCount,
+      lineNum: 4,
+      explanationEnglish: `Dijkstra Complete! Shortest Path from Node [${startV}] ➔ Node [${destV}] is [${shortestPath.join(' ➔ ')}] with Total Distance = ${distMap[destV]}.`,
+      explanationHinglish: `Dijkstra Algorithm Complete! Node [${startV}] se Node [${destV}] ka shortest path: [${shortestPath.join(' ➔ ')}] (Total Distance = ${distMap[destV]}).`,
+      memorySnapshot: {
+        nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+        edges: DIJKSTRA_EDGES,
+        distMap: { ...distMap },
+        parentMap: { ...parentMap },
+        settledSet: [...settledSet],
+        activeNode: undefined,
+        relaxingEdge: undefined,
+        shortestPath: [...shortestPath],
+        totalDist: distMap[destV],
+        isDijkstra: true,
+        isComplete: true,
+      },
+      consoleOutput: `> Dijkstra Final Path (${startV} to ${destV}): ${shortestPath.join(' -> ')} (Distance = ${distMap[destV]})`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    setCustomSteps(steps);
+    setIsPlaying(true);
+    setTimeout(() => goToStep(0), 20);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
+
+  // Generate Kruskal's MST Steps (Edge Sorting + Disjoint Set Union DSU)
+  const handleRunKruskal = useCallback(() => {
+    const sortedEdges = [...DIJKSTRA_EDGES].sort((a, b) => a.weight - b.weight);
+
+    const parent: Record<string, string> = {};
+    DIJKSTRA_NODES.forEach(n => { parent[n] = n; });
+
+    const find = (i: string): string => {
+      if (parent[i] === i) return i;
+      return find(parent[i]);
+    };
+
+    const union = (i: string, j: string) => {
+      const rootI = find(i);
+      const rootJ = find(j);
+      if (rootI !== rootJ) {
+        parent[rootI] = rootJ;
       }
     };
 
-    dfsHelper(start);
+    const steps: ExecutionStep[] = [];
+    const mstEdges: { u: string; v: string; weight: number }[] = [];
+    const edgeStatuses: Record<string, 'ACCEPTED' | 'REJECTED' | 'TESTING' | 'PENDING'> = {};
 
-    setError(null);
-    setCustomSteps(steps);
-    setTimeout(() => goToStep(1), 30);
-  };
-
-  const handleClear = () => {
-    dispatch([], [],
-      'Graph cleared.',
-      'Graph khali kiya.',
-      'Cleared Graph Mesh',
-      { type: 'GRAPH_CLEAR' }
-    );
-  };
-
-  const handleReset = () => {
-    const defaultNodes = ['A', 'B', 'C', 'D', 'E'];
-    const radius = 110;
-    const cx = 400;
-    const cy = 170;
-    const initialNodes = defaultNodes.map((id, index) => {
-      const angle = (index * 2 * Math.PI) / defaultNodes.length - Math.PI / 2;
-      return {
-        id,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle)
-      };
+    sortedEdges.forEach(e => {
+      edgeStatuses[`${e.u}-${e.v}`] = 'PENDING';
     });
-    const initialEdges = [
-      { u: 'A', v: 'B' },
-      { u: 'A', v: 'C' },
-      { u: 'B', v: 'D' },
-      { u: 'C', v: 'D' },
-      { u: 'D', v: 'E' }
-    ];
 
-    dispatch(initialNodes, initialEdges,
-      'Graph reset to default configuration.',
-      'Graph ko default configuration me reset kiya.',
-      'Reset Graph Workspace',
-      { type: 'NONE' }
-    );
-  };
+    let stepCount = 1;
+    let totalMstWeight = 0;
 
-  const isBasics = lesson?.topic === 'graph_basics';
-  const isBFS = lesson?.topic === 'graph_bfs';
-  const isDFS = lesson?.topic === 'graph_dfs';
-  const isEmpty = nodes.length === 0;
+    steps.push({
+      step: stepCount++,
+      lineNum: 1,
+      explanationEnglish: `Kruskal Step 1: Sorted all ${sortedEdges.length} edges in ascending order of weights. DSU components initialized.`,
+      explanationHinglish: `Kruskal Step 1: Sabhi ${sortedEdges.length} edges ko weight ke ascending order me sort kar diya gaya. DSU parent array initialize hua.`,
+      memorySnapshot: {
+        nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+        edges: DIJKSTRA_EDGES,
+        sortedEdges,
+        edgeStatuses: { ...edgeStatuses },
+        parentMap: { ...parent },
+        mstEdges: [...mstEdges],
+        totalMstWeight,
+        isKruskal: true,
+      },
+      consoleOutput: `> Kruskal Init: Sorted ${sortedEdges.length} edges by weight.`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    for (const edge of sortedEdges) {
+      const edgeKey = `${edge.u}-${edge.v}`;
+      const rootU = find(edge.u);
+      const rootV = find(edge.v);
+
+      edgeStatuses[edgeKey] = 'TESTING';
+
+      steps.push({
+        step: stepCount++,
+        lineNum: 2,
+        explanationEnglish: `Testing Edge [${edge.u} ↔ ${edge.v}] (w=${edge.weight}): find(${edge.u}) = Node [${rootU}], find(${edge.v}) = Node [${rootV}].`,
+        explanationHinglish: `Edge Test [${edge.u} ↔ ${edge.v}] (w=${edge.weight}): Node [${edge.u}] ka root [${rootU}] hai aur Node [${edge.v}] ka root [${rootV}] hai.`,
+        memorySnapshot: {
+          nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+          edges: DIJKSTRA_EDGES,
+          sortedEdges,
+          edgeStatuses: { ...edgeStatuses },
+          parentMap: { ...parent },
+          mstEdges: [...mstEdges],
+          testingEdge: edge,
+          totalMstWeight,
+          isKruskal: true,
+        },
+        consoleOutput: `> Testing Edge (${edge.u}-${edge.v}, w=${edge.weight})`,
+        animationEvent: { type: 'NONE' } as any,
+      });
+
+      if (rootU !== rootV) {
+        union(edge.u, edge.v);
+        mstEdges.push(edge);
+        edgeStatuses[edgeKey] = 'ACCEPTED';
+        totalMstWeight += edge.weight;
+
+        steps.push({
+          step: stepCount++,
+          lineNum: 3,
+          explanationEnglish: `ACCEPTED! Node [${edge.u}] & Node [${edge.v}] are in different components (${rootU} ≠ ${rootV}). Added Edge (${edge.u}↔${edge.v}, w=${edge.weight}) to MST!`,
+          explanationHinglish: `ACCEPTED! Node [${edge.u}] aur [${edge.v}] alag components me hain. Edge (${edge.u}↔${edge.v}) MST me add ho gaya. Total Weight = ${totalMstWeight}.`,
+          memorySnapshot: {
+            nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+            edges: DIJKSTRA_EDGES,
+            sortedEdges,
+            edgeStatuses: { ...edgeStatuses },
+            parentMap: { ...parent },
+            mstEdges: [...mstEdges],
+            acceptedEdge: edge,
+            totalMstWeight,
+            isKruskal: true,
+          },
+          consoleOutput: `> ACCEPTED Edge (${edge.u}-${edge.v}, w=${edge.weight}) ➔ MST Weight = ${totalMstWeight}`,
+          animationEvent: { type: 'NONE' } as any,
+        });
+      } else {
+        edgeStatuses[edgeKey] = 'REJECTED';
+
+        steps.push({
+          step: stepCount++,
+          lineNum: 3,
+          explanationEnglish: `CYCLE DETECTED! Both Node [${edge.u}] & Node [${edge.v}] belong to the same component [${rootU}]. Skipped Edge (${edge.u}↔${edge.v}) to avoid cycle!`,
+          explanationHinglish: `CYCLE DETECTED! Dono nodes [${edge.u}] aur [${edge.v}] pehle se same component [${rootU}] me hain. Edge (${edge.u}↔${edge.v}) ko SKIP kar diya.`,
+          memorySnapshot: {
+            nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+            edges: DIJKSTRA_EDGES,
+            sortedEdges,
+            edgeStatuses: { ...edgeStatuses },
+            parentMap: { ...parent },
+            mstEdges: [...mstEdges],
+            rejectedEdge: edge,
+            totalMstWeight,
+            isKruskal: true,
+          },
+          consoleOutput: `> REJECTED Edge (${edge.u}-${edge.v}) ➔ Cycle Detected!`,
+          animationEvent: { type: 'NONE' } as any,
+        });
+      }
+
+      if (mstEdges.length === DIJKSTRA_NODES.length - 1) break;
+    }
+
+    steps.push({
+      step: stepCount,
+      lineNum: 4,
+      explanationEnglish: `Kruskal Complete! Minimum Spanning Tree (MST) constructed with ${mstEdges.length} edges. Total Minimum Weight = ${totalMstWeight}.`,
+      explanationHinglish: `Kruskal MST Complete! Total ${mstEdges.length} edges se Minimum Spanning Tree taiyar ho gaya. Total Minimum Weight = ${totalMstWeight}.`,
+      memorySnapshot: {
+        nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+        edges: DIJKSTRA_EDGES,
+        sortedEdges,
+        edgeStatuses: { ...edgeStatuses },
+        parentMap: { ...parent },
+        mstEdges: [...mstEdges],
+        totalMstWeight,
+        isKruskal: true,
+        isComplete: true,
+      },
+      consoleOutput: `> Kruskal MST Complete! Total Minimum Spanning Tree Weight = ${totalMstWeight}`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    setCustomSteps(steps);
+    setIsPlaying(true);
+    setTimeout(() => goToStep(0), 20);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
+
+  // Generate Prim's MST Steps (Priority Cut Expansion)
+  const handleRunPrims = useCallback((startV: string) => {
+    const mstSet: string[] = [startV];
+    const mstEdges: { u: string; v: string; weight: number }[] = [];
+    const steps: ExecutionStep[] = [];
+    let stepCount = 1;
+    let totalMstWeight = 0;
+
+    const getCandidateEdges = (currentMst: string[]) => {
+      const candidates: { u: string; v: string; weight: number }[] = [];
+      DIJKSTRA_EDGES.forEach(e => {
+        const uIn = currentMst.includes(e.u);
+        const vIn = currentMst.includes(e.v);
+        if ((uIn && !vIn) || (!uIn && vIn)) {
+          candidates.push(e);
+        }
+      });
+      return candidates.sort((a, b) => a.weight - b.weight);
+    };
+
+    steps.push({
+      step: stepCount++,
+      lineNum: 1,
+      explanationEnglish: `Prim's MST Step 1: Initialized tree growth at Start Node [${startV}]. MST Set = {${startV}}.`,
+      explanationHinglish: `Prim's MST Step 1: Start Node [${startV}] se MST tree growth shuru hui. Initial MST Set = {${startV}}.`,
+      memorySnapshot: {
+        nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+        edges: DIJKSTRA_EDGES,
+        mstSet: [...mstSet],
+        mstEdges: [...mstEdges],
+        candidateEdges: getCandidateEdges(mstSet),
+        totalMstWeight,
+        isPrims: true,
+      },
+      consoleOutput: `> Prim's Init at Node [${startV}]`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    while (mstSet.length < DIJKSTRA_NODES.length) {
+      const candidates = getCandidateEdges(mstSet);
+      if (candidates.length === 0) break;
+
+      const minEdge = candidates[0];
+      const nextNode = mstSet.includes(minEdge.u) ? minEdge.v : minEdge.u;
+
+      steps.push({
+        step: stepCount++,
+        lineNum: 2,
+        explanationEnglish: `Inspecting Cut Edges: Smallest connecting edge is (${minEdge.u} ↔ ${minEdge.v}) with Weight = ${minEdge.weight}.`,
+        explanationHinglish: `Cut Edges Inspect: Minimum weight edge (${minEdge.u} ↔ ${minEdge.v}) w=${minEdge.weight} choose kiya.`,
+        memorySnapshot: {
+          nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+          edges: DIJKSTRA_EDGES,
+          mstSet: [...mstSet],
+          mstEdges: [...mstEdges],
+          testingEdge: minEdge,
+          candidateEdges: [...candidates],
+          totalMstWeight,
+          isPrims: true,
+        },
+        consoleOutput: `> Prim's Pick Min Edge: (${minEdge.u}-${minEdge.v}, w=${minEdge.weight})`,
+        animationEvent: { type: 'NONE' } as any,
+      });
+
+      mstSet.push(nextNode);
+      mstEdges.push(minEdge);
+      totalMstWeight += minEdge.weight;
+
+      steps.push({
+        step: stepCount++,
+        lineNum: 3,
+        explanationEnglish: `ADDED TO MST! Edge (${minEdge.u} ↔ ${minEdge.v}, w=${minEdge.weight}) accepted. Node [${nextNode}] added to MST Set. Total Weight = ${totalMstWeight}.`,
+        explanationHinglish: `ADDED TO MST! Edge (${minEdge.u} ↔ ${minEdge.v}) accept hua. Node [${nextNode}] MST Set me add ho gaya. Total Weight = ${totalMstWeight}.`,
+        memorySnapshot: {
+          nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+          edges: DIJKSTRA_EDGES,
+          mstSet: [...mstSet],
+          mstEdges: [...mstEdges],
+          acceptedEdge: minEdge,
+          candidateEdges: getCandidateEdges(mstSet),
+          totalMstWeight,
+          isPrims: true,
+        },
+        consoleOutput: `> Added Node [${nextNode}] & Edge (${minEdge.u}-${minEdge.v}) to MST`,
+        animationEvent: { type: 'NONE' } as any,
+      });
+    }
+
+    steps.push({
+      step: stepCount,
+      lineNum: 4,
+      explanationEnglish: `Prim's MST Complete! All ${DIJKSTRA_NODES.length} nodes connected using ${mstEdges.length} edges. Total Minimum Weight = ${totalMstWeight}.`,
+      explanationHinglish: `Prim's MST Complete! Sabhi ${DIJKSTRA_NODES.length} nodes connect ho gaye. Total Minimum Weight = ${totalMstWeight}.`,
+      memorySnapshot: {
+        nodes: DIJKSTRA_NODES.map(id => ({ id, x: DIJKSTRA_NODE_POSITIONS[id].x, y: DIJKSTRA_NODE_POSITIONS[id].y })),
+        edges: DIJKSTRA_EDGES,
+        mstSet: [...mstSet],
+        mstEdges: [...mstEdges],
+        candidateEdges: [],
+        totalMstWeight,
+        isPrims: true,
+        isComplete: true,
+      },
+      consoleOutput: `> Prim's Complete! Total Minimum Spanning Weight = ${totalMstWeight}`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    setCustomSteps(steps);
+    setIsPlaying(true);
+    setTimeout(() => goToStep(0), 20);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
+
+  useEffect(() => {
+    if (isBfs) {
+      handleRunBfs('0');
+    } else if (isDfs) {
+      handleRunDfs('0');
+    } else if (isDijkstra) {
+      handleRunDijkstra('0', '5');
+    } else if (isKruskal) {
+      handleRunKruskal();
+    } else if (isPrims) {
+      handleRunPrims('0');
+    } else {
+      updateGraphState(GRAPH_7_EDGES, '0', 'Default Mesh Network Initialized.');
+    }
+  }, [lesson?.id, isBfs, isDfs, isDijkstra, isKruskal, isPrims, handleRunBfs, handleRunDfs, handleRunDijkstra, handleRunKruskal, handleRunPrims, updateGraphState]);
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0c16] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
+    <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
+      
       {/* Header */}
-      <div className="px-4 py-3 bg-[#0d0f1f] border-b border-slate-800/60 flex items-center justify-between shrink-0 font-mono text-xs">
-        <span className="font-bold text-emerald-400">
-          {isBasics ? 'GRAPH FUNDAMENTALS' : isBFS ? 'GRAPH BFS TRAVERSAL' : 'GRAPH DFS TRAVERSAL'}
+      <div className="px-4 py-3 bg-[#050711] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <span className="font-extrabold tracking-wider text-slate-200 text-[11px] uppercase">
+            {isBfs ? 'GRAPH BFS (7 NODES)' : isDfs ? 'GRAPH DFS (7 NODES)' : isDijkstra ? 'DIJKSTRA ALGORITHM' : isKruskal ? 'KRUSKAL MST ALGORITHM' : isPrims ? "PRIM'S MST ALGORITHM" : 'GRAPH FUNDAMENTALS'}
+          </span>
+        </div>
+        <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded font-semibold">
+          {isBfs ? 'FIFO Queue Simulation' : isDfs ? 'LIFO Stack Backtracking' : isDijkstra ? 'Priority Queue' : isKruskal ? 'Disjoint Set Union (DSU)' : isPrims ? 'Min-Heap Priority Queue' : '7 Vertices'}
         </span>
-        <button onClick={handleReset} className="text-slate-500 hover:text-slate-300 p-1" title="Reset default configuration">
-          <RotateCcw size={13} />
-        </button>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {error && (
-          <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono flex items-center justify-between">
-            <span>⚠ {error}</span>
-            <button onClick={() => setError(null)} className="text-red-400/60 hover:text-red-400">✕</button>
-          </div>
-        )}
+      {/* Control Panel Body */}
+      <div className="flex-1 overflow-y-auto p-3.5 flex flex-col justify-between gap-4">
 
-        {/* Add/Remove Vertex (Basics only) */}
-        {isBasics && (
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Manage Vertices</span>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="ID (e.g. A)..."
-                value={nodeId}
-                onChange={e => setNodeId(e.target.value)}
-                className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-              />
-              <button
-                onClick={handleAddVertex}
-                className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs font-mono flex items-center justify-center gap-1"
-              >
-                <Plus size={14} /> Add
-              </button>
-              <button
-                onClick={handleRemoveVertex}
-                disabled={isEmpty}
-                className="px-3 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Add/Remove Edge (Basics only) */}
-        {isBasics && (
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Manage Edges (Connections)</span>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="From..."
-                value={edgeU}
-                onChange={e => setEdgeU(e.target.value)}
-                className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-              />
-              <div className="flex items-center text-slate-600">
-                <ArrowLeftRight size={13} />
+        <div className="flex flex-col gap-3.5">
+          
+          {isBfs || isDfs || isDijkstra || isKruskal || isPrims ? (
+            /* BFS / DFS / DIJKSTRA / KRUSKAL / PRIMS CONTROLS */
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold px-0.5 flex items-center gap-1">
+                  <PlayCircle size={12} className="text-cyan-400" /> Select Node & Auto-Execute
+                </span>
               </div>
-              <input
-                type="text"
-                placeholder="To..."
-                value={edgeV}
-                onChange={e => setEdgeV(e.target.value)}
-                className="w-1/4 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none"
-              />
-              <button
-                onClick={handleAddEdge}
-                disabled={isEmpty}
-                className="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono"
-              >
-                Link
-              </button>
-              <button
-                onClick={handleRemoveEdge}
-                disabled={isEmpty}
-                className="px-3 py-1.5 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 disabled:opacity-40 text-rose-300 font-bold text-xs font-mono"
-              >
-                Unlink
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* BFS (BFS page only) */}
-        {isBFS && (
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Breadth-First Search (Queue Based)</span>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Start node (e.g. A)..."
-                value={startVertex}
-                onChange={e => setStartVertex(e.target.value)}
-                className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                onClick={handleBFS}
-                disabled={isEmpty}
-                className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs font-mono flex items-center gap-1"
-              >
-                Run BFS Path
-              </button>
-            </div>
-          </div>
-        )}
+              <div className="flex flex-col gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-mono text-slate-300">
+                    {isKruskal ? 'Reset MST:' : 'Start Node:'}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {(isDijkstra || isKruskal || isPrims ? DIJKSTRA_NODES : GRAPH_7_NODES).map(id => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setStartNode(id);
+                          if (isBfs) handleRunBfs(id);
+                          else if (isDfs) handleRunDfs(id);
+                          else if (isDijkstra) handleRunDijkstra(id, targetNode);
+                          else if (isKruskal) handleRunKruskal();
+                          else if (isPrims) handleRunPrims(id);
+                        }}
+                        className={`w-7 h-7 rounded-lg font-mono text-xs font-bold transition-all border ${
+                          startNode === id
+                            ? isKruskal || isDijkstra || isPrims
+                              ? 'bg-amber-500 text-slate-950 border-amber-300 font-black shadow-[0_0_10px_rgba(251,191,36,0.8)]'
+                              : isBfs
+                              ? 'bg-cyan-500 text-slate-950 border-cyan-300 font-black shadow-[0_0_10px_rgba(6,182,212,0.8)]'
+                              : 'bg-purple-500 text-white border-purple-300 font-black shadow-[0_0_10px_rgba(168,85,247,0.8)]'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        {id}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-        {/* DFS (DFS page only) */}
-        {isDFS && (
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Depth-First Search (Stack Based)</span>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Start node (e.g. A)..."
-                value={startVertex}
-                onChange={e => setStartVertex(e.target.value)}
-                className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                onClick={handleDFS}
-                disabled={isEmpty}
-                className="px-4 py-1.5 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold text-xs font-mono flex items-center gap-1"
-              >
-                Run DFS Path
-              </button>
+                {isDijkstra && (
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-900">
+                    <span className="text-xs font-mono text-slate-300">Target Node:</span>
+                    <div className="flex items-center gap-1">
+                      {DIJKSTRA_NODES.map(id => (
+                        <button
+                          key={id}
+                          onClick={() => {
+                            setTargetNode(id);
+                            handleRunDijkstra(startNode, id);
+                          }}
+                          className={`w-7 h-7 rounded-lg font-mono text-xs font-bold transition-all border ${
+                            targetNode === id
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-black shadow-[0_0_10px_rgba(16,185,129,0.8)]'
+                              : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          {id}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            /* GRAPH FUNDAMENTALS CONTROLS */
+            <>
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold px-0.5 flex items-center gap-1">
+                  <Eye size={12} className="text-emerald-400" /> Inspect Node Connections
+                </span>
 
-        {/* Clear Graph (Basics only) */}
-        {isBasics && (
+                <div className="grid grid-cols-7 gap-1 bg-slate-950/80 p-2 rounded-xl border border-slate-800/80">
+                  {GRAPH_7_NODES.map(id => (
+                    <button
+                      key={id}
+                      onClick={() => updateGraphState(edgesList, id, `Selected Node [${id}] for inspection.`)}
+                      className={`py-1.5 rounded-lg font-mono text-xs font-bold transition-all border ${
+                        selectedInspectNode === id
+                          ? 'bg-amber-500 text-slate-950 border-amber-300 font-black shadow-[0_0_12px_rgba(251,191,36,0.7)]'
+                          : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      {id}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+        </div>
+
+        {/* Clean Step Controls Footer */}
+        <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-800/80">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={goPrev}
+              disabled={currentStepIndex === 0}
+              className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-35 text-slate-200 font-mono text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+            >
+              <ChevronLeft size={14} /> Prev
+            </button>
+
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className={`py-2 rounded-xl font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
+                isPlaying
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black'
+              }`}
+            >
+              {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+
+            <button
+              onClick={goNext}
+              disabled={currentStepIndex >= totalSteps - 1}
+              className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-35 text-slate-200 font-mono text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+            >
+              Next <ChevronRight size={14} />
+            </button>
+          </div>
+
           <button
-            onClick={handleClear}
-            disabled={isEmpty}
-            className="w-full py-2 rounded-lg bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 disabled:opacity-30 text-red-400 font-mono text-[11px] flex items-center justify-center gap-1"
+            onClick={() => isBfs ? handleRunBfs('0') : isDfs ? handleRunDfs('0') : isDijkstra ? handleRunDijkstra('0', '5') : isKruskal ? handleRunKruskal() : isPrims ? handleRunPrims(startNode) : updateGraphState(GRAPH_7_EDGES, '0', 'Reset Graph.')}
+            className="w-full py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 text-slate-400 hover:text-slate-200 font-mono text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all"
           >
-            <Trash2 size={12} /> Clear Graph
+            <RotateCcw size={12} /> Reset Algorithm
           </button>
-        )}
+        </div>
+
       </div>
     </div>
   );

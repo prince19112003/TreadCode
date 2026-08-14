@@ -981,6 +981,70 @@ export const dsa_graph_dfs: LessonProgram = {
   },
   executionSteps: [],
 };
+export const dsa_graph_dijkstra: LessonProgram = {
+  id: 'dsa_graph_dijkstra', language: 'dsa', topic: 'graph_dijkstra', lessonNumber: 1,
+  friendlyName: "Dijkstra's Shortest Path Algorithm",
+  learningObjective: "Single-source shortest path calculation on weighted graph with distance table & edge relaxation.",
+  lines: [
+    line(1, [cm("// Dijkstra's Shortest Path Algorithm")]),
+    line(2, [kw('void'), tx(' '), fn('dijkstra'), pu('('), kw('int'), tx(' '), va('startNode'), pu(')')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => [
+    {
+      step: 1, lineNum: 1,
+      explanationEnglish: "Dijkstra's Algorithm initialized.",
+      explanationHinglish: "Dijkstra's Shortest Path Workspace initialized.",
+      memorySnapshot: { isDijkstra: true },
+      consoleOutput: "> Dijkstra initialized.",
+      animationEvent: { type: 'NONE' },
+    },
+  ],
+  executionSteps: [],
+};
+
+export const dsa_graph_kruskal: LessonProgram = {
+  id: 'dsa_graph_kruskal', language: 'dsa', topic: 'graph_kruskal', lessonNumber: 1,
+  friendlyName: "Kruskal's Minimum Spanning Tree (MST)",
+  learningObjective: "Minimum Spanning Tree construction using edge weight sorting & Disjoint Set Union.",
+  lines: [
+    line(1, [cm("// Kruskal's Minimum Spanning Tree Algorithm")]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => [
+    {
+      step: 1, lineNum: 1,
+      explanationEnglish: "Kruskal's MST Algorithm initialized.",
+      explanationHinglish: "Kruskal's MST Workspace initialized.",
+      memorySnapshot: { isKruskal: true },
+      consoleOutput: "> Kruskal initialized.",
+      animationEvent: { type: 'NONE' },
+    },
+  ],
+  executionSteps: [],
+};
+
+export const dsa_graph_prims: LessonProgram = {
+  id: 'dsa_graph_prims', language: 'dsa', topic: 'graph_prims', lessonNumber: 1,
+  friendlyName: "Prim's Minimum Spanning Tree (MST)",
+  learningObjective: "Minimum Spanning Tree construction using Priority Queue & vertex expansion.",
+  lines: [
+    line(1, [cm("// Prim's Minimum Spanning Tree Algorithm")]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => [
+    {
+      step: 1, lineNum: 1,
+      explanationEnglish: "Prim's MST Algorithm initialized.",
+      explanationHinglish: "Prim's MST Workspace initialized.",
+      memorySnapshot: { isPrims: true },
+      consoleOutput: "> Prim's initialized.",
+      animationEvent: { type: 'NONE' },
+    },
+  ],
+  executionSteps: [],
+};
+
 export const dsa_binary_tree: LessonProgram = {
   id: 'dsa_binary_tree', language: 'dsa', topic: 'binary_tree', lessonNumber: 1,
   friendlyName: 'Binary Search Tree (BST)',
@@ -1061,6 +1125,9 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_graph_basics,
   dsa_graph_bfs,
   dsa_graph_dfs,
+  dsa_graph_dijkstra,
+  dsa_graph_kruskal,
+  dsa_graph_prims,
   dsa_binary_tree,
   dsa_merge_sort,
   dsa_heap_sort,
