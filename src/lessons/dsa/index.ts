@@ -298,7 +298,7 @@ export const dsa_bubble_sort: LessonProgram = {
 };
 
 export const dsa_selection_sort: LessonProgram = {
-  id: 'dsa_selection_sort', language: 'dsa', topic: 'sorting', lessonNumber: 2,
+  id: 'dsa_selection_sort', language: 'dsa', topic: 'selection_sort', lessonNumber: 2,
   friendlyName: 'Selection Sort Algorithm (O(N²))',
   learningObjective: 'Find minimum element in unsorted portion. Swap it to the front of the unsorted region.',
   lines: [

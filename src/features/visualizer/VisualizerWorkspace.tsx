@@ -11,6 +11,7 @@ import { QueueVisualStage } from './components/stages/QueueVisualStage';
 import { SllVisualStage } from './components/stages/SllVisualStage';
 import { DllVisualStage } from './components/stages/DllVisualStage';
 import { BubbleSortVisualStage } from './components/stages/BubbleSortVisualStage';
+import { SelectionSortVisualStage } from './components/stages/SelectionSortVisualStage';
 import { TreeVisualStage } from './components/stages/TreeVisualStage';
 import { GraphVisualStage } from './components/stages/GraphVisualStage';
 import { DsaAlgoStage } from './components/stages/DsaAlgoStage';
@@ -19,6 +20,7 @@ import { QueueOperationalPanel } from './components/QueueOperationalPanel';
 import { SllOperationalPanel } from './components/SllOperationalPanel';
 import { DllOperationalPanel } from './components/DllOperationalPanel';
 import { BubbleSortOperationalPanel } from './components/BubbleSortOperationalPanel';
+import { SelectionSortOperationalPanel } from './components/SelectionSortOperationalPanel';
 import { TreeOperationalPanel } from './components/TreeOperationalPanel';
 import { GraphOperationalPanel } from './components/GraphOperationalPanel';
 import { QuickHandwrittenNote } from './components/QuickHandwrittenNote';
@@ -52,6 +54,7 @@ export const VisualizerWorkspace: React.FC = () => {
   const isSllTopic = isDsa && lesson?.topic === 'singly_linked_list';
   const isDllTopic = isDsa && lesson?.topic === 'doubly_linked_list';
   const isBubbleSortTopic = isDsa && (lesson?.topic === 'bubble_sort' || lesson?.topic === 'sorting' || lesson?.id === 'dsa_bubble_sort');
+  const isSelectionSortTopic = isDsa && (lesson?.topic === 'selection_sort' || lesson?.id === 'dsa_selection_sort');
   const isTreeTopic = isDsa && lesson?.topic === 'binary_tree';
   const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs');
 
@@ -114,7 +117,7 @@ export const VisualizerWorkspace: React.FC = () => {
           {/* ── Left Column: Operational Dashboard (Mobile: flex-1/scrollable, PC: 30%) ── */}
           <div className="w-full md:w-[30%] flex flex-col gap-1.5 overflow-hidden shrink-0 h-[45%] md:h-full">
             <div className="h-[65%] md:h-[75%] overflow-hidden flex flex-col">
-              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
+              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
             </div>
             <div className="h-[35%] md:h-[25%] overflow-hidden flex flex-col">
               <ExplanationBar />
@@ -130,7 +133,7 @@ export const VisualizerWorkspace: React.FC = () => {
               isPureBlack ? 'bg-black' : 'bg-[#050510]'
             } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
               {pureBlackToggleButton}
-              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
+              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
               <PenMenu />
               <QuickHandwrittenNote topic={lesson?.topic ?? 'stack'} />
             </div>
