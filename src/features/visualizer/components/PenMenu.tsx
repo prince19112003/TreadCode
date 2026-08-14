@@ -39,20 +39,20 @@ export const PenMenu: React.FC = () => {
   const [pos, setPos] = useState({ x: window.innerWidth - 64, y: window.innerHeight * 0.7 });
   const [isLeftEdge, setIsLeftEdge] = useState(false);
 
-  const toggleMenu = () => {
-    setIsOpen(prev => {
-      const next = !prev;
-      setIsPenActive(next);
+  const handleFabClick = () => {
+    if (isPenActive) {
+      // If Pen is currently ACTIVE, clicking the button switches to Palm/Hand mode and disables writing
+      setIsPenActive(false);
+      setMode('palm');
+      setIsOpen(false);
       setActiveSubMenu('none');
-      setPos(current => {
-        const screenWidth = window.innerWidth;
-        const isLeft = current.x < screenWidth / 2;
-        const targetX = isLeft ? 16 : screenWidth - 64;
-        const slideOffset = !next ? (isLeft ? -40 : 40) : 0;
-        return { x: targetX + slideOffset, y: current.y };
-      });
-      return next;
-    });
+    } else {
+      // If Pen is INACTIVE (Palm mode), clicking the Pen button activates Blue Pen mode and opens radial menu
+      setIsPenActive(true);
+      setMode('pen');
+      setIsOpen(true);
+      setActiveSubMenu('none');
+    }
   };
 
   const handleUndo = () => {
@@ -428,7 +428,7 @@ export const PenMenu: React.FC = () => {
 
           {/* Center FAB Toggle Button */}
           <motion.button
-            onClick={(e) => { e.stopPropagation(); toggleMenu(); }}
+            onClick={(e) => { e.stopPropagation(); handleFabClick(); }}
             whileTap={{ scale: 0.9 }}
             className={`absolute inset-0 rounded-full flex items-center justify-center shadow-xl transition-all z-30 ${
               isPenActive
@@ -437,9 +437,13 @@ export const PenMenu: React.FC = () => {
                   : 'bg-blue-600 text-white ring-4 ring-blue-400/60 shadow-lg shadow-blue-500/50 border border-blue-300 animate-pulse'
                 : 'bg-slate-900/95 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/80 shadow-md'
             }`}
-            title={isPenActive ? 'Deactivate Pen Mode' : 'Activate Pen Mode (Click to Draw)'}
+            title={isPenActive ? 'Click Palm to Stop Writing (Return to Hand/Interact Mode)' : 'Click Pen to Start Writing (Blue Pen)'}
           >
-            {isOpen ? <X className="w-5.5 h-5.5 pointer-events-none" /> : mode === 'eraser' ? <Eraser className="w-5.5 h-5.5 pointer-events-none" /> : <Pen className="w-5.5 h-5.5 pointer-events-none" />}
+            {isPenActive ? (
+              <Hand className="w-5.5 h-5.5 pointer-events-none text-white" />
+            ) : (
+              <Pen className="w-5.5 h-5.5 pointer-events-none text-slate-300 group-hover:text-white" />
+            )}
           </motion.button>
         </div>
       </motion.div>
