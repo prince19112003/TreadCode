@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Pen, Eraser, Hand, Undo2, Redo2, Trash2, X, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
+import { Pen, Eraser, Hand, Undo2, Redo2, Trash2, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import type { Stroke } from './AnnotationCanvas';
 
