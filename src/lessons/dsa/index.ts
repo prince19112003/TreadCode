@@ -331,7 +331,7 @@ export const dsa_selection_sort: LessonProgram = {
 };
 
 export const dsa_insertion_sort: LessonProgram = {
-  id: 'dsa_insertion_sort', language: 'dsa', topic: 'sorting', lessonNumber: 3,
+  id: 'dsa_insertion_sort', language: 'dsa', topic: 'insertion_sort', lessonNumber: 3,
   friendlyName: 'Insertion Sort Algorithm',
   learningObjective: 'Pick each element and insert it into the correct position in the sorted portion.',
   lines: [

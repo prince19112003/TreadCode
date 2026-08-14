@@ -1,8 +1,6 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import { Card } from './Card';
-import { Button } from './Button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -12,42 +10,97 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
+  showDetails: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
+    errorInfo: null,
+    showDetails: false,
   };
 
-  public static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    if (import.meta.env.DEV) {
-      console.error('Uncaught error:', error, errorInfo);
-    }
+    console.error('Uncaught Visualizer error:', error, errorInfo);
+    this.setState({ errorInfo });
   }
+
+  private handleReset = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null, showDetails: false });
+  };
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full min-h-[300px] flex items-center justify-center p-6">
-          <Card className="max-w-md w-full border-danger-500/30 bg-danger-500/10 backdrop-blur-md text-center p-8 space-y-4">
-            <div className="flex justify-center text-danger-500">
-              <AlertTriangle size={48} />
+        <div className="w-full h-full min-h-[350px] flex items-center justify-center p-6 bg-slate-950/80 text-white font-mono select-none">
+          <div className="max-w-lg w-full bg-slate-900/95 border border-rose-500/40 rounded-3xl p-6 text-center shadow-2xl space-y-4 backdrop-blur-xl">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400 shadow-lg shadow-rose-500/20">
+              <AlertTriangle size={32} />
             </div>
-            <h2 className="text-xl font-bold text-white">Something went wrong</h2>
-            <p className="text-sm text-surface-200">
-              {this.props.fallbackMessage || 'The application encountered an unexpected error.'}
-            </p>
-            <div className="pt-4">
-              <Button onClick={() => window.location.reload()} variant="primary" className="w-full">
+
+            <div>
+              <h2 className="text-lg font-black tracking-wide text-white uppercase">Something went wrong</h2>
+              <p className="text-xs text-rose-300 font-sans mt-1">
+                {this.props.fallbackMessage || 'The Programming Visualizer encountered a runtime component error.'}
+              </p>
+            </div>
+
+            {/* Exact Error Message Box */}
+            {this.state.error && (
+              <div className="bg-rose-950/40 border border-rose-500/30 rounded-2xl p-3 text-left">
+                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider block mb-1">
+                  Error Cause:
+                </span>
+                <p className="text-xs text-rose-200 font-mono break-all font-bold">
+                  {this.state.error.name}: {this.state.error.message}
+                </p>
+              </div>
+            )}
+
+            {/* Expandable Stack Trace */}
+            {this.state.errorInfo && (
+              <div className="text-left">
+                <button
+                  onClick={() => this.setState(s => ({ showDetails: !s.showDetails }))}
+                  className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mx-auto py-1"
+                >
+                  <ChevronDown size={14} className={`transition-transform ${this.state.showDetails ? 'rotate-180' : ''}`} />
+                  {this.state.showDetails ? 'Hide Technical Log' : 'Show Technical Log'}
+                </button>
+
+                {this.state.showDetails && (
+                  <pre className="mt-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-[10px] text-slate-300 overflow-x-auto max-h-40 break-all whitespace-pre-wrap">
+                    {this.state.error.stack}
+                    {'\n'}
+                    {this.state.errorInfo.componentStack}
+                  </pre>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={this.handleReset}
+                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={14} /> Try Repair / Retry
+              </button>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/30"
+              >
                 Reload Application
-              </Button>
+              </button>
             </div>
-          </Card>
+          </div>
         </div>
       );
     }
