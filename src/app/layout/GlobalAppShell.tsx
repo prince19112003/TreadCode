@@ -512,7 +512,7 @@ export const GlobalAppShell: React.FC = () => {
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-200 bg-amber-500/10 border border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/20 hover:text-white transition-all shadow-sm group"
           >
             <Presentation className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-            <span className="hidden sm:inline">Smart Board</span>
+            <span className="hidden sm:inline">Board</span>
             <kbd className="hidden sm:inline-block text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md bg-amber-950/60 border border-amber-400/30 text-amber-300">
               ⌘B
             </kbd>
@@ -520,11 +520,11 @@ export const GlobalAppShell: React.FC = () => {
 
           <button
             onClick={() => setSearchOpen(true)}
-            title="Search programs (Ctrl+K)"
+            title="Search (Ctrl+K)"
             className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 bg-white/5 border border-white/10 hover:border-indigo-400/50 hover:bg-white/10 hover:text-white transition-all shadow-sm group"
           >
             <Search className="w-4 h-4 text-indigo-300 group-hover:scale-110 transition-transform" />
-            <span className="hidden sm:inline">Search programs</span>
+            <span className="hidden sm:inline">Search</span>
             <kbd className="hidden sm:inline-block text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md bg-indigo-950/60 border border-indigo-400/30 text-indigo-200">
               ⌘K
             </kbd>
