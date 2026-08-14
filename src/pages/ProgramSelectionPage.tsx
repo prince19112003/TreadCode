@@ -141,6 +141,15 @@ const mockProgramsByTopic: Record<string, { id: string; number: string; friendly
     { id: 'selection_sort',  number: '04', friendlyName: 'Selection Sort',  description: 'Learn how selection sort finds the minimum element and swaps it to the front.' },
     { id: 'insertion_sort',  number: '05', friendlyName: 'Insertion Sort',  description: 'Learn how insertion sort builds the sorted array one element at a time.' },
   ],
+  bubble_sort: [
+    { id: 'dsa_bubble_sort', number: '01', friendlyName: 'Bubble Sort Algorithm (O(N²))', description: 'Repeatedly compare adjacent elements and swap if left > right until array is sorted.' },
+  ],
+  selection_sort: [
+    { id: 'dsa_selection_sort', number: '01', friendlyName: 'Selection Sort Algorithm (O(N²))', description: 'Find minimum element in unsorted portion and swap it to the front.' },
+  ],
+  insertion_sort: [
+    { id: 'dsa_insertion_sort', number: '01', friendlyName: 'Insertion Sort Algorithm (O(N²))', description: 'Pick each element and insert it into its correct position in the sorted sublist.' },
+  ],
 };
 
 const otherProgramsByLang: Record<string, Record<string, { id: string; number: string; friendlyName: string; description: string }[]>> = {

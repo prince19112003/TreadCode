@@ -38,11 +38,18 @@ export const getLessonAsync = async (languageId: string, topicId: string, progra
         return undefined;
     }
 
-    // Support fallback for old format 't1' vs 'variables'
+    // 1. Direct topic & program lookup
     const topic = registry[topicId] || (topicId === 'variables' ? registry['t1'] : undefined);
-    if (!topic) return undefined;
+    if (topic && (topic[programId] || topic[`dsa_${programId}`])) {
+      return topic[programId] || topic[`dsa_${programId}`];
+    }
 
-    return topic[programId];
+    // 2. Fallback search across all topics in the language registry
+    const allProgramsInLang = Object.values(registry).flatMap((t: any) => Object.values(t));
+    const found = allProgramsInLang.find((p: any) => p && (p.id === programId || p.id === `dsa_${programId}`));
+    if (found) return found;
+
+    return undefined;
   } catch (error) {
     console.error(`Failed to load chunk for language: ${languageId}`, error);
     return undefined;
