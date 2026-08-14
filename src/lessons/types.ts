@@ -63,7 +63,7 @@ export interface ExecutionStep {
   explanationHinglish: string;
   memorySnapshot: Record<string, any>;
   consoleOutput?: string;
-  animationEvent: AnimationEvent;
+  animationEvent?: AnimationEvent;
 }
 
 // ─── Editable Variable Definition ────────────────────────────────────────────

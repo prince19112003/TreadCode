@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack, RefreshCw, Sparkles, Shuffle, ArrowDownMin, Check } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, RefreshCw, Sparkles, Shuffle } from 'lucide-react';
 import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
 
@@ -8,14 +8,14 @@ export const SelectionSortOperationalPanel: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Store bindings
-  const updateActiveSteps = useLessonStore((state) => state.updateActiveSteps);
+  const setCustomSteps = useLessonStore((state) => state.setCustomSteps);
   const goToStep = useLessonStore((state) => state.goToStep);
   const goNext = useLessonStore((state) => state.goNext);
   const goPrev = useLessonStore((state) => state.goPrev);
   const isPlaying = useLessonStore((state) => state.isPlaying);
   const setIsPlaying = useLessonStore((state) => state.setIsPlaying);
-  const playbackSpeed = useLessonStore((state) => state.playbackSpeed);
-  const setPlaybackSpeed = useLessonStore((state) => state.setPlaybackSpeed);
+  const playSpeed = useLessonStore((state) => state.playSpeed);
+  const setPlaySpeed = useLessonStore((state) => state.setPlaySpeed);
   const currentStepIndex = useLessonStore((state) => state.currentStepIndex);
   const activeSteps = useLessonStore((state) => state.activeSteps);
 
@@ -131,7 +131,7 @@ export const SelectionSortOperationalPanel: React.FC = () => {
     }
 
     const steps = generateSelectionSortSteps(parsed);
-    updateActiveSteps(steps);
+    setCustomSteps(steps);
     goToStep(0);
     setIsPlaying(false);
   };
@@ -270,9 +270,9 @@ export const SelectionSortOperationalPanel: React.FC = () => {
             {[0.5, 1, 2].map((spd) => (
               <button
                 key={spd}
-                onClick={() => setPlaybackSpeed(spd)}
+                onClick={() => setPlaySpeed(spd)}
                 className={`px-2 py-0.5 rounded-lg border font-mono transition-all ${
-                  playbackSpeed === spd
+                  playSpeed === spd
                     ? 'bg-purple-500/20 border-purple-400 text-purple-300 font-bold'
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}

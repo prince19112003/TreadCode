@@ -139,7 +139,7 @@ export const SelectionSortVisualStage: React.FC = () => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                className="flex flex-col items-center gap-2 group flex-1 max-w-[100px]"
+                className="flex flex-col items-center gap-2 group flex-1 max-w-25"
               >
                 {/* Pointer Tags Top Indicator */}
                 <div className="h-10 flex flex-col items-center justify-end font-mono text-[11px] font-black tracking-wider">
