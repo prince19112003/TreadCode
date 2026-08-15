@@ -22,7 +22,7 @@ const TOKEN_COLORS: Record<string, string> = {
  * EditableVariableToken — renders an inline input inside a depth box (inset styled).
  * Supports both text (strings) and numbers.
  */
-const EditableVariableToken: React.FC<{
+const EditableVariableToken = React.memo<{
   value: any;
   defaultValue: any;
   min?: number;
@@ -30,7 +30,7 @@ const EditableVariableToken: React.FC<{
   type?: 'number' | 'text';
   noQuotes?: boolean;
   onCommit: (val: any) => void;
-}> = ({ value, defaultValue, min, max, type = 'number', noQuotes = false, onCommit }) => {
+}>(({ value, defaultValue, min, max, type = 'number', noQuotes = false, onCommit }) => {
   const [draft, setDraft] = useState(String(value).replace(/['"]/g, '')); // Strip quotes for editing
   const inputRef = useRef<HTMLInputElement>(null);
   const reset = useLessonStore(s => s.reset);
@@ -121,9 +121,9 @@ const EditableVariableToken: React.FC<{
       </AnimatePresence>
     </span>
   );
-};
+});
 
-const CodeLineRow: React.FC<{
+const CodeLineRow = React.memo<{
   line: CodeLine;
   isActive: boolean;
   zoomLevel: number;
@@ -132,7 +132,7 @@ const CodeLineRow: React.FC<{
   setEditableValue: (name: string, val: any) => void;
   /** Map of "lineNum -> tokenIndex -> variableName" for the editable variables */
   editableTokenMapping: Record<number, Record<number, string>>;
-}> = ({ line, isActive, zoomLevel, editableValues, editableVariables, setEditableValue, editableTokenMapping }) => {
+}>(({ line, isActive, zoomLevel, editableValues, editableVariables, setEditableValue, editableTokenMapping }) => {
   const rowRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -205,11 +205,11 @@ const CodeLineRow: React.FC<{
       </span>
     </div>
   );
-};
+});
 
-export const CodeStepPanel: React.FC = () => {
+export const CodeStepPanel = React.memo(() => {
   const lesson = useLessonStore(s => s.lesson);
-  const currentStep = useLessonStore(s => s.currentStep);
+  const activeLine = useLessonStore(s => s.currentStep?.lineNum ?? -1);
   const editableValues = useLessonStore(s => s.editableValues);
   const setEditableValue = useLessonStore(s => s.setEditableValue);
   const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);
@@ -219,32 +219,32 @@ export const CodeStepPanel: React.FC = () => {
 
   if (!lesson) return null;
 
-  const activeLine = currentStep?.lineNum ?? -1;
   const editableVariables = lesson.editableVariables ?? {};
 
   // Build a map of lineNum -> tokenIndex -> varName for specific tokens
-  const editableTokenMapping: Record<number, Record<number, string>> = {};
+  const editableTokenMapping = React.useMemo(() => {
+    const mapping: Record<number, Record<number, string>> = {};
   if (Object.keys(editableVariables).length > 0) {
     if (lesson.id === 'basic_list') {
-      editableTokenMapping[1] = { 5: 'numbers' };
-      editableTokenMapping[2] = { 4: 'index_access' };
-      editableTokenMapping[3] = { 2: 'index_update', 7: 'val_update' };
+      mapping[1] = { 5: 'numbers' };
+      mapping[2] = { 4: 'index_access' };
+      mapping[3] = { 2: 'index_update', 7: 'val_update' };
     } else if (lesson.id === 'list_search') {
-      editableTokenMapping[1] = { 5: 'items' };
-      editableTokenMapping[2] = { 4: 'search_target' };
+      mapping[1] = { 5: 'items' };
+      mapping[2] = { 4: 'search_target' };
     } else if (lesson.id === 'list_modify') {
-      editableTokenMapping[1] = { 5: 'data' };
-      editableTokenMapping[2] = { 4: 'insert_index', 7: 'insert_value' };
-      editableTokenMapping[4] = { 4: 'delete_index' };
+      mapping[1] = { 5: 'data' };
+      mapping[2] = { 4: 'insert_index', 7: 'insert_value' };
+      mapping[4] = { 4: 'delete_index' };
     } else if (lesson.id === 'update_variable') {
       lesson.lines.forEach(line => {
         if (line.lineNum === 1) {
           const idx = line.tokens.findIndex(t => t.type === 'number');
-          if (idx !== -1) editableTokenMapping[1] = { [idx]: 'points_initial' };
+          if (idx !== -1) mapping[1] = { [idx]: 'points_initial' };
         }
         if (line.lineNum === 3) {
           const idx = line.tokens.findIndex(t => t.type === 'number');
-          if (idx !== -1) editableTokenMapping[3] = { [idx]: 'points_updated' };
+          if (idx !== -1) mapping[3] = { [idx]: 'points_updated' };
         }
       });
     } else {
@@ -252,8 +252,8 @@ export const CodeStepPanel: React.FC = () => {
         line.tokens.forEach((t, idx) => {
           const pId = (t as any).paramId;
           if (pId && editableVariables[pId]) {
-            if (!editableTokenMapping[line.lineNum]) editableTokenMapping[line.lineNum] = {};
-            editableTokenMapping[line.lineNum][idx] = pId;
+            if (!mapping[line.lineNum]) mapping[line.lineNum] = {};
+            mapping[line.lineNum][idx] = pId;
           }
         });
 
@@ -267,13 +267,15 @@ export const CodeStepPanel: React.FC = () => {
           const valTokenIdx = line.tokens.findIndex(t => t.type === 'number' || t.type === 'string' || t.type === 'parameter');
           
           if (varToken && hasAssignment && valTokenIdx !== -1 && !isIndexed && editableVariables[varToken.value]) {
-            if (!editableTokenMapping[line.lineNum]) editableTokenMapping[line.lineNum] = {};
-            editableTokenMapping[line.lineNum][valTokenIdx] = varToken.value;
+            if (!mapping[line.lineNum]) mapping[line.lineNum] = {};
+            mapping[line.lineNum][valTokenIdx] = varToken.value;
           }
         }
       });
     }
   }
+  return mapping;
+}, [lesson?.id, lesson?.lines, editableVariables]);
 
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-[#050510] border border-white/10 rounded-lg overflow-hidden relative">
@@ -342,5 +344,5 @@ export const CodeStepPanel: React.FC = () => {
       <style>{`input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }`}</style>
     </div>
   );
-};
+});
 

@@ -1,4 +1,8 @@
-# TreadCode (Code Visualizer & SmartBoard) — Developer Manual & Architecture Guide
+## License & Intellectual Property
+
+Copyright (c) **July 23, 2026** - Present **Prince (prince19112003)**. All Rights Reserved.  
+*Repository Initial Commit:* **July 23, 2026 at 01:11:21 +0530 (IST)**  
+Licensed under **Proprietary EULA**. Unauthorized copying, decompilation, or distribution is strictly prohibited. (Code Visualizer & SmartBoard) — Developer Manual & Architecture Guide
 
 > **Internal Developer Manual**: This document is a complete technical guide for software engineers, maintainers, and contributors working on the **TreadCode** codebase. It covers architecture, state management, adding new programs/languages, building and testing, licensing, and the update pipeline.
 

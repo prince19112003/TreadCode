@@ -279,7 +279,7 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* ── Main 2-Column Dashboard Layout ───────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start pb-6">
           
           {/* Left Tab Navigation Sidebar (4 cols) */}
           <div className="md:col-span-4 flex flex-col gap-2 bg-[#090b15] border border-white/10 rounded-2xl p-3 backdrop-blur-xl">
@@ -859,6 +859,13 @@ export const SettingsPage: React.FC = () => {
             </AnimatePresence>
           </div>
 
+          {/* ── Discrete Settings Footer Copyright ── */}
+          <footer className="md:col-span-12 mt-8 pt-6 pb-2 border-t border-white/5 text-center shrink-0">
+            <p className="text-[11px] font-mono tracking-wider text-slate-500/80 uppercase">
+              © July 23, 2026 – Present Prince. All Rights Reserved. TreadCode™ Proprietary Platform.
+            </p>
+          </footer>
+
         </div>
       </div>
 
@@ -906,6 +913,7 @@ export const SettingsPage: React.FC = () => {
           </motion.div>
         </div>
       )}
+
 
       {showPreviewModal && (
         <UpdateModal forceShow={true} onClosePreview={() => setShowPreviewModal(false)} />

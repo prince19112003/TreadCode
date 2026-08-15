@@ -6,7 +6,7 @@ import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
 import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 import { LicenseContext } from '../App';
-import { SmartBoardModal } from '../../features/smartboard/SmartBoardModal';
+const SmartBoardModal = React.lazy(() => import('../../features/smartboard/SmartBoardModal').then(m => ({ default: m.SmartBoardModal })));
 
 const GithubIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -673,7 +673,9 @@ export const GlobalAppShell: React.FC = () => {
         {searchOpen && <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />}
       </AnimatePresence>
 
-      <SmartBoardModal isOpen={smartBoardOpen} onClose={() => setSmartBoardOpen(false)} />
+      <React.Suspense fallback={null}>
+        <SmartBoardModal isOpen={smartBoardOpen} onClose={() => setSmartBoardOpen(false)} />
+      </React.Suspense>
 
       {/* === MAIN CONTENT === */}
       <main className="relative z-0 flex-1 overflow-hidden flex flex-col">

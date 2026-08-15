@@ -60,7 +60,7 @@ const DIJKSTRA_EDGES: WeightedEdge[] = [
   { u: '4', v: '5', weight: 3 },
 ];
 
-export const GraphVisualStage: React.FC = () => {
+export const GraphVisualStage = React.memo(() => {
   const lesson = useLessonStore(s => s.lesson);
   const currentStep = useLessonStore(s => s.currentStep);
   const activeSteps = useLessonStore(s => s.activeSteps);
@@ -1193,4 +1193,4 @@ export const GraphVisualStage: React.FC = () => {
       </div>
     </div>
   );
-};
+});

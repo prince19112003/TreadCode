@@ -124,23 +124,33 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
 
   // ─── History ─────────────────────────────────────────────────────────────────
   const undo = useCallback(() => {
-    if (!strokes.length) return;
-    const last = strokes[strokes.length - 1];
-    setStrokes((prev) => prev.slice(0, -1));
-    setRedo((prev) => [...prev, last]);
-  }, [strokes, setStrokes, setRedo]);
+    let lastStroke: Stroke | null = null;
+    setStrokes((prev) => {
+      if (!prev.length) return prev;
+      lastStroke = prev[prev.length - 1];
+      return prev.slice(0, -1);
+    });
+    if (lastStroke) {
+      setRedo((prev) => [...prev, lastStroke!]);
+    }
+  }, [setStrokes, setRedo]);
 
   const redo = useCallback(() => {
-    if (!redoStack.length) return;
-    const top = redoStack[redoStack.length - 1];
-    setRedo((prev) => prev.slice(0, -1));
-    setStrokes((prev) => [...prev, top]);
-  }, [redoStack, setStrokes, setRedo]);
+    let topStroke: Stroke | null = null;
+    setRedo((prev) => {
+      if (!prev.length) return prev;
+      topStroke = prev[prev.length - 1];
+      return prev.slice(0, -1);
+    });
+    if (topStroke) {
+      setStrokes((prev) => [...prev, topStroke!]);
+    }
+  }, [setStrokes, setRedo]);
 
-  const clearPage = () => {
+  const clearPage = useCallback(() => {
     setStrokes(() => []);
     setRedo(() => []);
-  };
+  }, [setStrokes, setRedo]);
 
   // ─── Keyboard Shortcuts ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -364,7 +374,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     if (activePointersRef.current.size === 2) {
       const pts = Array.from(activePointersRef.current.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      touchPinchRef.current = { dist, zoom };
+      touchPinchRef.current = { dist, zoom: zoomRef.current };
       return;
     }
 
@@ -386,7 +396,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     e.currentTarget.setPointerCapture(e.pointerId);
     drawing.current = true;
     if (pagesOpen) setPagesOpen(false);
-    // ★ Write directly to liveRef — zero React state update during stroke
+    // Write directly to liveRef with current zoom & offset transformation
     liveRef.current = { tool, color, size, points: [getPos(e)], timestamp: Date.now() };
   };
 
@@ -394,12 +404,24 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     // Pinch zoom
-    if (activePointersRef.current.size === 2 && touchPinchRef.current) {
+    if (activePointersRef.current.size === 2 && touchPinchRef.current && cvLiveRef.current) {
       const pts = Array.from(activePointersRef.current.values());
       const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       if (touchPinchRef.current.dist > 0) {
-        const ratio = newDist / touchPinchRef.current.dist;
-        setZoom(Math.min(4, Math.max(0.3, touchPinchRef.current.zoom * ratio)));
+        const r = cvLiveRef.current.getBoundingClientRect();
+        const midX = (pts[0].x + pts[1].x) / 2 - r.left;
+        const midY = (pts[0].y + pts[1].y) / 2 - r.top;
+        const factor = newDist / touchPinchRef.current.dist;
+        const newZoom = Math.min(4, Math.max(0.3, touchPinchRef.current.zoom * factor));
+        const oldZoom = zoomRef.current;
+        if (oldZoom > 0 && Math.abs(newZoom - oldZoom) > 0.001) {
+          const ratio = newZoom / oldZoom;
+          setZoom(newZoom);
+          setZoomOffset((old) => ({
+            x: midX - (midX - old.x) * ratio,
+            y: midY - (midY - old.y) * ratio,
+          }));
+        }
       }
       return;
     }
@@ -415,32 +437,21 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     }
     if (!drawing.current) return;
 
-    // ★ Coalesced events — capture ALL intermediate pointer positions from OS
     const events = e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent];
-    const cv = cvLiveRef.current!;
-    const r = cv.getBoundingClientRect();
-
     const prev = liveRef.current;
     if (prev && ["pen", "highlighter", "laser", "eraser", "stroke_eraser"].includes(prev.tool)) {
       const newPts: Point[] = [];
       for (const ev of events) {
-        const pt: Point = {
-          x: (ev.clientX - r.left - zoomOffsetRef.current.x) / zoomRef.current,
-          y: (ev.clientY - r.top - zoomOffsetRef.current.y) / zoomRef.current,
-          p: ev.pressure > 0 ? ev.pressure : 0.5,
-          t: ev.timeStamp ? performance.timeOrigin + ev.timeStamp : Date.now(),
-        };
-        // Jitter filter: 0.5px — tight enough for fast strokes, keeps slow deliberate marks
+        const pt = getPos(ev);
         const last = newPts[newPts.length - 1] ?? prev.points[prev.points.length - 1];
         if (last && Math.hypot(pt.x - last.x, pt.y - last.y) < 0.5) continue;
         newPts.push(pt);
       }
       if (newPts.length) {
-        // Direct mutation of liveRef — no setState, no React render, pure speed
         liveRef.current = { ...prev, points: [...prev.points, ...newPts], timestamp: Date.now() };
       }
     } else if (prev) {
-      // Shape tools: only start + current endpoint
+      // Shape tools: start point + current endpoint
       const pt = getPos(e);
       liveRef.current = { ...prev, points: [prev.points[0], pt] };
     }
@@ -471,7 +482,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     const s = liveRef.current;
     if (s) {
       if (s.tool === "eraser" || s.tool === "stroke_eraser") {
-        eraseLassoArea(s.points, size, setStrokes);
+        eraseLassoArea(s.points, size, setStrokes, s.tool === "stroke_eraser");
       } else {
         // Compress the stroke points using Douglas-Peucker to save RAM before committing
         const compressedPoints = simplifyStroke(s.points, 0.8);
@@ -692,6 +703,9 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
           autoSnapEnabled={autoSnapEnabled} setAutoSnapEnabled={setAutoSnapEnabled}
           velocityMode={velocityMode} setVelocityMode={setVelocityMode}
           zoom={zoom} setZoom={setZoom} setZoomOffset={setZoomOffset}
+          color={color} setColor={setColor}
+          size={size} setSize={setSize}
+          addPage={addPage}
           isFullscreen={isFullscreen} setIsFullscreen={setIsFullscreen}
           headerCollapsed={headerCollapsed} setHeaderCollapsed={setHeaderCollapsed}
           glassMode={glassMode}
@@ -705,7 +719,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
           <PageDrawer
             pages={pages} pageIdx={pageIdx} setPageIdx={setPageIdx}
             pagesOpen={pagesOpen} setPagesOpen={setPagesOpen}
-            addPage={addPage} deletePage={deletePage}
+            deletePage={deletePage}
             isFlyAnimating={isFlyAnimating} boardBg={boardBg}
           />
 
@@ -731,11 +745,9 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
 
           {/* Inspector Panel */}
           <InspectorPanel
-            strokes={strokes} redoStack={redoStack}
+            hasStrokes={strokes.length > 0} hasRedo={redoStack.length > 0}
             undo={undo} redo={redo} clearPage={clearPage}
             setIsExportOpen={setIsExportOpen}
-            tool={tool} color={color} setColor={setColor}
-            size={size} setSize={setSize}
           />
 
           {/* Radial Tool Menu */}

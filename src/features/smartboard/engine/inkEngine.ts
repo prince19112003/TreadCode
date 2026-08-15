@@ -268,7 +268,7 @@ export function drawStroke(
   ctx: CanvasRenderingContext2D,
   s: Stroke,
   now: number,
-  zoom: number,
+  _zoom: number,
   _bgFill: string,
   velocityMode: boolean,
   isLive: boolean = false
@@ -294,17 +294,7 @@ export function drawStroke(
 
   switch (s.tool) {
     case "eraser": {
-      // Show lasso eraser as a dashed pink outline during drawing
-      ctx.strokeStyle = "#f43f5e";
-      ctx.lineWidth = 1.5 / zoom;
-      ctx.setLineDash([6 / zoom, 6 / zoom]);
-      ctx.fillStyle = "rgba(244,63,94,0.08)";
-      ctx.beginPath();
-      buildMidpointPath(ctx, pts);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.setLineDash([]);
+      // Completely invisible eraser trace
       break;
     }
 

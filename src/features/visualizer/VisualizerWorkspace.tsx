@@ -5,34 +5,34 @@ import { StageControls } from './components/StageControls';
 import { OutputConsole } from './components/OutputConsole';
 import { ExplanationBar } from './components/ExplanationBar';
 import { PenMenu } from './components/PenMenu';
-import { CustomFlowchartStage } from './components/stages/CustomFlowchartStage';
-import { StackVisualStage } from './components/stages/StackVisualStage';
-import { QueueVisualStage } from './components/stages/QueueVisualStage';
-import { SllVisualStage } from './components/stages/SllVisualStage';
-import { DllVisualStage } from './components/stages/DllVisualStage';
-import { BubbleSortVisualStage } from './components/stages/BubbleSortVisualStage';
-import { SelectionSortVisualStage } from './components/stages/SelectionSortVisualStage';
-import { InsertionSortVisualStage } from './components/stages/InsertionSortVisualStage';
-import { MergeSortVisualStage } from './components/stages/MergeSortVisualStage';
-import { HeapSortVisualStage } from './components/stages/HeapSortVisualStage';
-import { TreeVisualStage } from './components/stages/TreeVisualStage';
-import { GraphVisualStage } from './components/stages/GraphVisualStage';
-import { DsaAlgoStage } from './components/stages/DsaAlgoStage';
-import { DsaOperationalPanel } from './components/DsaOperationalPanel';
-import { QueueOperationalPanel } from './components/QueueOperationalPanel';
-import { SllOperationalPanel } from './components/SllOperationalPanel';
-import { DllOperationalPanel } from './components/DllOperationalPanel';
-import { BubbleSortOperationalPanel } from './components/BubbleSortOperationalPanel';
-import { SelectionSortOperationalPanel } from './components/SelectionSortOperationalPanel';
-import { InsertionSortOperationalPanel } from './components/InsertionSortOperationalPanel';
-import { MergeSortOperationalPanel } from './components/MergeSortOperationalPanel';
-import { HeapSortOperationalPanel } from './components/HeapSortOperationalPanel';
-import { TreeOperationalPanel } from './components/TreeOperationalPanel';
-import { GraphOperationalPanel } from './components/GraphOperationalPanel';
+const CustomFlowchartStage = React.lazy(() => import('./components/stages/CustomFlowchartStage').then(m => ({ default: m.CustomFlowchartStage })));
+const StackVisualStage = React.lazy(() => import('./components/stages/StackVisualStage').then(m => ({ default: m.StackVisualStage })));
+const QueueVisualStage = React.lazy(() => import('./components/stages/QueueVisualStage').then(m => ({ default: m.QueueVisualStage })));
+const SllVisualStage = React.lazy(() => import('./components/stages/SllVisualStage').then(m => ({ default: m.SllVisualStage })));
+const DllVisualStage = React.lazy(() => import('./components/stages/DllVisualStage').then(m => ({ default: m.DllVisualStage })));
+const BubbleSortVisualStage = React.lazy(() => import('./components/stages/BubbleSortVisualStage').then(m => ({ default: m.BubbleSortVisualStage })));
+const SelectionSortVisualStage = React.lazy(() => import('./components/stages/SelectionSortVisualStage').then(m => ({ default: m.SelectionSortVisualStage })));
+const InsertionSortVisualStage = React.lazy(() => import('./components/stages/InsertionSortVisualStage').then(m => ({ default: m.InsertionSortVisualStage })));
+const MergeSortVisualStage = React.lazy(() => import('./components/stages/MergeSortVisualStage').then(m => ({ default: m.MergeSortVisualStage })));
+const HeapSortVisualStage = React.lazy(() => import('./components/stages/HeapSortVisualStage').then(m => ({ default: m.HeapSortVisualStage })));
+const TreeVisualStage = React.lazy(() => import('./components/stages/TreeVisualStage').then(m => ({ default: m.TreeVisualStage })));
+const GraphVisualStage = React.lazy(() => import('./components/stages/GraphVisualStage').then(m => ({ default: m.GraphVisualStage })));
+const DsaAlgoStage = React.lazy(() => import('./components/stages/DsaAlgoStage').then(m => ({ default: m.DsaAlgoStage })));
+const DsaOperationalPanel = React.lazy(() => import('./components/DsaOperationalPanel').then(m => ({ default: m.DsaOperationalPanel })));
+const QueueOperationalPanel = React.lazy(() => import('./components/QueueOperationalPanel').then(m => ({ default: m.QueueOperationalPanel })));
+const SllOperationalPanel = React.lazy(() => import('./components/SllOperationalPanel').then(m => ({ default: m.SllOperationalPanel })));
+const DllOperationalPanel = React.lazy(() => import('./components/DllOperationalPanel').then(m => ({ default: m.DllOperationalPanel })));
+const BubbleSortOperationalPanel = React.lazy(() => import('./components/BubbleSortOperationalPanel').then(m => ({ default: m.BubbleSortOperationalPanel })));
+const SelectionSortOperationalPanel = React.lazy(() => import('./components/SelectionSortOperationalPanel').then(m => ({ default: m.SelectionSortOperationalPanel })));
+const InsertionSortOperationalPanel = React.lazy(() => import('./components/InsertionSortOperationalPanel').then(m => ({ default: m.InsertionSortOperationalPanel })));
+const MergeSortOperationalPanel = React.lazy(() => import('./components/MergeSortOperationalPanel').then(m => ({ default: m.MergeSortOperationalPanel })));
+const HeapSortOperationalPanel = React.lazy(() => import('./components/HeapSortOperationalPanel').then(m => ({ default: m.HeapSortOperationalPanel })));
+const TreeOperationalPanel = React.lazy(() => import('./components/TreeOperationalPanel').then(m => ({ default: m.TreeOperationalPanel })));
+const GraphOperationalPanel = React.lazy(() => import('./components/GraphOperationalPanel').then(m => ({ default: m.GraphOperationalPanel })));
 import { QuickHandwrittenNote } from './components/QuickHandwrittenNote';
 import { useLessonStore } from '../../lessons/useLessonStore';
 
-export const VisualizerWorkspace: React.FC = () => {
+export const VisualizerWorkspace = React.memo(() => {
   const lesson = useLessonStore(s => s.lesson);
   const isFullScreen = useLessonStore(s => s.isFullScreen);
   const toggleFullScreen = useLessonStore(s => s.toggleFullScreen);
@@ -131,7 +131,9 @@ export const VisualizerWorkspace: React.FC = () => {
         <div className="flex-1 h-full relative overflow-hidden flex flex-col">
           {fullScreenToggleButton}
           {pureBlackToggleButton}
-          {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+          <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+            {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+          </React.Suspense>
         </div>
         <PenMenu />
       </div>
@@ -149,7 +151,9 @@ export const VisualizerWorkspace: React.FC = () => {
             <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
               isSortingTopic ? 'h-[48%] md:h-[46%]' : 'h-[60%] md:h-[66%]'
             }`}>
-              {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isInsertionSortTopic ? <InsertionSortOperationalPanel /> : isMergeSortTopic ? <MergeSortOperationalPanel /> : isHeapSortTopic ? <HeapSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
+              <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+                {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isInsertionSortTopic ? <InsertionSortOperationalPanel /> : isMergeSortTopic ? <MergeSortOperationalPanel /> : isHeapSortTopic ? <HeapSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
+              </React.Suspense>
             </div>
             <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
               isSortingTopic ? 'h-[52%] md:h-[54%]' : 'h-[40%] md:h-[34%]'
@@ -168,7 +172,9 @@ export const VisualizerWorkspace: React.FC = () => {
             } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
               {fullScreenToggleButton}
               {pureBlackToggleButton}
-              {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
+              <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+                {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <DsaAlgoStage />}
+              </React.Suspense>
               <PenMenu />
               <QuickHandwrittenNote topic={lesson?.topic ?? 'stack'} />
             </div>
@@ -213,7 +219,9 @@ export const VisualizerWorkspace: React.FC = () => {
             isPureBlack ? 'bg-black' : 'bg-[#050510]'
           } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
             {pureBlackToggleButton}
-            {isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+            <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+              {isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+            </React.Suspense>
             <PenMenu />
           </div>
           <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
@@ -231,4 +239,4 @@ export const VisualizerWorkspace: React.FC = () => {
       </div>
     </div>
   );
-};
+});

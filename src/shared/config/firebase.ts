@@ -3,13 +3,13 @@ import { getDatabase, ref, get, set, runTransaction } from 'firebase/database';
 
 // Firebase Web Config Setup targeting licensing database
 const firebaseConfig = {
-  apiKey: "AIzaSyCR9JqBrN1jfTuopPAvb8fbqSxjbOcilmc",
-  authDomain: "flowtrace-licensing.firebaseapp.com",
-  databaseURL: "https://flowtrace-licensing-default-rtdb.firebaseio.com",
-  projectId: "flowtrace-licensing",
-  storageBucket: "flowtrace-licensing.firebasestorage.app",
-  messagingSenderId: "54812800974",
-  appId: "1:54812800974:web:46f3294f029da000f4dd9f"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCR9JqBrN1jfTuopPAvb8fbqSxjbOcilmc",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flowtrace-licensing.firebaseapp.com",
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://flowtrace-licensing-default-rtdb.firebaseio.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "flowtrace-licensing",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "flowtrace-licensing.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "54812800974",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:54812800974:web:46f3294f029da000f4dd9f"
 };
 
 export const app = initializeApp(firebaseConfig);

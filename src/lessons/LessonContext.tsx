@@ -17,31 +17,43 @@ export const LessonProvider: React.FC<{ lesson: LessonProgram; children: React.R
   const goNext = useLessonStore(s => s.goNext);
   const isComplete = useLessonStore(s => s.isComplete);
   const playSpeed = useLessonStore(s => s.playSpeed);
-  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(0);
 
   useEffect(() => {
     initLesson(lesson);
   }, [lesson, initLesson]);
 
-  // Auto-playback logic — subscribes to currentStepIndex to step through all animation steps
+  // Auto-playback logic — uses requestAnimationFrame for buttery smooth syncing
+  // decoupled from currentStepIndex to avoid teardown/setup on every step
   useEffect(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    
-    if (isPlaying && !isComplete) {
-      const delay = AUTO_PLAY_DELAY_MS / playSpeed;
-      timerRef.current = setTimeout(() => {
-        goNext();
-      }, delay);
+    if (!isPlaying || isComplete) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      lastTickRef.current = 0;
+      return;
     }
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+    const loop = (timestamp: number) => {
+      if (lastTickRef.current === 0) lastTickRef.current = timestamp;
+      const elapsed = timestamp - lastTickRef.current;
+      const delay = AUTO_PLAY_DELAY_MS / playSpeed;
+
+      if (elapsed >= delay) {
+        goNext();
+        // Carry over remainder to prevent drift
+        lastTickRef.current = timestamp - (elapsed % delay);
+      }
+      rafRef.current = requestAnimationFrame(loop);
     };
-  }, [isPlaying, isComplete, goNext, playSpeed, currentStepIndex]);
+
+    rafRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isPlaying, isComplete, goNext, playSpeed]);
 
   return <>{children}</>;
 };

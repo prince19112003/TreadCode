@@ -29,7 +29,7 @@ const TOOL_ITEMS: {
   { tool: "pan", icon: <Hand size={15} />, title: "Pan (Space)", angle: 120 },
 ];
 
-export const RadialMenu: React.FC<RadialMenuProps> = ({
+export const RadialMenu = React.memo<RadialMenuProps>(({
   tool,
   setTool,
   isToolMenuOpen,
@@ -161,4 +161,4 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({
       </div>
     </motion.div>
   );
-};
+});

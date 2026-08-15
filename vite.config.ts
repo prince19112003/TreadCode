@@ -1,15 +1,48 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
+
+import obfuscator from 'javascript-obfuscator';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    tsconfigPaths(),
+    {
+      name: 'vite-plugin-javascript-obfuscator',
+      apply: 'build',
+      enforce: 'post',
+      renderChunk(code) {
+        const obfuscated = obfuscator.obfuscate(code, {
+          compact: true,
+          controlFlowFlattening: true,
+          deadCodeInjection: false,
+          debugProtection: false,
+          disableConsoleOutput: true,
+          identifierNamesGenerator: 'hexadecimal',
+          log: false,
+          numbersToExpressions: true,
+          renameGlobals: false,
+          selfDefending: true,
+          simplify: true,
+          splitStrings: true,
+          stringArray: true,
+          stringArrayCallsTransform: true,
+          stringArrayEncoding: ['base64'],
+          stringArrayThreshold: 0.75,
+          unicodeEscapeSequence: false,
+        });
+        return {
+          code: obfuscated.getObfuscatedCode(),
+          map: null,
+        };
+      },
+    },
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
   build: {
     rollupOptions: {
       output: {

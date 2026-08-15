@@ -1,14 +1,12 @@
-// components/BoardHeader.tsx — Top bar: bg, grid, shapes, zoom, velocity toggle
-
 import React from "react";
 import { motion } from "motion/react";
 import {
   GripHorizontal, ChevronDown, ChevronUp, Maximize2, Minimize2, X,
   Minus, MoveRight, Square, Circle, Sparkle, AlignJustify, SquareCheck,
-  Zap,
+  Zap, Plus,
 } from "lucide-react";
 import type { SmartBoardBg, SmartBoardGrid, SmartBoardTool } from "../types";
-import { BG_FILL } from "../types";
+import { BG_FILL, COLOR_PALETTE } from "../types";
 import { ToolBtn } from "./ToolBtn";
 
 interface BoardHeaderProps {
@@ -25,6 +23,11 @@ interface BoardHeaderProps {
   zoom: number;
   setZoom: (z: number) => void;
   setZoomOffset: (o: { x: number; y: number }) => void;
+  color: string;
+  setColor: (c: string) => void;
+  size: number;
+  setSize: (s: number) => void;
+  addPage: () => void;
   isFullscreen: boolean;
   setIsFullscreen: (v: boolean) => void;
   headerCollapsed: boolean;
@@ -36,13 +39,16 @@ interface BoardHeaderProps {
   onDragEnd: (e: React.PointerEvent) => void;
 }
 
-export const BoardHeader: React.FC<BoardHeaderProps> = ({
+export const BoardHeader = React.memo<BoardHeaderProps>(({
   boardBg, setBoardBg,
   bgGrid, setBgGrid,
   tool, setTool,
   autoSnapEnabled, setAutoSnapEnabled,
   velocityMode, setVelocityMode,
   zoom, setZoom, setZoomOffset,
+  color, setColor,
+  size, setSize,
+  addPage,
   isFullscreen, setIsFullscreen,
   headerCollapsed, setHeaderCollapsed,
   glassMode,
@@ -53,7 +59,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
     <>
       {/* Header bar */}
       <motion.div
-        animate={{ height: headerCollapsed ? 0 : 40, opacity: headerCollapsed ? 0 : 1 }}
+        animate={{ height: headerCollapsed ? 0 : 42, opacity: headerCollapsed ? 0 : 1 }}
         transition={{ duration: 0.2 }}
         className="overflow-hidden shrink-0"
       >
@@ -61,18 +67,88 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
           onPointerDown={(e) => startDrag(e, "move")}
           onPointerMove={onDragMove}
           onPointerUp={onDragEnd}
-          className={`h-10 px-2 sm:px-3 flex items-center justify-between border-b border-white/6 gap-2 ${
+          className={`h-10.5 px-2 sm:px-3 flex items-center justify-between border-b border-white/6 gap-2 ${
             glassMode ? "bg-black/30 backdrop-blur-xl" : "bg-[#080c18]/95"
           } ${!isFullscreen ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
-          {/* Left: Logo */}
-          <div className="flex items-center gap-1.5 shrink-0 pointer-events-none">
-            {!isFullscreen && <GripHorizontal size={13} className="text-white/20 hidden sm:inline" />}
-            <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-white/60 uppercase">SmartBoard</span>
-            <span className="text-[8px] sm:text-[9px] text-white/25 font-mono">v4</span>
+          {/* Left: Drag Grip + New Page Button + Pen Size & Color Palette */}
+          <div
+            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden py-0.5"
+            style={{ scrollbarWidth: "none" }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {!isFullscreen && <GripHorizontal size={13} className="text-white/20 mr-1 hidden sm:inline" />}
+
+            {/* New Slide / Page Button */}
+            <button
+              onClick={addPage}
+              className="h-7 px-2.5 flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/35 active:scale-95 border border-indigo-500/30 text-indigo-200 hover:text-white text-[11px] font-semibold transition-all shadow-xs shrink-0"
+              title="Add New Slide / Page"
+            >
+              <Plus size={12} className="text-indigo-400" />
+              <span>New</span>
+            </button>
+
+            {/* Unified Minimal Pen & Color Capsule */}
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-white/4 border border-white/7 shadow-inner backdrop-blur-md shrink-0">
+              {/* Pen Size Selector */}
+              <div className="flex items-center gap-1">
+                {[2, 3, 5, 7, 9].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    className={`w-5.5 h-5.5 rounded-lg flex items-center justify-center text-[10px] font-mono font-medium transition-all duration-150 active:scale-95 ${
+                      size === s
+                        ? "bg-indigo-600 text-white font-bold shadow-[0_0_10px_rgba(99,102,241,0.5)] scale-105"
+                        : "text-white/40 hover:text-white/80 hover:bg-white/6"
+                    }`}
+                    title={`${s}px size`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              {/* Minimal Divider */}
+              <div className="w-px h-3.5 bg-white/10 mx-0.5" />
+
+              {/* Color Swatches */}
+              <div className="flex items-center gap-1.5">
+                {COLOR_PALETTE.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={`rounded-full transition-all duration-150 flex items-center justify-center ${
+                      color === c
+                        ? "w-4.5 h-4.5 ring-2 ring-indigo-400 ring-offset-2 ring-offset-[#080c18] scale-110 shadow-sm"
+                        : "w-3.5 h-3.5 opacity-60 hover:opacity-100 hover:scale-115"
+                    }`}
+                    style={{
+                      background: c,
+                      border: c === "#f8fafc" ? "1px solid rgba(0,0,0,0.25)" : "none",
+                    }}
+                    title={c}
+                  />
+                ))}
+
+                {/* Custom Color Rainbow Dot */}
+                <label className="relative cursor-pointer flex items-center justify-center group" title="Custom Color">
+                  <div
+                    className="w-3.5 h-3.5 rounded-full border border-white/30 overflow-hidden group-hover:scale-115 transition-transform"
+                    style={{ background: "conic-gradient(red,yellow,lime,cyan,blue,magenta,red)" }}
+                  />
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+              </div>
+            </div>
           </div>
 
-          {/* Right: Controls */}
+          {/* Right: Background, Shapes, Grid, Zoom & Window Controls */}
           <div
             className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden py-1 max-w-[calc(100vw-90px)] sm:max-w-none"
             style={{ scrollbarWidth: "none" }}
@@ -134,7 +210,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
               </button>
             </div>
 
-            {/* ★ Velocity Ink Toggle (default OFF) */}
+            {/* Velocity Ink Toggle */}
             <button
               onClick={() => setVelocityMode(!velocityMode)}
               className={`px-1.5 py-0.5 text-[9px] sm:text-[9.5px] font-medium rounded-md transition-all flex items-center gap-1 border shrink-0 ${
@@ -142,7 +218,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
                   ? "bg-violet-500/20 text-violet-300 border-violet-400/40 shadow-xs shadow-violet-500/20 font-semibold"
                   : "bg-white/4 text-white/30 border-white/6 hover:text-white/60"
               }`}
-              title="Velocity Ink: Fast = thin line, Slow = thick line (calligraphic mode)"
+              title="Velocity Ink: Fast = thin line, Slow = thick line"
             >
               <Zap size={10} className={velocityMode ? "text-violet-400" : ""} />
               <span className="hidden xs:inline sm:inline">Velocity Ink</span>
@@ -190,4 +266,4 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
       )}
     </>
   );
-};
+});
