@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { CodeLine } from '../../../lessons/types';
 import { usePinchZoom } from '../../../shared/hooks/usePinchZoom';
@@ -211,6 +212,8 @@ export const CodeStepPanel: React.FC = () => {
   const currentStep = useLessonStore(s => s.currentStep);
   const editableValues = useLessonStore(s => s.editableValues);
   const setEditableValue = useLessonStore(s => s.setEditableValue);
+  const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);
+  const toggleCodeFullScreen = useLessonStore(s => s.toggleCodeFullScreen);
   const [zoomLevel, setZoomLevel] = useState(0.8);
   const containerRef = usePinchZoom(setZoomLevel, 0.4, 2.5);
 
@@ -302,6 +305,20 @@ export const CodeStepPanel: React.FC = () => {
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
           </button>
+          {lesson?.language === 'dsa' && (
+            <>
+              <div className="w-px bg-indigo-500/20 h-4" />
+              <button
+                onClick={toggleCodeFullScreen}
+                className={`p-1 rounded transition-colors ${
+                  isCodeFullScreen ? 'text-amber-400 bg-amber-500/20' : 'text-slate-400 hover:text-white hover:bg-white/10'
+                }`}
+                title={isCodeFullScreen ? "Exit Fullscreen Code" : "Fullscreen Code View"}
+              >
+                {isCodeFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

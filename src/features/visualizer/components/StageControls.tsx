@@ -213,17 +213,17 @@ export const StageControls: React.FC = () => {
           </button>
         </div>
 
-        {/* Playback controls */}
-        {!isDsa && (
+        {/* Playback controls (Icon-only) */}
+        {!['stack', 'queue', 'singly_linked_list', 'doubly_linked_list', 'binary_tree'].includes(lesson?.topic || '') && (
           <div className="flex md:flex-col flex-row items-center gap-1.5 md:gap-3 shrink-0">
             <motion.button
               onClick={goPrev}
               disabled={!canPrev}
               whileTap={canPrev ? { scale: 0.85 } : {}}
-              className="p-1 md:p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
+              className="p-1.5 md:p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
               title="Previous Step"
             >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>
 
             <div className="relative">
@@ -238,7 +238,7 @@ export const StageControls: React.FC = () => {
                 onClick={togglePlay}
                 whileTap={{ scale: 0.85 }}
                 disabled={isComplete}
-                className={`relative w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${
+                className={`relative w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all ${
                   isComplete
                     ? 'bg-green-500/20 text-green-300 cursor-not-allowed border border-green-500/30'
                     : isPlaying
@@ -247,7 +247,7 @@ export const StageControls: React.FC = () => {
                 }`}
                 title={isPlaying ? "Pause" : "Auto Play"}
               >
-                {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 ml-0.5 md:ml-1" />}
+                {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Play className="w-3.5 h-3.5 md:w-4 md:h-4 ml-0.5" />}
               </motion.button>
             </div>
 
@@ -255,32 +255,34 @@ export const StageControls: React.FC = () => {
               onClick={goNext}
               disabled={!canNext}
               whileTap={canNext ? { scale: 0.85 } : {}}
-              className="p-1 md:p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
+              className="p-1.5 md:p-2 rounded-xl text-indigo-300 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-500/20 transition-colors"
               title="Next Step"
             >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>
 
-            <button
-              onClick={() => {
-                const speeds = [1.0, 2.0, 3.0, 4.0];
-                const nextIdx = (speeds.indexOf(playSpeed) + 1) % speeds.length;
-                setPlaySpeed(speeds[nextIdx]);
-              }}
-              className={`px-1 py-0.5 text-[9px] md:text-[10px] font-black font-mono tracking-wider border rounded transition-all duration-300 shrink-0 select-none shadow-sm flex items-center justify-center gap-0.5 ${
-                playSpeed === 1.0
-                  ? 'border-indigo-500/20 text-indigo-300 bg-[#0b0c16]'
-                  : playSpeed === 2.0
-                  ? 'border-indigo-400 text-indigo-200 bg-indigo-500/10'
-                  : playSpeed === 3.0
-                  ? 'border-orange-500 text-orange-300 bg-orange-500/10'
-                  : 'border-red-500 text-red-400 bg-red-500/15 animate-pulse'
-              }`}
-              title="Cycling playback speed (1x, 2x, 3x, 4x)"
-            >
-              <Gauge className="w-3 h-3" />
-              <span>{Math.round(playSpeed)}x</span>
-            </button>
+            {!isDsa && (
+              <button
+                onClick={() => {
+                  const speeds = [1.0, 2.0, 3.0, 4.0];
+                  const nextIdx = (speeds.indexOf(playSpeed) + 1) % speeds.length;
+                  setPlaySpeed(speeds[nextIdx]);
+                }}
+                className={`px-1 py-0.5 text-[9px] md:text-[10px] font-black font-mono tracking-wider border rounded transition-all duration-300 shrink-0 select-none shadow-sm flex items-center justify-center gap-0.5 ${
+                  playSpeed === 1.0
+                    ? 'border-indigo-500/20 text-indigo-300 bg-[#0b0c16]'
+                    : playSpeed === 2.0
+                    ? 'border-indigo-400 text-indigo-200 bg-indigo-500/10'
+                    : playSpeed === 3.0
+                    ? 'border-orange-500 text-orange-300 bg-orange-500/10'
+                    : 'border-red-500 text-red-400 bg-red-500/15 animate-pulse'
+                }`}
+                title="Cycling playback speed (1x, 2x, 3x, 4x)"
+              >
+                <Gauge className="w-3 h-3" />
+                <span>{Math.round(playSpeed)}x</span>
+              </button>
+            )}
           </div>
         )}
       </div>

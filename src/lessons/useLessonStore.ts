@@ -19,6 +19,8 @@ export interface LessonStoreType {
   setIsPlaying: (isPlaying: boolean) => void;
   toggleLanguage: () => void;
   toggleFullScreen: () => void;
+  isCodeFullScreen: boolean;
+  toggleCodeFullScreen: () => void;
   reset: () => void;
   isFullScreen: boolean;
   zoom: number;
@@ -60,6 +62,8 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
   language: 'en',
   editableValues: {},
   isFullScreen: false,
+  isCodeFullScreen: false,
+  toggleCodeFullScreen: () => set(s => ({ isCodeFullScreen: !s.isCodeFullScreen })),
   zoom: 1,
   hasEdited: false,
   playSpeed: 1.0,
@@ -78,6 +82,8 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
       totalSteps,
       isComplete: false,
       isPlaying: false,
+      isFullScreen: false,
+      isCodeFullScreen: false,
       customSteps: null,
       hasEdited: false,
     });

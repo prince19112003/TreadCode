@@ -97,10 +97,10 @@ const languages = [
     id: 'dsa',
     name: 'DSA',
     enabled: true,
-    creator: 'CS Fundamentals',
-    year: 'Polyglot',
+    creator: 'Computer Science',
+    year: 'Core',
     tagline: 'Data Structures & Algorithms.',
-    topics: 10,
+    topics: 17,
     programs: 34,
     accentColor: '#a855f7',
     accentGlow: 'rgba(168,85,247,0.22)',
@@ -277,7 +277,7 @@ export const LanguageSelectionPage: React.FC = () => {
                       <Icon />
                     </div>
 
-                    {lang.id === 'python' ? (
+                    {(lang.id === 'python' || lang.id === 'dsa') ? (
                       <span
                         className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
                         style={{ color: '#4ade80', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
@@ -323,12 +323,14 @@ export const LanguageSelectionPage: React.FC = () => {
                         >
                           {topicsCount} Topics
                         </div>
-                        <div
-                          className="text-xs px-2.5 py-1 rounded-md font-mono font-bold text-white"
-                          style={{ background: `${lang.accentGlow}`, border: `1px solid ${lang.accentBorder}` }}
-                        >
-                          {programsCount} Programs
-                        </div>
+                        {lang.id !== 'dsa' && (
+                          <div
+                            className="text-xs px-2.5 py-1 rounded-md font-mono font-bold text-white"
+                            style={{ background: `${lang.accentGlow}`, border: `1px solid ${lang.accentBorder}` }}
+                          >
+                            {programsCount} Programs
+                          </div>
+                        )}
                       </div>
                     )}
 

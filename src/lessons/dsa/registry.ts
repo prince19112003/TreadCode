@@ -80,6 +80,10 @@ export const dsaRegistry: Record<string, any> = {
     dsa_graph_prims: dsaLessons.dsa_graph_prims,
     graph_prims: dsaLessons.dsa_graph_prims,
   },
+  graph_astar: {
+    dsa_graph_astar: dsaLessons.dsa_graph_astar,
+    graph_astar: dsaLessons.dsa_graph_astar,
+  },
   bubble_sort: {
     dsa_bubble_sort: dsaLessons.dsa_bubble_sort,
     bubble_sort: dsaLessons.dsa_bubble_sort,

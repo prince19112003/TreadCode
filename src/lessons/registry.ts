@@ -2,11 +2,11 @@ import type { LessonProgram } from './types';
 
 // Hardcode language stats to avoid loading massive chunks on the home screen
 const languageStats: Record<string, { topicsCount: number; programsCount: number }> = {
-  python: { topicsCount: 16, programsCount: 95 }, // Approximations based on old registry count
-  c: { topicsCount: 13, programsCount: 42 },
-  cpp: { topicsCount: 14, programsCount: 44 },
-  java: { topicsCount: 13, programsCount: 39 },
-  dsa: { topicsCount: 17, programsCount: 22 },
+  python: { topicsCount: 16, programsCount: 100 },
+  c: { topicsCount: 13, programsCount: 45 },
+  cpp: { topicsCount: 14, programsCount: 50 },
+  java: { topicsCount: 13, programsCount: 46 },
+  dsa: { topicsCount: 17, programsCount: 39 },
 };
 
 export const getLanguageStats = (languageId: string): { topicsCount: number; programsCount: number } => {

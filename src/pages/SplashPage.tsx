@@ -24,10 +24,15 @@ export const SplashPage: React.FC<SplashPageProps> = ({ onComplete }) => {
   return (
     <PageTransition className="items-center justify-center bg-[#05060b] text-slate-100 overflow-hidden relative">
       <div className="flex flex-col items-center justify-center z-10 select-none gap-10">
-        {/* Minimal Clean Extra Large 3D Logo (320px) — No Background Glows */}
-        <div className="relative flex items-center justify-center">
-          <TreadCodeLogo size={320} />
-        </div>
+        {/* Extra Large Sharp Logo (380px) — Smooth One-Time Fade In & Steady View */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative flex items-center justify-center"
+        >
+          <TreadCodeLogo size={380} glow={true} />
+        </motion.div>
 
         {/* 3-Second Staggered Blinking Matched Color Dots (. . . .) */}
         <motion.div

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Contrast } from 'lucide-react';
+import { Contrast, Expand, Shrink } from 'lucide-react';
 import { CodeStepPanel } from './components/CodeStepPanel';
 import { StageControls } from './components/StageControls';
 import { OutputConsole } from './components/OutputConsole';
@@ -35,6 +35,7 @@ import { useLessonStore } from '../../lessons/useLessonStore';
 export const VisualizerWorkspace: React.FC = () => {
   const lesson = useLessonStore(s => s.lesson);
   const isFullScreen = useLessonStore(s => s.isFullScreen);
+  const toggleFullScreen = useLessonStore(s => s.toggleFullScreen);
   const isDsa = lesson?.language === 'dsa';
   const [isConsoleFullScreen, setIsConsoleFullScreen] = useState(false);
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(() => lesson?.language === 'dsa');
@@ -66,7 +67,7 @@ export const VisualizerWorkspace: React.FC = () => {
   const isHeapSortTopic = isDsa && (lesson?.topic === 'heap_sort' || lesson?.id === 'dsa_heap_sort');
   const isSortingTopic = isBubbleSortTopic || isSelectionSortTopic || isInsertionSortTopic || isMergeSortTopic || isHeapSortTopic;
   const isTreeTopic = isDsa && lesson?.topic === 'binary_tree';
-  const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs' || lesson?.topic === 'graph_dijkstra' || lesson?.topic === 'graph_kruskal' || lesson?.topic === 'graph_prims');
+  const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs' || lesson?.topic === 'graph_dijkstra' || lesson?.topic === 'graph_kruskal' || lesson?.topic === 'graph_prims' || lesson?.topic === 'graph_astar');
 
   const isFlowchartTopic = !isDsa && [
     'variables', 'type_casting', 'operators', 'operators_expressions', 'user_input', 'data_types',
@@ -76,6 +77,17 @@ export const VisualizerWorkspace: React.FC = () => {
     'arrays', 'arrays_1d', 'arrays_2d', 'searching_sorting', 'array_operations',
     'searching', 'sorting',
   ].includes(lesson?.topic || '');
+
+  /* ── Stage FullScreen Toggle Button (Bottom-Left) ── */
+  const fullScreenToggleButton = (
+    <button
+      onClick={toggleFullScreen}
+      title={isFullScreen ? "Exit Fullscreen Stage" : "Fullscreen Stage View"}
+      className="absolute bottom-4 left-4 z-50 p-2 backdrop-blur-md rounded-xl transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)] flex items-center justify-center border bg-[#0d1126]/80 border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:scale-105 active:scale-95"
+    >
+      {isFullScreen ? <Shrink size={16} /> : <Expand size={16} />}
+    </button>
+  );
 
   /* ── Canvas Background Toggle Button (Bottom-Left next to Full Screen) ── */
   const pureBlackToggleButton = (
@@ -92,13 +104,20 @@ export const VisualizerWorkspace: React.FC = () => {
     </button>
   );
 
-  /* ── Output Console FullScreen ──────────────────────────────────────────── */
-  if (isConsoleFullScreen) {
+  const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);
+
+  /* ── Code Panel FullScreen ──────────────────────────────────────────────── */
+  if (isCodeFullScreen) {
     return (
-      <div className="flex h-screen w-screen overflow-hidden bg-[#050510] text-slate-200 relative p-1.5 gap-1.5">
-        {!isDsa && <StageControls />}
-        <div className="flex-1 h-full relative overflow-hidden flex flex-col">
-          <OutputConsole isFullScreen onToggleFullScreen={() => setIsConsoleFullScreen(false)} />
+      <div className={`flex h-screen w-screen overflow-hidden text-slate-200 relative p-1.5 gap-1.5 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
+        <StageControls />
+        <div className="flex-1 h-full relative overflow-hidden flex flex-col gap-1.5">
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <CodeStepPanel />
+          </div>
+          <div className="h-28 overflow-hidden flex flex-col">
+            <ExplanationBar />
+          </div>
         </div>
       </div>
     );
@@ -108,8 +127,9 @@ export const VisualizerWorkspace: React.FC = () => {
   if (isFullScreen) {
     return (
       <div className={`flex h-screen w-screen overflow-hidden text-slate-200 relative p-1.5 gap-1.5 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
-        {!isDsa && <StageControls />}
+        <StageControls />
         <div className="flex-1 h-full relative overflow-hidden flex flex-col">
+          {fullScreenToggleButton}
           {pureBlackToggleButton}
           {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
         </div>
@@ -146,6 +166,7 @@ export const VisualizerWorkspace: React.FC = () => {
             <div className={`relative overflow-hidden flex flex-col rounded-lg border border-slate-800/50 transition-all duration-300 ${
               isPureBlack ? 'bg-black' : 'bg-[#050510]'
             } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
+              {fullScreenToggleButton}
               {pureBlackToggleButton}
               {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <CustomFlowchartStage />}
               <PenMenu />

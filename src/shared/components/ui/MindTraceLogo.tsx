@@ -9,7 +9,7 @@ interface TreadCodeLogoProps {
 export const TreadCodeLogo: React.FC<TreadCodeLogoProps> = ({
   className = '',
   size = 32,
-  glow = false,
+  glow = true,
 }) => (
   <img
     src="/logo.png"
@@ -20,9 +20,8 @@ export const TreadCodeLogo: React.FC<TreadCodeLogoProps> = ({
       maxHeight: size,
       objectFit: 'contain',
       imageRendering: 'auto',
+      filter: glow ? 'drop-shadow(0 0 12px rgba(0, 242, 255, 0.45)) drop-shadow(0 0 24px rgba(168, 85, 247, 0.25))' : 'none',
     }}
-    className={`select-none pointer-events-none transition-all duration-300 ${
-      glow ? 'drop-shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'filter-none'
-    } ${className}`}
+    className={`select-none pointer-events-none transition-all duration-500 ${className}`}
   />
 );

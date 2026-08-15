@@ -95,6 +95,7 @@ const dsaTopics = [
   { id: 'graph_dijkstra', number: '14', name: "Dijkstra's Algorithm", subtitle: 'Single-Source Shortest Path in Weighted Graph', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#38bdf8' },
   { id: 'graph_kruskal', number: '15', name: "Kruskal's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Disjoint Set Union', complexity: 'O(E log E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#f59e0b' },
   { id: 'graph_prims', number: '16', name: "Prim's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Priority Queue', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
+  { id: 'graph_astar', number: '17', name: 'A* Search Algorithm', subtitle: 'Heuristic Optimal Pathfinding f(n) = g(n) + h(n)', complexity: 'O(E log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#ec4899' },
 ];
 
 const difficultyConfig = {
@@ -139,6 +140,7 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'graph_dijkstra') programId = 'dsa_graph_dijkstra';
       else if (topicId === 'graph_kruskal') programId = 'dsa_graph_kruskal';
       else if (topicId === 'graph_prims') programId = 'dsa_graph_prims';
+      else if (topicId === 'graph_astar') programId = 'dsa_graph_astar';
       else if (topicId === 'bubble_sort') programId = 'dsa_bubble_sort';
       else if (topicId === 'selection_sort') programId = 'dsa_selection_sort';
       else if (topicId === 'insertion_sort') programId = 'dsa_insertion_sort';

@@ -709,22 +709,71 @@ export const dsa_sll_reverse: LessonProgram = {
 };
 export const dsa_graph_basics: LessonProgram = {
   id: 'dsa_graph_basics', language: 'dsa', topic: 'graph_basics', lessonNumber: 1,
-  friendlyName: 'Graph Fundamentals (Vertices & Edges)',
-  learningObjective: 'Interactive Graph Workspace: Insert/Remove Vertices and Setup connections dynamically.',
+  friendlyName: 'Graph Fundamentals (Vertices, Edges & Matrices)',
+  learningObjective: 'Learn Graph Theory basics: Vertices, Edges, Edge Weights, Neighbor Nodes, Degree, Adjacency Matrix & Adjacency List representations.',
   lines: [
-    line(1, [cm('// Interactive Graph Workspace (Vertices & Connections)')]),
-    line(2, [cm('// Use the left controls panel to manage nodes and edges.')]),
+    line(1, [cm('// Graph Fundamentals: Representation & Data Structures')]),
+    line(2, [kw('class'), tx(' '), va('Graph'), tx(' {')]),
+    line(3, [tx('    '), kw('int'), tx(' '), va('V'), pu(';'), tx(' '), cm('// Number of Vertices')]),
+    line(4, [tx('    '), va('vector'), op('<'), va('pair'), op('<'), kw('int'), pu(','), kw('int'), op('>'), pu('>'), tx(' '), va('adj'), pu('['), pu(']'), pu(';'), tx(' '), cm('// Adjacency List')]),
+    line(5, [tx('    '), kw('int'), tx(' '), va('matrix'), pu('['), va('V'), pu(']'), pu('['), va('V'), pu(']'), pu(';'), tx(' '), cm('// Adjacency Matrix')]),
+    line(6, [pu('}')]),
   ],
   editableVariables: {},
   generateSteps: (): ExecutionStep[] => {
     return [
       {
         step: 1,
-        lineNum: 1,
-        explanationEnglish: 'Graph Workspace initialized. Add vertices and edges to construct the mesh network.',
-        explanationHinglish: 'Graph workspace initialize hua. Mesh network banane ke liye vertices add karein.',
-        memorySnapshot: { vertices: [], edges: [] },
-        consoleOutput: 'Graph Mesh Workspace initialized.',
+        lineNum: 2,
+        explanationEnglish: 'Graph G = (V, E): 7 Vertices V = {0..6} connected by 9 Edges E.',
+        explanationHinglish: 'Graph G = (V, E): 7 Vertices V = {0..6} aur 9 Edges E ka non-linear mesh network.',
+        memorySnapshot: { activeTab: 'overview', concept: 'GRAPH_STRUCTURE', nodesCount: 7, edgesCount: 9 },
+        consoleOutput: 'Graph initialized: 7 Vertices, 9 Edges.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 2,
+        lineNum: 3,
+        explanationEnglish: 'Vertices (Nodes): Spatial 2D coordinates (x, y) representing entities (Cities/Routers).',
+        explanationHinglish: 'Vertices (Nodes): 2D spatial positions jo network entities (Cities/Routers) ko represent karti hain.',
+        memorySnapshot: { activeTab: 'vertices', concept: 'VERTICES', highlightNode: '0' },
+        consoleOutput: 'Vertices V = {0, 1, 2, 3, 4, 5, 6}',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 3,
+        lineNum: 4,
+        explanationEnglish: 'Neighbors & Degree: Node [0] connects to neighbors [1, 2, 3] → Degree(0) = 3.',
+        explanationHinglish: 'Neighbors & Degree: Node [0] ke directly connected neighbors [1, 2, 3] hain → Degree(0) = 3.',
+        memorySnapshot: { activeTab: 'neighbors', concept: 'NEIGHBORS', inspectNode: '0', neighbors: ['1', '2', '3'], inspectingNeighbors: ['1', '2', '3'], degree: 3 },
+        consoleOutput: 'Node [0] Neighbors: [1, 2, 3] | Degree = 3',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 4,
+        lineNum: 4,
+        explanationEnglish: 'Edge Weights: Distance/latency values on connections (e.g. Node 0 ↔ Node 1 = 4).',
+        explanationHinglish: 'Edge Weights: Node 0 se connected edges ke weights (e.g. w(0,1)=4, w(0,2)=2, w(0,3)=5).',
+        memorySnapshot: { activeTab: 'weights', concept: 'EDGE_WEIGHTS', inspectNode: '0', neighbors: ['1', '2', '3'], inspectingNeighbors: ['1', '2', '3'] },
+        consoleOutput: 'Edge Weights active (Weighted Graph).',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 5,
+        lineNum: 5,
+        explanationEnglish: 'Adjacency Matrix: V×V 2D Grid where M[u][v] stores edge weight/connection status.',
+        explanationHinglish: 'Adjacency Matrix: 7×7 ka 2D Grid jahan M[u][v] edge weight ya connection presence store karta hai.',
+        memorySnapshot: { activeTab: 'matrix', concept: 'ADJACENCY_MATRIX', showMatrix: true },
+        consoleOutput: 'Adjacency Matrix 7x7 generated.',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 6,
+        lineNum: 4,
+        explanationEnglish: 'Adjacency List: Array of linked vectors storing adj[u] → (v, weight) for optimal space.',
+        explanationHinglish: 'Adjacency List: Memory-efficient list structure jahan adj[u] har node ke neighbors store karta hai.',
+        memorySnapshot: { activeTab: 'list', concept: 'ADJACENCY_LIST', showList: true },
+        consoleOutput: 'Adjacency List generated: adj[0] -> (1:4), (2:2), (3:5)',
         animationEvent: { type: 'NONE' },
       },
     ];
@@ -1045,6 +1094,31 @@ export const dsa_graph_prims: LessonProgram = {
   executionSteps: [],
 };
 
+export const dsa_graph_astar: LessonProgram = {
+  id: 'dsa_graph_astar', language: 'dsa', topic: 'graph_astar', lessonNumber: 1,
+  friendlyName: 'A* (A-Star) Search Algorithm',
+  learningObjective: 'Optimal pathfinding using Heuristic evaluation f(n) = g(n) + h(n), Open Set priority queue, and Closed Set tracking.',
+  lines: [
+    line(1, [cm('// A* (A-Star) Search Algorithm: f(n) = g(n) + h(n)')]),
+    line(2, [cm('// g(n): Actual path cost from Start Node')]),
+    line(3, [cm('// h(n): Heuristic estimate to Target Node')]),
+    line(4, [cm('// Open Set: Priority queue sorted by minimum f(n)')]),
+    line(5, [cm('// Closed Set: Evaluated nodes')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => [
+    {
+      step: 1, lineNum: 1,
+      explanationEnglish: 'A* Search Algorithm workspace initialized. Priority Queue Open Set will evaluate nodes using f(n) = g(n) + h(n).',
+      explanationHinglish: 'A* Search Algorithm workspace initialize hua. Open Set (Priority Queue) minimum f(n) = g(n) + h(n) value wale nodes ko evaluate karega.',
+      memorySnapshot: { isAStar: true },
+      consoleOutput: '> A* Search Algorithm workspace initialized.',
+      animationEvent: { type: 'NONE' },
+    },
+  ],
+  executionSteps: [],
+};
+
 export const dsa_binary_tree: LessonProgram = {
   id: 'dsa_binary_tree', language: 'dsa', topic: 'binary_tree', lessonNumber: 1,
   friendlyName: 'Binary Search Tree (BST)',
@@ -1128,6 +1202,7 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_graph_dijkstra,
   dsa_graph_kruskal,
   dsa_graph_prims,
+  dsa_graph_astar,
   dsa_binary_tree,
   dsa_merge_sort,
   dsa_heap_sort,

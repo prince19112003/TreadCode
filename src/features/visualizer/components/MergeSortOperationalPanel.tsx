@@ -1,18 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
-import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export const MergeSortOperationalPanel: React.FC = () => {
   const lesson = useLessonStore(s => s.lesson);
   const setCustomSteps = useLessonStore(s => s.setCustomSteps);
   const goToStep = useLessonStore(s => s.goToStep);
-  const goNext = useLessonStore(s => s.goNext);
-  const goPrev = useLessonStore(s => s.goPrev);
-  const isPlaying = useLessonStore(s => s.isPlaying);
   const setIsPlaying = useLessonStore(s => s.setIsPlaying);
-  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
-  const totalSteps = useLessonStore(s => s.totalSteps);
 
   // 6 separate input boxes state
   const [boxes, setBoxes] = useState<string[]>(['38', '27', '43', '3', '9', '82']);
@@ -210,54 +204,6 @@ export const MergeSortOperationalPanel: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* Clean Step Controls Footer */}
-        <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-800/80">
-          
-          {/* Main Controls: Prev / Play-Pause / Next */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={goPrev}
-              disabled={currentStepIndex === 0}
-              className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-35 text-slate-200 font-mono text-xs font-semibold flex items-center justify-center gap-1 transition-all"
-            >
-              <ChevronLeft size={14} /> Prev
-            </button>
-
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className={`py-2 rounded-xl font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm ${
-                isPlaying
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-              }`}
-            >
-              {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-              {isPlaying ? 'Pause' : 'Play'}
-            </button>
-
-            <button
-              onClick={goNext}
-              disabled={currentStepIndex >= totalSteps - 1}
-              className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-35 text-slate-200 font-mono text-xs font-semibold flex items-center justify-center gap-1 transition-all"
-            >
-              Next <ChevronRight size={14} />
-            </button>
-          </div>
-
-          {/* Reset Action */}
-          <button
-            onClick={() => {
-              setIsPlaying(false);
-              goToStep(0);
-            }}
-            className="w-full py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 text-slate-400 hover:text-slate-200 font-mono text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all"
-          >
-            <RotateCcw size={12} /> Reset to Start
-          </button>
-
-        </div>
-
       </div>
     </div>
   );
