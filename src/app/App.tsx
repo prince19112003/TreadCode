@@ -285,8 +285,8 @@ export const App: React.FC = () => {
         {/* EULA agreement modal — runs once on first launch */}
         <EulaModal />
 
-        {/* Floating Chatbot-Style Bug / Feedback Widget */}
-        <FloatingFeedbackWidget />
+        {/* Floating Chatbot-Style Bug / Feedback Widget (Shown after splash screen) */}
+        {!showSplash && <FloatingFeedbackWidget />}
 
         {showSplash ? (
           <SplashPage onComplete={() => setShowSplash(false)} />
