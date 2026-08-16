@@ -44,7 +44,7 @@ const cTopics = [
 
 const cppTopics = [
   { id: 'variables', number: '01', name: 'Variables', subtitle: 'Data Storage & Memory', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#00599c' },
-  { id: 'operators', number: '02', name: 'Operators', subtitle: 'Arithmetic & Expressions', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#10b981' },
+  { id: 'operators', number: '02', name: 'Operators', subtitle: 'Arithmetic & Expressions', programsCount: 3, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#10b981' },
   { id: 'user_input', number: '03', name: 'User Input', subtitle: 'Console Input (cin)', programsCount: 3, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#14b8a6' },
   { id: 'type_casting', number: '04', name: 'Type Casting', subtitle: 'Implicit & Static Casting', programsCount: 3, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#eab308' },
   { id: 'if_else', number: '05', name: 'If Else', subtitle: 'Two-Path Decisions', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#6366f1' },
@@ -84,18 +84,20 @@ const dsaTopics = [
   { id: 'insertion_sort', number: '03', name: 'Insertion Sort', subtitle: 'Insert elements sequentially into sorted sublist', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#6366f1' },
   { id: 'merge_sort', number: '04', name: 'Merge Sort', subtitle: 'Divide and conquer recursive array merge', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#ec4899' },
   { id: 'heap_sort', number: '05', name: 'Heap Sort', subtitle: 'Build max heap and swap root repeatedly', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#f97316' },
-  { id: 'stack', number: '06', name: 'Stack (LIFO)', subtitle: 'Push, Pop, Peek, Search & Traverse', complexity: 'O(1)', programsCount: 9, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#ec4899' },
-  { id: 'queue', number: '07', name: 'Queue (FIFO)', subtitle: 'Enqueue, Dequeue & Front/Rear Pointers', complexity: 'O(1)', programsCount: 4, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#06b6d4' },
-  { id: 'singly_linked_list', number: '08', name: 'Singly Linked List', subtitle: 'Node → Data | Next Pointer Chain', complexity: 'O(N)', programsCount: 5, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#8b5cf6' },
-  { id: 'doubly_linked_list', number: '09', name: 'Doubly Linked List', subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links', complexity: 'O(N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#6366f1' },
-  { id: 'binary_tree', number: '10', name: 'Binary Search Tree (BST)', subtitle: 'Insert, Delete, Search & Traversals (Inorder, Preorder, Postorder)', complexity: 'O(log N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
-  { id: 'graph_basics', number: '11', name: 'Graph Fundamentals', subtitle: 'Vertices, Edges & Adjacency Matrix', complexity: 'O(V+E)', programsCount: 2, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#eab308' },
-  { id: 'graph_bfs', number: '12', name: 'Graph BFS Traversal', subtitle: 'Breadth-First Queue-based Level-Order Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
-  { id: 'graph_dfs', number: '13', name: 'Graph DFS Traversal', subtitle: 'Depth-First Stack-based Backtracking Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#8b5cf6' },
-  { id: 'graph_dijkstra', number: '14', name: "Dijkstra's Algorithm", subtitle: 'Single-Source Shortest Path in Weighted Graph', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#38bdf8' },
-  { id: 'graph_kruskal', number: '15', name: "Kruskal's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Disjoint Set Union', complexity: 'O(E log E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#f59e0b' },
-  { id: 'graph_prims', number: '16', name: "Prim's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Priority Queue', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
-  { id: 'graph_astar', number: '17', name: 'A* Search Algorithm', subtitle: 'Heuristic Optimal Pathfinding f(n) = g(n) + h(n)', complexity: 'O(E log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#ec4899' },
+  { id: 'hashset', number: '06', name: 'HashSet (Unique Keys)', subtitle: 'h(key) = key % 7 Hash Buckets. Unique elements only', complexity: 'O(1) Avg', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#10b981' },
+  { id: 'hashmap', number: '07', name: 'HashMap (Key-Value Map)', subtitle: 'h(key) = Hash Buckets. Key-Value mapping', complexity: 'O(1) Avg', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#6366f1' },
+  { id: 'stack', number: '08', name: 'Stack (LIFO)', subtitle: 'Push, Pop, Peek, Search & Traverse', complexity: 'O(1)', programsCount: 9, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#ec4899' },
+  { id: 'queue', number: '09', name: 'Queue (FIFO)', subtitle: 'Enqueue, Dequeue & Front/Rear Pointers', complexity: 'O(1)', programsCount: 4, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#06b6d4' },
+  { id: 'singly_linked_list', number: '10', name: 'Singly Linked List', subtitle: 'Node → Data | Next Pointer Chain', complexity: 'O(N)', programsCount: 5, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#8b5cf6' },
+  { id: 'doubly_linked_list', number: '11', name: 'Doubly Linked List', subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links', complexity: 'O(N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#6366f1' },
+  { id: 'binary_tree', number: '12', name: 'Binary Search Tree (BST)', subtitle: 'Insert, Delete, Search & Traversals (Inorder, Preorder, Postorder)', complexity: 'O(log N)', programsCount: 4, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
+  { id: 'graph_basics', number: '13', name: 'Graph Fundamentals', subtitle: 'Vertices, Edges & Adjacency Matrix', complexity: 'O(V+E)', programsCount: 2, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#eab308' },
+  { id: 'graph_bfs', number: '14', name: 'Graph BFS Traversal', subtitle: 'Breadth-First Queue-based Level-Order Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
+  { id: 'graph_dfs', number: '15', name: 'Graph DFS Traversal', subtitle: 'Depth-First Stack-based Backtracking Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#8b5cf6' },
+  { id: 'graph_dijkstra', number: '16', name: "Dijkstra's Algorithm", subtitle: 'Single-Source Shortest Path in Weighted Graph', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#38bdf8' },
+  { id: 'graph_kruskal', number: '17', name: "Kruskal's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Disjoint Set Union', complexity: 'O(E log E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#f59e0b' },
+  { id: 'graph_prims', number: '18', name: "Prim's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Priority Queue', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
+  { id: 'graph_astar', number: '19', name: 'A* Search Algorithm', subtitle: 'Heuristic Optimal Pathfinding f(n) = g(n) + h(n)', complexity: 'O(E log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#ec4899' },
 ];
 
 const difficultyConfig = {
@@ -146,6 +148,8 @@ export const TopicSelectionPage: React.FC = () => {
       else if (topicId === 'insertion_sort') programId = 'dsa_insertion_sort';
       else if (topicId === 'merge_sort') programId = 'dsa_merge_sort';
       else if (topicId === 'heap_sort') programId = 'dsa_heap_sort';
+      else if (topicId === 'hashset') programId = 'dsa_hashset';
+      else if (topicId === 'hashmap') programId = 'dsa_hashmap';
       navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);

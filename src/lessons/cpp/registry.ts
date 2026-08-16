@@ -10,11 +10,11 @@ export const cppRegistry: Record<string, any> = {
     cpp_arithmetic: cppLessons.cpp_arithmetic,
     cpp_relational_logical: cppLessons.cpp_relational_logical,
     cpp_inc_dec: cppLessons.cpp_inc_dec,
-    cpp_circle_geometry: cppLessons.cpp_circle_geometry,
   },
   user_input: {
     cpp_cin_primitives: cppLessons.cpp_cin_primitives,
     cpp_cin_strings: cppLessons.cpp_cin_strings,
+    cpp_circle_area: cppLessons.cpp_circle_area,
   },
   type_casting: {
     cpp_implicit_casting: cppLessons.cpp_implicit_casting,

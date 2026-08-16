@@ -281,13 +281,19 @@ export const CodeStepPanel = React.memo(() => {
     <div ref={containerRef} className="h-full flex flex-col bg-[#050510] border border-white/10 rounded-lg overflow-hidden relative">
       {/* Slim header */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/5 shrink-0 bg-white/2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="text-xs text-slate-500 font-mono font-bold tracking-widest uppercase">
             {lesson?.language === 'java' ? 'Main.java' : lesson?.language === 'cpp' ? 'main.cpp' : lesson?.language === 'c' ? 'main.c' : 'main.py'}
           </span>
           {Object.keys(editableVariables).length > 0 && (
             <span className="text-[10px] text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 font-bold tracking-wider uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)]">
               ✏ editable
+            </span>
+          )}
+          {lesson?.language !== 'python' && lesson?.language !== 'dsa' && (
+            <span className="text-[10px] text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 rounded-full px-2 py-0.5 font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              Under Development
             </span>
           )}
         </div>
@@ -323,6 +329,16 @@ export const CodeStepPanel = React.memo(() => {
           )}
         </div>
       </div>
+
+      {/* Under Development Polite Banner for all In-Progress Languages */}
+      {lesson?.language !== 'python' && lesson?.language !== 'dsa' && (
+        <div className="mx-3 mt-2 px-3 py-2 rounded-lg bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between text-xs text-indigo-200 shadow-sm shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-indigo-400">ℹ️</span>
+            <span><strong className="text-indigo-300">Under Development:</strong> This topic is under active development and requires prior coding knowledge to best understand its visual execution.</span>
+          </div>
+        </div>
+      )}
 
       {/* Code lines */}
       <div className="flex-1 overflow-auto custom-scrollbar py-3 relative">

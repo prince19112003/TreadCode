@@ -126,6 +126,7 @@ const AnimatedRoutes: React.FC = () => {
 };
 
 import { LicenseModal } from '@shared/components/ui/LicenseModal';
+import { FloatingFeedbackWidget } from '@shared/components/ui/FloatingFeedbackWidget';
 import { db } from '../shared/config/firebase';
 import { ref, onValue } from 'firebase/database';
 
@@ -283,6 +284,9 @@ export const App: React.FC = () => {
       <BrowserRouter>
         {/* EULA agreement modal — runs once on first launch */}
         <EulaModal />
+
+        {/* Floating Chatbot-Style Bug / Feedback Widget */}
+        <FloatingFeedbackWidget />
 
         {showSplash ? (
           <SplashPage onComplete={() => setShowSplash(false)} />

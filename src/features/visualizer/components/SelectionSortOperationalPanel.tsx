@@ -141,14 +141,17 @@ export const SelectionSortOperationalPanel: React.FC = () => {
     setTimeout(() => goToStep(0), 20);
   };
 
-  // Initialize default array on component load
+  const customSteps = useLessonStore(s => s.customSteps);
+
+  // Initialize default array on component load or reset
   useEffect(() => {
     const initialArr = [64, 25, 12, 22, 11, 90];
+    setBoxes(['64', '25', '12', '22', '11', '90']);
     const steps = generateSelectionSortSteps(initialArr);
     setCustomSteps(steps);
     setIsPlaying(false);
     setTimeout(() => goToStep(0), 30);
-  }, [lesson?.id, generateSelectionSortSteps, setCustomSteps, goToStep, setIsPlaying]);
+  }, [lesson?.id, customSteps === null]);
 
   return (
     <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">

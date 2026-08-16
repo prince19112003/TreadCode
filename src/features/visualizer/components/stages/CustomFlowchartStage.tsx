@@ -139,61 +139,96 @@ export const CustomFlowchartStage: React.FC = () => {
     }, 50);
   }, [visibleSteps.length]);
 
-  const isMatchTopic = lesson.topic === 'match_case';
+  const isMatchTopic = lesson.topic === 'match_case' || lesson.topic === 'switch_case';
   const hasLoopKeyword = lesson.lines.some(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while')));
   const isLoopTopic = (['for_loop', 'while_loop', 'nested_loop', 'loop_control'].includes(lesson.topic) || hasLoopKeyword) && lesson.topic !== 'searching_sorting';
 
-  // Parse cases from lesson lines dynamically (for match_case)
+  // Parse cases from lesson lines dynamically (for match_case & switch_case)
   const casesList: { value: string; displayValue: string }[] = [];
   if (isMatchTopic) {
     lesson.lines.forEach(line => {
-      const caseIdx = line.tokens.findIndex(t => t.type === 'keyword' && t.value === 'case');
-      if (caseIdx !== -1) {
-        const valToken = line.tokens.find((t, idx) => idx > caseIdx && (t.type === 'number' || t.type === 'string' || (t.type === 'keyword' && t.value === '_')));
-        if (valToken) {
-          casesList.push({
-            value: valToken.value.replace(/['"]/g, ''),
-            displayValue: valToken.value
-          });
+      line.tokens.forEach((token, idx) => {
+        if (token.type === 'keyword' && (token.value === 'case' || token.value === 'default')) {
+          if (token.value === 'default') {
+            if (!casesList.some(c => c.value === 'default')) {
+              casesList.push({ value: 'default', displayValue: 'default' });
+            }
+          } else {
+            // Find next number or string token after 'case'
+            const valToken = line.tokens.slice(idx + 1).find(t => t.type === 'number' || t.type === 'string' || (t.type === 'keyword' && t.value === '_'));
+            if (valToken) {
+              const cleanVal = valToken.value.replace(/['"]/g, '');
+              if (!casesList.some(c => c.value === cleanVal)) {
+                casesList.push({
+                  value: cleanVal,
+                  displayValue: valToken.value
+                });
+              }
+            }
+          }
         }
-      }
+      });
     });
   }
 
   // Get status of a specific case value from visibleSteps
-  const getCaseStatus = (caseVal: string) => {
-    const computeStep = visibleSteps.find(step => {
+  const getCaseStatus = (caseVal: string): 'matched' | 'failed' | 'pending' => {
+    const cleanCaseVal = caseVal.replace(/['"]/g, '');
+    
+    // Check if any step in visibleSteps matches this case
+    const matchedStep = visibleSteps.find(step => {
       const ev = step.animationEvent;
-      if (ev?.type === 'COMPUTE' && ev.storeIn === 'Condition') {
-        const op = ev.operator.replace(/['"]/g, '');
-        if (caseVal === '_' && op.includes('default')) return true;
-        if (op.includes(caseVal)) return true;
+      if (!ev) return false;
+
+      if (ev.type === 'COMPUTE' && (ev.storeIn === 'Condition' || ev.operator === 'switch')) {
+        const op = String(ev.operator || '').replace(/['"]/g, '');
+        const res = String(ev.result || '').replace(/['"]/g, '');
+        if ((cleanCaseVal === '_' || cleanCaseVal === 'default') && (op.includes('default') || res.includes('default') || res === 'Invalid Day' || res === 'Invalid Month' || res === 'Invalid Operator')) return true;
+        if (op.includes(cleanCaseVal) || res === cleanCaseVal) return true;
       }
+
+      if (ev.type === 'PRINT_VALUE' || ev.type === 'UPDATE_VARIABLE') {
+        const out = String((ev as any).outputValue || (ev as any).newValue || '').replace(/['"]/g, '');
+        if ((cleanCaseVal === '_' || cleanCaseVal === 'default') && out.includes('Invalid')) return true;
+        if (out.includes(cleanCaseVal)) return true;
+      }
+
       return false;
     });
 
-    if (!computeStep) return 'pending';
-    const ev = computeStep.animationEvent;
-    if (ev?.type === 'COMPUTE' && (ev.result === 'True' || String(ev.result) === 'true')) {
-      return 'matched';
-    }
-    return 'failed';
+    if (!matchedStep) return 'pending';
+    
+    // If the step is present in visibleSteps, mark it matched
+    return 'matched';
   };
 
-  // Find index of MATCH_START in visibleSteps
-  const matchStartIdx = visibleSteps.findIndex(s => s.animationEvent?.type === 'MATCH_START');
-  const hasMatchStarted = matchStartIdx !== -1;
+  // Find index of MATCH_START in visibleSteps or fallback for switch_case
+  let matchStartIdx = visibleSteps.findIndex(s => s.animationEvent?.type === 'MATCH_START');
+  if (matchStartIdx === -1 && isMatchTopic) {
+    // Check if COMPUTE or switch line step exists
+    const switchStepIdx = visibleSteps.findIndex(s => 
+      s.animationEvent?.type === 'COMPUTE' && 
+      (s.animationEvent.operator === 'switch' || s.animationEvent.storeIn === 'Match')
+    );
+    if (switchStepIdx !== -1) {
+      matchStartIdx = switchStepIdx;
+    }
+  }
+  const hasMatchStarted = matchStartIdx !== -1 || (isMatchTopic && visibleSteps.length > 1);
 
-  // Separate steps for rendering match_case
-  const initialSteps = hasMatchStarted ? visibleSteps.slice(0, matchStartIdx) : visibleSteps;
-  const matchStep = hasMatchStarted ? visibleSteps[matchStartIdx] : null;
+  // Separate steps for rendering match_case / switch_case
+  const initialSteps = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps.slice(0, matchStartIdx) : (isMatchTopic ? visibleSteps.slice(0, 1) : visibleSteps);
+  const matchStep = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps[matchStartIdx] : (isMatchTopic && visibleSteps.length > 1 ? visibleSteps[1] : null);
 
   // Find the index of the successfully matched condition to group subsequent branch steps
-  const matchedConditionIdx = visibleSteps.findIndex(s => 
+  let matchedConditionIdx = visibleSteps.findIndex(s => 
     s.animationEvent?.type === 'COMPUTE' && 
     s.animationEvent.storeIn === 'Condition' && 
     (s.animationEvent.result === 'True' || String(s.animationEvent.result) === 'true')
   );
+  if (matchedConditionIdx === -1 && matchStartIdx !== -1 && isMatchTopic) {
+    matchedConditionIdx = matchStartIdx;
+  }
   const branchSteps = matchedConditionIdx !== -1 ? visibleSteps.slice(matchedConditionIdx + 1) : [];
   
   const isFunctionTopic = lesson.topic === 'functions' || lesson.topic === 'recursion';
@@ -967,22 +1002,28 @@ export const CustomFlowchartStage: React.FC = () => {
                 )}
 
                 {/* 2. MatchBlock */}
-                {matchStep && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="relative flex flex-col items-center"
-                  >
-                    <MatchBlock 
-                      variableName={(matchStep.animationEvent as any).variableName} 
-                      value={(matchStep.animationEvent as any).value} 
-                      isActive={currentStepIndex - 1 === matchStartIdx} 
-                    />
+                {matchStep && (() => {
+                  const ev = matchStep.animationEvent as any;
+                  const varName = ev?.variableName || (Array.isArray(ev?.inputs) && ev.inputs[0]) || Object.keys(matchStep.memorySnapshot || {})[0] || 'val';
+                  const val = ev?.value || (ev?.result !== undefined ? ev.result : matchStep.memorySnapshot?.[varName]) || '?';
 
-                    {/* Connector line system down to cases */}
-                    <div className="w-0.5 h-8 bg-fuchsia-500/30" />
-                  </motion.div>
-                )}
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="relative flex flex-col items-center"
+                    >
+                      <MatchBlock 
+                        variableName={varName} 
+                        value={val} 
+                        isActive={true} 
+                      />
+
+                      {/* Connector line system down to cases */}
+                      <div className="w-0.5 h-8 bg-fuchsia-500/30" />
+                    </motion.div>
+                  );
+                })()}
 
                 {/* 3. Horizontal Cases Row */}
                 {hasMatchStarted && (

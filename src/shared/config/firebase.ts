@@ -22,6 +22,21 @@ export interface CustomBranding {
   logoUrl?: string;
 }
 
+export interface FeedbackItem {
+  id?: string;
+  category: 'bug' | 'feature' | 'feedback';
+  message: string;
+  timestamp: string;
+  status: 'pending' | 'resolved';
+  systemDetails: {
+    platform: string;
+    userAgent: string;
+    screenResolution: string;
+    language: string;
+    licenseKey?: string;
+  };
+}
+
 export interface LicenseValidationResult {
   isValid: boolean;
   licenseKey?: string;
@@ -187,6 +202,24 @@ export async function fetchLicenseDetails(licenseKey: string, hwid: string): Pro
     }
 
     return { isValid: false };
+  }
+}
+
+// ─── Feedback & Bug Reporting Service ─────────────────────────────────────────
+
+export async function submitFeedback(item: Omit<FeedbackItem, 'id' | 'timestamp' | 'status'>): Promise<boolean> {
+  try {
+    const feedbackRef = ref(db, `feedbacks/${Date.now()}`);
+    const payload: FeedbackItem = {
+      ...item,
+      timestamp: new Date().toISOString(),
+      status: 'pending',
+    };
+    await set(feedbackRef, payload);
+    return true;
+  } catch (err) {
+    console.error('Failed to submit feedback to Firebase:', err);
+    return false;
   }
 }
 

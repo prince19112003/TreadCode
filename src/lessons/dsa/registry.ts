@@ -104,4 +104,12 @@ export const dsaRegistry: Record<string, any> = {
     dsa_heap_sort: dsaLessons.dsa_heap_sort,
     heap_sort: dsaLessons.dsa_heap_sort,
   },
+  hashset: {
+    dsa_hashset: dsaLessons.dsa_hashset,
+    hashset: dsaLessons.dsa_hashset,
+  },
+  hashmap: {
+    dsa_hashmap: dsaLessons.dsa_hashmap,
+    hashmap: dsaLessons.dsa_hashmap,
+  },
 };

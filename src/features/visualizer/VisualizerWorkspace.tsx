@@ -17,6 +17,8 @@ const MergeSortVisualStage = React.lazy(() => import('./components/stages/MergeS
 const HeapSortVisualStage = React.lazy(() => import('./components/stages/HeapSortVisualStage').then(m => ({ default: m.HeapSortVisualStage })));
 const TreeVisualStage = React.lazy(() => import('./components/stages/TreeVisualStage').then(m => ({ default: m.TreeVisualStage })));
 const GraphVisualStage = React.lazy(() => import('./components/stages/GraphVisualStage').then(m => ({ default: m.GraphVisualStage })));
+const HashSetVisualStage = React.lazy(() => import('./components/stages/HashSetVisualStage').then(m => ({ default: m.HashSetVisualStage })));
+const HashMapVisualStage = React.lazy(() => import('./components/stages/HashMapVisualStage').then(m => ({ default: m.HashMapVisualStage })));
 const DsaAlgoStage = React.lazy(() => import('./components/stages/DsaAlgoStage').then(m => ({ default: m.DsaAlgoStage })));
 const DsaOperationalPanel = React.lazy(() => import('./components/DsaOperationalPanel').then(m => ({ default: m.DsaOperationalPanel })));
 const QueueOperationalPanel = React.lazy(() => import('./components/QueueOperationalPanel').then(m => ({ default: m.QueueOperationalPanel })));
@@ -27,6 +29,8 @@ const SelectionSortOperationalPanel = React.lazy(() => import('./components/Sele
 const InsertionSortOperationalPanel = React.lazy(() => import('./components/InsertionSortOperationalPanel').then(m => ({ default: m.InsertionSortOperationalPanel })));
 const MergeSortOperationalPanel = React.lazy(() => import('./components/MergeSortOperationalPanel').then(m => ({ default: m.MergeSortOperationalPanel })));
 const HeapSortOperationalPanel = React.lazy(() => import('./components/HeapSortOperationalPanel').then(m => ({ default: m.HeapSortOperationalPanel })));
+const HashSetOperationalPanel = React.lazy(() => import('./components/HashSetOperationalPanel').then(m => ({ default: m.HashSetOperationalPanel })));
+const HashMapOperationalPanel = React.lazy(() => import('./components/HashMapOperationalPanel').then(m => ({ default: m.HashMapOperationalPanel })));
 const TreeOperationalPanel = React.lazy(() => import('./components/TreeOperationalPanel').then(m => ({ default: m.TreeOperationalPanel })));
 const GraphOperationalPanel = React.lazy(() => import('./components/GraphOperationalPanel').then(m => ({ default: m.GraphOperationalPanel })));
 import { QuickHandwrittenNote } from './components/QuickHandwrittenNote';
@@ -36,6 +40,7 @@ export const VisualizerWorkspace = React.memo(() => {
   const lesson = useLessonStore(s => s.lesson);
   const isFullScreen = useLessonStore(s => s.isFullScreen);
   const toggleFullScreen = useLessonStore(s => s.toggleFullScreen);
+  const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);
   const isDsa = lesson?.language === 'dsa';
   const [isConsoleFullScreen, setIsConsoleFullScreen] = useState(false);
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(() => lesson?.language === 'dsa');
@@ -67,6 +72,8 @@ export const VisualizerWorkspace = React.memo(() => {
   const isHeapSortTopic = isDsa && (lesson?.topic === 'heap_sort' || lesson?.id === 'dsa_heap_sort');
   const isSortingTopic = isBubbleSortTopic || isSelectionSortTopic || isInsertionSortTopic || isMergeSortTopic || isHeapSortTopic;
   const isTreeTopic = isDsa && lesson?.topic === 'binary_tree';
+  const isHashSetTopic = isDsa && lesson?.topic === 'hashset';
+  const isHashMapTopic = isDsa && lesson?.topic === 'hashmap';
   const isGraphTopic = isDsa && (lesson?.topic === 'graph_basics' || lesson?.topic === 'graph_bfs' || lesson?.topic === 'graph_dfs' || lesson?.topic === 'graph_dijkstra' || lesson?.topic === 'graph_kruskal' || lesson?.topic === 'graph_prims' || lesson?.topic === 'graph_astar');
 
   const isFlowchartTopic = !isDsa && [
@@ -103,8 +110,6 @@ export const VisualizerWorkspace = React.memo(() => {
       <Contrast size={16} />
     </button>
   );
-
-  const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);
 
   /* ── Code Panel FullScreen ──────────────────────────────────────────────── */
   if (isCodeFullScreen) {
@@ -152,7 +157,7 @@ export const VisualizerWorkspace = React.memo(() => {
               isSortingTopic ? 'h-[48%] md:h-[46%]' : 'h-[60%] md:h-[66%]'
             }`}>
               <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
-                {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isInsertionSortTopic ? <InsertionSortOperationalPanel /> : isMergeSortTopic ? <MergeSortOperationalPanel /> : isHeapSortTopic ? <HeapSortOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
+                {isStackTopic ? <DsaOperationalPanel /> : isQueueTopic ? <QueueOperationalPanel /> : isSllTopic ? <SllOperationalPanel /> : isDllTopic ? <DllOperationalPanel /> : isBubbleSortTopic ? <BubbleSortOperationalPanel /> : isSelectionSortTopic ? <SelectionSortOperationalPanel /> : isInsertionSortTopic ? <InsertionSortOperationalPanel /> : isMergeSortTopic ? <MergeSortOperationalPanel /> : isHeapSortTopic ? <HeapSortOperationalPanel /> : isHashSetTopic ? <HashSetOperationalPanel /> : isHashMapTopic ? <HashMapOperationalPanel /> : isTreeTopic ? <TreeOperationalPanel /> : isGraphTopic ? <GraphOperationalPanel /> : <CodeStepPanel />}
               </React.Suspense>
             </div>
             <div className={`overflow-hidden flex flex-col transition-all duration-300 ${
@@ -173,7 +178,7 @@ export const VisualizerWorkspace = React.memo(() => {
               {fullScreenToggleButton}
               {pureBlackToggleButton}
               <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
-                {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <DsaAlgoStage />}
+                {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isHashSetTopic ? <HashSetVisualStage /> : isHashMapTopic ? <HashMapVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : <DsaAlgoStage />}
               </React.Suspense>
               <PenMenu />
               <QuickHandwrittenNote topic={lesson?.topic ?? 'stack'} />

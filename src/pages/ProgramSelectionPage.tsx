@@ -236,11 +236,11 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'cpp_arithmetic', number: '01', friendlyName: 'Arithmetic Operators (+, -, *, /, %)', description: 'Master C++ arithmetic operator evaluation rules and integer division vs modulo.' },
       { id: 'cpp_relational_logical', number: '02', friendlyName: 'Relational & Logical Operators (&&, ||, !)', description: 'Combine multiple boolean evaluation conditions with logical operators in C++.' },
       { id: 'cpp_inc_dec', number: '03', friendlyName: 'Pre-increment vs Post-increment (++i vs i++)', description: 'Understand side effects and memory evaluation timing of ++ operators.' },
-      { id: 'cpp_circle_geometry', number: '04', friendlyName: 'Circle Area & Circumference Formulas', description: 'Apply mathematical double expressions for geometry calculations.' },
     ],
     user_input: [
       { id: 'cpp_cin_primitives', number: '01', friendlyName: 'Read Primitive Inputs (cin >>)', description: 'Read different primitive data types (int, float, char) from console.' },
       { id: 'cpp_cin_strings', number: '02', friendlyName: 'Read String Inputs (cin vs getline)', description: 'Compare reading single word strings with cin vs full lines with getline.' },
+      { id: 'cpp_circle_area', number: '03', friendlyName: 'Area of Circle (cin >> radius)', description: 'Read circle radius from user input using cin >> and calculate area.' },
     ],
     type_casting: [
       { id: 'cpp_implicit_casting', number: '01', friendlyName: 'Implicit Widening Type Casting', description: 'Learn automatic conversion from smaller int to double without precision loss.' },

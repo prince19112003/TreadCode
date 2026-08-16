@@ -1175,6 +1175,58 @@ export const dsa_dll_traverse: LessonProgram = {
   executionSteps: [],
 };
 
+export const dsa_hashset: LessonProgram = {
+  id: 'dsa_hashset', language: 'dsa', topic: 'hashset', lessonNumber: 18,
+  friendlyName: 'HashSet Data Structure',
+  learningObjective: 'Store unique keys using hash bucket indexing h(key) = key % 7. Operations: add(), remove(), contains().',
+  lines: [
+    line(1, [kw('HashSet'), pu('<'), kw('int'), pu('>'), tx(' '), va('set'), tx(' '), op('='), tx(' '), kw('new'), tx(' '), kw('HashSet'), pu('()'), pu(';')]),
+    line(2, [va('set'), pu('.'), fn('add'), pu('('), nu('10'), pu(')'), pu(';')]),
+    line(3, [va('set'), pu('.'), fn('add'), pu('('), nu('25'), pu(')'), pu(';')]),
+    line(4, [va('set'), pu('.'), fn('add'), pu('('), nu('42'), pu(')'), pu(';')]),
+    line(5, [va('set'), pu('.'), fn('contains'), pu('('), nu('25'), pu(')'), pu(';'), tx(' '), cm('// Returns true')]),
+    line(6, [va('set'), pu('.'), fn('remove'), pu('('), nu('10'), pu(')'), pu(';')]),
+  ],
+  editableVariables: {},
+  generateSteps: () => [
+    {
+      step: 1, lineNum: 1,
+      explanationEnglish: 'HashSet initialized with 7 Buckets.',
+      explanationHinglish: 'HashSet 7 Buckets ke saath initialize hui.',
+      memorySnapshot: { capacity: 7, elements: ['10', '25', '42'] },
+      consoleOutput: '> HashSet workspace initialized.',
+      animationEvent: { type: 'NONE' },
+    },
+  ],
+  executionSteps: [],
+};
+
+export const dsa_hashmap: LessonProgram = {
+  id: 'dsa_hashmap', language: 'dsa', topic: 'hashmap', lessonNumber: 19,
+  friendlyName: 'HashMap Data Structure',
+  learningObjective: 'Store Key-Value pairs mapped into 7 hash buckets h(key). Operations: put(k,v), get(k), remove(k).',
+  lines: [
+    line(1, [kw('HashMap'), pu('<'), kw('String'), pu(','), tx(' '), kw('String'), pu('>'), tx(' '), va('map'), tx(' '), op('='), tx(' '), kw('new'), tx(' '), kw('HashMap'), pu('()'), pu(';')]),
+    line(2, [va('map'), pu('.'), fn('put'), pu('('), st('"id"'), pu(','), tx(' '), st('"101"'), pu(')'), pu(';')]),
+    line(3, [va('map'), pu('.'), fn('put'), pu('('), st('"name"'), pu(','), tx(' '), st('"Alice"'), pu(')'), pu(';')]),
+    line(4, [va('map'), pu('.'), fn('put'), pu('('), st('"age"'), pu(','), tx(' '), st('"24"'), pu(')'), pu(';')]),
+    line(5, [va('map'), pu('.'), fn('get'), pu('('), st('"name"'), pu(')'), pu(';'), tx(' '), cm('// Returns "Alice"')]),
+    line(6, [va('map'), pu('.'), fn('remove'), pu('('), st('"id"'), pu(')'), pu(';')]),
+  ],
+  editableVariables: {},
+  generateSteps: () => [
+    {
+      step: 1, lineNum: 1,
+      explanationEnglish: 'HashMap initialized with 7 Hash Buckets.',
+      explanationHinglish: 'HashMap 7 Hash Buckets ke saath initialize hui.',
+      memorySnapshot: { capacity: 7, entries: [['id', '101'], ['name', 'Alice'], ['age', '24']] },
+      consoleOutput: '> HashMap workspace initialized.',
+      animationEvent: { type: 'NONE' },
+    },
+  ],
+  executionSteps: [],
+};
+
 // ─── EXPORT ────────────────────────────────────────────────────────────────────
 
 export const dsaLessons: Record<string, LessonProgram> = {
@@ -1206,10 +1258,15 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_binary_tree,
   dsa_merge_sort,
   dsa_heap_sort,
+  dsa_hashset,
+  dsa_hashmap,
   // Re-use existing Python lessons for tree/graph until dedicated versions are built:
   linear_search: dsa_linear_search,
   binary_search: dsa_binary_search,
   bubble_sort: dsa_bubble_sort,
   selection_sort: dsa_selection_sort,
   insertion_sort: dsa_insertion_sort,
+  hashset: dsa_hashset,
+  hashmap: dsa_hashmap,
 };
+

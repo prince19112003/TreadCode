@@ -229,9 +229,7 @@ export const MergeSortVisualStage: React.FC = () => {
                     </span>
 
                     {/* Explanatory Action Banner */}
-                    <span className={`text-[11px] font-bold ${
-                      isCurrentActive ? 'text-amber-300 animate-pulse' : 'text-slate-400'
-                    }`}>
+                    <span className="text-[11px] font-bold text-slate-300">
                       {lvl.subLabel}
                     </span>
                   </div>
@@ -285,25 +283,93 @@ export const MergeSortVisualStage: React.FC = () => {
 
                 {/* Branch Arrows SVG between tree levels */}
                 {lIdx < visibleLevels.length - 1 && (
-                  <div className="flex items-center justify-center opacity-80 py-0.5">
-                    <svg className="w-20 h-7 stroke-slate-300 fill-slate-300" viewBox="0 0 80 28" fill="none">
-                      {lIdx < 3 ? (
-                        <>
-                          {/* Diverging arrows for Divide phases ↙ ↘ */}
-                          <path d="M40 0 L16 22" strokeWidth="2.2" strokeDasharray="3 2" />
-                          <path d="M40 0 L64 22" strokeWidth="2.2" strokeDasharray="3 2" />
-                          <polygon points="16,22 22,17 17,14" />
-                          <polygon points="64,22 63,14 58,17" />
-                        </>
-                      ) : (
-                        <>
-                          {/* Converging arrows for Merge phases ↘ ↙ */}
-                          <path d="M16 0 L40 22" strokeWidth="2.2" strokeDasharray="3 2" />
-                          <path d="M64 0 L40 22" strokeWidth="2.2" strokeDasharray="3 2" />
-                          <polygon points="40,22 36,15 44,15" />
-                        </>
-                      )}
-                    </svg>
+                  <div className="w-full flex items-center justify-center py-1">
+                    {lIdx === 0 && (
+                      /* Level 0 -> Level 1: Single split from 1 block into 2 blocks */
+                      <svg className="w-32 h-7 stroke-purple-400 fill-purple-400" viewBox="0 0 120 28" fill="none">
+                        <path d="M60 2 L25 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                        <path d="M60 2 L95 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                        <polygon points="25,22 32,17 26,14" />
+                        <polygon points="95,22 94,14 88,17" />
+                      </svg>
+                    )}
+
+                    {lIdx === 1 && (
+                      /* Level 1 -> Level 2: 2 separate parent blocks split into 4 blocks */
+                      <div className="flex items-center justify-center gap-16 sm:gap-24 w-full">
+                        <svg className="w-20 h-7 stroke-purple-400 fill-purple-400" viewBox="0 0 80 28" fill="none">
+                          <path d="M40 2 L15 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <path d="M40 2 L65 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <polygon points="15,22 22,17 16,14" />
+                          <polygon points="65,22 64,14 58,17" />
+                        </svg>
+                        <svg className="w-20 h-7 stroke-purple-400 fill-purple-400" viewBox="0 0 80 28" fill="none">
+                          <path d="M40 2 L15 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <path d="M40 2 L65 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <polygon points="15,22 22,17 16,14" />
+                          <polygon points="65,22 64,14 58,17" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {lIdx === 2 && (
+                      /* Level 2 -> Level 3: Base elements separation */
+                      <div className="flex items-center justify-center gap-12 sm:gap-16 w-full">
+                        <svg className="w-16 h-6 stroke-amber-400 fill-amber-400" viewBox="0 0 60 24" fill="none">
+                          <path d="M30 2 L12 18" strokeWidth="2" strokeDasharray="3 2" />
+                          <path d="M30 2 L48 18" strokeWidth="2" strokeDasharray="3 2" />
+                          <polygon points="12,18 18,14 13,11" />
+                          <polygon points="48,18 47,11 42,14" />
+                        </svg>
+                        <svg className="w-16 h-6 stroke-amber-400 fill-amber-400" viewBox="0 0 60 24" fill="none">
+                          <path d="M30 2 L12 18" strokeWidth="2" strokeDasharray="3 2" />
+                          <path d="M30 2 L48 18" strokeWidth="2" strokeDasharray="3 2" />
+                          <polygon points="12,18 18,14 13,11" />
+                          <polygon points="48,18 47,11 42,14" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {lIdx === 3 && (
+                      /* Level 3 -> Level 4: Merging single elements into pairs */
+                      <div className="flex items-center justify-center gap-16 sm:gap-24 w-full">
+                        <svg className="w-20 h-7 stroke-cyan-400 fill-cyan-400" viewBox="0 0 80 28" fill="none">
+                          <path d="M15 2 L40 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <path d="M65 2 L40 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <polygon points="40,22 35,15 45,15" />
+                        </svg>
+                        <svg className="w-20 h-7 stroke-cyan-400 fill-cyan-400" viewBox="0 0 80 28" fill="none">
+                          <path d="M15 2 L40 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <path d="M65 2 L40 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <polygon points="40,22 35,15 45,15" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {lIdx === 4 && (
+                      /* Level 4 -> Level 5: Merging pairs into halves */
+                      <div className="flex items-center justify-center gap-20 sm:gap-32 w-full">
+                        <svg className="w-24 h-7 stroke-cyan-400 fill-cyan-400" viewBox="0 0 90 28" fill="none">
+                          <path d="M18 2 L45 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <path d="M72 2 L45 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <polygon points="45,22 40,15 50,15" />
+                        </svg>
+                        <svg className="w-24 h-7 stroke-cyan-400 fill-cyan-400" viewBox="0 0 90 28" fill="none">
+                          <path d="M18 2 L45 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <path d="M72 2 L45 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                          <polygon points="45,22 40,15 50,15" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {lIdx === 5 && (
+                      /* Level 5 -> Level 6: Final merge of 2 halves into complete array */
+                      <svg className="w-32 h-7 stroke-emerald-400 fill-emerald-400" viewBox="0 0 120 28" fill="none">
+                        <path d="M25 2 L60 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                        <path d="M95 2 L60 22" strokeWidth="2.2" strokeDasharray="3 2" />
+                        <polygon points="60,22 55,15 65,15" />
+                      </svg>
+                    )}
                   </div>
                 )}
 

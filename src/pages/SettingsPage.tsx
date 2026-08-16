@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { 
   Monitor, Info, Volume2, ArrowLeft, Key, ShieldCheck, Copy, Check, 
-  Sun, Tv, Sparkles, Play, VolumeX, 
+  Sun, Tv, Sparkles, Play, VolumeX, MessageSquarePlus, Laptop,
   Building2, CheckCircle2, HelpCircle, Eye, RefreshCw, ExternalLink, Globe
 } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
@@ -11,6 +11,9 @@ import { LicenseModal } from '@shared/components/ui/LicenseModal';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { useNavigate } from 'react-router-dom';
 import { LicenseContext } from '../app/App';
+import { db } from '../shared/config/firebase';
+import type { FeedbackItem } from '../shared/config/firebase';
+import { ref, onValue } from 'firebase/database';
 
 export const applyDisplayTuning = (contrast: number, brightness: number, sharpness: number) => {
   const filterStr = `contrast(${contrast}%) brightness(${brightness}%) saturate(${sharpness}%)`;
@@ -18,7 +21,7 @@ export const applyDisplayTuning = (contrast: number, brightness: number, sharpne
   localStorage.setItem('flowtrace_display_tuning', JSON.stringify({ contrast, brightness, saturate: sharpness }));
 };
 
-type SettingTab = 'display' | 'voice' | 'licensing' | 'about';
+type SettingTab = 'display' | 'voice' | 'licensing' | 'feedback' | 'about';
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,31 +32,51 @@ export const SettingsPage: React.FC = () => {
   const [displayVersion, setDisplayVersion] = useState(currentVersion);
 
   useEffect(() => {
-    if (currentVersion) {
-      setDisplayVersion(currentVersion);
-    }
     if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
       import('@tauri-apps/api/app').then(({ getVersion }) => {
         getVersion().then(v => {
           if (v) setDisplayVersion(v);
         });
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error(err);
+      });
     }
-  }, [currentVersion]);
+  }, []);
 
   // Tab 1 (Default: Classroom Display)
   const [activeTab, setActiveTab] = useState<SettingTab>('display');
 
   // Display Tuning States (Sharpness replaces Saturation)
-  const [contrastVal, setContrastVal] = useState(100);
-  const [brightnessVal, setBrightnessVal] = useState(100);
-  const [sharpnessVal, setSharpnessVal] = useState(100);
+  const [contrastVal, setContrastVal] = useState(() => {
+    const saved = localStorage.getItem('flowtrace_display_tuning');
+    if (saved) {
+      try { return JSON.parse(saved).contrast || 100; } catch (e) { console.error(e); }
+    }
+    return 100;
+  });
+  const [brightnessVal, setBrightnessVal] = useState(() => {
+    const saved = localStorage.getItem('flowtrace_display_tuning');
+    if (saved) {
+      try { return JSON.parse(saved).brightness || 100; } catch (e) { console.error(e); }
+    }
+    return 100;
+  });
+  const [sharpnessVal, setSharpnessVal] = useState(() => {
+    const saved = localStorage.getItem('flowtrace_display_tuning');
+    if (saved) {
+      try { return JSON.parse(saved).saturate || 100; } catch (e) { console.error(e); }
+    }
+    return 100;
+  });
   const [activePreset, setActivePreset] = useState<'default' | 'projector' | 'smartboard' | 'daylight'>('default');
 
   // Copy & Activation states
   const [copiedHwid, setCopiedHwid] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [showChangeKeyInput, setShowChangeKeyInput] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [policyDoc, setPolicyDoc] = useState<'privacy' | 'terms' | null>(null);
+  const [checkToast, setCheckToast] = useState<string | null>(null);
 
   // Voice States
   const [isVoiceModeEnabled, setIsVoiceModeEnabled] = useState(
@@ -76,26 +99,31 @@ export const SettingsPage: React.FC = () => {
     });
   };
 
-  // Modals & Feedback Toasts
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [policyDoc, setPolicyDoc] = useState<'privacy' | 'terms' | null>(null);
-  const [checkToast, setCheckToast] = useState<string | null>(null);
+  // Feedback Submissions Real-Time Listener
+  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
 
-  // Load Display Tuning on mount
   useEffect(() => {
-    const saved = localStorage.getItem('flowtrace_display_tuning');
-    if (saved) {
-      try {
-        const { contrast, brightness, saturate } = JSON.parse(saved);
-        setContrastVal(contrast || 100);
-        setBrightnessVal(brightness || 100);
-        setSharpnessVal(saturate || 100);
-        applyDisplayTuning(contrast || 100, brightness || 100, saturate || 100);
-      } catch (e) {
-        console.error(e);
+    const feedbackRef = ref(db, 'feedbacks');
+    const unsubscribe = onValue(feedbackRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const items: FeedbackItem[] = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key],
+        })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setFeedbackList(items);
+      } else {
+        setFeedbackList([]);
       }
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  // Load Display Tuning filter on mount
+  useEffect(() => {
+    applyDisplayTuning(contrastVal, brightnessVal, sharpnessVal);
+  }, [contrastVal, brightnessVal, sharpnessVal]);
 
   const handleTuneChange = (c: number, b: number, s: number, preset: 'default' | 'projector' | 'smartboard' | 'daylight' = 'default') => {
     setContrastVal(c);
@@ -179,11 +207,12 @@ export const SettingsPage: React.FC = () => {
     ? (rawKey.length <= 6 ? `${rawKey.slice(0, 2)}****` : `${rawKey.slice(0, 4)}-****-****-${rawKey.slice(-4)}`) 
     : 'No License Active';
 
-  // ORDER: 1. Classroom Display, 2. AI Voice, 3. Licensing & Tier, 4. About & Updates
+  // ORDER: 1. Classroom Display, 2. AI Voice, 3. Licensing & Tier, 4. User Feedbacks, 5. About & Updates
   const navTabs = [
     { id: 'display', label: 'Classroom Display', icon: Monitor, badge: activePreset !== 'default' ? 'Tuned' : undefined },
     { id: 'voice', label: 'AI Voice & Audio', icon: Volume2 },
     { id: 'licensing', label: 'Licensing & Tier', icon: Key, badge: licenseContext?.activated ? 'Active' : 'Unregistered' },
+    { id: 'feedback', label: 'Bug Reports & Feedback', icon: MessageSquarePlus },
     { id: 'about', label: 'About & Updates', icon: Info, badge: hasUpdate ? 'Update Ready' : undefined },
   ];
 
@@ -191,7 +220,6 @@ export const SettingsPage: React.FC = () => {
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full bg-[#050510]">
       <div className="flex flex-col py-8 md:py-10 px-4 md:px-8 max-w-6xl mx-auto w-full min-h-full">
 
-        {/* ── Page Header ───────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -707,6 +735,97 @@ export const SettingsPage: React.FC = () => {
                           style={{ width: `${Math.min(100, ((licenseContext.licenseDetails.activeDevicesCount || 1) / (licenseContext.licenseDetails.maxDevices || 1)) * 100)}%` }}
                         />
                       </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* TAB 4: BUG REPORTS & USER FEEDBACK (Admin View) */}
+              {activeTab === 'feedback' && (
+                <motion.div
+                  key="feedback"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="bg-[#090b15] border border-white/10 rounded-2xl p-6 space-y-6"
+                >
+                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                    <div>
+                      <h2 className="text-xl font-black text-white flex items-center gap-2">
+                        <MessageSquarePlus className="text-indigo-400" size={20} />
+                        <span>User Submissions & Diagnostic Reports</span>
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Real-time feedback, feature ideas, and bug reports sent by users along with full system diagnostics.
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold">
+                      {feedbackList.length} Submissions
+                    </span>
+                  </div>
+
+                  {feedbackList.length === 0 ? (
+                    <div className="py-16 text-center border-2 border-dashed border-white/10 rounded-2xl bg-slate-950/40 flex flex-col items-center justify-center gap-2">
+                      <MessageSquarePlus size={32} className="text-slate-600 mb-1" />
+                      <p className="text-xs font-bold text-slate-400">No Feedback Submitted Yet</p>
+                      <p className="text-[11px] text-slate-600">Submissions from the floating widget will appear here live in real-time.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {feedbackList.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 space-y-3 shadow-lg hover:border-indigo-500/30 transition-all"
+                        >
+                          {/* Card Top Row */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                                item.category === 'bug'
+                                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                  : item.category === 'feature'
+                                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                  : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                              }`}>
+                                {item.category === 'bug' ? '🐞 Bug Report' : item.category === 'feature' ? '💡 Feature Request' : '💬 General Feedback'}
+                              </span>
+                              <span className="text-[11px] font-mono text-slate-500">
+                                {new Date(item.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+
+                            <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-500/30 font-bold">
+                              Key: {item.systemDetails?.licenseKey || 'N/A'}
+                            </span>
+                          </div>
+
+                          {/* Message Body */}
+                          <p className="text-xs font-medium text-slate-200 bg-black/40 p-3 rounded-xl border border-white/5 leading-relaxed whitespace-pre-wrap">
+                            "{item.message}"
+                          </p>
+
+                          {/* System Diagnostic Spec Grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[10px] font-mono text-slate-400">
+                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate">
+                              <Laptop size={12} className="text-slate-500 shrink-0" />
+                              <span className="truncate">{item.systemDetails?.platform || 'Unknown OS'}</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate">
+                              <span className="text-slate-500 font-bold shrink-0">Res:</span>
+                              <span className="truncate">{item.systemDetails?.screenResolution || 'N/A'}</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate">
+                              <Globe size={12} className="text-slate-500 shrink-0" />
+                              <span className="truncate">{item.systemDetails?.language || 'en'}</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate" title={item.systemDetails?.userAgent}>
+                              <span className="text-slate-500 font-bold shrink-0">Agent:</span>
+                              <span className="truncate">{item.systemDetails?.userAgent ? item.systemDetails.userAgent.slice(0, 20) + '...' : 'Browser'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </motion.div>

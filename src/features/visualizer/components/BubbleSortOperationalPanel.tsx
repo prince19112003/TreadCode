@@ -154,14 +154,17 @@ export const BubbleSortOperationalPanel: React.FC = () => {
     setTimeout(() => goToStep(0), 20);
   };
 
-  // Initialize default array on component load
+  const customSteps = useLessonStore(s => s.customSteps);
+
+  // Initialize default array on component load or reset
   useEffect(() => {
     const initialArr = [69, 14, 75, 68, 61, 58];
+    setBoxes(['69', '14', '75', '68', '61', '58']);
     const steps = generateBubbleSortSteps(initialArr);
     setCustomSteps(steps);
     setIsPlaying(false);
     setTimeout(() => goToStep(0), 30);
-  }, [lesson?.id, generateBubbleSortSteps, setCustomSteps, goToStep, setIsPlaying]);
+  }, [lesson?.id, customSteps === null]);
 
   return (
     <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
