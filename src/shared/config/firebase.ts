@@ -3,7 +3,7 @@ import { getDatabase, ref, get, set, runTransaction } from 'firebase/database';
 
 // Firebase Web Config Setup targeting licensing database
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCR9JqBrN1jfTuopPAvb8fbqSxjbOcilmc",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flowtrace-licensing.firebaseapp.com",
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://flowtrace-licensing-default-rtdb.firebaseio.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "flowtrace-licensing",
