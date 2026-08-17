@@ -6,7 +6,7 @@ const languageStats: Record<string, { topicsCount: number; programsCount: number
   c: { topicsCount: 13, programsCount: 45 },
   cpp: { topicsCount: 14, programsCount: 50 },
   java: { topicsCount: 13, programsCount: 46 },
-  dsa: { topicsCount: 17, programsCount: 39 },
+  dsa: { topicsCount: 19, programsCount: 21 },
 };
 
 export const getLanguageStats = (languageId: string): { topicsCount: number; programsCount: number } => {

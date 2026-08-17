@@ -37,17 +37,30 @@ export const VariableBox: React.FC<VariableBoxProps> = ({ name, value, oldValue,
   const labelMargin = isSmall ? 'mb-1' : 'mb-1.5';
   const boxHeightLiteral = isSmall ? 'h-10 min-w-8' : 'h-14 min-w-12';
 
-  const formatFloatVal = (val?: string | number) => {
-    if (val === undefined || val === null) return val;
-    if (varType === 'float') {
-      const num = Number(val);
-      if (!isNaN(num)) return num.toFixed(4);
+  // Helper to extract type tag like [int], [double], [char], [boolean], [String] from value string
+  const parseValAndType = (rawVal?: string | number, explicitType?: string) => {
+    if (rawVal === undefined || rawVal === null) return { cleanVal: rawVal, typeBadge: explicitType };
+    const str = String(rawVal);
+    const typeMatch = str.match(/\[([a-zA-Z0-9_]+)\]/);
+    const typeFromStr = typeMatch ? typeMatch[1] : undefined;
+    const cleanStr = str.replace(/\s*\[[a-zA-Z0-9_]+\]/g, '').trim();
+    
+    // Parse numeric string if applicable
+    let finalVal: string | number = cleanStr;
+    const typeBadge = explicitType || typeFromStr;
+
+    if (typeBadge === 'float' || typeBadge === 'double') {
+      const num = Number(cleanStr);
+      if (!isNaN(num) && typeBadge === 'float') {
+        finalVal = num.toFixed(4);
+      }
     }
-    return val;
+
+    return { cleanVal: finalVal, typeBadge };
   };
 
-  const displayVal = formatFloatVal(value);
-  const displayOldVal = formatFloatVal(oldValue);
+  const { cleanVal: displayVal, typeBadge } = parseValAndType(value, varType);
+  const { cleanVal: displayOldVal } = parseValAndType(oldValue, varType);
 
   if (isLiteral) {
     return (
@@ -64,16 +77,16 @@ export const VariableBox: React.FC<VariableBoxProps> = ({ name, value, oldValue,
 
   return (
     <div className="relative flex flex-col items-center">
-      {/* Name tag + clean white type text positioned above the box */}
+      {/* Name tag + small clean type badge positioned above the box */}
       {name !== String(value) && (
         <motion.div 
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           className={`absolute bottom-full ${labelMargin} left-1/2 -translate-x-1/2 flex items-center gap-1 z-10 whitespace-nowrap`}
         >
-          {varType && (
-            <span className="text-[11px] font-mono font-bold text-white uppercase tracking-wider">
-              {varType}
+          {typeBadge && typeBadge !== 'Obj' && typeBadge !== 'Object' && name !== 'sc' && String(displayVal) !== 'Scanner' && (
+            <span className="text-[9px] font-mono font-black text-indigo-300 uppercase tracking-widest bg-indigo-500/20 px-1 py-0.2 rounded border border-indigo-500/30">
+              {typeBadge}
             </span>
           )}
           <span className={`${labelSize} font-black tracking-wider text-blue-300 font-mono leading-none whitespace-nowrap px-0.5`}>

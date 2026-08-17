@@ -32,9 +32,10 @@ const EditableVariableToken = React.memo<{
   onCommit: (val: any) => void;
 }>(({ value, defaultValue, min, max, type = 'number', noQuotes = false, onCommit }) => {
   const [draft, setDraft] = useState(String(value).replace(/['"]/g, '')); // Strip quotes for editing
+  const [justApplied, setJustApplied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const reset = useLessonStore(s => s.reset);
-  const hasEdited = useLessonStore(s => s.hasEdited);
+  const setHasEdited = useLessonStore(s => s.setHasEdited);
 
   // Sync draft if external value changes
   React.useEffect(() => {
@@ -95,17 +96,32 @@ const EditableVariableToken = React.memo<{
       />
       {type === 'text' && !noQuotes && <span className="text-amber-400 font-bold font-mono">"</span>}
       
-      {/* Show dynamic Apply button next to editable value block */}
-      <AnimatePresence>
-        {(hasEdited || isChanged) && (
+      {/* Show dynamic Apply button or Applied notification next to editable value block */}
+      <AnimatePresence mode="wait">
+        {justApplied ? (
+          <motion.span
+            key="applied-badge"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="px-2 py-0.5 text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 text-[10px] font-extrabold uppercase rounded shadow flex items-center gap-1 select-none"
+          >
+            <span>Applied</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </motion.span>
+        ) : isChanged ? (
           <motion.button
+            key="apply-btn"
             initial={{ opacity: 0, scale: 0.8, x: -10 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.8, x: -10 }}
             onClick={(e) => {
               e.stopPropagation();
               commit();
-              reset(); // Run dynamic pipeline and restart visualization
+              setHasEdited(false);
+              reset();
+              setJustApplied(true);
+              setTimeout(() => setJustApplied(false), 1500);
             }}
             className={`px-2 py-0.5 text-white text-[10px] font-extrabold uppercase rounded shadow transition-all flex items-center gap-1 active:scale-95 cursor-pointer ${
               type === 'text' 
@@ -117,7 +133,7 @@ const EditableVariableToken = React.memo<{
             <span>Apply</span>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
           </motion.button>
-        )}
+        ) : null}
       </AnimatePresence>
     </span>
   );
@@ -216,15 +232,18 @@ export const CodeStepPanel = React.memo(() => {
   const toggleCodeFullScreen = useLessonStore(s => s.toggleCodeFullScreen);
   const [zoomLevel, setZoomLevel] = useState(0.8);
   const containerRef = usePinchZoom(setZoomLevel, 0.4, 2.5);
-
-  if (!lesson) return null;
-
-  const editableVariables = lesson.editableVariables ?? {};
+  // ─── ALL HOOKS MUST COME BEFORE ANY EARLY RETURN ───────────────────────────
+  // editableVariables derived here (not after early return) to keep hook order stable
+  const editableVariables = React.useMemo(
+    () => lesson?.editableVariables ?? {},
+    [lesson?.editableVariables]
+  );
 
   // Build a map of lineNum -> tokenIndex -> varName for specific tokens
   const editableTokenMapping = React.useMemo(() => {
     const mapping: Record<number, Record<number, string>> = {};
-  if (Object.keys(editableVariables).length > 0) {
+    if (!lesson || Object.keys(editableVariables).length === 0) return mapping;
+
     if (lesson.id === 'basic_list') {
       mapping[1] = { 5: 'numbers' };
       mapping[2] = { 4: 'index_access' };
@@ -262,10 +281,10 @@ export const CodeStepPanel = React.memo(() => {
           const varToken = line.tokens[varIdx];
           const nextToken = line.tokens[varIdx + 1];
           const isIndexed = nextToken && nextToken.type === 'punctuation' && nextToken.value === '[';
-          
+
           const hasAssignment = line.tokens.some(t => t.type === 'operator' && t.value === '=');
           const valTokenIdx = line.tokens.findIndex(t => t.type === 'number' || t.type === 'string' || t.type === 'parameter');
-          
+
           if (varToken && hasAssignment && valTokenIdx !== -1 && !isIndexed && editableVariables[varToken.value]) {
             if (!mapping[line.lineNum]) mapping[line.lineNum] = {};
             mapping[line.lineNum][valTokenIdx] = varToken.value;
@@ -273,9 +292,11 @@ export const CodeStepPanel = React.memo(() => {
         }
       });
     }
-  }
-  return mapping;
-}, [lesson?.id, lesson?.lines, editableVariables]);
+    return mapping;
+  }, [lesson?.id, lesson?.lines, editableVariables]);
+
+  // ─── Early return AFTER all hooks ────────────────────────────────────────────
+  if (!lesson) return null;
 
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-[#050510] border border-white/10 rounded-lg overflow-hidden relative">

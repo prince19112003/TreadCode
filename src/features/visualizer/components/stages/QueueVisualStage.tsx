@@ -118,6 +118,7 @@ export const QueueVisualStage: React.FC = () => {
         className="w-full h-full flex flex-col items-center justify-center relative transition-transform duration-200 ease-out"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
       >
+        <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
         <div className="flex flex-col items-center gap-4">
 
           {/* Direction Flow Label */}
@@ -171,44 +172,44 @@ export const QueueVisualStage: React.FC = () => {
                   <div className="h-6 flex items-center justify-center">
                     <AnimatePresence mode="wait">
                       {isFound && (
-                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-mono font-black text-xs shadow-md">
+                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-mono font-black text-[9px] tracking-wider shadow-md">
                           ✓ MATCH
                         </motion.span>
                       )}
                       {isPeekTarget && !isFound && (
-                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-xs shadow-lg">
+                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-[9px] tracking-wider shadow-lg">
                           👁 PEEK
                         </motion.span>
                       )}
                       {!isFound && !isPeekTarget && isTraverseTarget && (
-                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-xs">
+                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-[9px] tracking-wider">
                           🔍 VISIT
                         </motion.span>
                       )}
                       {!isFound && !isPeekTarget && !isTraverseTarget && isSearch && (
-                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-xs">
+                        <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-[9px] tracking-wider">
                           SCAN
                         </motion.span>
                       )}
                       {!isFound && !isPeekTarget && !isTraverseTarget && !isSearch && isFront && isRear && (
-                        <motion.span key="fr" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-purple-400 text-slate-950 font-mono font-black text-xs shadow-md">
+                        <motion.span key="fr" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-purple-400 text-slate-950 font-mono font-black text-[9px] tracking-wider shadow-md">
                           F & R ▲
                         </motion.span>
                       )}
                       {!isFound && !isPeekTarget && !isTraverseTarget && !isSearch && isFront && !isRear && (
-                        <motion.span key="f" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-sky-400 text-slate-950 font-mono font-black text-xs shadow-md">
+                        <motion.span key="f" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-sky-400 text-slate-950 font-mono font-black text-[9px] tracking-wider shadow-md">
                           FRONT ▲
                         </motion.span>
                       )}
                       {!isFound && !isPeekTarget && !isTraverseTarget && !isSearch && !isFront && isRear && (
-                        <motion.span key="r" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-2 py-0.5 rounded bg-indigo-400 text-slate-950 font-mono font-black text-xs shadow-md">
+                        <motion.span key="r" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-1.5 py-0.5 rounded bg-indigo-400 text-slate-950 font-mono font-black text-[9px] tracking-wider shadow-md">
                           REAR ▲
                         </motion.span>
                       )}
                     </AnimatePresence>
                   </div>
 
-                  {/* Cell Box (Matching Stack's Solid White Block Aesthetic) */}
+                  {/* Cell Box (Matching Glassmorphism & White Text Aesthetic) */}
                   <div className="w-16 h-16 relative flex items-center justify-center">
                     <AnimatePresence mode="wait">
                       {hasValue ? (
@@ -218,20 +219,20 @@ export const QueueVisualStage: React.FC = () => {
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.8 }}
                           transition={{ type: 'spring', stiffness: 350, damping: 24 }}
-                          className={`w-full h-full rounded-[5px] flex items-center justify-center font-mono font-black text-lg transition-all shadow-md ${
+                          className={`w-full h-full rounded-lg flex items-center justify-center font-mono font-black text-lg transition-all text-white backdrop-blur-md shadow-md ${
                             isFound
-                              ? 'bg-emerald-400 text-slate-950 border-2 border-white'
+                              ? 'bg-emerald-500/30 text-white border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                               : isPeekTarget
-                              ? 'bg-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg'
+                              ? 'bg-amber-500/30 text-white border-2 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
                               : isTraverseTarget
-                              ? 'bg-cyan-400 text-slate-950 border-2 border-white'
+                              ? 'bg-cyan-500/30 text-white border-2 border-cyan-300'
                               : isSearch
-                              ? 'bg-amber-400 text-slate-950 border-2 border-white'
+                              ? 'bg-amber-500/30 text-white border-2 border-amber-300'
                               : isFront
-                              ? 'bg-white text-slate-950 border-2 border-cyan-400'
+                              ? 'bg-cyan-500/25 text-white border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
                               : isRear
-                              ? 'bg-white text-slate-950 border-2 border-indigo-400'
-                              : 'bg-white text-slate-950 border border-slate-300'
+                              ? 'bg-indigo-500/25 text-white border-2 border-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+                              : 'bg-slate-900/60 text-white border border-cyan-500/30'
                           }`}
                         >
                           {value}

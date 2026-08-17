@@ -801,14 +801,142 @@ export const dsa_graph_bfs: LessonProgram = {
     line(13, [tx('    '), pu('}')]),
     line(14, [pu('}')]),
   ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => {
+  editableVariables: {
+    graphPreset: { default: 1, min: 1, max: 2, label: 'Graph Preset' },
+  },
+  generateSteps: (vars?: Record<string, any>): ExecutionStep[] => {
+    const preset = Number(vars?.graphPreset ?? 1);
+    if (preset === 2) {
+      return [
+        {
+          step: 1, lineNum: 2,
+          explanationEnglish: 'BFS begins on Graph 2 (9 Vertices). Starting at Node 1.',
+          explanationHinglish: 'Graph 2 (9 Vertices) par BFS shuru hua. Starting Node = 1.',
+          memorySnapshot: { queue: ['1'], visited: ['1'], path: [] },
+          consoleOutput: 'BFS initialized on Graph 2 at Node 1.',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 2, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 1. Add to Path: [1]. Inspect neighbors (2, 3, 4).',
+          explanationHinglish: 'Queue se 1 ko dequeue kiya. Path: [1]. Neighbors (2, 3, 4) check karein.',
+          memorySnapshot: { queue: [], visited: ['1'], path: ['1'] },
+          consoleOutput: 'Dequeued: 1',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 3, lineNum: 9,
+          explanationEnglish: 'Enqueue unvisited neighbors 2, 3, 4 into Queue.',
+          explanationHinglish: 'Neighbors 2, 3, 4 ko Queue me enqueue kiya.',
+          memorySnapshot: { queue: ['2', '3', '4'], visited: ['1', '2', '3', '4'], path: ['1'] },
+          consoleOutput: 'Enqueued: 2, 3, 4',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 4, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 2. Path: [1, 2]. Neighbor 5 is unvisited.',
+          explanationHinglish: 'Front se 2 ko dequeue kiya. Path: [1, 2]. Neighbor 5 unvisited hai.',
+          memorySnapshot: { queue: ['3', '4'], visited: ['1', '2', '3', '4'], path: ['1', '2'] },
+          consoleOutput: 'Dequeued: 2',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 5, lineNum: 9,
+          explanationEnglish: 'Enqueue neighbor 5 into Queue.',
+          explanationHinglish: 'Neighbor 5 ko Queue me add kiya.',
+          memorySnapshot: { queue: ['3', '4', '5'], visited: ['1', '2', '3', '4', '5'], path: ['1', '2'] },
+          consoleOutput: 'Enqueued: 5',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 6, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 3. Path: [1, 2, 3]. Neighbor 6 is unvisited.',
+          explanationHinglish: 'Front se 3 ko dequeue kiya. Path: [1, 2, 3]. Neighbor 6 unvisited hai.',
+          memorySnapshot: { queue: ['4', '5'], visited: ['1', '2', '3', '4', '5'], path: ['1', '2', '3'] },
+          consoleOutput: 'Dequeued: 3',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 7, lineNum: 9,
+          explanationEnglish: 'Enqueue neighbor 6 into Queue.',
+          explanationHinglish: 'Neighbor 6 ko Queue me enqueue kiya.',
+          memorySnapshot: { queue: ['4', '5', '6'], visited: ['1', '2', '3', '4', '5', '6'], path: ['1', '2', '3'] },
+          consoleOutput: 'Enqueued: 6',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 8, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 4. Path: [1, 2, 3, 4]. (All neighbors visited).',
+          explanationHinglish: 'Front se 4 ko dequeue kiya. Path: [1, 2, 3, 4]. All neighbors already visited.',
+          memorySnapshot: { queue: ['5', '6'], visited: ['1', '2', '3', '4', '5', '6'], path: ['1', '2', '3', '4'] },
+          consoleOutput: 'Dequeued: 4',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 9, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 5. Path: [1, 2, 3, 4, 5]. Neighbors 7 and 8 unvisited.',
+          explanationHinglish: 'Front se 5 ko dequeue kiya. Path: [1, 2, 3, 4, 5]. Neighbors 7 aur 8 unvisited hain.',
+          memorySnapshot: { queue: ['6'], visited: ['1', '2', '3', '4', '5', '6'], path: ['1', '2', '3', '4', '5'] },
+          consoleOutput: 'Dequeued: 5',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 10, lineNum: 9,
+          explanationEnglish: 'Enqueue neighbors 7 and 8 into Queue.',
+          explanationHinglish: 'Neighbors 7 aur 8 ko Queue me enqueue kiya.',
+          memorySnapshot: { queue: ['6', '7', '8'], visited: ['1', '2', '3', '4', '5', '6', '7', '8'], path: ['1', '2', '3', '4', '5'] },
+          consoleOutput: 'Enqueued: 7, 8',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 11, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 6. Path: [1, 2, 3, 4, 5, 6]. Neighbor 9 unvisited.',
+          explanationHinglish: 'Front se 6 ko dequeue kiya. Neighbor 9 unvisited hai.',
+          memorySnapshot: { queue: ['7', '8'], visited: ['1', '2', '3', '4', '5', '6', '7', '8'], path: ['1', '2', '3', '4', '5', '6'] },
+          consoleOutput: 'Dequeued: 6',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 12, lineNum: 9,
+          explanationEnglish: 'Enqueue neighbor 9 into Queue.',
+          explanationHinglish: 'Neighbor 9 ko Queue me enqueue kiya.',
+          memorySnapshot: { queue: ['7', '8', '9'], visited: ['1', '2', '3', '4', '5', '6', '7', '8', '9'], path: ['1', '2', '3', '4', '5', '6'] },
+          consoleOutput: 'Enqueued: 9',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 13, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 7. Path: [1, 2, 3, 4, 5, 6, 7].',
+          explanationHinglish: 'Front se 7 ko dequeue kiya. Path: [1..7].',
+          memorySnapshot: { queue: ['8', '9'], visited: ['1', '2', '3', '4', '5', '6', '7', '8', '9'], path: ['1', '2', '3', '4', '5', '6', '7'] },
+          consoleOutput: 'Dequeued: 7',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 14, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 8. Path: [1, 2, 3, 4, 5, 6, 7, 8].',
+          explanationHinglish: 'Front se 8 ko dequeue kiya. Path: [1..8].',
+          memorySnapshot: { queue: ['9'], visited: ['1', '2', '3', '4', '5', '6', '7', '8', '9'], path: ['1', '2', '3', '4', '5', '6', '7', '8'] },
+          consoleOutput: 'Dequeued: 8',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 15, lineNum: 6,
+          explanationEnglish: 'Dequeue curr = 9. Traversal complete! Path: [1, 2, 3, 4, 5, 6, 7, 8, 9].',
+          explanationHinglish: 'Front se 9 ko dequeue kiya. BFS Complete! Final Path: [1, 2, 3, 4, 5, 6, 7, 8, 9].',
+          memorySnapshot: { queue: [], visited: ['1', '2', '3', '4', '5', '6', '7', '8', '9'], path: ['1', '2', '3', '4', '5', '6', '7', '8', '9'] },
+          consoleOutput: 'BFS Complete: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9',
+          animationEvent: { type: 'NONE' },
+        },
+      ];
+    }
+
     return [
       {
         step: 1,
         lineNum: 2,
-        explanationEnglish: 'BFS begins. Select start node (e.g. A).',
-        explanationHinglish: 'BFS shuru hua. Start node select karein (e.g. A).',
+        explanationEnglish: 'BFS begins on Graph 1 (5 Nodes). Select start node A.',
+        explanationHinglish: 'Graph 1 par BFS shuru hua. Start node select karein (A).',
         memorySnapshot: { queue: [], visited: [], path: [] },
         consoleOutput: 'BFS traversal initialized.',
         animationEvent: { type: 'NONE' },
@@ -915,8 +1043,112 @@ export const dsa_graph_dfs: LessonProgram = {
     line(9, [tx('    '), pu('}')]),
     line(10, [pu('}')]),
   ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => {
+  editableVariables: {
+    graphPreset: { default: 1, min: 1, max: 2, label: 'Graph Preset' },
+  },
+  generateSteps: (vars?: Record<string, any>): ExecutionStep[] => {
+    const preset = Number(vars?.graphPreset ?? 1);
+    if (preset === 2) {
+      return [
+        {
+          step: 1, lineNum: 2,
+          explanationEnglish: 'DFS begins on Graph 2 (9 Vertices). Start at Node 1.',
+          explanationHinglish: 'Graph 2 (9 Vertices) par DFS call stack shuru hui starting Node 1 se.',
+          memorySnapshot: { stack: ['DFS(1)'], visited: ['1'], path: [] },
+          consoleOutput: 'DFS initialized on Graph 2 at Node 1.',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 2, lineNum: 4,
+          explanationEnglish: 'Process Node 1. Add to Path: [1].',
+          explanationHinglish: 'Node 1 ko process kiya. Visited Path: [1].',
+          memorySnapshot: { stack: ['DFS(1)'], visited: ['1'], path: ['1'] },
+          consoleOutput: 'Processed: 1',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 3, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 1\'s neighbor: DFS(2). Stack Push.',
+          explanationHinglish: 'Node 1 ke neighbor 2 par recursive call stack push kiya: DFS(2).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)'], visited: ['1', '2'], path: ['1', '2'] },
+          consoleOutput: 'Stack Push: DFS(2)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 4, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 2\'s neighbor: DFS(4). Stack Push.',
+          explanationHinglish: 'Node 2 ke neighbor 4 par recursive call stack push kiya: DFS(4).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)'], visited: ['1', '2', '4'], path: ['1', '2', '4'] },
+          consoleOutput: 'Stack Push: DFS(4)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 5, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 4\'s neighbor: DFS(6). Stack Push.',
+          explanationHinglish: 'Node 4 ke neighbor 6 par recursive call stack push kiya: DFS(6).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)'], visited: ['1', '2', '4', '6'], path: ['1', '2', '4', '6'] },
+          consoleOutput: 'Stack Push: DFS(6)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 6, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 6\'s neighbor: DFS(3). Stack Push.',
+          explanationHinglish: 'Node 6 ke neighbor 3 par recursive call stack push kiya: DFS(3).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)', 'DFS(3)'], visited: ['1', '2', '4', '6', '3'], path: ['1', '2', '4', '6', '3'] },
+          consoleOutput: 'Stack Push: DFS(3)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 7, lineNum: 9,
+          explanationEnglish: 'Node 3 has no unvisited neighbors. Backtrack (Pop DFS(3)).',
+          explanationHinglish: 'Node 3 ka koi unvisited neighbor nahi bacha. Backtrack kiya (Pop DFS(3)).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)'], visited: ['1', '2', '4', '6', '3'], path: ['1', '2', '4', '6', '3'] },
+          consoleOutput: 'Stack Pop: DFS(3)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 8, lineNum: 7,
+          explanationEnglish: 'From Node 6, recurse into unvisited neighbor: DFS(9). Stack Push.',
+          explanationHinglish: 'Node 6 se unvisited neighbor 9 par call stack push kiya: DFS(9).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)', 'DFS(9)'], visited: ['1', '2', '4', '6', '3', '9'], path: ['1', '2', '4', '6', '3', '9'] },
+          consoleOutput: 'Stack Push: DFS(9)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 9, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 9\'s neighbor: DFS(7). Stack Push.',
+          explanationHinglish: 'Node 9 ke neighbor 7 par recursive call stack push kiya: DFS(7).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)', 'DFS(9)', 'DFS(7)'], visited: ['1', '2', '4', '6', '3', '9', '7'], path: ['1', '2', '4', '6', '3', '9', '7'] },
+          consoleOutput: 'Stack Push: DFS(7)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 10, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 7\'s neighbor: DFS(5). Stack Push.',
+          explanationHinglish: 'Node 7 ke neighbor 5 par recursive call stack push kiya: DFS(5).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)', 'DFS(9)', 'DFS(7)', 'DFS(5)'], visited: ['1', '2', '4', '6', '3', '9', '7', '5'], path: ['1', '2', '4', '6', '3', '9', '7', '5'] },
+          consoleOutput: 'Stack Push: DFS(5)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 11, lineNum: 7,
+          explanationEnglish: 'Recurse into Node 5\'s unvisited neighbor: DFS(8). Stack Push.',
+          explanationHinglish: 'Node 5 ke neighbor 8 par recursive call stack push kiya: DFS(8).',
+          memorySnapshot: { stack: ['DFS(1)', 'DFS(2)', 'DFS(4)', 'DFS(6)', 'DFS(9)', 'DFS(7)', 'DFS(5)', 'DFS(8)'], visited: ['1', '2', '4', '6', '3', '9', '7', '5', '8'], path: ['1', '2', '4', '6', '3', '9', '7', '5', '8'] },
+          consoleOutput: 'Stack Push: DFS(8)',
+          animationEvent: { type: 'NONE' },
+        },
+        {
+          step: 12, lineNum: 10,
+          explanationEnglish: 'All 9 nodes visited! Backtrack complete. DFS finished.',
+          explanationHinglish: 'Sabhi 9 nodes visit ho gaye! DFS complete. Path: [1, 2, 4, 6, 3, 9, 7, 5, 8].',
+          memorySnapshot: { stack: [], visited: ['1', '2', '4', '6', '3', '9', '7', '5', '8'], path: ['1', '2', '4', '6', '3', '9', '7', '5', '8'] },
+          consoleOutput: 'DFS Complete: 1 -> 2 -> 4 -> 6 -> 3 -> 9 -> 7 -> 5 -> 8',
+          animationEvent: { type: 'NONE' },
+        },
+      ];
+    }
+
     return [
       {
         step: 1,
@@ -1038,17 +1270,89 @@ export const dsa_graph_dijkstra: LessonProgram = {
     line(1, [cm("// Dijkstra's Shortest Path Algorithm")]),
     line(2, [kw('void'), tx(' '), fn('dijkstra'), pu('('), kw('int'), tx(' '), va('startNode'), pu(')')]),
   ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 1,
-      explanationEnglish: "Dijkstra's Algorithm initialized.",
-      explanationHinglish: "Dijkstra's Shortest Path Workspace initialized.",
-      memorySnapshot: { isDijkstra: true },
-      consoleOutput: "> Dijkstra initialized.",
-      animationEvent: { type: 'NONE' },
-    },
-  ],
+  editableVariables: {
+    graphPreset: { default: 1, min: 1, max: 2, label: 'Graph Preset' },
+  },
+  generateSteps: (vars?: Record<string, any>): ExecutionStep[] => {
+    const preset = Number(vars?.graphPreset ?? 1);
+    if (preset === 2) {
+      const graph2Nodes = [
+        { id: '1', x: 65, y: 170 },
+        { id: '2', x: 175, y: 70 },
+        { id: '3', x: 175, y: 270 },
+        { id: '4', x: 285, y: 70 },
+        { id: '5', x: 285, y: 270 },
+        { id: '6', x: 395, y: 70 },
+        { id: '7', x: 395, y: 270 },
+        { id: '8', x: 475, y: 170 },
+      ];
+      const graph2Edges = [
+        { u: '1', v: '2', weight: 3 },
+        { u: '1', v: '3', weight: 6 },
+        { u: '2', v: '3', weight: 2 },
+        { u: '2', v: '4', weight: 4 },
+        { u: '2', v: '5', weight: 7 },
+        { u: '3', v: '5', weight: 1 },
+        { u: '4', v: '6', weight: 5 },
+        { u: '4', v: '7', weight: 3 },
+        { u: '5', v: '7', weight: 8 },
+        { u: '6', v: '8', weight: 2 },
+        { u: '7', v: '8', weight: 4 },
+      ];
+      return [
+        {
+          step: 1, lineNum: 1,
+          explanationEnglish: "Dijkstra's initialized on Complex Graph 2 (8 Vertices: 1-8). Source = Node 1.",
+          explanationHinglish: "Graph 2 (8 Vertices: 1-8) par Dijkstra's Algorithm shuru hua. Source = Node 1.",
+          memorySnapshot: {
+            nodes: graph2Nodes,
+            edges: graph2Edges,
+            isDijkstra: true,
+            preset: 2,
+            distMap: { '1': 0, '2': 3, '3': 5, '4': 7, '5': 6, '6': 12, '7': 10, '8': 14 },
+            settledSet: ['1'],
+            activeNode: '1',
+          },
+          consoleOutput: "> Dijkstra initialized on Graph 2 (8 Nodes).",
+          animationEvent: { type: 'NONE' },
+        },
+      ];
+    }
+    const graph1Nodes = [
+      { id: '1', x: 75, y: 170 },
+      { id: '2', x: 200, y: 65 },
+      { id: '3', x: 200, y: 275 },
+      { id: '4', x: 345, y: 65 },
+      { id: '5', x: 345, y: 275 },
+      { id: '6', x: 465, y: 170 },
+    ];
+    const graph1Edges = [
+      { u: '1', v: '2', weight: 4 },
+      { u: '1', v: '3', weight: 2 },
+      { u: '2', v: '3', weight: 1 },
+      { u: '2', v: '4', weight: 5 },
+      { u: '3', v: '4', weight: 8 },
+      { u: '3', v: '5', weight: 10 },
+      { u: '4', v: '5', weight: 2 },
+      { u: '4', v: '6', weight: 6 },
+      { u: '5', v: '6', weight: 3 },
+    ];
+    return [
+      {
+        step: 1, lineNum: 1,
+        explanationEnglish: "Dijkstra's Algorithm initialized on Graph 1 (6 Vertices).",
+        explanationHinglish: "Graph 1 (6 Vertices) par Dijkstra's Shortest Path Workspace initialize hua.",
+        memorySnapshot: {
+          nodes: graph1Nodes,
+          edges: graph1Edges,
+          isDijkstra: true,
+          preset: 1,
+        },
+        consoleOutput: "> Dijkstra initialized.",
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
   executionSteps: [],
 };
 
@@ -1059,17 +1363,18 @@ export const dsa_graph_kruskal: LessonProgram = {
   lines: [
     line(1, [cm("// Kruskal's Minimum Spanning Tree Algorithm")]),
   ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 1,
-      explanationEnglish: "Kruskal's MST Algorithm initialized.",
-      explanationHinglish: "Kruskal's MST Workspace initialized.",
-      memorySnapshot: { isKruskal: true },
-      consoleOutput: "> Kruskal initialized.",
-      animationEvent: { type: 'NONE' },
-    },
-  ],
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1, lineNum: 1,
+        explanationEnglish: "Kruskal's MST Algorithm initialized on Weighted Graph.",
+        explanationHinglish: "Weighted Graph par Kruskal's MST Workspace initialize hua.",
+        memorySnapshot: { isKruskal: true },
+        consoleOutput: "> Kruskal initialized.",
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
   executionSteps: [],
 };
 
@@ -1080,17 +1385,18 @@ export const dsa_graph_prims: LessonProgram = {
   lines: [
     line(1, [cm("// Prim's Minimum Spanning Tree Algorithm")]),
   ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 1,
-      explanationEnglish: "Prim's MST Algorithm initialized.",
-      explanationHinglish: "Prim's MST Workspace initialized.",
-      memorySnapshot: { isPrims: true },
-      consoleOutput: "> Prim's initialized.",
-      animationEvent: { type: 'NONE' },
-    },
-  ],
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1, lineNum: 1,
+        explanationEnglish: "Prim's MST Algorithm initialized on Weighted Graph.",
+        explanationHinglish: "Weighted Graph par Prim's MST Workspace initialize hua.",
+        memorySnapshot: { isPrims: true },
+        consoleOutput: "> Prim's initialized.",
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
   executionSteps: [],
 };
 

@@ -31,8 +31,19 @@ export const PenMenu: React.FC = () => {
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    const el = document.getElementById('canvas-pen-layer');
-    if (el) setPortalTarget(el);
+    const checkTarget = () => {
+      const el = document.getElementById('canvas-pen-layer');
+      setPortalTarget(prev => (prev === el ? prev : el));
+    };
+    checkTarget();
+
+    const observer = new MutationObserver(() => {
+      checkTarget();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
   }, []);
 
   // Floating position

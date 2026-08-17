@@ -168,6 +168,7 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
       isPlaying: false,
       isComplete: false,
       customSteps: null,
+      hasEdited: false,
     });
     get().updateActiveSteps();
   },

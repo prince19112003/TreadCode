@@ -100,21 +100,56 @@ const languages = [
     creator: 'Computer Science',
     year: 'Core',
     tagline: 'Data Structures & Algorithms.',
-    topics: 17,
-    programs: 34,
+    topics: 19,
+    programs: 21,
     accentColor: '#a855f7',
     accentGlow: 'rgba(168,85,247,0.22)',
     accentBorder: 'rgba(168,85,247,0.35)',
     Icon: () => (
       <svg viewBox="0 0 128 128" className="w-full h-full">
-        <path d="M64 24L36 56M64 24L92 56M36 56L20 88M36 56L52 88M92 56L76 88M92 56L108 88" stroke="#a855f7" strokeWidth="5" strokeLinecap="round"/>
-        <circle cx="64" cy="24" r="12" fill="#a855f7" stroke="#ffffff" strokeWidth="3"/>
-        <circle cx="36" cy="56" r="10" fill="#8b5cf6" stroke="#ffffff" strokeWidth="2.5"/>
-        <circle cx="92" cy="56" r="10" fill="#8b5cf6" stroke="#ffffff" strokeWidth="2.5"/>
-        <circle cx="20" cy="88" r="8" fill="#d8b4fe"/>
-        <circle cx="52" cy="88" r="8" fill="#d8b4fe"/>
-        <circle cx="76" cy="88" r="8" fill="#d8b4fe"/>
-        <circle cx="108" cy="88" r="8" fill="#d8b4fe"/>
+        <defs>
+          <linearGradient id="dsaBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#c084fc" />
+            <stop offset="100%" stopColor="#7e22ce" />
+          </linearGradient>
+          <linearGradient id="dsaCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
+          </linearGradient>
+          <linearGradient id="dsaLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
+          </linearGradient>
+          <filter id="dsaGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Glow backdrop paths */}
+        <path d="M64 18 L32 54 M64 18 L96 54 M32 54 L18 90 M32 54 L48 90 M96 54 L80 90 M96 54 L110 90 M48 90 L80 90" stroke="url(#dsaLineGrad)" strokeWidth="4.5" strokeLinecap="round" />
+        
+        {/* Additional Cross Mesh links */}
+        <path d="M32 54 L96 54" stroke="#a855f7" strokeWidth="2.5" strokeDasharray="4 4" opacity="0.7" />
+
+        {/* Glowing Outer Rings */}
+        <circle cx="64" cy="18" r="16" fill="none" stroke="#c084fc" strokeWidth="1.5" opacity="0.6" />
+        <circle cx="32" cy="54" r="13" fill="none" stroke="#38bdf8" strokeWidth="1.5" opacity="0.6" />
+        <circle cx="96" cy="54" r="13" fill="none" stroke="#38bdf8" strokeWidth="1.5" opacity="0.6" />
+
+        {/* Root Node */}
+        <circle cx="64" cy="18" r="11" fill="url(#dsaBgGrad)" stroke="#ffffff" strokeWidth="2.5" filter="url(#dsaGlowFilter)" />
+        <circle cx="64" cy="18" r="4" fill="#ffffff" />
+
+        {/* Level 1 Nodes */}
+        <circle cx="32" cy="54" r="9" fill="url(#dsaCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="96" cy="54" r="9" fill="url(#dsaCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+
+        {/* Level 2 Nodes */}
+        <circle cx="18" cy="90" r="7" fill="#e879f9" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="48" cy="90" r="7" fill="#818cf8" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="80" cy="90" r="7" fill="#818cf8" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="110" cy="90" r="7" fill="#e879f9" stroke="#ffffff" strokeWidth="1.5" />
       </svg>
     ),
   },
@@ -282,7 +317,7 @@ export const LanguageSelectionPage: React.FC = () => {
                         className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
                         style={{ color: '#4ade80', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         Available
                       </span>
                     ) : lang.enabled ? (
@@ -290,7 +325,7 @@ export const LanguageSelectionPage: React.FC = () => {
                         className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
                         style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)' }}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                         In Progress 🚧
                       </span>
                     ) : (

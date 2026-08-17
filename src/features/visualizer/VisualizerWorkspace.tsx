@@ -5,7 +5,10 @@ import { StageControls } from './components/StageControls';
 import { OutputConsole } from './components/OutputConsole';
 import { ExplanationBar } from './components/ExplanationBar';
 import { PenMenu } from './components/PenMenu';
-const CustomFlowchartStage = React.lazy(() => import('./components/stages/CustomFlowchartStage').then(m => ({ default: m.CustomFlowchartStage })));
+const PythonFlowchartStage = React.lazy(() => import('./components/stages/PythonFlowchartStage').then(m => ({ default: m.PythonFlowchartStage })));
+const JavaFlowchartStage = React.lazy(() => import('./components/stages/JavaFlowchartStage').then(m => ({ default: m.JavaFlowchartStage })));
+const CFlowchartStage = React.lazy(() => import('./components/stages/CFlowchartStage').then(m => ({ default: m.CFlowchartStage })));
+const CppFlowchartStage = React.lazy(() => import('./components/stages/CppFlowchartStage').then(m => ({ default: m.CppFlowchartStage })));
 const StackVisualStage = React.lazy(() => import('./components/stages/StackVisualStage').then(m => ({ default: m.StackVisualStage })));
 const QueueVisualStage = React.lazy(() => import('./components/stages/QueueVisualStage').then(m => ({ default: m.QueueVisualStage })));
 const SllVisualStage = React.lazy(() => import('./components/stages/SllVisualStage').then(m => ({ default: m.SllVisualStage })));
@@ -137,7 +140,7 @@ export const VisualizerWorkspace = React.memo(() => {
           {fullScreenToggleButton}
           {pureBlackToggleButton}
           <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
-            {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+            {isStackTopic ? <StackVisualStage /> : isQueueTopic ? <QueueVisualStage /> : isSllTopic ? <SllVisualStage /> : isDllTopic ? <DllVisualStage /> : isBubbleSortTopic ? <BubbleSortVisualStage /> : isSelectionSortTopic ? <SelectionSortVisualStage /> : isInsertionSortTopic ? <InsertionSortVisualStage /> : isMergeSortTopic ? <MergeSortVisualStage /> : isHeapSortTopic ? <HeapSortVisualStage /> : isHashSetTopic ? <HashSetVisualStage /> : isHashMapTopic ? <HashMapVisualStage /> : isTreeTopic ? <TreeVisualStage /> : isGraphTopic ? <GraphVisualStage /> : (isFlowchartTopic && lesson?.language === 'python') ? <PythonFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'java') ? <JavaFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'c') ? <CFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'cpp') ? <CppFlowchartStage /> : <DsaAlgoStage />}
           </React.Suspense>
         </div>
         <PenMenu />
@@ -225,7 +228,7 @@ export const VisualizerWorkspace = React.memo(() => {
           } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
             {pureBlackToggleButton}
             <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
-              {isFlowchartTopic ? <CustomFlowchartStage /> : <DsaAlgoStage />}
+              {(isFlowchartTopic && lesson?.language === 'python') ? <PythonFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'java') ? <JavaFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'c') ? <CFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'cpp') ? <CppFlowchartStage /> : <DsaAlgoStage />}
             </React.Suspense>
             <PenMenu />
           </div>

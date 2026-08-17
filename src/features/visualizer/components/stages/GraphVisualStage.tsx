@@ -1,27 +1,27 @@
 import React, { useRef, useEffect } from 'react';
 import { useLessonStore } from '../../../../lessons/useLessonStore';
 
-const GRAPH_7_NODES = ['0', '1', '2', '3', '4', '5', '6'];
-const DIJKSTRA_NODES = ['0', '1', '2', '3', '4', '5'];
+const GRAPH_7_NODES = ['1', '2', '3', '4', '5', '6', '7'];
+const DIJKSTRA_NODES = ['1', '2', '3', '4', '5', '6'];
 
 const FALLBACK_GRAPH_POSITIONS: Record<string, { x: number; y: number }> = {
-  '0': { x: 80, y: 70 },
-  '3': { x: 300, y: 70 },
-  '6': { x: 440, y: 150 },
-  '2': { x: 220, y: 170 },
-  '1': { x: 80, y: 270 },
-  '4': { x: 270, y: 280 },
-  '5': { x: 400, y: 250 },
+  '1': { x: 120, y: 65 },
+  '4': { x: 320, y: 65 },
+  '2': { x: 80, y: 170 },
+  '3': { x: 250, y: 170 },
+  '7': { x: 440, y: 170 },
+  '5': { x: 160, y: 275 },
+  '6': { x: 360, y: 275 },
 };
 
 // Coordinates layout for 6-node Weighted Graph (Large 520x340 Canvas)
 const DIJKSTRA_NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  '0': { x: 75, y: 170 },
-  '1': { x: 200, y: 65 },
-  '2': { x: 200, y: 275 },
-  '3': { x: 345, y: 65 },
-  '4': { x: 345, y: 275 },
-  '5': { x: 465, y: 170 },
+  '1': { x: 75, y: 170 },
+  '2': { x: 200, y: 65 },
+  '3': { x: 200, y: 275 },
+  '4': { x: 345, y: 65 },
+  '5': { x: 345, y: 275 },
+  '6': { x: 465, y: 170 },
 };
 
 interface GraphNode {
@@ -37,27 +37,27 @@ interface WeightedEdge {
 }
 
 const GRAPH_7_EDGES: WeightedEdge[] = [
-  { u: '0', v: '1', weight: 4 },
-  { u: '0', v: '2', weight: 2 },
-  { u: '0', v: '3', weight: 5 },
-  { u: '1', v: '2', weight: 1 },
-  { u: '1', v: '4', weight: 7 },
-  { u: '2', v: '4', weight: 3 },
-  { u: '2', v: '5', weight: 8 },
-  { u: '3', v: '6', weight: 6 },
-  { u: '5', v: '6', weight: 2 },
+  { u: '1', v: '2', weight: 4 },
+  { u: '1', v: '3', weight: 2 },
+  { u: '1', v: '4', weight: 5 },
+  { u: '2', v: '3', weight: 1 },
+  { u: '2', v: '5', weight: 7 },
+  { u: '3', v: '5', weight: 3 },
+  { u: '3', v: '6', weight: 8 },
+  { u: '4', v: '7', weight: 6 },
+  { u: '6', v: '7', weight: 2 },
 ];
 
 const DIJKSTRA_EDGES: WeightedEdge[] = [
-  { u: '0', v: '1', weight: 4 },
-  { u: '0', v: '2', weight: 2 },
-  { u: '1', v: '2', weight: 1 },
-  { u: '1', v: '3', weight: 5 },
-  { u: '2', v: '3', weight: 8 },
-  { u: '2', v: '4', weight: 10 },
-  { u: '3', v: '4', weight: 2 },
-  { u: '3', v: '5', weight: 6 },
-  { u: '4', v: '5', weight: 3 },
+  { u: '1', v: '2', weight: 4 },
+  { u: '1', v: '3', weight: 2 },
+  { u: '2', v: '3', weight: 1 },
+  { u: '2', v: '4', weight: 5 },
+  { u: '3', v: '4', weight: 8 },
+  { u: '3', v: '5', weight: 10 },
+  { u: '4', v: '5', weight: 2 },
+  { u: '4', v: '6', weight: 6 },
+  { u: '5', v: '6', weight: 3 },
 ];
 
 export const GraphVisualStage = React.memo(() => {
@@ -139,14 +139,13 @@ export const GraphVisualStage = React.memo(() => {
   const activeNodeList = (isDijkstra || isKruskal || isPrims || isAStar) ? DIJKSTRA_NODES : GRAPH_7_NODES;
   const activePosMap = (isDijkstra || isKruskal || isPrims || isAStar) ? DIJKSTRA_NODE_POSITIONS : FALLBACK_GRAPH_POSITIONS;
 
-  const nodes: GraphNode[] = activeNodeList.map(id => {
-    const found = rawNodes.find((n: GraphNode) => n.id === id);
-    return {
-      id,
-      x: found ? found.x : activePosMap[id].x,
-      y: found ? found.y : activePosMap[id].y,
-    };
-  });
+  const nodes: GraphNode[] = (rawNodes && rawNodes.length > 0)
+    ? rawNodes
+    : activeNodeList.map(id => ({
+        id,
+        x: activePosMap[id] ? activePosMap[id].x : 100,
+        y: activePosMap[id] ? activePosMap[id].y : 100,
+      }));
 
   // Auto-scroll on step change
   useEffect(() => {
@@ -166,9 +165,10 @@ export const GraphVisualStage = React.memo(() => {
       className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-y-auto p-3 md:p-5 select-none custom-scrollbar"
     >
       <div
-        className="w-full max-w-6xl flex flex-col items-center gap-5 transition-transform duration-200 ease-out py-1"
+        className="relative w-full max-w-6xl flex flex-col items-center gap-5 transition-transform duration-200 ease-out py-1"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
       >
+        <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
         
         {/* Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/90 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md font-mono text-xs">
@@ -330,7 +330,7 @@ export const GraphVisualStage = React.memo(() => {
                               ? (isBfs ? '#06b6d4' : '#a855f7')
                               : '#334155'
                           }
-                          className={`transition-all duration-300 ${isInspectingEdge ? 'animate-pulse' : ''}`}
+                          className="transition-all duration-300"
                         />
 
                         {/* Edge Weight Text Label (No Box, Floating Center Above Line) */}
@@ -392,9 +392,9 @@ export const GraphVisualStage = React.memo(() => {
                           r="26"
                           className={`transition-all duration-300 ${
                             isInspectedNode
-                              ? 'fill-amber-950 stroke-amber-400 shadow-[0_0_35px_rgba(251,191,36,1)] ring-4 ring-amber-400/60 animate-pulse'
+                              ? 'fill-amber-950 stroke-amber-400 shadow-[0_0_35px_rgba(251,191,36,1)] ring-4 ring-amber-400/60'
                               : isInspectedNeighbor
-                              ? 'fill-cyan-950 stroke-cyan-400 shadow-[0_0_25px_rgba(6,182,212,1)] ring-2 ring-cyan-400/60 animate-pulse'
+                              ? 'fill-cyan-950 stroke-cyan-400 shadow-[0_0_25px_rgba(6,182,212,1)] ring-2 ring-cyan-400/60'
                               : isMstNode
                               ? 'fill-emerald-950 stroke-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.9)]'
                               : isActive

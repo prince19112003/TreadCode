@@ -38,6 +38,7 @@ export type AnimationEvent =
   | { type: 'HIGHLIGHT_ARRAY_INDEX'; arrayName: string; index: number }
   | { type: 'USER_INPUT_PROMPT'; prompt: string; variableName: string; value: string | number }
   | { type: 'TYPE_CAST_TRANSFORM'; fromType: string; toType: string; fromValue: string | number; toValue: string | number; variableName: string }
+  | { type: 'EVALUATE_CONDITION'; condition?: string; variableName?: string; variableValue?: string | number; operator?: string; result: boolean; explanation?: string }
   | { type: 'COMPLETE' }
   | { type: 'NONE' }
   // ── DSA-Specific Events (language-independent) ──────────────────────────────

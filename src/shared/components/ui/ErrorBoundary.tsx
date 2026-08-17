@@ -12,7 +12,22 @@ interface State {
   error: Error | null;
   errorInfo: ErrorInfo | null;
   showDetails: boolean;
+  isChunkError: boolean;
 }
+
+// ─── Detect Vite/Rollup chunk load failures ────────────────────────────────────
+const isChunkLoadError = (error: Error): boolean => {
+  const msg = error?.message?.toLowerCase() ?? '';
+  const name = error?.name?.toLowerCase() ?? '';
+  return (
+    name.includes('chunkloaderror') ||
+    msg.includes('failed to fetch dynamically imported module') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('importing a module script failed') ||
+    msg.includes('unable to preload css') ||
+    msg.includes('chunk')
+  );
+};
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
@@ -20,23 +35,53 @@ export class ErrorBoundary extends Component<Props, State> {
     error: null,
     errorInfo: null,
     showDetails: false,
+    isChunkError: false,
   };
 
   public static getDerivedStateFromError(error: Error): Partial<State> {
-    return { hasError: true, error };
+    return {
+      hasError: true,
+      error,
+      isChunkError: isChunkLoadError(error),
+    };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    if (isChunkLoadError(error)) {
+      // Auto-recover from Vite stale chunk: reload ONCE then stop to prevent loops
+      const RELOAD_FLAG = 'flowtrace_chunk_reload';
+      const alreadyReloaded = sessionStorage.getItem(RELOAD_FLAG);
+      if (!alreadyReloaded) {
+        sessionStorage.setItem(RELOAD_FLAG, '1');
+        window.location.reload();
+        return;
+      }
+      // If already reloaded once, clear flag and show generic error UI
+      sessionStorage.removeItem(RELOAD_FLAG);
+    }
     console.error('Uncaught Visualizer error:', error, errorInfo);
     this.setState({ errorInfo });
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null, showDetails: false });
+    sessionStorage.removeItem('flowtrace_chunk_reload');
+    this.setState({ hasError: false, error: null, errorInfo: null, showDetails: false, isChunkError: false });
   };
 
   public render() {
     if (this.state.hasError) {
+      // Chunk error: show minimal spinner while auto-reload fires
+      if (this.state.isChunkError) {
+        return (
+          <div className="w-full h-full min-h-87.5 flex items-center justify-center bg-slate-950/80">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-slate-400 text-xs font-mono">Reloading updated module...</p>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="w-full h-full min-h-87.5 flex items-center justify-center p-6 bg-slate-950/80 text-white font-mono select-none">
           <div className="max-w-lg w-full bg-slate-900/95 border border-rose-500/40 rounded-3xl p-6 text-center shadow-2xl space-y-4 backdrop-blur-xl">

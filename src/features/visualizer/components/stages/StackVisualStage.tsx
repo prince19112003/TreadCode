@@ -106,6 +106,7 @@ export const StackVisualStage: React.FC = () => {
         className="w-full h-full flex items-center relative transition-transform duration-200 ease-out"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'left center' }}
       >
+        <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
         <div className="flex items-center gap-4 pl-4">
           
           {/* 1. Array Indexing Column */}
@@ -176,18 +177,18 @@ export const StackVisualStage: React.FC = () => {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -20, scale: 0.9 }}
                           transition={{ type: 'spring', stiffness: 350, damping: 24 }}
-                          className={`w-full h-full rounded-[5px] flex items-center justify-center font-mono font-black text-lg transition-all shadow-md ${
+                          className={`w-full h-full rounded-lg flex items-center justify-center font-mono font-black text-lg transition-all text-white backdrop-blur-md shadow-md ${
                             isFound
-                              ? 'bg-emerald-400 text-slate-950 border-2 border-white'
+                              ? 'bg-emerald-500/30 text-white border-2 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                               : isPeekTarget
-                              ? 'bg-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg'
+                              ? 'bg-amber-500/30 text-white border-2 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
                               : isTraverseTarget
-                              ? 'bg-cyan-400 text-slate-950 border-2 border-white'
+                              ? 'bg-cyan-500/30 text-white border-2 border-cyan-300'
                               : isSearch
-                              ? 'bg-amber-400 text-slate-950 border-2 border-white'
+                              ? 'bg-amber-500/30 text-white border-2 border-amber-300'
                               : isTop
-                              ? 'bg-white text-slate-950 border-2 border-cyan-400'
-                              : 'bg-white text-slate-950 border border-slate-300'
+                              ? 'bg-cyan-500/25 text-white border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
+                              : 'bg-slate-900/60 text-white border border-cyan-500/30'
                           }`}
                         >
                           {value}

@@ -31,34 +31,28 @@ export const javaTypes: LessonProgram = {
     const gpa = Number(vars.gpa ?? 3.85);
     return [
       {
-        step: 1, lineNum: 2,
-        explanationEnglish: 'Java main method entry point execution starts.',
-        explanationHinglish: 'Java main method entry point se code execution start hua.',
-        memorySnapshot: {}, animationEvent: { type: 'NONE' as const }
-      },
-      {
-        step: 2, lineNum: 3,
+        step: 1, lineNum: 3,
         explanationEnglish: `Declare 32-bit primitive integer int score = ${score} (4 bytes).`,
         explanationHinglish: `Java stack memory me 4-byte int variable 'score' (${score}) allocate hua.`,
         memorySnapshot: { score: `${score} [int]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'score', value: score }
       },
       {
-        step: 3, lineNum: 4,
+        step: 2, lineNum: 4,
         explanationEnglish: `Declare 64-bit double precision gpa = ${gpa} (8 bytes).`,
         explanationHinglish: `Double variable 'gpa' (${gpa}) 8-byte floating point memory slot me store hua.`,
         memorySnapshot: { score: `${score} [int]`, gpa: `${gpa} [double]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'gpa', value: gpa }
       },
       {
-        step: 4, lineNum: 5,
+        step: 3, lineNum: 5,
         explanationEnglish: "Declare 16-bit Unicode char grade = 'A' (2 bytes).",
         explanationHinglish: "Character variable 'grade' ('A') 2-byte Unicode slot me store hua.",
         memorySnapshot: { score: `${score} [int]`, gpa: `${gpa} [double]`, grade: "'A' [char]" },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'grade', value: "'A'" }
       },
       {
-        step: 5, lineNum: 6,
+        step: 4, lineNum: 6,
         explanationEnglish: 'Declare boolean variable isPassed = true (1 bit/1 byte).',
         explanationHinglish: 'Boolean variable isPassed = true stack slot me store hua.',
         memorySnapshot: { score: `${score} [int]`, gpa: `${gpa} [double]`, grade: "'A' [char]", isPassed: 'true [boolean]' },
@@ -216,17 +210,23 @@ export const javaTempConvert: LessonProgram = {
     return [
       {
         step: 1, lineNum: 3,
-        explanationEnglish: `Declare celsius = ${cel}.`,
+        explanationEnglish: `Declare double celsius = ${cel}.`,
         explanationHinglish: `Variable celsius = ${cel} store hua.`,
         memorySnapshot: { celsius: `${cel} [double]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'celsius', value: cel }
       },
       {
         step: 2, lineNum: 4,
-        explanationEnglish: `Compute formula (${cel} * 9.0 / 5.0) + 32.0 = ${fah}.`,
-        explanationHinglish: `Formula calculate hoke fahrenheit = ${fah} store hua.`,
+        explanationEnglish: `Evaluate formula: (${cel} * 9.0 / 5.0) + 32.0 -> Result ${fah}.`,
+        explanationHinglish: `celsius (${cel}) substitute karke formula calculate kiya: (${cel} * 9.0 / 5.0) + 32.0 = ${fah}.`,
         memorySnapshot: { celsius: `${cel} [double]`, fahrenheit: `${fah} [double]` },
-        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'fahrenheit', value: fah }
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['celsius'],
+          operator: '(* 9/5) + 32',
+          storeIn: 'fahrenheit',
+          result: fah
+        }
       },
       {
         step: 3, lineNum: 5,
@@ -258,43 +258,56 @@ export const javaCircleArea: LessonProgram = {
   lines: [
     { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
     { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
-    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '7.0' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '7.0', paramId: 'r' }, { type: 'punctuation', value: ';' }] },
     { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'area' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '3.14159' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r' }, { type: 'punctuation', value: ';' }] },
     { lineNum: 5, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Area: "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'area' }, { type: 'punctuation', value: ');' }] },
     { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
     { lineNum: 7, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 3,
-      explanationEnglish: 'Declare double r = 7.0.',
-      explanationHinglish: 'Radius r = 7.0 store hua.',
-      memorySnapshot: { r: '7.0 [double]' },
-      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'r', value: 7.0 }
-    },
-    {
-      step: 2, lineNum: 4,
-      explanationEnglish: 'Calculate area = 3.14159 * 7.0 * 7.0 = 153.93791.',
-      explanationHinglish: 'Area calculate hoke area = 153.93791 store hua.',
-      memorySnapshot: { r: '7.0 [double]', area: '153.93791 [double]' },
-      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'area', value: 153.93791 }
-    },
-    {
-      step: 3, lineNum: 5,
-      explanationEnglish: 'System.out.println prints Area: 153.93791.',
-      explanationHinglish: 'Console pe "Area: 153.93791" print hua.',
-      memorySnapshot: { r: '7.0 [double]', area: '153.93791 [double]' },
-      consoleOutput: 'Area: 153.93791',
-      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'area', outputValue: 153.93791 }
-    },
-    {
-      step: 4, lineNum: 6,
-      explanationEnglish: 'Program finished.',
-      explanationHinglish: 'Program finish hua.',
-      memorySnapshot: { r: '7.0 [double]', area: '153.93791 [double]' },
-      animationEvent: { type: 'COMPLETE' as const }
-    }
-  ],
+  editableVariables: {
+    r: { default: 7.0, min: 1, max: 50, label: 'r (radius)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const rVal = Number(vars.r ?? 7.0);
+    const areaVal = Math.round(3.14159 * rVal * rVal * 100000) / 100000;
+    return [
+      {
+        step: 1, lineNum: 3,
+        explanationEnglish: `Declare double r = ${rVal}.`,
+        explanationHinglish: `Radius r = ${rVal} store hua.`,
+        memorySnapshot: { r: `${rVal} [double]` },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'r', value: rVal }
+      },
+      {
+        step: 2, lineNum: 4,
+        explanationEnglish: `Calculate area formula: 3.14159 * ${rVal} * ${rVal} -> Result ${areaVal}.`,
+        explanationHinglish: `Radius (${rVal}) substitute karke circle area calculate kiya: 3.14159 * ${rVal} * ${rVal} = ${areaVal}.`,
+        memorySnapshot: { r: `${rVal} [double]`, area: `${areaVal} [double]` },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['r', 'r'],
+          operator: '3.14159 * r * r',
+          storeIn: 'area',
+          result: areaVal
+        }
+      },
+      {
+        step: 3, lineNum: 5,
+        explanationEnglish: `System.out.println prints Area: ${areaVal}.`,
+        explanationHinglish: `Console pe "Area: ${areaVal}" print hua.`,
+        memorySnapshot: { r: `${rVal} [double]`, area: `${areaVal} [double]` },
+        consoleOutput: `Area: ${areaVal}`,
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'area', outputValue: areaVal }
+      },
+      {
+        step: 4, lineNum: 6,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { r: `${rVal} [double]`, area: `${areaVal} [double]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
   executionSteps: []
 };
 
@@ -316,51 +329,60 @@ export const javaSwapTemp: LessonProgram = {
     { lineNum: 8, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
     { lineNum: 9, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 3,
-      explanationEnglish: 'Set a = 10, b = 20.',
-      explanationHinglish: 'a = 10 aur b = 20 initialize hue.',
-      memorySnapshot: { a: '10 [int]', b: '20 [int]' },
-      animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'a', value: 10 }, { name: 'b', value: 20 }] }
-    },
-    {
-      step: 2, lineNum: 4,
-      explanationEnglish: 'Backup a value to temp: temp = a (10).',
-      explanationHinglish: 'a ki value (10) temp variable me backup ki.',
-      memorySnapshot: { a: '10 [int]', b: '20 [int]', temp: '10 [int]' },
-      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'temp', value: 10 }
-    },
-    {
-      step: 3, lineNum: 5,
-      explanationEnglish: 'Copy b to a: a = b (20).',
-      explanationHinglish: 'b (20) ki value a me copy hui -> a = 20.',
-      memorySnapshot: { a: '20 [int]', b: '20 [int]', temp: '10 [int]' },
-      animationEvent: { type: 'COPY_VALUE' as const, from: 'b', to: 'a', value: 20 }
-    },
-    {
-      step: 4, lineNum: 6,
-      explanationEnglish: 'Copy temp to b: b = temp (10). Swap complete!',
-      explanationHinglish: 'temp (10) ki value b me copy hui -> b = 10. Swapping complete!',
-      memorySnapshot: { a: '20 [int]', b: '10 [int]', temp: '10 [int]' },
-      animationEvent: { type: 'COPY_VALUE' as const, from: 'temp', to: 'b', value: 10 }
-    },
-    {
-      step: 5, lineNum: 7,
-      explanationEnglish: 'System.out.println prints a: 20, b: 10.',
-      explanationHinglish: 'Console pe "a: 20, b: 10" print hua.',
-      memorySnapshot: { a: '20 [int]', b: '10 [int]' },
-      consoleOutput: 'a: 20, b: 10',
-      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'a', outputValue: '20, 10' }
-    },
-    {
-      step: 6, lineNum: 8,
-      explanationEnglish: 'Program finished.',
-      explanationHinglish: 'Program finish hua.',
-      memorySnapshot: { a: '20 [int]', b: '10 [int]' },
-      animationEvent: { type: 'COMPLETE' as const }
-    }
-  ],
+  editableVariables: {
+    a: { default: 10, min: 1, max: 100, label: 'a (int)' },
+    b: { default: 20, min: 1, max: 100, label: 'b (int)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const aVal = Number(vars.a ?? 10);
+    const bVal = Number(vars.b ?? 20);
+
+    return [
+      {
+        step: 1, lineNum: 3,
+        explanationEnglish: `Declare int a = ${aVal}, b = ${bVal}.`,
+        explanationHinglish: `a = ${aVal} aur b = ${bVal} declare hue.`,
+        memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]` },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'a', value: aVal }, { name: 'b', value: bVal }] }
+      },
+      {
+        step: 2, lineNum: 4,
+        explanationEnglish: `Backup a value into temp: temp = a (${aVal}).`,
+        explanationHinglish: `a ki value (${aVal}) temp variable me store ki.`,
+        memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, temp: `${aVal} [int]` },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'temp', value: aVal }
+      },
+      {
+        step: 3, lineNum: 5,
+        explanationEnglish: `Assign b to a: a = b (${bVal}).`,
+        explanationHinglish: `b (${bVal}) ki value a me copy hui -> a = ${bVal}.`,
+        memorySnapshot: { a: `${bVal} [int]`, b: `${bVal} [int]`, temp: `${aVal} [int]` },
+        animationEvent: { type: 'UPDATE_VARIABLE' as const, name: 'a', oldValue: aVal, newValue: bVal }
+      },
+      {
+        step: 4, lineNum: 6,
+        explanationEnglish: `Assign temp to b: b = temp (${aVal}). Swapping complete!`,
+        explanationHinglish: `temp (${aVal}) ki value b me copy hui -> b = ${aVal}. Swapping complete!`,
+        memorySnapshot: { a: `${bVal} [int]`, b: `${aVal} [int]`, temp: `${aVal} [int]` },
+        animationEvent: { type: 'UPDATE_VARIABLE' as const, name: 'b', oldValue: bVal, newValue: aVal }
+      },
+      {
+        step: 5, lineNum: 7,
+        explanationEnglish: `System.out.println prints a: ${bVal}, b: ${aVal}.`,
+        explanationHinglish: `Console pe "a: ${bVal}, b: ${aVal}" print hua.`,
+        memorySnapshot: { a: `${bVal} [int]`, b: `${aVal} [int]`, temp: `${aVal} [int]` },
+        consoleOutput: `a: ${bVal}, b: ${aVal}`,
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'a', outputValue: `a: ${bVal}, b: ${aVal}` }
+      },
+      {
+        step: 6, lineNum: 8,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { a: `${bVal} [int]`, b: `${aVal} [int]`, temp: `${aVal} [int]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
   executionSteps: []
 };
 
@@ -403,10 +425,10 @@ export const javaEvenOdd: LessonProgram = {
       },
       {
         step: 2, lineNum: 4,
-        explanationEnglish: `Evaluate condition ${num} % 2 == 0 -> ${isEven ? 'TRUE (Green)' : 'FALSE (Red)'}.`,
+        explanationEnglish: `Evaluate condition ${num} % 2 == 0 -> ${isEven ? 'TRUE' : 'FALSE'}.`,
         explanationHinglish: `Condition check ${num} % 2 == 0 -> ${isEven ? 'TRUE' : 'FALSE'}.`,
         memorySnapshot: { num: `${num} [int]` },
-        animationEvent: { type: 'NONE' as const }
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'num', variableValue: num, operator: '% 2 == 0', result: isEven }
       },
       isEven ? {
         step: 3, lineNum: 5,
@@ -445,7 +467,7 @@ export const javaLargestThree: LessonProgram = {
   lines: [
     { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
     { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
-    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '45' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '89' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'c' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '23' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '45', paramId: 'a' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '89', paramId: 'b' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'c' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '23', paramId: 'c' }, { type: 'punctuation', value: ';' }] },
     { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '>=' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'text', value: ' ' }, { type: 'operator', value: '&&' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '>=' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'c' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
     { lineNum: 5, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"a is largest"' }, { type: 'punctuation', value: ');' }] },
     { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'b' }, { type: 'text', value: ' ' }, { type: 'operator', value: '>=' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'c' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
@@ -456,44 +478,148 @@ export const javaLargestThree: LessonProgram = {
     { lineNum: 11, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
     { lineNum: 12, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 3,
-      explanationEnglish: 'Initialize int a=45, b=89, c=23.',
-      explanationHinglish: 'Variables a=45, b=89, c=23 initialize hue.',
-      memorySnapshot: { a: '45 [int]', b: '89 [int]', c: '23 [int]' },
-      animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'a', value: 45 }, { name: 'b', value: 89 }, { name: 'c', value: 23 }] }
-    },
-    {
-      step: 2, lineNum: 4,
-      explanationEnglish: 'Check (a >= b && a >= c): 45 >= 89 is FALSE.',
-      explanationHinglish: 'Condition 45 >= 89 && 45 >= 23 check hui -> FALSE.',
-      memorySnapshot: { a: '45 [int]', b: '89 [int]', c: '23 [int]' },
-      animationEvent: { type: 'NONE' as const }
-    },
-    {
-      step: 3, lineNum: 6,
-      explanationEnglish: 'Check else if (b >= c): 89 >= 23 is TRUE.',
-      explanationHinglish: 'Condition 89 >= 23 check hui -> TRUE.',
-      memorySnapshot: { a: '45 [int]', b: '89 [int]', c: '23 [int]' },
-      animationEvent: { type: 'NONE' as const }
-    },
-    {
-      step: 4, lineNum: 7,
-      explanationEnglish: 'Execute branch: System.out.println("b is largest").',
-      explanationHinglish: 'b sabse bada hai, "b is largest" print hua.',
-      memorySnapshot: { a: '45 [int]', b: '89 [int]', c: '23 [int]' },
-      consoleOutput: 'b is largest',
-      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'b', outputValue: 'b is largest' }
-    },
-    {
-      step: 5, lineNum: 11,
-      explanationEnglish: 'Program finished.',
-      explanationHinglish: 'Program finish hua.',
-      memorySnapshot: { a: '45 [int]', b: '89 [int]', c: '23 [int]' },
-      animationEvent: { type: 'COMPLETE' as const }
-    }
+  editableVariables: {
+    a: { default: 45, min: 1, max: 100, label: 'a (int)' },
+    b: { default: 89, min: 1, max: 100, label: 'b (int)' },
+    c: { default: 23, min: 1, max: 100, label: 'c (int)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const aVal = Number(vars.a ?? 45);
+    const bVal = Number(vars.b ?? 89);
+    const cVal = Number(vars.c ?? 23);
+
+    const aIsLargest = aVal >= bVal && aVal >= cVal;
+    const bIsLargest = !aIsLargest && bVal >= cVal;
+
+    return [
+      {
+        step: 1, lineNum: 3,
+        explanationEnglish: `Initialize int a=${aVal}, b=${bVal}, c=${cVal}.`,
+        explanationHinglish: `Variables a=${aVal}, b=${bVal}, c=${cVal} initialize hue.`,
+        memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'a', value: aVal }, { name: 'b', value: bVal }, { name: 'c', value: cVal }] }
+      },
+      {
+        step: 2, lineNum: 4,
+        explanationEnglish: `Check (a >= b && a >= c): ${aVal} >= ${bVal} && ${aVal} >= ${cVal} -> ${aIsLargest ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Condition check: ${aVal} >= ${bVal} && ${aVal} >= ${cVal} -> ${aIsLargest ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'a', variableValue: aVal, operator: `>= ${bVal} && a >= ${cVal}`, result: aIsLargest }
+      },
+      ...(aIsLargest ? [
+        {
+          step: 3, lineNum: 5,
+          explanationEnglish: 'a is largest, execute if block: System.out.println("a is largest").',
+          explanationHinglish: 'a sabse bada hai, "a is largest" print hua.',
+          memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+          consoleOutput: 'a is largest',
+          animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'a', outputValue: 'a is largest' }
+        }
+      ] : [
+        {
+          step: 3, lineNum: 6,
+          explanationEnglish: `Check else if (b >= c): ${bVal} >= ${cVal} -> ${bIsLargest ? 'TRUE' : 'FALSE'}.`,
+          explanationHinglish: `Condition check: ${bVal} >= ${cVal} -> ${bIsLargest ? 'TRUE' : 'FALSE'}.`,
+          memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+          animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'b', variableValue: bVal, operator: `>= ${cVal}`, result: bIsLargest }
+        },
+        ...(bIsLargest ? [
+          {
+            step: 4, lineNum: 7,
+            explanationEnglish: 'b is largest, execute branch: System.out.println("b is largest").',
+            explanationHinglish: 'b sabse bada hai, "b is largest" print hua.',
+            memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+            consoleOutput: 'b is largest',
+            animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'b', outputValue: 'b is largest' }
+          }
+        ] : [
+          {
+            step: 4, lineNum: 9,
+            explanationEnglish: 'c is largest, execute else block: System.out.println("c is largest").',
+            explanationHinglish: 'c sabse bada hai, "c is largest" print hua.',
+            memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+            consoleOutput: 'c is largest',
+            animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'c', outputValue: 'c is largest' }
+          }
+        ])
+      ]),
+      {
+        step: 5, lineNum: 11,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]`, c: `${cVal} [int]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
+  executionSteps: []
+};
+
+export const javaLeapYear: LessonProgram = {
+  id: 'java_leap_year',
+  language: 'java',
+  topic: 'if_else',
+  lessonNumber: 3,
+  friendlyName: 'Leap Year Checker',
+  learningObjective: 'Check leap year condition: divisible by 400 OR (divisible by 4 and not divisible by 100).',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '2024', paramId: 'year' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'number', value: '4' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'text', value: ' ' }, { type: 'operator', value: '&&' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'number', value: '100' }, { type: 'text', value: ' ' }, { type: 'operator', value: '!=' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'number', value: '400' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'punctuation', value: ')' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Leap Year"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Not a Leap Year"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
+  editableVariables: {
+    year: { default: 2024, min: 1600, max: 2400, label: 'year (int)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const yr = Number(vars.year ?? 2024);
+    const isLeap = (yr % 4 === 0 && yr % 100 !== 0) || (yr % 400 === 0);
+
+    return [
+      {
+        step: 1, lineNum: 3,
+        explanationEnglish: `Declare int year = ${yr}.`,
+        explanationHinglish: `Variable year = ${yr} declare hua.`,
+        memorySnapshot: { year: `${yr} [int]` },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'year', value: yr }
+      },
+      {
+        step: 2, lineNum: 4,
+        explanationEnglish: `Evaluate (${yr} % 4 == 0 && ${yr} % 100 != 0) || (${yr} % 400 == 0) -> ${isLeap ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Leap year condition check: (${yr} % 4 == 0 && ${yr} % 100 != 0) || (${yr} % 400 == 0) -> ${isLeap ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { year: `${yr} [int]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'year', variableValue: yr, operator: `% 4==0 && %100!=0 || %400==0`, result: isLeap }
+      },
+      isLeap ? {
+        step: 3, lineNum: 5,
+        explanationEnglish: `Condition TRUE: System.out.println("Leap Year").`,
+        explanationHinglish: `Condition TRUE hui, console pe "Leap Year" print hua.`,
+        memorySnapshot: { year: `${yr} [int]` },
+        consoleOutput: 'Leap Year',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'year', outputValue: 'Leap Year' }
+      } : {
+        step: 3, lineNum: 7,
+        explanationEnglish: `Condition FALSE: System.out.println("Not a Leap Year").`,
+        explanationHinglish: `Condition FALSE hui, console pe "Not a Leap Year" print hua.`,
+        memorySnapshot: { year: `${yr} [int]` },
+        consoleOutput: 'Not a Leap Year',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'year', outputValue: 'Not a Leap Year' }
+      },
+      {
+        step: 4, lineNum: 9,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { year: `${yr} [int]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
   executionSteps: []
 };
 
@@ -541,14 +667,14 @@ export const javaGrade: LessonProgram = {
         explanationEnglish: `Check first condition: ${marks} >= 90 is ${marks >= 90 ? 'TRUE' : 'FALSE'}.`,
         explanationHinglish: `Pehli condition: ${marks} >= 90 -> ${marks >= 90 ? 'TRUE' : 'FALSE'}.`,
         memorySnapshot: { marks: `${marks} [int]` },
-        animationEvent: { type: 'NONE' as const }
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'marks', variableValue: marks, operator: '>= 90', result: marks >= 90 }
       },
       ...(marks < 90 ? [{
         step: 3, lineNum: 6,
         explanationEnglish: `Check second condition: ${marks} >= 75 is ${marks >= 75 ? 'TRUE' : 'FALSE'}.`,
         explanationHinglish: `Dusri condition check: ${marks} >= 75 -> ${marks >= 75 ? 'TRUE' : 'FALSE'}.`,
         memorySnapshot: { marks: `${marks} [int]` },
-        animationEvent: { type: 'NONE' as const }
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'marks', variableValue: marks, operator: '>= 75', result: marks >= 75 }
       }] : []),
       {
         step: 4, lineNum: lineToExec,
@@ -619,7 +745,7 @@ export const javaTaxCalc: LessonProgram = {
         explanationEnglish: `Check condition income (${inc}) > 500000 is ${inc > 500000 ? 'TRUE (20% Slab)' : 'FALSE (5% Slab)'}.`,
         explanationHinglish: `Income > 500000 check -> ${inc > 500000 ? 'TRUE (20% Slab)' : 'FALSE (5% Slab)'}.`,
         memorySnapshot: { income: `${inc} [double]`, tax: '0.0 [double]' },
-        animationEvent: { type: 'NONE' as const }
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'income', variableValue: inc, operator: '> 500000', result: inc > 500000 }
       },
       {
         step: 4, lineNum: inc > 500000 ? 6 : 8,
@@ -648,68 +774,20 @@ export const javaTaxCalc: LessonProgram = {
   executionSteps: []
 };
 
-export const javaLeapYear: LessonProgram = {
-  id: 'java_leap_year',
-  language: 'java',
-  topic: 'if_else',
-  lessonNumber: 5,
-  friendlyName: 'Leap Year Checker',
-  learningObjective: 'Learn complex boolean expression logic (% 4, % 100, % 400).',
-  lines: [
-    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
-    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
-    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '2024' }, { type: 'punctuation', value: ';' }] },
-    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'boolean' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'isLeap' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'number', value: '4' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'text', value: ' ' }, { type: 'operator', value: '&&' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'number', value: '100' }, { type: 'text', value: ' ' }, { type: 'operator', value: '!=' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'year' }, { type: 'text', value: ' ' }, { type: 'operator', value: '%' }, { type: 'text', value: ' ' }, { type: 'number', value: '400' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'punctuation', value: ');' }] },
-    { lineNum: 5, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Leap Year: "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'isLeap' }, { type: 'punctuation', value: ');' }] },
-    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
-    { lineNum: 7, tokens: [{ type: 'punctuation', value: '}' }] },
-  ],
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 3,
-      explanationEnglish: 'Set year = 2024.',
-      explanationHinglish: 'year = 2024 initialize hua.',
-      memorySnapshot: { year: '2024 [int]' },
-      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'year', value: 2024 }
-    },
-    {
-      step: 2, lineNum: 4,
-      explanationEnglish: 'Evaluate (2024 % 4 == 0 && 2024 % 100 != 0) -> TRUE.',
-      explanationHinglish: 'Leap year condition check hui -> TRUE.',
-      memorySnapshot: { year: '2024 [int]', isLeap: 'true [boolean]' },
-      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'isLeap', value: 'true' }
-    },
-    {
-      step: 3, lineNum: 5,
-      explanationEnglish: 'System.out.println prints Leap Year: true.',
-      explanationHinglish: 'Console pe "Leap Year: true" print hua.',
-      memorySnapshot: { year: '2024 [int]', isLeap: 'true [boolean]' },
-      consoleOutput: 'Leap Year: true',
-      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'isLeap', outputValue: 'true' }
-    },
-    {
-      step: 4, lineNum: 6,
-      explanationEnglish: 'Program finished.',
-      explanationHinglish: 'Program finish hua.',
-      memorySnapshot: { year: '2024 [int]', isLeap: 'true [boolean]' },
-      animationEvent: { type: 'COMPLETE' as const }
-    }
-  ],
-  executionSteps: []
-};
+
 
 export const javaVowelIf: LessonProgram = {
   id: 'java_vowel_if',
   language: 'java',
   topic: 'if_else',
-  lessonNumber: 6,
+  lessonNumber: 4,
   friendlyName: 'Vowel or Consonant (If-Else Logical OR)',
   learningObjective: 'Learn multiple character comparisons using logical OR (||) in Java.',
   lines: [
     { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
     { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
-    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'char' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'string', value: "'i'" }, { type: 'punctuation', value: ';' }] },
-    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'a'" }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'e'" }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'i'" }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'char' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'string', value: "'i'", paramId: 'ch' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'a'" }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'e'" }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'i'" }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'o'" }, { type: 'text', value: ' ' }, { type: 'operator', value: '||' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ch' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'string', value: "'u'" }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
     { lineNum: 5, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Vowel"' }, { type: 'punctuation', value: ');' }] },
     { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' {' }] },
     { lineNum: 7, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Consonant"' }, { type: 'punctuation', value: ');' }] },
@@ -717,37 +795,53 @@ export const javaVowelIf: LessonProgram = {
     { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
     { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
-  generateSteps: (): ExecutionStep[] => [
-    {
-      step: 1, lineNum: 3,
-      explanationEnglish: "Set char ch = 'i'.",
-      explanationHinglish: "Character ch = 'i' set hua.",
-      memorySnapshot: { ch: "'i' [char]" },
-      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'ch', value: "'i'" }
-    },
-    {
-      step: 2, lineNum: 4,
-      explanationEnglish: "Check condition ('i'=='a' || 'i'=='e' || 'i'=='i') -> TRUE.",
-      explanationHinglish: "Condition ch == 'i' true hui.",
-      memorySnapshot: { ch: "'i' [char]" },
-      animationEvent: { type: 'NONE' as const }
-    },
-    {
-      step: 3, lineNum: 5,
-      explanationEnglish: 'System.out.println prints Vowel.',
-      explanationHinglish: 'Console pe "Vowel" print hua.',
-      memorySnapshot: { ch: "'i' [char]" },
-      consoleOutput: 'Vowel',
-      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'ch', outputValue: 'Vowel' }
-    },
-    {
-      step: 4, lineNum: 8,
-      explanationEnglish: 'Program finished.',
-      explanationHinglish: 'Program finish hua.',
-      memorySnapshot: { ch: "'i' [char]" },
-      animationEvent: { type: 'COMPLETE' as const }
-    }
-  ],
+  editableVariables: {
+    ch: { default: 'i', type: 'text', noQuotes: true, label: 'ch (char)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const rawCh = String(vars.ch ?? 'i').replace(/['"]/g, '').toLowerCase() || 'i';
+    const ch = rawCh.charAt(0);
+    const isVowel = ['a', 'e', 'i', 'o', 'u'].includes(ch);
+
+    return [
+      {
+        step: 1, lineNum: 3,
+        explanationEnglish: `Declare char ch = '${ch}'.`,
+        explanationHinglish: `Character variable ch = '${ch}' declare hua.`,
+        memorySnapshot: { ch: `'${ch}' [char]` },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'ch', value: `'${ch}'` }
+      },
+      {
+        step: 2, lineNum: 4,
+        explanationEnglish: `Check if '${ch}' is a vowel -> ${isVowel ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Condition check: '${ch}' vowel ('a','e','i','o','u') hai? -> ${isVowel ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { ch: `'${ch}' [char]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'ch', variableValue: `'${ch}'`, operator: `== 'a'||'e'||'i'||'o'||'u'`, result: isVowel }
+      },
+      isVowel ? {
+        step: 3, lineNum: 5,
+        explanationEnglish: `Condition TRUE: System.out.println("Vowel").`,
+        explanationHinglish: `Condition TRUE hui, console pe "Vowel" print hua.`,
+        memorySnapshot: { ch: `'${ch}' [char]` },
+        consoleOutput: 'Vowel',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'ch', outputValue: 'Vowel' }
+      } : {
+        step: 3, lineNum: 7,
+        explanationEnglish: `Condition FALSE: System.out.println("Consonant").`,
+        explanationHinglish: `Condition FALSE hui, console pe "Consonant" print hua.`,
+        memorySnapshot: { ch: `'${ch}' [char]` },
+        consoleOutput: 'Consonant',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'ch', outputValue: 'Consonant' }
+      },
+      {
+        step: 4, lineNum: 8,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { ch: `'${ch}' [char]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
   executionSteps: []
 };
 
@@ -2034,10 +2128,10 @@ export const javaSwapNoTemp: LessonProgram = {
     return [
       {
         step: 1, lineNum: 3,
-        explanationEnglish: `Initialize a = ${aVal}, b = ${bVal}.`,
+        explanationEnglish: `Declare int a = ${aVal}, b = ${bVal}.`,
         explanationHinglish: `a = ${aVal} aur b = ${bVal} declare hua.`,
         memorySnapshot: { a: `${aVal} [int]`, b: `${bVal} [int]` },
-        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'a', value: aVal }
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'a', value: aVal }, { name: 'b', value: bVal }] }
       },
       {
         step: 2, lineNum: 4,
@@ -2152,17 +2246,30 @@ export const javaSimpleInterest: LessonProgram = {
     return [
       {
         step: 1, lineNum: 3,
-        explanationEnglish: `Initialize P = ${p}, R = ${r}%, T = ${t} years.`,
-        explanationHinglish: `P = ${p}, R = ${r}%, T = ${t} years declare hue.`,
+        explanationEnglish: `Declare double P = ${p}, R = ${r}%, T = ${t} years.`,
+        explanationHinglish: `P = ${p}, R = ${r}%, T = ${t} years memory me store hue.`,
         memorySnapshot: { P: `${p} [double]`, R: `${r} [double]`, T: `${t} [double]` },
-        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'P', value: p }
+        animationEvent: {
+          type: 'MULTI_CREATE_VARIABLES' as const,
+          variables: [
+            { name: 'P', value: p },
+            { name: 'R', value: r },
+            { name: 'T', value: t }
+          ]
+        }
       },
       {
         step: 2, lineNum: 4,
-        explanationEnglish: `Compute SI = (${p} * ${r} * ${t}) / 100 = ${si}.`,
-        explanationHinglish: `SI calculate hua -> (${p} * ${r} * ${t}) / 100 = ${si}.`,
+        explanationEnglish: `Evaluate Simple Interest formula: (${p} * ${r} * ${t}) / 100 -> Result ${si}.`,
+        explanationHinglish: `Values substitute karke SI calculate kiya: (${p} * ${r} * ${t}) / 100 = ${si}.`,
         memorySnapshot: { P: `${p} [double]`, R: `${r} [double]`, T: `${t} [double]`, SI: `${si} [double]` },
-        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'SI', value: si }
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['P', 'R', 'T'],
+          operator: '* / 100',
+          storeIn: 'SI',
+          result: si
+        }
       },
       {
         step: 3, lineNum: 5,
@@ -2171,6 +2278,13 @@ export const javaSimpleInterest: LessonProgram = {
         memorySnapshot: { P: `${p} [double]`, R: `${r} [double]`, T: `${t} [double]`, SI: `${si} [double]` },
         consoleOutput: `Interest: ${si}`,
         animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'SI', outputValue: String(si) }
+      },
+      {
+        step: 4, lineNum: 6,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { P: `${p} [double]`, R: `${r} [double]`, T: `${t} [double]`, SI: `${si} [double]` },
+        animationEvent: { type: 'COMPLETE' as const }
       }
     ];
   },
@@ -2203,32 +2317,56 @@ export const javaPosNegZero: LessonProgram = {
   },
   generateSteps: (vars): ExecutionStep[] => {
     const val = Number(vars.num ?? -7);
-    const result = val > 0 ? 'Positive' : val < 0 ? 'Negative' : 'Zero';
-    const lineToExec = val > 0 ? 5 : val < 0 ? 7 : 9;
-    return [
+    const isPos = val > 0;
+    const isNeg = val < 0;
+    const result = isPos ? 'Positive' : isNeg ? 'Negative' : 'Zero';
+    const lineToExec = isPos ? 5 : isNeg ? 7 : 9;
+
+    const steps: ExecutionStep[] = [
       {
         step: 1, lineNum: 3,
         explanationEnglish: `Declare int num = ${val}.`,
-        explanationHinglish: `num = ${val} set hua.`,
+        explanationHinglish: `Variable num = ${val} declare hua.`,
         memorySnapshot: { num: `${val} [int]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'num', value: val }
       },
       {
-        step: 2, lineNum: val > 0 ? 4 : 6,
-        explanationEnglish: `Check condition for ${val}: evaluates to ${result}.`,
-        explanationHinglish: `${val} ke liye check hua -> condition Result: ${result}.`,
+        step: 2, lineNum: 4,
+        explanationEnglish: `Check first condition: ${val} > 0 -> ${isPos ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Pehla check: ${val} > 0 -> ${isPos ? 'TRUE' : 'FALSE'}.`,
         memorySnapshot: { num: `${val} [int]` },
-        animationEvent: { type: 'NONE' as const }
-      },
-      {
-        step: 3, lineNum: lineToExec,
-        explanationEnglish: `System.out.println prints "${result}".`,
-        explanationHinglish: `Console pe "${result}" print hua.`,
-        memorySnapshot: { num: `${val} [int]` },
-        consoleOutput: result,
-        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'num', outputValue: result }
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'num', variableValue: val, operator: '> 0', result: isPos }
       }
     ];
+
+    if (!isPos) {
+      steps.push({
+        step: steps.length + 1, lineNum: 6,
+        explanationEnglish: `Check second condition: ${val} < 0 -> ${isNeg ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Dusra check: ${val} < 0 -> ${isNeg ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { num: `${val} [int]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'num', variableValue: val, operator: '< 0', result: isNeg }
+      });
+    }
+
+    steps.push({
+      step: steps.length + 1, lineNum: lineToExec,
+      explanationEnglish: `Execute selected branch: System.out.println("${result}").`,
+      explanationHinglish: `Matching branch execute hoke "${result}" print hua.`,
+      memorySnapshot: { num: `${val} [int]` },
+      consoleOutput: result,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'num', outputValue: result }
+    });
+
+    steps.push({
+      step: steps.length + 1, lineNum: 11,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { num: `${val} [int]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
   },
   executionSteps: []
 };
@@ -2238,49 +2376,77 @@ export const javaBmiCalc: LessonProgram = {
   language: 'java',
   topic: 'if_elif_else',
   lessonNumber: 4,
-  friendlyName: 'BMI Category Calculator',
-  learningObjective: 'Calculate Body Mass Index (weight / height^2) and categorize health status.',
+  friendlyName: 'BMI Category Ladder',
+  learningObjective: 'Categorize BMI value using an if-else if decision ladder in Java.',
   lines: [
     { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
     { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
-    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'weight' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '70', paramId: 'weight' }, { type: 'punctuation', value: ';' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'height' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '1.75', paramId: 'height' }, { type: 'punctuation', value: ';' }] },
-    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'bmi' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'weight' }, { type: 'text', value: ' ' }, { type: 'operator', value: '/' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'height' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'height' }, { type: 'punctuation', value: ');' }] },
-    { lineNum: 5, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"BMI: "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'bmi' }, { type: 'punctuation', value: ');' }] },
-    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
-    { lineNum: 7, tokens: [{ type: 'punctuation', value: '}' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'bmi' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '22.5', paramId: 'bmi' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'bmi' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<' }, { type: 'text', value: ' ' }, { type: 'number', value: '18.5' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Underweight"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'bmi' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<' }, { type: 'text', value: ' ' }, { type: 'number', value: '25.0' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Normal Weight"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' {' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Overweight"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 10, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 11, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 12, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
   editableVariables: {
-    weight: { default: 70, min: 40, max: 150, label: 'weight (kg)' },
-    height: { default: 1.75, min: 1.2, max: 2.2, label: 'height (m)' }
+    bmi: { default: 22.5, min: 10.0, max: 45.0, label: 'bmi (double)' }
   },
   generateSteps: (vars): ExecutionStep[] => {
-    const w = Number(vars.weight ?? 70);
-    const h = Number(vars.height ?? 1.75);
-    const bmiVal = Number((w / (h * h)).toFixed(2));
-    return [
+    const bmiVal = Number(vars.bmi ?? 22.5);
+    const isUnder = bmiVal < 18.5;
+    const isNormal = bmiVal < 25.0;
+    const category = isUnder ? 'Underweight' : isNormal ? 'Normal Weight' : 'Overweight';
+    const lineToExec = isUnder ? 5 : isNormal ? 7 : 9;
+
+    const steps: ExecutionStep[] = [
       {
         step: 1, lineNum: 3,
-        explanationEnglish: `Initialize weight = ${w} kg, height = ${h} m.`,
-        explanationHinglish: `weight = ${w} kg, height = ${h} m set hua.`,
-        memorySnapshot: { weight: `${w} [double]`, height: `${h} [double]` },
-        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'weight', value: w }
-      },
-      {
-        step: 2, lineNum: 4,
-        explanationEnglish: `Compute BMI = ${w} / (${h} * ${h}) = ${bmiVal}.`,
-        explanationHinglish: `BMI calculate hua -> ${w} / (${h} * ${h}) = ${bmiVal}.`,
-        memorySnapshot: { weight: `${w} [double]`, height: `${h} [double]`, bmi: `${bmiVal} [double]` },
+        explanationEnglish: `Declare double bmi = ${bmiVal}.`,
+        explanationHinglish: `Variable bmi = ${bmiVal} declare hua.`,
+        memorySnapshot: { bmi: `${bmiVal} [double]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'bmi', value: bmiVal }
       },
       {
-        step: 3, lineNum: 5,
-        explanationEnglish: `System.out.println prints BMI: ${bmiVal}.`,
-        explanationHinglish: `Console pe "BMI: ${bmiVal}" print hua.`,
-        memorySnapshot: { weight: `${w} [double]`, height: `${h} [double]`, bmi: `${bmiVal} [double]` },
-        consoleOutput: `BMI: ${bmiVal}`,
-        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'bmi', outputValue: String(bmiVal) }
+        step: 2, lineNum: 4,
+        explanationEnglish: `Check first condition: ${bmiVal} < 18.5 -> ${isUnder ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Pehla check: ${bmiVal} < 18.5 -> ${isUnder ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { bmi: `${bmiVal} [double]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'bmi', variableValue: bmiVal, operator: '< 18.5', result: isUnder }
       }
     ];
+
+    if (!isUnder) {
+      steps.push({
+        step: steps.length + 1, lineNum: 6,
+        explanationEnglish: `Check second condition: ${bmiVal} < 25.0 -> ${isNormal ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Dusra check: ${bmiVal} < 25.0 -> ${isNormal ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { bmi: `${bmiVal} [double]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'bmi', variableValue: bmiVal, operator: '< 25.0', result: isNormal }
+      });
+    }
+
+    steps.push({
+      step: steps.length + 1, lineNum: lineToExec,
+      explanationEnglish: `Execute selected branch: System.out.println("${category}").`,
+      explanationHinglish: `Matching branch execute hoke "${category}" print hua.`,
+      memorySnapshot: { bmi: `${bmiVal} [double]` },
+      consoleOutput: category,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'bmi', outputValue: category }
+    });
+
+    steps.push({
+      step: steps.length + 1, lineNum: 11,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { bmi: `${bmiVal} [double]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
   },
   executionSteps: []
 };
@@ -2290,47 +2456,77 @@ export const javaElectricityBill: LessonProgram = {
   language: 'java',
   topic: 'if_elif_else',
   lessonNumber: 5,
-  friendlyName: 'Electricity Bill Slab Calculator',
-  learningObjective: 'Calculate tiered utility electricity bills by unit consumption slabs.',
+  friendlyName: 'Electricity Tariff Slab Ladder',
+  learningObjective: 'Calculate tariff rate per unit using an if-else if tier structure in Java.',
   lines: [
     { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
     { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
     { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'units' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '150', paramId: 'units' }, { type: 'punctuation', value: ';' }] },
-    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'bill' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'units' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'number', value: '5.0' }, { type: 'punctuation', value: ';' }] },
-    { lineNum: 5, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Bill: ₹"' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'bill' }, { type: 'punctuation', value: ');' }] },
-    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
-    { lineNum: 7, tokens: [{ type: 'punctuation', value: '}' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'units' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<=' }, { type: 'text', value: ' ' }, { type: 'number', value: '100' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"₹3.5 per unit"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'units' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<=' }, { type: 'text', value: ' ' }, { type: 'number', value: '200' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"₹5.0 per unit"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'else' }, { type: 'text', value: ' {' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '            ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"₹7.0 per unit"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 10, tokens: [{ type: 'text', value: '        ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 11, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 12, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
   editableVariables: {
     units: { default: 150, min: 10, max: 1000, label: 'units (int)' }
   },
   generateSteps: (vars): ExecutionStep[] => {
     const u = Number(vars.units ?? 150);
-    const billVal = u * 5.0;
-    return [
+    const isTier1 = u <= 100;
+    const isTier2 = u <= 200;
+    const slab = isTier1 ? '₹3.5 per unit' : isTier2 ? '₹5.0 per unit' : '₹7.0 per unit';
+    const lineToExec = isTier1 ? 5 : isTier2 ? 7 : 9;
+
+    const steps: ExecutionStep[] = [
       {
         step: 1, lineNum: 3,
-        explanationEnglish: `Initialize units = ${u}.`,
-        explanationHinglish: `units = ${u} set hua.`,
+        explanationEnglish: `Declare int units = ${u}.`,
+        explanationHinglish: `Variable units = ${u} declare hua.`,
         memorySnapshot: { units: `${u} [int]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'units', value: u }
       },
       {
         step: 2, lineNum: 4,
-        explanationEnglish: `Compute bill = ${u} * 5.0 = ₹${billVal}.`,
-        explanationHinglish: `Bill calculate hua -> ${u} * ₹5.0 = ₹${billVal}.`,
-        memorySnapshot: { units: `${u} [int]`, bill: `${billVal} [double]` },
-        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'bill', value: billVal }
-      },
-      {
-        step: 3, lineNum: 5,
-        explanationEnglish: `System.out.println prints Bill: ₹${billVal}.`,
-        explanationHinglish: `Console pe "Bill: ₹${billVal}" print hua.`,
-        memorySnapshot: { units: `${u} [int]`, bill: `${billVal} [double]` },
-        consoleOutput: `Bill: ₹${billVal}`,
-        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'bill', outputValue: String(billVal) }
+        explanationEnglish: `Check first tier: ${u} <= 100 -> ${isTier1 ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Pehla tier check: ${u} <= 100 -> ${isTier1 ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { units: `${u} [int]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'units', variableValue: u, operator: '<= 100', result: isTier1 }
       }
     ];
+
+    if (!isTier1) {
+      steps.push({
+        step: steps.length + 1, lineNum: 6,
+        explanationEnglish: `Check second tier: ${u} <= 200 -> ${isTier2 ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Dusra tier check: ${u} <= 200 -> ${isTier2 ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { units: `${u} [int]` },
+        animationEvent: { type: 'EVALUATE_CONDITION' as const, variableName: 'units', variableValue: u, operator: '<= 200', result: isTier2 }
+      });
+    }
+
+    steps.push({
+      step: steps.length + 1, lineNum: lineToExec,
+      explanationEnglish: `Execute selected branch: System.out.println("${slab}").`,
+      explanationHinglish: `Matching branch execute hoke "${slab}" print hua.`,
+      memorySnapshot: { units: `${u} [int]` },
+      consoleOutput: slab,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'units', outputValue: slab }
+    });
+
+    steps.push({
+      step: steps.length + 1, lineNum: 11,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { units: `${u} [int]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
   },
   executionSteps: []
 };
@@ -2702,6 +2898,13 @@ export const javaScannerNumber: LessonProgram = {
         memorySnapshot: { sc: 'Scanner [Obj]', age: `${userAge} [int]` },
         consoleOutput: `Enter age: \nYour age is: ${userAge}`,
         animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'age', outputValue: String(userAge) }
+      },
+      {
+        step: 5, lineNum: 8,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { sc: 'Scanner [Obj]', age: `${userAge} [int]` },
+        animationEvent: { type: 'COMPLETE' as const }
       }
     ];
   },
@@ -2740,19 +2943,34 @@ export const javaScannerFloat: LessonProgram = {
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'sc', value: 'Scanner' }
       },
       {
-        step: 2, lineNum: 6,
+        step: 2, lineNum: 5,
+        explanationEnglish: 'System.out.print prompt: "Enter salary: ".',
+        explanationHinglish: 'Console pe prompt: "Enter salary: " print hua.',
+        memorySnapshot: { sc: 'Scanner [Obj]' },
+        consoleOutput: 'Enter salary: ',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'sc', outputValue: 'Enter salary: ' }
+      },
+      {
+        step: 3, lineNum: 6,
         explanationEnglish: `sc.nextDouble() reads decimal input -> ${sal}.`,
         explanationHinglish: `sc.nextDouble() ne decimal input ${sal} read kiya. salary = ${sal} store hua.`,
         memorySnapshot: { sc: 'Scanner [Obj]', salary: `${sal} [double]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'salary', value: sal }
       },
       {
-        step: 3, lineNum: 7,
+        step: 4, lineNum: 7,
         explanationEnglish: `System.out.println prints Salary: ₹${sal}.`,
         explanationHinglish: `Console pe "Salary: ₹${sal}" print hua.`,
         memorySnapshot: { sc: 'Scanner [Obj]', salary: `${sal} [double]` },
-        consoleOutput: `Salary: ₹${sal}`,
+        consoleOutput: `Enter salary: \nSalary: ₹${sal}`,
         animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'salary', outputValue: String(sal) }
+      },
+      {
+        step: 5, lineNum: 8,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { sc: 'Scanner [Obj]', salary: `${sal} [double]` },
+        animationEvent: { type: 'COMPLETE' as const }
       }
     ];
   },
@@ -2777,9 +2995,11 @@ export const javaScannerString: LessonProgram = {
     { lineNum: 8, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
     { lineNum: 9, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => {
-    const strName = 'Rahul Sharma';
+  editableVariables: {
+    name: { default: 'Rahul Sharma', label: 'sc.nextLine() text' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const strName = String(vars.name ?? 'Rahul Sharma');
     return [
       {
         step: 1, lineNum: 4,
@@ -2789,19 +3009,34 @@ export const javaScannerString: LessonProgram = {
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'sc', value: 'Scanner' }
       },
       {
-        step: 2, lineNum: 6,
+        step: 2, lineNum: 5,
+        explanationEnglish: 'System.out.print prompt: "Enter full name: ".',
+        explanationHinglish: 'Console pe prompt: "Enter full name: " print hua.',
+        memorySnapshot: { sc: 'Scanner [Obj]' },
+        consoleOutput: 'Enter full name: ',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'sc', outputValue: 'Enter full name: ' }
+      },
+      {
+        step: 3, lineNum: 6,
         explanationEnglish: `sc.nextLine() reads string line input -> "${strName}".`,
         explanationHinglish: `sc.nextLine() ne string line "${strName}" read ki. name = "${strName}" store hua.`,
         memorySnapshot: { sc: 'Scanner [Obj]', name: `"${strName}" [String]` },
         animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'name', value: `"${strName}"` }
       },
       {
-        step: 3, lineNum: 7,
+        step: 4, lineNum: 7,
         explanationEnglish: `System.out.println prints Welcome, ${strName}.`,
         explanationHinglish: `Console pe "Welcome, ${strName}" print hua.`,
         memorySnapshot: { sc: 'Scanner [Obj]', name: `"${strName}" [String]` },
-        consoleOutput: `Welcome, ${strName}`,
+        consoleOutput: `Enter full name: \nWelcome, ${strName}`,
         animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'name', outputValue: `Welcome, ${strName}` }
+      },
+      {
+        step: 5, lineNum: 8,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { sc: 'Scanner [Obj]', name: `"${strName}" [String]` },
+        animationEvent: { type: 'COMPLETE' as const }
       }
     ];
   },

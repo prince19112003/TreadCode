@@ -30,9 +30,10 @@ export const HashSetVisualStage: React.FC = () => {
   return (
     <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-y-auto p-4 md:p-6 select-none custom-scrollbar">
       <div
-        className="w-full max-w-3xl flex flex-col items-center gap-5 transition-transform duration-200 ease-out py-2"
+        className="relative w-full max-w-3xl flex flex-col items-center gap-5 transition-transform duration-200 ease-out py-2"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
       >
+        <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
         {/* ── TOP SECTION: ELEGANT PIPELINE BANNER ── */}
         <div className="w-full bg-[#080c1d]/90 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-xl flex flex-col gap-3">
           <div className="flex items-center justify-between font-mono text-xs border-b border-slate-800/80 pb-2.5">

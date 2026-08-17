@@ -79,7 +79,7 @@ const parseDataStructure = (val: any) => {
 };
 
 const getVarTypeForLanguage = (varName: string, lessonLines: any[], language?: string) => {
-  if (language === 'python' || !varName || !lessonLines) return undefined;
+  if (language !== 'c' || !varName || !lessonLines) return undefined;
   for (const line of lessonLines) {
     const tokens = line?.tokens || [];
     const varIdx = tokens.findIndex((t: any) => t.value === varName);
@@ -110,7 +110,7 @@ const getPointersAndRange = (memSnapshot: Record<string, any>) => {
   return { pointers, searchRange };
 };
 
-export const CustomFlowchartStage: React.FC = () => {
+export const CFlowchartStage: React.FC = () => {
   const { lesson, currentStepIndex, zoom, setZoom, isFullScreen, toggleFullScreen, editableValues } = useLesson();
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = usePinchZoom(setZoom, 0.2, 2.5);
@@ -276,7 +276,7 @@ export const CustomFlowchartStage: React.FC = () => {
       const indent = (firstToken?.type === 'text' && firstToken.value.trim() === '') ? firstToken.value.length : 0;
       
       const hasContent = line.tokens.some(t => t.value.trim() !== '');
-      const isDef = line.tokens.some(t => t.type === 'keyword' && t.value === 'def');
+      const isDef = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
       
       if (isDef) {
         inFunctionDef = true;
@@ -420,7 +420,7 @@ export const CustomFlowchartStage: React.FC = () => {
       }
     } else if (isFunctionTopic) {
       if (functionLines.some(l => l.lineNum === line.lineNum)) {
-        const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def');
+        const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
         colorTheme = isHeader ? 'orange' : (isPrintLine ? 'default' : 'grey');
       } else {
         colorTheme = 'default'; // Main flow lines
@@ -428,7 +428,7 @@ export const CustomFlowchartStage: React.FC = () => {
     }
 
     const isFunctionLine = isFunctionTopic && functionLines.some(l => l.lineNum === line.lineNum);
-    const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def');
+    const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
     const isFunctionBody = isFunctionLine && !isHeader;
 
     if (!hasExecuted) {
@@ -678,18 +678,18 @@ export const CustomFlowchartStage: React.FC = () => {
                   : 'border-slate-700/60')
           }`}>
             <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
-              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def')
+              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value))
                 ? `Calling ${funcToken.value}()`
-                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def'))
-                    ? (line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def') ? 'Function Created' : 'Executing Function')
+                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value)))
+                    ? (line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value)) ? 'Function Created' : 'Executing Function')
                     : (() => {
                         const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
-                        const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');
+                        const isElif = false;
                         const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
                         const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
                         if (isPass) return 'Pass Statement';
                         if (isElse) return 'Else Block';
-                        if (isElif) return 'Elif Block';
+                        // No elif in this language
                         if (isIf) return 'If Block';
                         if (isLoopTopic && line.lineNum === loopHeaderLineNum) return 'Loop Header';
                         return 'Step Executed';

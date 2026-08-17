@@ -78,20 +78,8 @@ const parseDataStructure = (val: any) => {
   }
 };
 
-const getVarTypeForLanguage = (varName: string, lessonLines: any[], language?: string) => {
-  if (language === 'python' || !varName || !lessonLines) return undefined;
-  for (const line of lessonLines) {
-    const tokens = line?.tokens || [];
-    const varIdx = tokens.findIndex((t: any) => t.value === varName);
-    if (varIdx > 0) {
-      const kwToken = tokens.slice(0, varIdx).reverse().find((t: any) => 
-        t.type === 'keyword' && ['int', 'double', 'float', 'bool', 'char', 'void', 'long', 'string', 'short', 'auto', 'struct', 'const'].includes(t.value)
-      );
-      if (kwToken) return kwToken.value;
-    }
-  }
-  return undefined;
-};
+// Python has no static types — varType always undefined
+const getVarTypeForLanguage = (_varName: string, _lessonLines: any[], _language?: string) => undefined;
 
 const getPointersAndRange = (memSnapshot: Record<string, any>) => {
   if (!memSnapshot) return { pointers: undefined, searchRange: undefined };
@@ -110,7 +98,7 @@ const getPointersAndRange = (memSnapshot: Record<string, any>) => {
   return { pointers, searchRange };
 };
 
-export const CustomFlowchartStage: React.FC = () => {
+export const PythonFlowchartStage: React.FC = () => {
   const { lesson, currentStepIndex, zoom, setZoom, isFullScreen, toggleFullScreen, editableValues } = useLesson();
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = usePinchZoom(setZoom, 0.2, 2.5);
@@ -215,23 +203,27 @@ export const CustomFlowchartStage: React.FC = () => {
     return 'pending';
   };
 
-  // Find index of MATCH_START in visibleSteps or fallback for switch_case
+  // Find index of MATCH_START in visibleSteps or fallback for switch/match keyword line step
   let matchStartIdx = visibleSteps.findIndex(s => s.animationEvent?.type === 'MATCH_START');
   if (matchStartIdx === -1 && isMatchTopic) {
-    // Check if COMPUTE or switch line step exists
     const switchStepIdx = visibleSteps.findIndex(s => 
       s.animationEvent?.type === 'COMPUTE' && 
       (s.animationEvent.operator === 'switch' || s.animationEvent.storeIn === 'Match')
     );
     if (switchStepIdx !== -1) {
       matchStartIdx = switchStepIdx;
+    } else {
+      const matchLine = lesson.lines.find(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'match' || t.value === 'switch')));
+      if (matchLine) {
+        matchStartIdx = visibleSteps.findIndex(s => s.lineNum === matchLine.lineNum);
+      }
     }
   }
-  const hasMatchStarted = matchStartIdx !== -1 || (isMatchTopic && visibleSteps.length > 1);
+  const hasMatchStarted = matchStartIdx !== -1;
 
   // Separate steps for rendering match_case / switch_case
-  const initialSteps = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps.slice(0, matchStartIdx) : (isMatchTopic ? visibleSteps.slice(0, 1) : visibleSteps);
-  const matchStep = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps[matchStartIdx] : (isMatchTopic && visibleSteps.length > 1 ? visibleSteps[1] : null);
+  const initialSteps = hasMatchStarted ? visibleSteps.slice(0, matchStartIdx) : visibleSteps;
+  const matchStep = hasMatchStarted ? visibleSteps[matchStartIdx] : null;
 
   // Find the index of the successfully matched condition to group subsequent branch steps
   const matchedConditionIdx = visibleSteps.findIndex(s => 
@@ -683,14 +675,18 @@ export const CustomFlowchartStage: React.FC = () => {
                 : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def'))
                     ? (line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def') ? 'Function Created' : 'Executing Function')
                     : (() => {
+                        const isBreak = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'break');
+                        const isContinue = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'continue');
                         const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
                         const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');
                         const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
                         const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
+                        if (isBreak) return 'Break Executed';
+                        if (isContinue) return 'Skip Execution';
                         if (isPass) return 'Pass Statement';
-                        if (isElse) return 'Else Block';
-                        if (isElif) return 'Elif Block';
-                        if (isIf) return 'If Block';
+                        if (isElse) return 'Else Block Executed';
+                        if (isElif) return 'Elif Block Executed';
+                        if (isIf) return 'If Block Executed';
                         if (isLoopTopic && line.lineNum === loopHeaderLineNum) return 'Loop Header';
                         return 'Step Executed';
                       })())}
@@ -1811,13 +1807,31 @@ export const CustomFlowchartStage: React.FC = () => {
                         );
                       })()}
 
-                      {ev?.type === 'NONE' && (
-                        <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-xl text-center select-none shadow-sm transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
-                          <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
-                            Step Executed
-                          </span>
-                        </div>
-                      )}
+                      {ev?.type === 'NONE' && (() => {
+                        const line = lesson.lines.find(l => l.lineNum === step.lineNum);
+                        let label = 'Block Executed';
+                        if (line) {
+                          const isBreak = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'break');
+                          const isContinue = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'continue');
+                          const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
+                          const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');
+                          const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
+                          const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
+                          if (isBreak) label = 'Break Executed';
+                          else if (isContinue) label = 'Skip Execution';
+                          else if (isPass) label = 'Pass Statement Executed';
+                          else if (isElse) label = 'Else Block Executed';
+                          else if (isElif) label = 'Elif Block Executed';
+                          else if (isIf) label = 'If Block Executed';
+                        }
+                        return (
+                          <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-xl text-center select-none shadow-sm transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
+                            <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+                              {label}
+                            </span>
+                          </div>
+                        );
+                      })()}
 
                       {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
                         <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded">

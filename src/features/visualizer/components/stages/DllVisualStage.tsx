@@ -44,6 +44,7 @@ export const DllVisualStage: React.FC = () => {
         className="w-full h-full flex flex-col items-center justify-center relative transition-transform duration-200 ease-out"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
       >
+        <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
         <div className="flex flex-col items-center gap-6">
 
           {/* Alert Banners */}
