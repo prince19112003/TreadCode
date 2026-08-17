@@ -684,7 +684,6 @@ export const CppFlowchartStage: React.FC = () => {
                     ? (line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value)) ? 'Function Created' : 'Executing Function')
                     : (() => {
                         const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
-                        const isElif = false;
                         const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
                         const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
                         if (isPass) return 'Pass Statement';
