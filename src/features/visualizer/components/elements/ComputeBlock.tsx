@@ -334,16 +334,20 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
           return (
             <>
               {inputs.map((inp, i) => {
-                const rawVal = prevMemorySnapshot[inp] ?? memorySnapshot[inp] ?? inp;
+                const match = String(inp).match(/^([a-zA-Z_]\w*)\s*\((.*)\)$/);
+                const varName = match ? match[1] : inp;
+                const inlineVal = match ? match[2] : undefined;
+
+                const rawVal = inlineVal ?? prevMemorySnapshot[varName] ?? memorySnapshot[varName] ?? prevMemorySnapshot[inp] ?? memorySnapshot[inp] ?? inp;
                 const { value: cleanVal, varType } = cleanValueAndType(rawVal);
                 return (
                   <React.Fragment key={i}>
                     {isDataStructure(cleanVal) ? (() => {
                       const { variant, items } = parseDataStructure(cleanVal);
-                      return <DataStructureBox name={inp} variant={variant} items={items} isActive={isActive && calcState === 'inputs'} highlightedIndex={highlightIdx} highlightedIndices={highlightedIndices} />;
+                      return <DataStructureBox name={varName} variant={variant} items={items} isActive={isActive && calcState === 'inputs'} highlightedIndex={highlightIdx} highlightedIndices={highlightedIndices} />;
                     })() : (
                       <VariableBox 
-                        name={inp} 
+                        name={varName} 
                         value={cleanVal} 
                         isActive={isActive && calcState === 'inputs'} 
                         colorTheme={colorTheme} 

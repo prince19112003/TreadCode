@@ -225,7 +225,24 @@ const CodeLineRow = React.memo<{
 
 export const CodeStepPanel = React.memo(() => {
   const lesson = useLessonStore(s => s.lesson);
-  const activeLine = useLessonStore(s => s.currentStep?.lineNum ?? -1);
+  const currentStep = useLessonStore(s => s.currentStep);
+  const isComplete = useLessonStore(s => s.isComplete);
+  const rawActiveLine = currentStep?.lineNum ?? -1;
+
+  const activeLine = React.useMemo(() => {
+    if (!lesson || isComplete || currentStep?.animationEvent?.type === 'COMPLETE') return -1;
+    
+    // Do not highlight lines that consist only of closing braces '}' or '};'
+    const lineObj = lesson.lines.find(l => l.lineNum === rawActiveLine);
+    if (lineObj) {
+      const codeText = lineObj.tokens.map(t => t.value).join('').trim();
+      if (codeText === '}' || codeText === '};' || codeText === '}}' || codeText === '}}}') {
+        return -1;
+      }
+    }
+    return rawActiveLine;
+  }, [lesson, isComplete, currentStep, rawActiveLine]);
+
   const editableValues = useLessonStore(s => s.editableValues);
   const setEditableValue = useLessonStore(s => s.setEditableValue);
   const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);

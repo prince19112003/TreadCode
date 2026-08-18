@@ -34,9 +34,17 @@ export const PrintBox: React.FC<PrintBoxProps> = ({ variableName, value, isActiv
   const gap = isSmall ? 'gap-1' : 'gap-1.5';
   const labelSize = isSmall ? 'text-[9px]' : 'text-[11px]';
 
-  const displayText = (value !== undefined && value !== null && String(value).trim() !== '')
-    ? String(value)
-    : (variableName || '');
+  let displayText = '';
+  if (value !== undefined && value !== null && String(value).trim() !== '') {
+    const valStr = String(value);
+    if (variableName && variableName !== valStr && !['output', 'print', 'val', 'value'].includes(variableName.toLowerCase())) {
+      displayText = `${variableName}: ${valStr}`;
+    } else {
+      displayText = valStr;
+    }
+  } else {
+    displayText = variableName || '';
+  }
 
   return (
     <div className={`flex flex-col items-center ${gap}`}>

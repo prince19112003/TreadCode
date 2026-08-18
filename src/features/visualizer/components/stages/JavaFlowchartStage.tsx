@@ -100,18 +100,20 @@ const parseDataStructure = (val: any) => {
   }
 };
 
-const getVarTypeForLanguage = (varName: string, lessonLines: any[], language?: string) => {
-  if (language !== 'java' || !varName || !lessonLines) return undefined;
+const getVarTypeForLanguage = (varName: string, lessonLines: any[], _language?: string, val?: any) => {
+  if (!varName || !lessonLines) return undefined;
   for (const line of lessonLines) {
     const tokens = line?.tokens || [];
     const varIdx = tokens.findIndex((t: any) => t.value === varName);
-    if (varIdx > 0) {
+    if (varIdx >= 0) {
       const kwToken = tokens.slice(0, varIdx).reverse().find((t: any) => 
-        t.type === 'keyword' && ['int', 'double', 'float', 'bool', 'char', 'void', 'long', 'string', 'short', 'auto', 'struct', 'const'].includes(t.value)
+        t.type === 'keyword' && ['int', 'double', 'float', 'boolean', 'bool', 'char', 'void', 'long', 'string', 'String', 'short', 'auto', 'struct', 'const', 'byte'].includes(t.value)
       );
       if (kwToken) return kwToken.value;
     }
   }
+  if (typeof val === 'number') return Number.isInteger(val) ? 'int' : 'double';
+  if (typeof val === 'boolean') return 'boolean';
   return undefined;
 };
 
@@ -195,8 +197,25 @@ export const JavaFlowchartStage: React.FC = () => {
 
   // Get status of a specific case value from visibleSteps
   const getCaseStatus = (caseVal: string): 'matched' | 'failed' | 'pending' => {
-    const cleanCaseVal = caseVal.replace(/['"]/g, '').trim();
+    const cleanCaseVal = caseVal.replace(/['"]/g, '').trim().toLowerCase();
     
+    // Check if MATCH_START is present in visibleSteps
+    const matchStartStep = visibleSteps.find(step => step.animationEvent?.type === 'MATCH_START');
+    if (matchStartStep) {
+      const matchEv = matchStartStep.animationEvent as any;
+      const activeVal = String(matchEv.value ?? '').replace(/['"]/g, '').trim().toLowerCase();
+      
+      const nonDefaultCases = casesList
+        .map(item => item.value.replace(/['"]/g, '').trim().toLowerCase())
+        .filter(v => v !== 'default');
+
+      if (cleanCaseVal === 'default') {
+        return !nonDefaultCases.includes(activeVal) ? 'matched' : 'pending';
+      }
+
+      return cleanCaseVal === activeVal ? 'matched' : 'pending';
+    }
+
     // Check if any step in visibleSteps matches this case
     const evalStep = visibleSteps.find(step => {
       const ev = step.animationEvent;
@@ -256,11 +275,15 @@ export const JavaFlowchartStage: React.FC = () => {
   const matchStep = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps[matchStartIdx] : (isMatchTopic && visibleSteps.length > 1 ? visibleSteps[1] : null);
 
   // Find the index of the successfully matched condition to group subsequent branch steps
-  const matchedConditionIdx = visibleSteps.findIndex(s => 
+  let matchedConditionIdx = visibleSteps.findIndex(s => 
     s.animationEvent?.type === 'COMPUTE' && 
     s.animationEvent.storeIn === 'Condition' && 
     (s.animationEvent.result === 'True' || String(s.animationEvent.result).toLowerCase() === 'true')
   );
+
+  if (matchedConditionIdx === -1 && matchStartIdx !== -1) {
+    matchedConditionIdx = matchStartIdx;
+  }
 
   const branchSteps = matchedConditionIdx !== -1 ? visibleSteps.slice(matchedConditionIdx + 1) : [];
   
@@ -318,9 +341,10 @@ export const JavaFlowchartStage: React.FC = () => {
     currentActiveLine = visibleSteps.length > 0 ? visibleSteps[visibleSteps.length - 1].lineNum : -1;
 
     // Detect loop header
+    const doHeaderLine = lesson.lines.find(l => l.tokens.some(t => t.type === 'keyword' && t.value === 'do'));
     const loopHeaders = lesson.lines.filter(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while')));
-    const loopHeaderLine = loopHeaders[0];
-    const innerLoopHeaders = loopHeaders.slice(1);
+    const loopHeaderLine = doHeaderLine || loopHeaders[0];
+    const innerLoopHeaders = doHeaderLine ? loopHeaders : loopHeaders.slice(1);
     
     if (loopHeaderLine) {
       loopHeaderLineNum = loopHeaderLine.lineNum;
@@ -456,12 +480,29 @@ export const JavaFlowchartStage: React.FC = () => {
     if (!hasExecuted) {
       return null;
     }
+
+    if (!latestStep) {
+      return (
+        <motion.div
+          key={line.lineNum}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-4 relative shrink-0 min-w-max transition-all duration-300 opacity-60"
+        >
+          <div className="w-fit flex flex-col items-center gap-4">
+            <div className="px-3 py-1.5 border border-slate-800 rounded font-mono text-[11px] text-slate-500 whitespace-pre">
+              {line.tokens.map((t: any) => t.value).join('').trim()}
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
     
     const ev = latestStep.animationEvent;
 
     // Compute dynamic oldValue for in-place loop updates
     let oldValue = (ev as any)?.oldValue;
-    if (oldValue === undefined && (ev?.type === 'CREATE_VARIABLE' || ev?.type === 'UPDATE_VARIABLE')) {
+    if (oldValue === undefined && (ev?.type === 'CREATE_VARIABLE' || ev?.type === 'UPDATE_VARIABLE') && latestStep) {
       const prevStep = [...visibleSteps].reverse().find(s => 
         s.step < latestStep.step && 
         (s.animationEvent?.type === 'CREATE_VARIABLE' || s.animationEvent?.type === 'UPDATE_VARIABLE') && 
@@ -505,7 +546,7 @@ export const JavaFlowchartStage: React.FC = () => {
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
             })() : (
               <div className="flex flex-col items-center gap-2">
-                <VariableBox name={ev.name} value={ev.value} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
+                <VariableBox name={ev.name} value={ev.value} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language, ev.value)} />
                 {ev.formula && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
@@ -526,7 +567,7 @@ export const JavaFlowchartStage: React.FC = () => {
                   const { variant, items } = parseDataStructure(v.value);
                   return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLatest} />;
                 })() : (
-                  <VariableBox key={idx} name={v.name} value={v.value} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(v.name, lesson.lines, lesson.language)} />
+                  <VariableBox key={idx} name={v.name} value={v.value} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(v.name, lesson.lines, lesson.language, v.value)} />
                 )
               ))}
             </div>
@@ -538,7 +579,7 @@ export const JavaFlowchartStage: React.FC = () => {
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
             })() : (
               <div className="flex flex-col items-center gap-2">
-                <VariableBox name={ev.name} value={ev.newValue} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
+                <VariableBox name={ev.name} value={ev.newValue} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language, ev.newValue)} />
                 {ev.formula && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
@@ -546,6 +587,17 @@ export const JavaFlowchartStage: React.FC = () => {
                     className="px-3 py-1 rounded-lg bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 shadow-md shadow-amber-950/30"
                   >
                     {ev.formula}
+                  </motion.div>
+                )}
+                {isLoopTopic && (ev.name === 'i' || ev.name === 'j' || ev.name === 'count') && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="px-4 py-1.5 bg-amber-950/70 border border-amber-500/40 rounded-xl flex items-center gap-2 shadow-sm my-1 select-none"
+                  >
+                    <span className="text-xs font-mono font-bold text-amber-300 tracking-wider uppercase">
+                      INCREMENT STEP: {ev.name}++ ({oldValue} ➔ {ev.newValue})
+                    </span>
                   </motion.div>
                 )}
               </div>
@@ -623,6 +675,54 @@ export const JavaFlowchartStage: React.FC = () => {
             />
           )}
 
+          {!isFunctionBody && ev?.type === 'EVALUATE_CONDITION' && (() => {
+            const currentLine = lesson.lines.find(l => l.lineNum === latestStep.lineNum);
+            const isLoopHeader = !!currentLine?.tokens.some(t => t.type === 'keyword' && (t.value === 'while' || t.value === 'for'));
+            const isForLoop = !!currentLine?.tokens.some(t => t.type === 'keyword' && t.value === 'for');
+            
+            let labelText = 'CONDITION';
+            if (isLoopTopic && isLoopHeader) {
+              if (innerLoopHeaderLineNums.includes(latestStep.lineNum)) {
+                labelText = isForLoop ? 'INNER FOR LOOP' : 'INNER WHILE LOOP';
+              } else if (latestStep.lineNum === loopHeaderLineNum) {
+                labelText = isForLoop ? 'OUTER FOR LOOP' : 'OUTER WHILE LOOP';
+              } else {
+                labelText = isForLoop ? 'FOR LOOP' : 'WHILE LOOP';
+              }
+            }
+
+            const counterVar = (ev.inputs && ev.inputs[0]) || 'i';
+            const rawSnapVal = latestStep.memorySnapshot?.[counterVar];
+            const counterVal = rawSnapVal !== undefined ? String(rawSnapVal).split(' ')[0] : undefined;
+
+            return (
+              <div className="flex flex-col items-center gap-3">
+                {isLoopTopic && isLoopHeader && isForLoop && counterVal !== undefined && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="flex items-center gap-2.5 px-4 py-1.5 bg-slate-900/90 border border-orange-500/40 rounded-xl shadow-md select-none"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                    <span className="text-xs font-mono font-bold text-slate-300">
+                      Loop Counter State: <span className="text-orange-400 font-extrabold">{counterVar}</span> = <span className="text-white font-black bg-orange-500/20 px-2 py-0.5 rounded border border-orange-500/30">{counterVal}</span>
+                    </span>
+                  </motion.div>
+                )}
+
+                <ConditionBox
+                  condition={ev.condition || ev.formula || 'Condition'}
+                  inputs={ev.inputs || []}
+                  memorySnapshot={latestStep.memorySnapshot}
+                  isTrue={ev.result}
+                  isActive={isLatest}
+                  label={labelText}
+                  colorTheme={isLoopTopic && isLoopHeader ? (innerLoopHeaderLineNums.includes(latestStep.lineNum) ? 'fuchsia' : 'orange') : 'default'}
+                />
+              </div>
+            );
+          })()}
+
           {!isFunctionBody && ev?.type === 'PRINT_VALUE' && (
             isDataStructure(ev.outputValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.outputValue);
@@ -635,8 +735,19 @@ export const JavaFlowchartStage: React.FC = () => {
                 </div>
               );
             })() : (
-              <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} colorTheme={isPrintLine ? 'default' : colorTheme} isSmall={isFunctionBody} />
+              <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} colorTheme="default" isSmall={isFunctionBody} />
             )
+          )}
+          {!isFunctionBody && ev?.type === 'BREAK_EXECUTION' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="px-6 py-2 rounded-full border-2 border-amber-500/80 bg-[#241300] shadow-lg shadow-amber-950/60 flex items-center justify-center select-none"
+            >
+              <span className="text-xs font-mono font-extrabold tracking-widest text-amber-400 uppercase">
+                BREAK EXECUTION
+              </span>
+            </motion.div>
           )}
 
         {ev?.type === 'COMPUTE' && (
@@ -772,17 +883,27 @@ export const JavaFlowchartStage: React.FC = () => {
       </button>
 
       {/* Scrollable Container */}
-      <div ref={containerRef} id="flowchart-container" className="w-full h-full overflow-auto custom-scrollbar">
+      <div ref={containerRef} id="flowchart-container" className="w-full h-full overflow-auto custom-scrollbar flex justify-center">
         {/* Zoomable Canvas Area */}
         <div
           id="flowchart-content"
-          className="relative p-12 flex flex-col items-center gap-10 min-w-max min-h-max transition-transform duration-300 origin-top"
+          className="relative p-12 flex flex-col items-center gap-10 min-w-max min-h-max transition-transform duration-300 origin-top mx-auto"
           style={{ transform: `scale(${zoom})` }}
         >
           {/* Pen Layer Target */}
           <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
 
-          <AnimatePresence mode="wait">
+          {/* Java main() Method Scope Container */}
+          <div className="relative px-12 pb-10 pt-12 rounded-3xl border border-indigo-500/35 bg-transparent flex flex-col items-center gap-8 min-w-105">
+            {/* Minimal Header Badge */}
+            <div className="absolute -top-3 left-6 px-2.5 py-0.5 bg-slate-950 border border-indigo-500/50 rounded-md flex items-center gap-1.5 shadow-xs select-none z-20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-90" />
+              <span className="text-[11px] font-mono font-medium text-indigo-200">
+                main()
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait">
             {isFunctionTopic ? (() => {
               let functionPhase: 'idle' | 'defined' | 'calling' | 'executing' | 'returning' = 'idle';
               const defLineNum = functionLines[0]?.lineNum;
@@ -1119,6 +1240,28 @@ export const JavaFlowchartStage: React.FC = () => {
                                         )}
                                         {bEv?.type === 'UPDATE_VARIABLE' && (
                                           <VariableBox name={bEv.name} value={bEv.newValue} oldValue={bEv.oldValue} isActive={isLatest} />
+                                        )}
+                                        {bEv?.type === 'BREAK_EXECUTION' && (
+                                          <motion.div
+                                            initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            className="px-5 py-2 bg-amber-950/80 border-2 border-amber-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                                          >
+                                            <span className="text-xs font-mono font-black text-amber-300 tracking-wider uppercase">
+                                              Break Execution
+                                            </span>
+                                          </motion.div>
+                                        )}
+                                        {bEv?.type === 'SKIP_EXECUTION' && (
+                                          <motion.div
+                                            initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            className="px-5 py-2 bg-cyan-950/80 border-2 border-cyan-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                                          >
+                                            <span className="text-xs font-mono font-black text-cyan-300 tracking-wider uppercase">
+                                              Skip Execution
+                                            </span>
+                                          </motion.div>
                                         )}
                                         {bEv?.type === 'COMPUTE' && bEv.storeIn !== 'Condition' && (() => {
                                           const prevStep = activeSteps.find((s: any) => s.step === bStep.step - 1);
@@ -1501,6 +1644,30 @@ export const JavaFlowchartStage: React.FC = () => {
                         <MatchBlock variableName={ev.variableName} value={ev.value} isActive={isLatest} />
                       )}
 
+                      {ev?.type === 'BREAK_EXECUTION' && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          className="px-5 py-2 bg-amber-950/80 border-2 border-amber-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                        >
+                          <span className="text-xs font-mono font-black text-amber-300 tracking-wider uppercase">
+                            Break Execution
+                          </span>
+                        </motion.div>
+                      )}
+
+                      {ev?.type === 'SKIP_EXECUTION' && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          className="px-5 py-2 bg-cyan-950/80 border-2 border-cyan-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                        >
+                          <span className="text-xs font-mono font-black text-cyan-300 tracking-wider uppercase">
+                            Skip Execution
+                          </span>
+                        </motion.div>
+                      )}
+
                       {ev?.type === 'CREATE_VARIABLE' && (
                         isDataStructure(ev.value) ? (() => {
                           const { variant, items } = parseDataStructure(ev.value);
@@ -1747,75 +1914,20 @@ export const JavaFlowchartStage: React.FC = () => {
 
                       {ev?.type === 'EVALUATE_CONDITION' && (() => {
                         const condEv = ev as any;
-                        let varName = condEv.variableName;
-                        let varVal = condEv.variableValue;
-                        let operatorText = condEv.operator || condEv.condition || '';
-
-                        if (!varName && condEv.condition) {
-                          const match = String(condEv.condition).trim().match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(.*)$/);
-                          if (match) {
-                            varName = match[1];
-                            operatorText = match[2];
-                          }
-                        }
-
-                        if (varVal === undefined && varName) {
-                          varVal = step.memorySnapshot?.[varName];
-                        }
-
                         const isPass = Boolean(condEv.result);
+                        const conditionStr = condEv.formula || condEv.condition || (condEv.variableName ? `${condEv.variableName} ${condEv.operator || ''}` : condEv.operator || '');
+                        const inputsList = condEv.inputs || (condEv.variableName ? [condEv.variableName] : []);
 
                         return (
-                          <div className="flex flex-col items-center gap-1.5 my-1">
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9, y: 8 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              className={`relative flex items-center gap-6 px-6 py-3.5 rounded-[22px] border-2 font-mono shadow-xl backdrop-blur-md transition-all duration-300 ${
-                                isPass
-                                  ? 'bg-slate-950/95 border-emerald-400 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
-                                  : 'bg-slate-950/95 border-rose-500 text-rose-300 shadow-[0_0_25px_rgba(244,63,94,0.2)]'
-                              } ${isLatest ? 'ring-2 ring-emerald-400/40 scale-105' : ''}`}
-                            >
-                              {/* Left: Variable Name + Value directly under it */}
-                              {varName && isNaN(Number(varName)) && (
-                                <div className="flex flex-col items-center justify-center leading-tight">
-                                  <span className={`text-base font-extrabold font-mono tracking-wide ${isPass ? 'text-emerald-300' : 'text-rose-300'}`}>
-                                    {varName}
-                                  </span>
-                                  {varVal !== undefined && (
-                                    <span className="text-xs font-bold font-mono text-cyan-400 mt-0.5">
-                                      {String(varVal).replace(/\s*\[[a-zA-Z0-9_]+\]/g, '')}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Middle: Operator / Rest of Condition Expression */}
-                              <div className="text-lg font-black font-mono tracking-wider text-slate-100">
-                                {operatorText}
-                              </div>
-
-                              {/* Right: Solid Circle Icon Badge with Checkmark / Cross */}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md ${
-                                isPass ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
-                              }`}>
-                                {isPass ? (
-                                  <svg className="w-5 h-5 stroke-[3.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-5 h-5 stroke-[3.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                )}
-                              </div>
-                            </motion.div>
-
-                            {/* Bottom Label: CONDITION */}
-                            <span className={`text-[10px] font-mono font-black tracking-widest uppercase ${isPass ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              CONDITION
-                            </span>
-                          </div>
+                          <ConditionBox
+                            condition={conditionStr}
+                            inputs={inputsList}
+                            memorySnapshot={step.memorySnapshot}
+                            isTrue={isPass}
+                            isActive={isLatest}
+                            label="CONDITION"
+                            colorTheme="default"
+                          />
                         );
                       })()}
 
@@ -1827,7 +1939,7 @@ export const JavaFlowchartStage: React.FC = () => {
                         </div>
                       )}
 
-                      {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
+                      {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'BREAK_EXECUTION', 'SKIP_EXECUTION', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
                         <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded">
                           [Step {step.step} Executed]
                         </div>
@@ -1932,6 +2044,7 @@ export const JavaFlowchartStage: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
 
           {/* Invisible element to anchor the scroll */}
           <div ref={bottomRef} className="h-4 w-full" />

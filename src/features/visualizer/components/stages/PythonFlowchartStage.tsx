@@ -491,7 +491,68 @@ export const PythonFlowchartStage: React.FC = () => {
             </div>
           ) : null}
           
-          {!isFunctionBody && ev?.type === 'CREATE_VARIABLE' && (
+          {!isFunctionBody && line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'for') ? (() => {
+            const lineStr = line.tokens.map((t: any) => t.value).join('');
+            const match = lineStr.match(/for\s+([a-zA-Z_]\w*)\s+in\s+range\(([^)]+)\)/);
+            const loopVar = match ? match[1] : ((ev as any)?.name || (ev as any)?.variableName || 'i');
+            const currentVal = latestStep.memorySnapshot?.[loopVar] ?? (ev as any)?.value ?? (ev as any)?.newValue ?? '?';
+
+            let rangeText = '';
+            if (match) {
+              const rawArgs = match[2].split(',').map((s: string) => s.trim());
+              if (rawArgs.length === 1) {
+                const stopVal = latestStep.memorySnapshot?.[rawArgs[0]] ?? Number(rawArgs[0]);
+                rangeText = !isNaN(Number(stopVal)) ? `0 → ${Number(stopVal) - 1} (Stop at ${stopVal})` : `0 to < ${rawArgs[0]}`;
+              } else if (rawArgs.length >= 2) {
+                const startVal = latestStep.memorySnapshot?.[rawArgs[0]] ?? Number(rawArgs[0]);
+                let stopVal: any = undefined;
+                if (rawArgs[1].includes('+')) {
+                  const parts = rawArgs[1].split('+').map((p: string) => p.trim());
+                  const v1 = latestStep.memorySnapshot?.[parts[0]] ?? Number(parts[0]);
+                  const v2 = latestStep.memorySnapshot?.[parts[1]] ?? Number(parts[1]);
+                  if (!isNaN(Number(v1)) && !isNaN(Number(v2))) stopVal = Number(v1) + Number(v2);
+                } else {
+                  stopVal = latestStep.memorySnapshot?.[rawArgs[1]] ?? Number(rawArgs[1]);
+                }
+
+                if (!isNaN(Number(startVal)) && !isNaN(Number(stopVal))) {
+                  rangeText = `${startVal} → ${Number(stopVal) - 1} (Stop at ${stopVal})`;
+                } else {
+                  rangeText = `${rawArgs[0]} to < ${rawArgs[1]}`;
+                }
+              }
+            }
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="flex flex-col items-center gap-1.5 px-5 py-2.5 bg-linear-to-r from-amber-950/90 via-slate-900 to-orange-950/90 border-2 border-amber-500/70 rounded-2xl shadow-lg shadow-amber-950/50 select-none"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
+                    FOR LOOP RANGE ITERATION
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs font-mono">
+                  <span className="text-slate-300 font-bold">
+                    <span className="text-amber-400 font-extrabold">{loopVar}</span> = <span className="text-white font-black bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">{currentVal}</span>
+                  </span>
+                  {rangeText && (
+                    <>
+                      <span className="text-slate-500 font-bold">•</span>
+                      <span className="text-amber-300 font-extrabold">
+                        Range: {rangeText}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })() : null}
+
+          {!isFunctionBody && !line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'for') && ev?.type === 'CREATE_VARIABLE' && (
             isDataStructure(ev.value) ? (() => {
               const { variant, items } = parseDataStructure(ev.value);
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
@@ -524,7 +585,7 @@ export const PythonFlowchartStage: React.FC = () => {
             </div>
           )}
 
-          {!isFunctionBody && ev?.type === 'UPDATE_VARIABLE' && (
+          {!isFunctionBody && !line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'for') && ev?.type === 'UPDATE_VARIABLE' && (
             isDataStructure(ev.newValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.newValue);
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
