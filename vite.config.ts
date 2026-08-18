@@ -16,21 +16,20 @@ export default defineConfig({
       renderChunk(code) {
         const obfuscated = obfuscator.obfuscate(code, {
           compact: true,
-          controlFlowFlattening: true,
+          controlFlowFlattening: false,
           deadCodeInjection: false,
           debugProtection: false,
-          disableConsoleOutput: true,
+          disableConsoleOutput: false,
           identifierNamesGenerator: 'hexadecimal',
           log: false,
-          numbersToExpressions: true,
+          numbersToExpressions: false,
           renameGlobals: false,
-          selfDefending: true,
+          selfDefending: false,
           simplify: true,
-          splitStrings: true,
+          splitStrings: false,
           stringArray: true,
           stringArrayCallsTransform: true,
-          stringArrayEncoding: ['base64'],
-          stringArrayThreshold: 0.75,
+          stringArrayThreshold: 0.5,
           unicodeEscapeSequence: false,
         });
         return {
