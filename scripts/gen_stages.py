@@ -23,7 +23,8 @@ def make_stage(content, export_name, lang_guard, keywords, no_elif=True):
     s = s.replace("const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def');",
                   f"const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && {keywords}.includes(t.value));")
     if no_elif:
-        s = s.replace("const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');", "")
+        s = s.replace("const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');",
+                      "const isElif = false;")
         s = s.replace("if (isElif) return 'Elif Block';", "// No elif in this language")
     return s
 

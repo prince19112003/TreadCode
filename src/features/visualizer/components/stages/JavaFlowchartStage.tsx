@@ -20,6 +20,28 @@ const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecut
   return null;
 };
 
+const getConditionString = (ev: { formula?: string; operator?: string; inputs?: string[] }) => {
+  if (!ev) return '';
+  if (ev.formula) return ev.formula;
+  const op = (ev.operator || '').trim();
+  const inputs = ev.inputs || [];
+  if (!op) return inputs.join(' ');
+  
+  if (inputs.length > 0 && inputs[0] && op.startsWith(inputs[0])) {
+    return op;
+  }
+  
+  if (inputs.length === 2 && !op.includes(' ')) {
+    return `${inputs[0]} ${op} ${inputs[1]}`;
+  }
+  
+  if (inputs.length >= 1 && inputs[0]) {
+    return `${inputs[0]} ${op}`;
+  }
+  
+  return op;
+};
+
 const isDataStructure = (val: any) => {
   if (typeof val !== 'string') return false;
   let cleaned = val.trim();
@@ -636,12 +658,7 @@ export const JavaFlowchartStage: React.FC = () => {
 
             return (
               <ConditionBox
-                condition={ev.formula || (ev.inputs.length === 2
-                  ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]}`
-                  : ev.inputs.length > 2
-                    ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]} and ${ev.inputs[0]} ${ev.operator} ${ev.inputs[2]}`
-                    : `${ev.inputs[0] || ''} ${ev.operator || ''}`
-                )}
+                condition={getConditionString(ev)}
                 inputs={ev.inputs}
                 memorySnapshot={latestStep.memorySnapshot}
                 isTrue={ev.result === 'True' || String(ev.result) === 'true'}
@@ -909,12 +926,7 @@ export const JavaFlowchartStage: React.FC = () => {
                                 if (ev.storeIn === 'Condition') {
                                   activeComponent = (
                                     <ConditionBox
-                                      condition={ev.formula || (ev.inputs.length === 2
-                                        ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]}`
-                                        : ev.inputs.length > 2
-                                          ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]} and ${ev.inputs[0]} ${ev.operator} ${ev.inputs[2]}`
-                                          : `${ev.inputs[0] || ''} ${ev.operator || ''}`
-                                      )}
+                                      condition={getConditionString(ev)}
                                       inputs={ev.inputs}
                                       memorySnapshot={lineLatestStep.memorySnapshot}
                                       isTrue={ev.result === 'True' || String(ev.result) === 'true'}
@@ -1678,10 +1690,7 @@ export const JavaFlowchartStage: React.FC = () => {
                         ev.storeIn === 'Condition' ? (
                           <div className="flex flex-col items-center gap-3">
                             <ConditionBox
-                              condition={ev.inputs.length === 2
-                                ? `${ev.inputs[0]} ${ev.operator} ${ev.inputs[1]}`
-                                : `${ev.inputs[0] || ''} ${ev.operator || ''}`
-                              }
+                              condition={getConditionString(ev)}
                               inputs={ev.inputs}
                               memorySnapshot={step.memorySnapshot}
                               isTrue={ev.result === 'True' || String(ev.result) === 'true'}
