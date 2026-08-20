@@ -184,48 +184,48 @@ export const dsa_array_count: LessonProgram = {
 // ─── TOPIC 02: SEARCHING ─────────────────────────────────────────────────────
 
 export const dsa_linear_search: LessonProgram = {
-  id: 'dsa_linear_search', language: 'dsa', topic: 'searching', lessonNumber: 1,
+  id: 'dsa_linear_search', language: 'dsa', topic: 'linear_search', lessonNumber: 1,
   friendlyName: 'Linear Search Algorithm (O(N))',
   learningObjective: 'Sequentially check every element from index 0 to N-1. Stop when target is found.',
   lines: [
-    line(1, [kw('int'), tx(' '), va('arr'), pu('['), nu('5'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('12'), pu(','), tx(' '), nu('35'), pu(','), tx(' '), nu('78'), pu(','), tx(' '), nu('22'), pu(','), tx(' '), nu('56'), pu('}'), pu(';')]),
-    line(2, [kw('int'), tx(' '), va('target'), tx(' '), op('='), tx(' '), nu('22', 'target'), pu(';')]),
+    line(1, [kw('int'), tx(' '), va('arr'), pu('['), nu('10'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('12'), pu(','), tx(' '), nu('25'), pu(','), tx(' '), nu('34'), pu(','), tx(' '), nu('41'), pu(','), tx(' '), nu('56'), pu(','), tx(' '), nu('63'), pu(','), tx(' '), nu('78'), pu(','), tx(' '), nu('82'), pu(','), tx(' '), nu('90'), pu(','), tx(' '), nu('99'), pu('}'), pu(';')]),
+    line(2, [kw('int'), tx(' '), va('target'), tx(' '), op('='), tx(' '), nu('78', 'target'), pu(';')]),
     line(3, [kw('int'), tx(' '), va('result'), tx(' '), op('='), tx(' '), nu('-1'), pu(';')]),
-    line(4, [kw('for'), pu('('), kw('int'), tx(' '), va('i'), op('='), nu('0'), pu(';'), tx(' '), va('i'), op('<'), nu('5'), pu(';'), tx(' '), va('i'), op('++'), pu(')'), tx(' {')]),
+    line(4, [kw('for'), pu('('), kw('int'), tx(' '), va('i'), op('='), nu('0'), pu(';'), tx(' '), va('i'), op('<'), nu('10'), pu(';'), tx(' '), va('i'), op('++'), pu(')'), tx(' {')]),
     line(5, [tx('    '), kw('if'), pu('('), va('arr'), pu('['), va('i'), pu(']'), tx(' '), op('=='), tx(' '), va('target'), pu(')'), tx(' {')]),
     line(6, [tx('        '), va('result'), tx(' '), op('='), tx(' '), va('i'), pu(';'), tx(' '), kw('break'), pu(';')]),
     line(7, [tx('    '), pu('}')]),
     line(8, [pu('}')]),
     line(9, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Found at index: "'), tx(' '), op('<<'), tx(' '), va('result'), pu(';')]),
   ],
-  editableVariables: { target: { default: 22, label: 'Search target' } },
+  editableVariables: { target: { default: 78, label: 'Search target' } },
   generateSteps: ({ target }): ExecutionStep[] => {
-    const arr = [12, 35, 78, 22, 56];
-    const t = Number(target ?? 22);
+    const arr = [12, 25, 34, 41, 56, 63, 78, 82, 90, 99];
+    const t = Number(target ?? 78);
     let result = -1;
     const steps: ExecutionStep[] = [
-      { step: 1, lineNum: 2, explanationEnglish: `Search for target = ${t} in array.`, explanationHinglish: `target = ${t} ko array me dhundh rhe hain.`, memorySnapshot: { arr: `[${arr.join(',')}]`, target: t, result: -1 }, animationEvent: { type: 'CREATE_VARIABLE', name: 'target', value: t } },
+      { step: 1, lineNum: 2, explanationEnglish: `Search for target = ${t} in array.`, explanationHinglish: `target = ${t} ko array me dhundh rhe hain.`, memorySnapshot: { arr: [...arr], target: t, result: -1, i: -1 }, animationEvent: { type: 'CREATE_VARIABLE', name: 'target', value: t } },
     ];
     for (let i = 0; i < arr.length; i++) {
       const found = arr[i] === t;
       if (found) result = i;
-      steps.push({ step: 2 + i, lineNum: 5, explanationEnglish: `i=${i}: arr[${i}]=${arr[i]} ${found ? '== target → FOUND!' : '!= target, continue'}`, explanationHinglish: `arr[${i}]=${arr[i]} ${found ? '→ Match milgaya!' : '→ match nahi, aage badho'}`, memorySnapshot: { i, arr: `[${arr.join(',')}]`, target: t, result }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: i } });
+      steps.push({ step: 2 + i, lineNum: 5, explanationEnglish: `i=${i}: arr[${i}]=${arr[i]} ${found ? '== target → FOUND!' : '!= target, continue'}`, explanationHinglish: `arr[${i}]=${arr[i]} ${found ? '→ Match milgaya!' : '→ match nahi, aage badho'}`, memorySnapshot: { i, arr: [...arr], target: t, result }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: i } });
       if (found) break;
     }
-    steps.push({ step: steps.length + 1, lineNum: 9, explanationEnglish: result >= 0 ? `Found at index ${result}.` : 'Not found. result = -1.', explanationHinglish: result >= 0 ? `Index ${result} pe mila.` : 'Nahi mila. result = -1.', memorySnapshot: { result }, consoleOutput: result >= 0 ? `Found at index: ${result}` : 'Not Found (-1)', animationEvent: { type: 'PRINT_VALUE', variableName: 'result', outputValue: result } });
+    steps.push({ step: steps.length + 1, lineNum: 9, explanationEnglish: result >= 0 ? `Found at index ${result}.` : 'Not found. result = -1.', explanationHinglish: result >= 0 ? `Index ${result} pe mila.` : 'Nahi mila. result = -1.', memorySnapshot: { arr: [...arr], target: t, result }, consoleOutput: result >= 0 ? `Found at index: ${result}` : 'Not Found (-1)', animationEvent: { type: 'PRINT_VALUE', variableName: 'result', outputValue: result } });
     return steps;
   },
   executionSteps: [],
 };
 
 export const dsa_binary_search: LessonProgram = {
-  id: 'dsa_binary_search', language: 'dsa', topic: 'searching', lessonNumber: 2,
+  id: 'dsa_binary_search', language: 'dsa', topic: 'binary_search', lessonNumber: 2,
   friendlyName: 'Binary Search Algorithm (O(log N))',
   learningObjective: 'Halve the search space each step using low, mid, high pointers on a SORTED array.',
   lines: [
-    line(1, [kw('int'), tx(' '), va('arr'), pu('['), nu('7'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('5'), pu(','), tx(' '), nu('12'), pu(','), tx(' '), nu('23'), pu(','), tx(' '), nu('38'), pu(','), tx(' '), nu('56'), pu(','), tx(' '), nu('72'), pu(','), tx(' '), nu('89'), pu('}'), pu(';')]),
-    line(2, [kw('int'), tx(' '), va('target'), tx(' '), op('='), tx(' '), nu('38', 'target'), pu(';')]),
-    line(3, [kw('int'), tx(' '), va('low'), tx(' '), op('='), tx(' '), nu('0'), pu(','), tx(' '), va('high'), tx(' '), op('='), tx(' '), nu('6'), pu(','), tx(' '), va('mid'), pu(','), tx(' '), va('result'), tx(' '), op('='), tx(' '), nu('-1'), pu(';')]),
+    line(1, [kw('int'), tx(' '), va('arr'), pu('['), nu('10'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('12'), pu(','), tx(' '), nu('25'), pu(','), tx(' '), nu('34'), pu(','), tx(' '), nu('41'), pu(','), tx(' '), nu('56'), pu(','), tx(' '), nu('63'), pu(','), tx(' '), nu('78'), pu(','), tx(' '), nu('82'), pu(','), tx(' '), nu('90'), pu(','), tx(' '), nu('99'), pu('}'), pu(';')]),
+    line(2, [kw('int'), tx(' '), va('target'), tx(' '), op('='), tx(' '), nu('78', 'target'), pu(';')]),
+    line(3, [kw('int'), tx(' '), va('low'), tx(' '), op('='), tx(' '), nu('0'), pu(','), tx(' '), va('high'), tx(' '), op('='), tx(' '), nu('9'), pu(','), tx(' '), va('mid'), pu(','), tx(' '), va('result'), tx(' '), op('='), tx(' '), nu('-1'), pu(';')]),
     line(4, [kw('while'), pu('('), va('low'), tx(' '), op('<='), tx(' '), va('high'), pu(')'), tx(' {')]),
     line(5, [tx('    '), va('mid'), tx(' '), op('='), tx(' '), pu('('), va('low'), tx(' '), op('+'), tx(' '), va('high'), pu(')'), tx(' '), op('/'), tx(' '), nu('2'), pu(';')]),
     line(6, [tx('    '), kw('if'), pu('('), va('arr'), pu('['), va('mid'), pu(']'), tx(' '), op('=='), tx(' '), va('target'), pu(')'), tx(' {'), va('result'), tx(' '), op('='), tx(' '), va('mid'), pu(';'), kw('break'), pu(';}')]),
@@ -234,23 +234,23 @@ export const dsa_binary_search: LessonProgram = {
     line(9, [pu('}')]),
     line(10, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Found at: "'), tx(' '), op('<<'), tx(' '), va('result'), pu(';')]),
   ],
-  editableVariables: { target: { default: 38, label: 'Search target' } },
+  editableVariables: { target: { default: 78, label: 'Search target' } },
   generateSteps: ({ target }): ExecutionStep[] => {
-    const arr = [5, 12, 23, 38, 56, 72, 89];
-    const t = Number(target ?? 38);
+    const arr = [12, 25, 34, 41, 56, 63, 78, 82, 90, 99];
+    const t = Number(target ?? 78);
     let low = 0, high = arr.length - 1, result = -1;
     const steps: ExecutionStep[] = [
-      { step: 1, lineNum: 2, explanationEnglish: `Binary Search for target = ${t} in sorted array.`, explanationHinglish: `Sorted array me target = ${t} ko binary search se dhundho.`, memorySnapshot: { arr: `[${arr.join(',')}]`, target: t, low, high, result: -1 }, animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'target', value: t }, { name: 'low', value: 0 }, { name: 'high', value: 6 }] } },
+      { step: 1, lineNum: 2, explanationEnglish: `Binary Search for target = ${t} in sorted array.`, explanationHinglish: `Sorted array me target = ${t} ko binary search se dhundho.`, memorySnapshot: { arr: [...arr], target: t, low, high, mid: -1, result: -1 }, animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'target', value: t }, { name: 'low', value: 0 }, { name: 'high', value: 9 }] } },
     ];
     let step = 2;
     while (low <= high) {
       const mid = Math.floor((low + high) / 2);
-      steps.push({ step: step++, lineNum: 5, explanationEnglish: `mid = (${low} + ${high}) / 2 = ${mid}. arr[${mid}] = ${arr[mid]}.`, explanationHinglish: `mid = ${mid}. arr[${mid}] = ${arr[mid]}.`, memorySnapshot: { low, high, mid, result }, animationEvent: { type: 'CREATE_VARIABLE', name: 'mid', value: mid } });
-      if (arr[mid] === t) { result = mid; steps.push({ step: step++, lineNum: 6, explanationEnglish: `arr[${mid}] = ${arr[mid]} == target! Found at index ${mid}.`, explanationHinglish: `arr[${mid}] = ${arr[mid]} == ${t}! Index ${mid} pe milgaya!`, memorySnapshot: { low, high, mid, result }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: mid } }); break; }
-      else if (arr[mid] < t) { const prevLow = low; low = mid + 1; steps.push({ step: step++, lineNum: 7, explanationEnglish: `arr[${mid}]=${arr[mid]} < target. Move low to ${low}.`, explanationHinglish: `arr[${mid}] < target. low = ${low} ho gaya.`, memorySnapshot: { low, high, mid, result }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'low', oldValue: prevLow, newValue: low } }); }
-      else { const prevHigh = high; high = mid - 1; steps.push({ step: step++, lineNum: 8, explanationEnglish: `arr[${mid}]=${arr[mid]} > target. Move high to ${high}.`, explanationHinglish: `arr[${mid}] > target. high = ${high} ho gaya.`, memorySnapshot: { low, high, mid, result }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'high', oldValue: prevHigh, newValue: high } }); }
+      steps.push({ step: step++, lineNum: 5, explanationEnglish: `mid = (${low} + ${high}) / 2 = ${mid}. arr[${mid}] = ${arr[mid]}.`, explanationHinglish: `mid = ${mid}. arr[${mid}] = ${arr[mid]}.`, memorySnapshot: { arr: [...arr], low, high, mid, target: t, result }, animationEvent: { type: 'CREATE_VARIABLE', name: 'mid', value: mid } });
+      if (arr[mid] === t) { result = mid; steps.push({ step: step++, lineNum: 6, explanationEnglish: `arr[${mid}] = ${arr[mid]} == target! Found at index ${mid}.`, explanationHinglish: `arr[${mid}] = ${arr[mid]} == ${t}! Index ${mid} pe milgaya!`, memorySnapshot: { arr: [...arr], low, high, mid, target: t, result }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: mid } }); break; }
+      else if (arr[mid] < t) { const prevLow = low; low = mid + 1; steps.push({ step: step++, lineNum: 7, explanationEnglish: `arr[${mid}]=${arr[mid]} < target. Move low to ${low}.`, explanationHinglish: `arr[${mid}] < target. low = ${low} ho gaya.`, memorySnapshot: { arr: [...arr], low, high, mid, target: t, result }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'low', oldValue: prevLow, newValue: low } }); }
+      else { const prevHigh = high; high = mid - 1; steps.push({ step: step++, lineNum: 8, explanationEnglish: `arr[${mid}]=${arr[mid]} > target. Move high to ${high}.`, explanationHinglish: `arr[${mid}] > target. high = ${high} ho gaya.`, memorySnapshot: { arr: [...arr], low, high, mid, target: t, result }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'high', oldValue: prevHigh, newValue: high } }); }
     }
-    steps.push({ step: step, lineNum: 10, explanationEnglish: result >= 0 ? `Found at index ${result}!` : 'Not found.', explanationHinglish: result >= 0 ? `Target index ${result} pe mila!` : 'Nahi mila.', memorySnapshot: { result }, consoleOutput: result >= 0 ? `Found at: ${result}` : 'Not Found', animationEvent: { type: 'PRINT_VALUE', variableName: 'result', outputValue: result } });
+    steps.push({ step: steps.length + 1, lineNum: 10, explanationEnglish: result >= 0 ? `Found at index ${result}.` : 'Not found. result = -1.', explanationHinglish: result >= 0 ? `Index ${result} pe mila.` : 'Nahi mila. result = -1.', memorySnapshot: { arr: [...arr], target: t, result }, consoleOutput: result >= 0 ? `Found at index: ${result}` : 'Not Found (-1)', animationEvent: { type: 'PRINT_VALUE', variableName: 'result', outputValue: result } });
     return steps;
   },
   executionSteps: [],

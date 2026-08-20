@@ -617,7 +617,7 @@ export const GraphOperationalPanel: React.FC = () => {
     setCustomSteps(steps);
     setIsPlaying(true);
     setTimeout(() => goToStep(0), 20);
-  }, [setCustomSteps, goToStep, setIsPlaying]);
+  }, [setCustomSteps, goToStep, setIsPlaying, graphPreset]);
 
   // Generate Kruskal's MST Steps (Edge Sorting + Disjoint Set Union DSU)
   const handleRunKruskal = useCallback(() => {

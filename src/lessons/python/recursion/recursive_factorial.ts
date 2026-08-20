@@ -93,22 +93,31 @@ export const recursive_factorial: LessonProgram = {
     let currentRes = 1;
     for (let i = callChain.length - 2; i >= 0; i--) {
       const val = callChain[i];
+      const prevRes = currentRes;
       const subStack = callChain.slice(0, i + 1).map(v => `factorial(${v})`).join(' -> ');
-      currentRes = val * currentRes;
+      currentRes = val * prevRes;
 
       steps.push({
         step: stepNum++, lineNum: 4,
-        explanationEnglish: `Returned from factorial(${val - 1}) with value ${currentRes / val}.`,
-        explanationHinglish: `factorial(${val - 1}) se ${currentRes / val} return aaya.`,
-        memorySnapshot: { n: val, CallStack: subStack },
-        animationEvent: { type: 'NONE' },
+        explanationEnglish: `Returned from factorial(${val - 1}) with prev_fact = ${prevRes}.`,
+        explanationHinglish: `factorial(${val - 1}) se prev_fact = ${prevRes} return aaya.`,
+        memorySnapshot: { n: val, prev_fact: prevRes, CallStack: subStack },
+        animationEvent: { type: 'CREATE_VARIABLE', name: 'prev_fact', value: prevRes },
       });
 
       steps.push({
         step: stepNum++, lineNum: 5,
-        explanationEnglish: `Compute ${val} * ${currentRes / val} = ${currentRes} and return it.`,
-        explanationHinglish: `${val} aur ${currentRes / val} ko multiply karke ${currentRes} return kiya.`,
-        memorySnapshot: { n: val, CallStack: subStack },
+        explanationEnglish: `Compute ${val} * ${prevRes} = ${currentRes}.`,
+        explanationHinglish: `n (${val}) * prev_fact (${prevRes}) calculate karke ${currentRes} mila.`,
+        memorySnapshot: { n: val, prev_fact: prevRes, CallStack: subStack },
+        animationEvent: { type: 'COMPUTE', inputs: ['n', 'prev_fact'], operator: '*', formula: `${val} * ${prevRes}`, result: currentRes, storeIn: 'Result' },
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 5,
+        explanationEnglish: `Return ${currentRes} to caller.`,
+        explanationHinglish: `${currentRes} ko caller ko return kiya.`,
+        memorySnapshot: { n: val, prev_fact: prevRes, CallStack: subStack },
         animationEvent: { type: 'FUNCTION_RETURN', functionName: 'factorial', returnValue: currentRes },
       });
     }

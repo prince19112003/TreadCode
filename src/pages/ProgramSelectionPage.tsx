@@ -317,6 +317,12 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'dsa_binary_search', number: '02', friendlyName: 'Binary Search Algorithm (O(log N))', description: 'Divide-and-conquer: eliminate half the array with each low, mid, high comparison.' },
       { id: 'dsa_binary_search', number: '03', friendlyName: 'Binary Search — First Occurrence', description: 'Find the first index of a repeated element in a sorted array.' },
     ],
+    linear_search: [
+      { id: 'dsa_linear_search', number: '01', friendlyName: 'Linear Search Algorithm (O(N))', description: 'Sequentially check each element from index 0 to N-1 for target match.' },
+    ],
+    binary_search: [
+      { id: 'dsa_binary_search', number: '01', friendlyName: 'Binary Search Algorithm (O(log N))', description: 'Divide-and-conquer: eliminate half the array with each low, mid, high comparison.' },
+    ],
     sorting: [
       { id: 'dsa_bubble_sort', number: '01', friendlyName: 'Bubble Sort Algorithm (O(N²))', description: 'Repeatedly compare adjacent elements and swap them into sorted order.' },
       { id: 'dsa_selection_sort', number: '02', friendlyName: 'Selection Sort Algorithm (O(N²))', description: 'Select the minimum element from the unsorted region and move it to front.' },

@@ -1,20 +1,20 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expand, Shrink } from 'lucide-react';
-import { useLesson } from '../../../../lessons/LessonContext';
-import { usePinchZoom } from '../../../../shared/hooks/usePinchZoom';
+import { useLesson } from '../../../../../lessons/LessonContext';
+import { usePinchZoom } from '../../../../../shared/hooks/usePinchZoom';
 
-import { VariableBox } from '../elements/VariableBox';
-import { PrintBox } from '../elements/PrintBox';
-import { ComputeBlock } from '../elements/ComputeBlock';
-import { ConditionBox } from '../elements/ConditionBox';
-import { MatchBlock } from '../elements/MatchBlock';
-import { FunctionBlock } from '../elements/FunctionBlock';
-import { RecursiveFunctionBlock } from '../elements/RecursiveFunctionBlock';
-import { FunctionStatementRow } from '../elements/FunctionStatementRow';
-import { DataStructureBox } from '../elements/DataStructureBox';
-import { UserInputPromptBox } from '../elements/UserInputPromptBox';
-import { TypeCastBox } from '../elements/TypeCastBox';
+import { VariableBox } from './elements/VariableBox';
+import { PrintBox } from './elements/PrintBox';
+import { ComputeBlock } from './elements/ComputeBlock';
+import { ConditionBox } from './elements/ConditionBox';
+import { MatchBlock } from './elements/MatchBlock';
+import { FunctionBlock } from './elements/FunctionBlock';
+import { RecursiveFunctionBlock } from './elements/RecursiveFunctionBlock';
+import { FunctionStatementRow } from './elements/FunctionStatementRow';
+import { DataStructureBox } from './elements/DataStructureBox';
+import { UserInputPromptBox } from './elements/UserInputPromptBox';
+import { TypeCastBox } from './elements/TypeCastBox';
 
 const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = () => {
   return null;
@@ -100,8 +100,22 @@ const parseDataStructure = (val: any) => {
   }
 };
 
-// Python has no static types — varType always undefined
-const getVarTypeForLanguage = (_varName: string, _lessonLines: any[], _language?: string) => undefined;
+const getVarTypeForLanguage = (varName: string, lessonLines: any[], _language?: string, val?: any) => {
+  if (!varName || !lessonLines) return undefined;
+  for (const line of lessonLines) {
+    const tokens = line?.tokens || [];
+    const varIdx = tokens.findIndex((t: any) => t.value === varName);
+    if (varIdx >= 0) {
+      const kwToken = tokens.slice(0, varIdx).reverse().find((t: any) => 
+        t.type === 'keyword' && ['int', 'double', 'float', 'boolean', 'bool', 'char', 'void', 'long', 'string', 'String', 'short', 'auto', 'struct', 'const', 'byte'].includes(t.value)
+      );
+      if (kwToken) return kwToken.value;
+    }
+  }
+  if (typeof val === 'number') return Number.isInteger(val) ? 'int' : 'double';
+  if (typeof val === 'boolean') return 'boolean';
+  return undefined;
+};
 
 const getPointersAndRange = (memSnapshot: Record<string, any>) => {
   if (!memSnapshot) return { pointers: undefined, searchRange: undefined };
@@ -120,7 +134,7 @@ const getPointersAndRange = (memSnapshot: Record<string, any>) => {
   return { pointers, searchRange };
 };
 
-export const PythonFlowchartStage: React.FC = () => {
+export const JavaFlowchartStage: React.FC = () => {
   const { lesson, currentStepIndex, zoom, setZoom, isFullScreen, toggleFullScreen, editableValues } = useLesson();
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = usePinchZoom(setZoom, 0.2, 2.5);
@@ -183,8 +197,25 @@ export const PythonFlowchartStage: React.FC = () => {
 
   // Get status of a specific case value from visibleSteps
   const getCaseStatus = (caseVal: string): 'matched' | 'failed' | 'pending' => {
-    const cleanCaseVal = caseVal.replace(/['"]/g, '').trim();
+    const cleanCaseVal = caseVal.replace(/['"]/g, '').trim().toLowerCase();
     
+    // Check if MATCH_START is present in visibleSteps
+    const matchStartStep = visibleSteps.find(step => step.animationEvent?.type === 'MATCH_START');
+    if (matchStartStep) {
+      const matchEv = matchStartStep.animationEvent as any;
+      const activeVal = String(matchEv.value ?? '').replace(/['"]/g, '').trim().toLowerCase();
+      
+      const nonDefaultCases = casesList
+        .map(item => item.value.replace(/['"]/g, '').trim().toLowerCase())
+        .filter(v => v !== 'default');
+
+      if (cleanCaseVal === 'default') {
+        return !nonDefaultCases.includes(activeVal) ? 'matched' : 'pending';
+      }
+
+      return cleanCaseVal === activeVal ? 'matched' : 'pending';
+    }
+
     // Check if any step in visibleSteps matches this case
     const evalStep = visibleSteps.find(step => {
       const ev = step.animationEvent;
@@ -225,34 +256,34 @@ export const PythonFlowchartStage: React.FC = () => {
     return 'pending';
   };
 
-  // Find index of MATCH_START in visibleSteps or fallback for switch/match keyword line step
+  // Find index of MATCH_START in visibleSteps or fallback for switch_case
   let matchStartIdx = visibleSteps.findIndex(s => s.animationEvent?.type === 'MATCH_START');
   if (matchStartIdx === -1 && isMatchTopic) {
+    // Check if COMPUTE or switch line step exists
     const switchStepIdx = visibleSteps.findIndex(s => 
       s.animationEvent?.type === 'COMPUTE' && 
       (s.animationEvent.operator === 'switch' || s.animationEvent.storeIn === 'Match')
     );
     if (switchStepIdx !== -1) {
       matchStartIdx = switchStepIdx;
-    } else {
-      const matchLine = lesson.lines.find(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'match' || t.value === 'switch')));
-      if (matchLine) {
-        matchStartIdx = visibleSteps.findIndex(s => s.lineNum === matchLine.lineNum);
-      }
     }
   }
-  const hasMatchStarted = matchStartIdx !== -1;
+  const hasMatchStarted = matchStartIdx !== -1 || (isMatchTopic && visibleSteps.length > 1);
 
   // Separate steps for rendering match_case / switch_case
-  const initialSteps = hasMatchStarted ? visibleSteps.slice(0, matchStartIdx) : visibleSteps;
-  const matchStep = hasMatchStarted ? visibleSteps[matchStartIdx] : null;
+  const initialSteps = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps.slice(0, matchStartIdx) : (isMatchTopic ? visibleSteps.slice(0, 1) : visibleSteps);
+  const matchStep = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps[matchStartIdx] : (isMatchTopic && visibleSteps.length > 1 ? visibleSteps[1] : null);
 
   // Find the index of the successfully matched condition to group subsequent branch steps
-  const matchedConditionIdx = visibleSteps.findIndex(s => 
+  let matchedConditionIdx = visibleSteps.findIndex(s => 
     s.animationEvent?.type === 'COMPUTE' && 
     s.animationEvent.storeIn === 'Condition' && 
     (s.animationEvent.result === 'True' || String(s.animationEvent.result).toLowerCase() === 'true')
   );
+
+  if (matchedConditionIdx === -1 && matchStartIdx !== -1) {
+    matchedConditionIdx = matchStartIdx;
+  }
 
   const branchSteps = matchedConditionIdx !== -1 ? visibleSteps.slice(matchedConditionIdx + 1) : [];
   
@@ -290,7 +321,7 @@ export const PythonFlowchartStage: React.FC = () => {
       const indent = (firstToken?.type === 'text' && firstToken.value.trim() === '') ? firstToken.value.length : 0;
       
       const hasContent = line.tokens.some(t => t.value.trim() !== '');
-      const isDef = line.tokens.some(t => t.type === 'keyword' && t.value === 'def');
+      const isDef = line.tokens.some((t: any) => t.type === 'keyword' && ['public','static','void','int','double','boolean','char','String'].includes(t.value));
       
       if (isDef) {
         inFunctionDef = true;
@@ -310,9 +341,10 @@ export const PythonFlowchartStage: React.FC = () => {
     currentActiveLine = visibleSteps.length > 0 ? visibleSteps[visibleSteps.length - 1].lineNum : -1;
 
     // Detect loop header
+    const doHeaderLine = lesson.lines.find(l => l.tokens.some(t => t.type === 'keyword' && t.value === 'do'));
     const loopHeaders = lesson.lines.filter(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while')));
-    const loopHeaderLine = loopHeaders[0];
-    const innerLoopHeaders = loopHeaders.slice(1);
+    const loopHeaderLine = doHeaderLine || loopHeaders[0];
+    const innerLoopHeaders = doHeaderLine ? loopHeaders : loopHeaders.slice(1);
     
     if (loopHeaderLine) {
       loopHeaderLineNum = loopHeaderLine.lineNum;
@@ -434,7 +466,7 @@ export const PythonFlowchartStage: React.FC = () => {
       }
     } else if (isFunctionTopic) {
       if (functionLines.some(l => l.lineNum === line.lineNum)) {
-        const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def');
+        const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['public','static','void','int','double','boolean','char','String'].includes(t.value));
         colorTheme = isHeader ? 'orange' : (isPrintLine ? 'default' : 'grey');
       } else {
         colorTheme = 'default'; // Main flow lines
@@ -442,18 +474,35 @@ export const PythonFlowchartStage: React.FC = () => {
     }
 
     const isFunctionLine = isFunctionTopic && functionLines.some(l => l.lineNum === line.lineNum);
-    const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def');
+    const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['public','static','void','int','double','boolean','char','String'].includes(t.value));
     const isFunctionBody = isFunctionLine && !isHeader;
 
     if (!hasExecuted) {
       return null;
+    }
+
+    if (!latestStep) {
+      return (
+        <motion.div
+          key={line.lineNum}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-4 relative shrink-0 min-w-max transition-all duration-300 opacity-60"
+        >
+          <div className="w-fit flex flex-col items-center gap-4">
+            <div className="px-3 py-1.5 border border-slate-800 rounded font-mono text-[11px] text-slate-500 whitespace-pre">
+              {line.tokens.map((t: any) => t.value).join('').trim()}
+            </div>
+          </div>
+        </motion.div>
+      );
     }
     
     const ev = latestStep.animationEvent;
 
     // Compute dynamic oldValue for in-place loop updates
     let oldValue = (ev as any)?.oldValue;
-    if (oldValue === undefined && (ev?.type === 'CREATE_VARIABLE' || ev?.type === 'UPDATE_VARIABLE')) {
+    if (oldValue === undefined && (ev?.type === 'CREATE_VARIABLE' || ev?.type === 'UPDATE_VARIABLE') && latestStep) {
       const prevStep = [...visibleSteps].reverse().find(s => 
         s.step < latestStep.step && 
         (s.animationEvent?.type === 'CREATE_VARIABLE' || s.animationEvent?.type === 'UPDATE_VARIABLE') && 
@@ -491,74 +540,13 @@ export const PythonFlowchartStage: React.FC = () => {
             </div>
           ) : null}
           
-          {!isFunctionBody && line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'for') ? (() => {
-            const lineStr = line.tokens.map((t: any) => t.value).join('');
-            const match = lineStr.match(/for\s+([a-zA-Z_]\w*)\s+in\s+range\(([^)]+)\)/);
-            const loopVar = match ? match[1] : ((ev as any)?.name || (ev as any)?.variableName || 'i');
-            const currentVal = latestStep.memorySnapshot?.[loopVar] ?? (ev as any)?.value ?? (ev as any)?.newValue ?? '?';
-
-            let rangeText = '';
-            if (match) {
-              const rawArgs = match[2].split(',').map((s: string) => s.trim());
-              if (rawArgs.length === 1) {
-                const stopVal = latestStep.memorySnapshot?.[rawArgs[0]] ?? Number(rawArgs[0]);
-                rangeText = !isNaN(Number(stopVal)) ? `0 → ${Number(stopVal) - 1} (Stop at ${stopVal})` : `0 to < ${rawArgs[0]}`;
-              } else if (rawArgs.length >= 2) {
-                const startVal = latestStep.memorySnapshot?.[rawArgs[0]] ?? Number(rawArgs[0]);
-                let stopVal: any = undefined;
-                if (rawArgs[1].includes('+')) {
-                  const parts = rawArgs[1].split('+').map((p: string) => p.trim());
-                  const v1 = latestStep.memorySnapshot?.[parts[0]] ?? Number(parts[0]);
-                  const v2 = latestStep.memorySnapshot?.[parts[1]] ?? Number(parts[1]);
-                  if (!isNaN(Number(v1)) && !isNaN(Number(v2))) stopVal = Number(v1) + Number(v2);
-                } else {
-                  stopVal = latestStep.memorySnapshot?.[rawArgs[1]] ?? Number(rawArgs[1]);
-                }
-
-                if (!isNaN(Number(startVal)) && !isNaN(Number(stopVal))) {
-                  rangeText = `${startVal} → ${Number(stopVal) - 1} (Stop at ${stopVal})`;
-                } else {
-                  rangeText = `${rawArgs[0]} to < ${rawArgs[1]}`;
-                }
-              }
-            }
-
-            return (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="flex flex-col items-center gap-1.5 px-5 py-2.5 bg-linear-to-r from-amber-950/90 via-slate-900 to-orange-950/90 border-2 border-amber-500/70 rounded-2xl shadow-lg shadow-amber-950/50 select-none"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
-                    FOR LOOP RANGE ITERATION
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-mono">
-                  <span className="text-slate-300 font-bold">
-                    <span className="text-amber-400 font-extrabold">{loopVar}</span> = <span className="text-white font-black bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">{currentVal}</span>
-                  </span>
-                  {rangeText && (
-                    <>
-                      <span className="text-slate-500 font-bold">•</span>
-                      <span className="text-amber-300 font-extrabold">
-                        Range: {rangeText}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })() : null}
-
-          {!isFunctionBody && !line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'for') && ev?.type === 'CREATE_VARIABLE' && (
+          {!isFunctionBody && ev?.type === 'CREATE_VARIABLE' && (
             isDataStructure(ev.value) ? (() => {
               const { variant, items } = parseDataStructure(ev.value);
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
             })() : (
               <div className="flex flex-col items-center gap-2">
-                <VariableBox name={ev.name} value={ev.value} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
+                <VariableBox name={ev.name} value={ev.value} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language, ev.value)} />
                 {ev.formula && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
@@ -579,19 +567,19 @@ export const PythonFlowchartStage: React.FC = () => {
                   const { variant, items } = parseDataStructure(v.value);
                   return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLatest} />;
                 })() : (
-                  <VariableBox key={idx} name={v.name} value={v.value} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(v.name, lesson.lines, lesson.language)} />
+                  <VariableBox key={idx} name={v.name} value={v.value} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(v.name, lesson.lines, lesson.language, v.value)} />
                 )
               ))}
             </div>
           )}
 
-          {!isFunctionBody && !line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'for') && ev?.type === 'UPDATE_VARIABLE' && (
+          {!isFunctionBody && ev?.type === 'UPDATE_VARIABLE' && (
             isDataStructure(ev.newValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.newValue);
               return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
             })() : (
               <div className="flex flex-col items-center gap-2">
-                <VariableBox name={ev.name} value={ev.newValue} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
+                <VariableBox name={ev.name} value={ev.newValue} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language, ev.newValue)} />
                 {ev.formula && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
@@ -599,6 +587,17 @@ export const PythonFlowchartStage: React.FC = () => {
                     className="px-3 py-1 rounded-lg bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 shadow-md shadow-amber-950/30"
                   >
                     {ev.formula}
+                  </motion.div>
+                )}
+                {isLoopTopic && (ev.name === 'i' || ev.name === 'j' || ev.name === 'count') && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="px-4 py-1.5 bg-amber-950/70 border border-amber-500/40 rounded-xl flex items-center gap-2 shadow-sm my-1 select-none"
+                  >
+                    <span className="text-xs font-mono font-bold text-amber-300 tracking-wider uppercase">
+                      INCREMENT STEP: {ev.name}++ ({oldValue} ➔ {ev.newValue})
+                    </span>
                   </motion.div>
                 )}
               </div>
@@ -676,6 +675,54 @@ export const PythonFlowchartStage: React.FC = () => {
             />
           )}
 
+          {!isFunctionBody && ev?.type === 'EVALUATE_CONDITION' && (() => {
+            const currentLine = lesson.lines.find(l => l.lineNum === latestStep.lineNum);
+            const isLoopHeader = !!currentLine?.tokens.some(t => t.type === 'keyword' && (t.value === 'while' || t.value === 'for'));
+            const isForLoop = !!currentLine?.tokens.some(t => t.type === 'keyword' && t.value === 'for');
+            
+            let labelText = 'CONDITION';
+            if (isLoopTopic && isLoopHeader) {
+              if (innerLoopHeaderLineNums.includes(latestStep.lineNum)) {
+                labelText = isForLoop ? 'INNER FOR LOOP' : 'INNER WHILE LOOP';
+              } else if (latestStep.lineNum === loopHeaderLineNum) {
+                labelText = isForLoop ? 'OUTER FOR LOOP' : 'OUTER WHILE LOOP';
+              } else {
+                labelText = isForLoop ? 'FOR LOOP' : 'WHILE LOOP';
+              }
+            }
+
+            const counterVar = (ev.inputs && ev.inputs[0]) || 'i';
+            const rawSnapVal = latestStep.memorySnapshot?.[counterVar];
+            const counterVal = rawSnapVal !== undefined ? String(rawSnapVal).split(' ')[0] : undefined;
+
+            return (
+              <div className="flex flex-col items-center gap-3">
+                {isLoopTopic && isLoopHeader && isForLoop && counterVal !== undefined && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="flex items-center gap-2.5 px-4 py-1.5 bg-slate-900/90 border border-orange-500/40 rounded-xl shadow-md select-none"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                    <span className="text-xs font-mono font-bold text-slate-300">
+                      Loop Counter State: <span className="text-orange-400 font-extrabold">{counterVar}</span> = <span className="text-white font-black bg-orange-500/20 px-2 py-0.5 rounded border border-orange-500/30">{counterVal}</span>
+                    </span>
+                  </motion.div>
+                )}
+
+                <ConditionBox
+                  condition={ev.condition || ev.formula || 'Condition'}
+                  inputs={ev.inputs || []}
+                  memorySnapshot={latestStep.memorySnapshot}
+                  isTrue={ev.result}
+                  isActive={isLatest}
+                  label={labelText}
+                  colorTheme={isLoopTopic && isLoopHeader ? (innerLoopHeaderLineNums.includes(latestStep.lineNum) ? 'fuchsia' : 'orange') : 'default'}
+                />
+              </div>
+            );
+          })()}
+
           {!isFunctionBody && ev?.type === 'PRINT_VALUE' && (
             isDataStructure(ev.outputValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.outputValue);
@@ -688,8 +735,19 @@ export const PythonFlowchartStage: React.FC = () => {
                 </div>
               );
             })() : (
-              <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} colorTheme={isPrintLine ? 'default' : colorTheme} isSmall={isFunctionBody} />
+              <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} colorTheme="default" isSmall={isFunctionBody} />
             )
+          )}
+          {!isFunctionBody && ev?.type === 'BREAK_EXECUTION' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="px-6 py-2 rounded-full border-2 border-amber-500/80 bg-[#241300] shadow-lg shadow-amber-950/60 flex items-center justify-center select-none"
+            >
+              <span className="text-xs font-mono font-extrabold tracking-widest text-amber-400 uppercase">
+                BREAK EXECUTION
+              </span>
+            </motion.div>
           )}
 
         {ev?.type === 'COMPUTE' && (
@@ -748,23 +806,18 @@ export const PythonFlowchartStage: React.FC = () => {
                   : 'border-slate-700/60')
           }`}>
             <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
-              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def')
+              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && ['public','static','void','int','double','boolean','char','String'].includes(t.value))
                 ? `Calling ${funcToken.value}()`
-                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def'))
-                    ? (line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def') ? 'Function Created' : 'Executing Function')
+                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && ['public','static','void','int','double','boolean','char','String'].includes(t.value)))
+                    ? (line.tokens.some((t: any) => t.type === 'keyword' && ['public','static','void','int','double','boolean','char','String'].includes(t.value)) ? 'Function Created' : 'Executing Function')
                     : (() => {
-                        const isBreak = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'break');
-                        const isContinue = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'continue');
                         const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
-                        const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');
                         const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
                         const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
-                        if (isBreak) return 'Break Executed';
-                        if (isContinue) return 'Skip Execution';
                         if (isPass) return 'Pass Statement';
-                        if (isElse) return 'Else Block Executed';
-                        if (isElif) return 'Elif Block Executed';
-                        if (isIf) return 'If Block Executed';
+                        if (isElse) return 'Else Block';
+                        // No elif in this language
+                        if (isIf) return 'If Block';
                         if (isLoopTopic && line.lineNum === loopHeaderLineNum) return 'Loop Header';
                         return 'Step Executed';
                       })())}
@@ -830,17 +883,27 @@ export const PythonFlowchartStage: React.FC = () => {
       </button>
 
       {/* Scrollable Container */}
-      <div ref={containerRef} id="flowchart-container" className="w-full h-full overflow-auto custom-scrollbar">
+      <div ref={containerRef} id="flowchart-container" className="w-full h-full overflow-auto custom-scrollbar flex justify-center">
         {/* Zoomable Canvas Area */}
         <div
           id="flowchart-content"
-          className="relative p-12 flex flex-col items-center gap-10 min-w-max min-h-max transition-transform duration-300 origin-top"
+          className="relative p-12 flex flex-col items-center gap-10 min-w-max min-h-max transition-transform duration-300 origin-top mx-auto"
           style={{ transform: `scale(${zoom})` }}
         >
           {/* Pen Layer Target */}
           <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
 
-          <AnimatePresence mode="wait">
+          {/* Java main() Method Scope Container */}
+          <div className="relative px-12 pb-10 pt-12 rounded-3xl border border-indigo-500/35 bg-transparent flex flex-col items-center gap-8 min-w-105">
+            {/* Minimal Header Badge */}
+            <div className="absolute -top-3 left-6 px-2.5 py-0.5 bg-slate-950 border border-indigo-500/50 rounded-md flex items-center gap-1.5 shadow-xs select-none z-20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-90" />
+              <span className="text-[11px] font-mono font-medium text-indigo-200">
+                main()
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait">
             {isFunctionTopic ? (() => {
               let functionPhase: 'idle' | 'defined' | 'calling' | 'executing' | 'returning' = 'idle';
               const defLineNum = functionLines[0]?.lineNum;
@@ -1177,6 +1240,28 @@ export const PythonFlowchartStage: React.FC = () => {
                                         )}
                                         {bEv?.type === 'UPDATE_VARIABLE' && (
                                           <VariableBox name={bEv.name} value={bEv.newValue} oldValue={bEv.oldValue} isActive={isLatest} />
+                                        )}
+                                        {bEv?.type === 'BREAK_EXECUTION' && (
+                                          <motion.div
+                                            initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            className="px-5 py-2 bg-amber-950/80 border-2 border-amber-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                                          >
+                                            <span className="text-xs font-mono font-black text-amber-300 tracking-wider uppercase">
+                                              Break Execution
+                                            </span>
+                                          </motion.div>
+                                        )}
+                                        {bEv?.type === 'SKIP_EXECUTION' && (
+                                          <motion.div
+                                            initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            className="px-5 py-2 bg-cyan-950/80 border-2 border-cyan-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                                          >
+                                            <span className="text-xs font-mono font-black text-cyan-300 tracking-wider uppercase">
+                                              Skip Execution
+                                            </span>
+                                          </motion.div>
                                         )}
                                         {bEv?.type === 'COMPUTE' && bEv.storeIn !== 'Condition' && (() => {
                                           const prevStep = activeSteps.find((s: any) => s.step === bStep.step - 1);
@@ -1559,6 +1644,30 @@ export const PythonFlowchartStage: React.FC = () => {
                         <MatchBlock variableName={ev.variableName} value={ev.value} isActive={isLatest} />
                       )}
 
+                      {ev?.type === 'BREAK_EXECUTION' && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          className="px-5 py-2 bg-amber-950/80 border-2 border-amber-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                        >
+                          <span className="text-xs font-mono font-black text-amber-300 tracking-wider uppercase">
+                            Break Execution
+                          </span>
+                        </motion.div>
+                      )}
+
+                      {ev?.type === 'SKIP_EXECUTION' && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          className="px-5 py-2 bg-cyan-950/80 border-2 border-cyan-500/60 rounded-2xl flex items-center justify-center shadow-lg select-none my-1"
+                        >
+                          <span className="text-xs font-mono font-black text-cyan-300 tracking-wider uppercase">
+                            Skip Execution
+                          </span>
+                        </motion.div>
+                      )}
+
                       {ev?.type === 'CREATE_VARIABLE' && (
                         isDataStructure(ev.value) ? (() => {
                           const { variant, items } = parseDataStructure(ev.value);
@@ -1805,105 +1914,32 @@ export const PythonFlowchartStage: React.FC = () => {
 
                       {ev?.type === 'EVALUATE_CONDITION' && (() => {
                         const condEv = ev as any;
-                        let varName = condEv.variableName;
-                        let varVal = condEv.variableValue;
-                        let operatorText = condEv.operator || condEv.condition || '';
-
-                        if (!varName && condEv.condition) {
-                          const match = String(condEv.condition).trim().match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(.*)$/);
-                          if (match) {
-                            varName = match[1];
-                            operatorText = match[2];
-                          }
-                        }
-
-                        if (varVal === undefined && varName) {
-                          varVal = step.memorySnapshot?.[varName];
-                        }
-
                         const isPass = Boolean(condEv.result);
+                        const conditionStr = condEv.formula || condEv.condition || (condEv.variableName ? `${condEv.variableName} ${condEv.operator || ''}` : condEv.operator || '');
+                        const inputsList = condEv.inputs || (condEv.variableName ? [condEv.variableName] : []);
 
                         return (
-                          <div className="flex flex-col items-center gap-1.5 my-1">
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9, y: 8 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              className={`relative flex items-center gap-6 px-6 py-3.5 rounded-[22px] border-2 font-mono shadow-xl backdrop-blur-md transition-all duration-300 ${
-                                isPass
-                                  ? 'bg-slate-950/95 border-emerald-400 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
-                                  : 'bg-slate-950/95 border-rose-500 text-rose-300 shadow-[0_0_25px_rgba(244,63,94,0.2)]'
-                              } ${isLatest ? 'ring-2 ring-emerald-400/40 scale-105' : ''}`}
-                            >
-                              {/* Left: Variable Name + Value directly under it */}
-                              {varName && isNaN(Number(varName)) && (
-                                <div className="flex flex-col items-center justify-center leading-tight">
-                                  <span className={`text-base font-extrabold font-mono tracking-wide ${isPass ? 'text-emerald-300' : 'text-rose-300'}`}>
-                                    {varName}
-                                  </span>
-                                  {varVal !== undefined && (
-                                    <span className="text-xs font-bold font-mono text-cyan-400 mt-0.5">
-                                      {String(varVal).replace(/\s*\[[a-zA-Z0-9_]+\]/g, '')}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Middle: Operator / Rest of Condition Expression */}
-                              <div className="text-lg font-black font-mono tracking-wider text-slate-100">
-                                {operatorText}
-                              </div>
-
-                              {/* Right: Solid Circle Icon Badge with Checkmark / Cross */}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md ${
-                                isPass ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
-                              }`}>
-                                {isPass ? (
-                                  <svg className="w-5 h-5 stroke-[3.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-5 h-5 stroke-[3.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                )}
-                              </div>
-                            </motion.div>
-
-                            {/* Bottom Label: CONDITION */}
-                            <span className={`text-[10px] font-mono font-black tracking-widest uppercase ${isPass ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              CONDITION
-                            </span>
-                          </div>
+                          <ConditionBox
+                            condition={conditionStr}
+                            inputs={inputsList}
+                            memorySnapshot={step.memorySnapshot}
+                            isTrue={isPass}
+                            isActive={isLatest}
+                            label="CONDITION"
+                            colorTheme="default"
+                          />
                         );
                       })()}
 
-                      {ev?.type === 'NONE' && (() => {
-                        const line = lesson.lines.find(l => l.lineNum === step.lineNum);
-                        let label = 'Block Executed';
-                        if (line) {
-                          const isBreak = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'break');
-                          const isContinue = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'continue');
-                          const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
-                          const isElif = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'elif');
-                          const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
-                          const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
-                          if (isBreak) label = 'Break Executed';
-                          else if (isContinue) label = 'Skip Execution';
-                          else if (isPass) label = 'Pass Statement Executed';
-                          else if (isElse) label = 'Else Block Executed';
-                          else if (isElif) label = 'Elif Block Executed';
-                          else if (isIf) label = 'If Block Executed';
-                        }
-                        return (
-                          <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-xl text-center select-none shadow-sm transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
-                            <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
-                              {label}
-                            </span>
-                          </div>
-                        );
-                      })()}
+                      {ev?.type === 'NONE' && (
+                        <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-xl text-center select-none shadow-sm transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
+                          <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+                            Step Executed
+                          </span>
+                        </div>
+                      )}
 
-                      {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
+                      {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'BREAK_EXECUTION', 'SKIP_EXECUTION', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
                         <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded">
                           [Step {step.step} Executed]
                         </div>
@@ -2008,6 +2044,7 @@ export const PythonFlowchartStage: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
 
           {/* Invisible element to anchor the scroll */}
           <div ref={bottomRef} className="h-4 w-full" />

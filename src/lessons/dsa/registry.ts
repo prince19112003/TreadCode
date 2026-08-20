@@ -14,6 +14,14 @@ export const dsaRegistry: Record<string, any> = {
     dsa_binary_search: dsaLessons.dsa_binary_search,
     binary_search: dsaLessons.dsa_binary_search,
   },
+  linear_search: {
+    dsa_linear_search: dsaLessons.dsa_linear_search,
+    linear_search: dsaLessons.dsa_linear_search,
+  },
+  binary_search: {
+    dsa_binary_search: dsaLessons.dsa_binary_search,
+    binary_search: dsaLessons.dsa_binary_search,
+  },
   sorting: {
     dsa_bubble_sort: dsaLessons.dsa_bubble_sort,
     bubble_sort: dsaLessons.dsa_bubble_sort,

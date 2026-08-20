@@ -1,20 +1,20 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expand, Shrink } from 'lucide-react';
-import { useLesson } from '../../../../lessons/LessonContext';
-import { usePinchZoom } from '../../../../shared/hooks/usePinchZoom';
+import { useLesson } from '../../../../../lessons/LessonContext';
+import { usePinchZoom } from '../../../../../shared/hooks/usePinchZoom';
 
-import { VariableBox } from '../elements/VariableBox';
-import { PrintBox } from '../elements/PrintBox';
-import { ComputeBlock } from '../elements/ComputeBlock';
-import { ConditionBox } from '../elements/ConditionBox';
-import { MatchBlock } from '../elements/MatchBlock';
-import { FunctionBlock } from '../elements/FunctionBlock';
-import { RecursiveFunctionBlock } from '../elements/RecursiveFunctionBlock';
-import { FunctionStatementRow } from '../elements/FunctionStatementRow';
-import { DataStructureBox } from '../elements/DataStructureBox';
-import { UserInputPromptBox } from '../elements/UserInputPromptBox';
-import { TypeCastBox } from '../elements/TypeCastBox';
+import { VariableBox } from './elements/VariableBox';
+import { PrintBox } from './elements/PrintBox';
+import { ComputeBlock } from './elements/ComputeBlock';
+import { ConditionBox } from './elements/ConditionBox';
+import { MatchBlock } from './elements/MatchBlock';
+import { FunctionBlock } from './elements/FunctionBlock';
+import { RecursiveFunctionBlock } from './elements/RecursiveFunctionBlock';
+import { FunctionStatementRow } from './elements/FunctionStatementRow';
+import { DataStructureBox } from './elements/DataStructureBox';
+import { UserInputPromptBox } from './elements/UserInputPromptBox';
+import { TypeCastBox } from './elements/TypeCastBox';
 
 const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = () => {
   return null;
@@ -101,7 +101,7 @@ const parseDataStructure = (val: any) => {
 };
 
 const getVarTypeForLanguage = (varName: string, lessonLines: any[], language?: string) => {
-  if (language !== 'c' || !varName || !lessonLines) return undefined;
+  if (language !== 'cpp' || !varName || !lessonLines) return undefined;
   for (const line of lessonLines) {
     const tokens = line?.tokens || [];
     const varIdx = tokens.findIndex((t: any) => t.value === varName);
@@ -132,7 +132,7 @@ const getPointersAndRange = (memSnapshot: Record<string, any>) => {
   return { pointers, searchRange };
 };
 
-export const CFlowchartStage: React.FC = () => {
+export const CppFlowchartStage: React.FC = () => {
   const { lesson, currentStepIndex, zoom, setZoom, isFullScreen, toggleFullScreen, editableValues } = useLesson();
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = usePinchZoom(setZoom, 0.2, 2.5);
@@ -298,7 +298,7 @@ export const CFlowchartStage: React.FC = () => {
       const indent = (firstToken?.type === 'text' && firstToken.value.trim() === '') ? firstToken.value.length : 0;
       
       const hasContent = line.tokens.some(t => t.value.trim() !== '');
-      const isDef = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
+      const isDef = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value));
       
       if (isDef) {
         inFunctionDef = true;
@@ -442,7 +442,7 @@ export const CFlowchartStage: React.FC = () => {
       }
     } else if (isFunctionTopic) {
       if (functionLines.some(l => l.lineNum === line.lineNum)) {
-        const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
+        const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value));
         colorTheme = isHeader ? 'orange' : (isPrintLine ? 'default' : 'grey');
       } else {
         colorTheme = 'default'; // Main flow lines
@@ -450,7 +450,7 @@ export const CFlowchartStage: React.FC = () => {
     }
 
     const isFunctionLine = isFunctionTopic && functionLines.some(l => l.lineNum === line.lineNum);
-    const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
+    const isHeader = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value));
     const isFunctionBody = isFunctionLine && !isHeader;
 
     if (!hasExecuted) {
@@ -695,10 +695,10 @@ export const CFlowchartStage: React.FC = () => {
                   : 'border-slate-700/60')
           }`}>
             <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
-              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value))
+              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value))
                 ? `Calling ${funcToken.value}()`
-                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value)))
-                    ? (line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value)) ? 'Function Created' : 'Executing Function')
+                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value)))
+                    ? (line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char','bool','auto','string'].includes(t.value)) ? 'Function Created' : 'Executing Function')
                     : (() => {
                         const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
                         const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
