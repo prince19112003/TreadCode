@@ -72,15 +72,15 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`flex flex-col gap-2 p-3.5 rounded-xl border-2 transition-all duration-500 ${themeClasses}`}
+      className={`flex flex-col gap-2 p-3.5 rounded-lg border-2 transition-all duration-500 ${themeClasses}`}
       style={{ minWidth: 'fit-content' }}
     >
       <div className="flex items-center justify-between px-1">
         <span className={`text-[10px] font-black uppercase tracking-widest ${badgeTextClass} font-mono leading-none`}>
-          {name} {isTuple ? '(TUPLE)' : isTable ? '{DICT}' : '[LIST]'}
+          {name} {isTuple ? '(TUPLE)' : isTable ? '{DICT}' : '[ARRAY]'}
         </span>
         {hasRange && (
-          <span className="text-[9px] font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded-md shadow-sm">
+          <span className="text-[9px] font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded shadow-sm">
             Window: [{searchRange[0]}...{searchRange[1]}]
           </span>
         )}
@@ -88,8 +88,8 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
       
       {isArrayOrTuple ? (
         <div className="flex flex-col gap-3">
-          {/* Main Full Array Grid */}
-          <div className={`flex border ${gridBorderClass} rounded-lg overflow-hidden bg-slate-950/60 p-0.5`}>
+          {/* Main Full Array Grid - Square Box Style */}
+          <div className={`flex border-2 ${gridBorderClass} rounded-none overflow-hidden bg-slate-950/80 p-0 shadow-md`}>
             {arrayItems.map((val, idx) => {
               const isHighlighted = idx === highlightedIndex || highlightedIndices?.includes(idx);
               const isOutOfRange = hasRange && (idx < searchRange[0] || idx > searchRange[1]);
@@ -106,8 +106,8 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
               return (
                 <div 
                   key={idx} 
-                  className={`flex flex-col items-center justify-center min-w-13.5 p-2 transition-all duration-500 rounded-md relative ${
-                    idx !== arrayItems.length - 1 ? `border-r ${gridBorderClass}` : ''
+                  className={`flex flex-col items-center justify-center min-w-13.5 p-2 transition-all duration-500 rounded-none relative ${
+                    idx !== arrayItems.length - 1 ? `border-r-2 ${gridBorderClass}` : ''
                   } ${
                     isSwapping
                       ? 'bg-amber-500/35 border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-[0_0_20px_rgba(245,158,11,0.6)] scale-110 z-30'

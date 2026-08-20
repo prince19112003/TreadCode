@@ -5,7 +5,7 @@ const languageStats: Record<string, { topicsCount: number; programsCount: number
   python: { topicsCount: 16, programsCount: 100 },
   c: { topicsCount: 13, programsCount: 45 },
   cpp: { topicsCount: 14, programsCount: 50 },
-  java: { topicsCount: 13, programsCount: 46 },
+  java: { topicsCount: 13, programsCount: 52 },
   dsa: { topicsCount: 21, programsCount: 24 },
 };
 

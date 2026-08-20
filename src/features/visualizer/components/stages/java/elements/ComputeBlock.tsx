@@ -65,14 +65,9 @@ const parseDataStructure = (val: any) => {
 const cleanValueAndType = (raw: any) => {
   if (raw === undefined || raw === null) return { value: raw, varType: undefined };
   const str = String(raw);
-  let varType: string | undefined = undefined;
-  
-  if (str.includes('[const]')) varType = 'const';
-  else if (str.includes('[4B]')) varType = 'float';
-  else if (str.includes('[8B]')) varType = 'double';
-  else if (str.includes('[1B]')) varType = 'bool';
-
-  const cleanedVal = str.replace(/\s*\[(4B|8B|1B|const|short|long)\]/gi, '').trim();
+  const typeMatch = str.match(/\[([a-zA-Z0-9_]+)\]/);
+  const varType = typeMatch ? typeMatch[1] : undefined;
+  const cleanedVal = str.replace(/\s*\[[a-zA-Z0-9_]+\]/g, '').trim();
 
   return { value: cleanedVal, varType };
 };
@@ -106,12 +101,12 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
   const isCaseCalc = (operator === 'upper()' || operator === 'lower()') && inputs.length === 1;
   const isStringCalc = isLenCalc || isCaseCalc;
 
-  const rawVal = String(prevMemorySnapshot[inputs[0]] ?? memorySnapshot[inputs[0]] ?? inputs[0]);
-  const isListVal = rawVal.replace(/['"]/g, '').trim().startsWith('[') && rawVal.replace(/['"]/g, '').trim().endsWith(']');
+  const rawVal = cleanValueAndType(prevMemorySnapshot[inputs[0]] ?? memorySnapshot[inputs[0]] ?? inputs[0]).value;
+  const isListVal = isDataStructure(rawVal);
   
   const itemsList: Array<string | number> = isListVal 
     ? (() => {
-        const cleaned = rawVal.replace(/['"]/g, '').trim();
+        const cleaned = String(rawVal).replace(/['"]/g, '').trim();
         try {
           return JSON.parse(cleaned) as Array<string | number>;
         } catch {
@@ -121,7 +116,7 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
           });
         }
       })()
-    : rawVal.replace(/['"]/g, '').split('');
+    : String(rawVal).replace(/['"]/g, '').split('');
 
   const [activeCountIdx, setActiveCountIdx] = useState(-1);
   const [highlightedIndices, setHighlightedIndices] = useState<number[]>([]);
@@ -338,7 +333,38 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
                 const varName = match ? match[1] : inp;
                 const inlineVal = match ? match[2] : undefined;
 
-                const rawVal = inlineVal ?? prevMemorySnapshot[varName] ?? memorySnapshot[varName] ?? prevMemorySnapshot[inp] ?? memorySnapshot[inp] ?? inp;
+                // Check if input is matrix/array index access like matrix[0][1] or arr[2]
+                let resolvedIndexedVal: any = undefined;
+                const matrix2DMatch = String(inp).match(/^([a-zA-Z_]\w*)\[(\d+)\]\[(\d+)\]$/);
+                const array1DMatch = String(inp).match(/^([a-zA-Z_]\w*)\[(\d+)\]$/);
+
+                if (matrix2DMatch) {
+                  const dsName = matrix2DMatch[1];
+                  const r = parseInt(matrix2DMatch[2], 10);
+                  const c = parseInt(matrix2DMatch[3], 10);
+                  // Check explicit key first like 'matrix[0][1]' or 'mat[0][1]'
+                  if (memorySnapshot[`${dsName}[${r}][${c}]`] !== undefined) {
+                    resolvedIndexedVal = memorySnapshot[`${dsName}[${r}][${c}]`];
+                  } else if (memorySnapshot[dsName]) {
+                    const parsed = parseDataStructure(memorySnapshot[dsName]);
+                    if (parsed.items && Array.isArray(parsed.items) && parsed.items[r] && Array.isArray(parsed.items[r])) {
+                      resolvedIndexedVal = parsed.items[r][c];
+                    }
+                  }
+                } else if (array1DMatch) {
+                  const dsName = array1DMatch[1];
+                  const idx = parseInt(array1DMatch[2], 10);
+                  if (memorySnapshot[`${dsName}[${idx}]`] !== undefined) {
+                    resolvedIndexedVal = memorySnapshot[`${dsName}[${idx}]`];
+                  } else if (memorySnapshot[dsName]) {
+                    const parsed = parseDataStructure(memorySnapshot[dsName]);
+                    if (parsed.items && Array.isArray(parsed.items) && parsed.items[idx] !== undefined) {
+                      resolvedIndexedVal = parsed.items[idx];
+                    }
+                  }
+                }
+
+                const rawVal = resolvedIndexedVal ?? inlineVal ?? prevMemorySnapshot[varName] ?? memorySnapshot[varName] ?? prevMemorySnapshot[inp] ?? memorySnapshot[inp] ?? inp;
                 const { value: cleanVal, varType } = cleanValueAndType(rawVal);
                 return (
                   <React.Fragment key={i}>
@@ -347,7 +373,7 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
                       return <DataStructureBox name={varName} variant={variant} items={items} isActive={isActive && calcState === 'inputs'} highlightedIndex={highlightIdx} highlightedIndices={highlightedIndices} />;
                     })() : (
                       <VariableBox 
-                        name={varName} 
+                        name={inp} 
                         value={cleanVal} 
                         isActive={isActive && calcState === 'inputs'} 
                         colorTheme={colorTheme} 

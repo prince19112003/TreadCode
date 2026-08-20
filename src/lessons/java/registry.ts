@@ -3,6 +3,9 @@ import { javaLessons } from './index';
 export const javaRegistry: Record<string, any> = {
   variables: {
     java_types: javaLessons.java_types,
+    java_var_reassign: javaLessons.java_var_reassign,
+    java_multi_vars: javaLessons.java_multi_vars,
+    java_constants: javaLessons.java_constants,
     java_swap_temp: javaLessons.java_swap_temp,
     java_swap_no_temp: javaLessons.java_swap_no_temp,
   },
@@ -61,6 +64,9 @@ export const javaRegistry: Record<string, any> = {
   strings: {
     java_ascii: javaLessons.java_ascii,
     java_string_concat: javaLessons.java_string_concat,
+    java_string_length: javaLessons.java_string_length,
+    java_string_case: javaLessons.java_string_case,
+    java_string_reverse: javaLessons.java_string_reverse,
   },
   arrays_1d: {
     java_array_sum_1d: javaLessons.java_array_sum_1d,

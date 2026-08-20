@@ -403,8 +403,11 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
   java: {
     variables: [
       { id: 'java_types', number: '01', friendlyName: 'Java Primitive Data Types (int, double, boolean, char)', description: 'Understand Java strongly-typed primitives, explicit byte sizes, and memory allocation.' },
-      { id: 'java_swap_temp', number: '02', friendlyName: 'Swap Two Variables (Using Temp Variable)', description: 'Understand variable swapping logic and temporary memory slot usage.' },
-      { id: 'java_swap_no_temp', number: '03', friendlyName: 'Swap Two Variables (Without Temp Variable)', description: 'Swap two integer variables using arithmetic addition and subtraction.' },
+      { id: 'java_var_reassign', number: '02', friendlyName: 'Variable Value Reassignment', description: 'Observe how variable memory cell values are updated and overwritten over time.' },
+      { id: 'java_multi_vars', number: '03', friendlyName: 'Multiple Variables Initialization & Formulas', description: 'Learn declaring multiple variables of same type and performing cross calculations.' },
+      { id: 'java_constants', number: '04', friendlyName: 'Constants with final Keyword', description: 'Learn immutable memory slots declared with final keyword in Java.' },
+      { id: 'java_swap_temp', number: '05', friendlyName: 'Swap Two Variables (Using Temp Variable)', description: 'Understand variable swapping logic and temporary memory slot usage.' },
+      { id: 'java_swap_no_temp', number: '06', friendlyName: 'Swap Two Variables (Without Temp Variable)', description: 'Swap two integer variables using arithmetic addition and subtraction.' },
     ],
     type_casting: [
       { id: 'java_casting', number: '01', friendlyName: 'Implicit & Explicit Type Casting', description: 'Learn automatic widening and manual narrowing casting in Java.' },
@@ -460,7 +463,10 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
     ],
     strings: [
       { id: 'java_ascii', number: '01', friendlyName: 'Char to ASCII Integer Conversion', description: 'Understand character encoding and numeric ASCII representation in Java.' },
-      { id: 'java_string_concat', number: '02', friendlyName: 'String Concatenation & Length', description: 'Join String objects using + operator and inspect string .length().' },
+      { id: 'java_string_concat', number: '02', friendlyName: 'String Concatenation (+ Operator)', description: 'Join String objects using + operator and build complete messages.' },
+      { id: 'java_string_length', number: '03', friendlyName: 'String .length() Method', description: 'Inspect String character length using .length() method.' },
+      { id: 'java_string_case', number: '04', friendlyName: 'String toUpperCase() Transformation', description: 'Learn uppercase casing transformation using .toUpperCase().' },
+      { id: 'java_string_reverse', number: '05', friendlyName: 'Reverse String with charAt() Loop', description: 'Iterate String backwards and build reversed String using .charAt(i).' },
     ],
     arrays_1d: [
       { id: 'java_array_sum_1d', number: '01', friendlyName: '1D Array Sum & Average', description: 'Learn Java 1D array allocation, element indexing, and average computation.' },
@@ -471,7 +477,7 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
     arrays_2d: [
       { id: 'java_matrix_2d', number: '01', friendlyName: '2D Matrix Declaration & Traversal', description: 'Understand 2D array matrix row and column indexing in Java.' },
       { id: 'java_diagonal_sum_2d', number: '02', friendlyName: 'Primary Diagonal Sum of 2D Matrix', description: 'Learn matrix primary diagonal indexing (matrix[i][i]) in Java 2D arrays.' },
-      { id: 'java_matrix_transpose', number: '03', friendlyName: '2D Matrix Transpose', description: 'Learn row-column swapping matrix transposition in Java.' },
+      { id: 'java_matrix_transpose', number: '03', friendlyName: '2D Matrix Transpose using Nested Loops', description: 'Learn matrix transposition (t[j][i] = mat[i][j]) using nested loops in Java.' },
     ],
   }
 };

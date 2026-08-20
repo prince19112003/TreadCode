@@ -39,7 +39,7 @@ const languages = [
     year: '1995',
     tagline: 'Write once, run anywhere.',
     topics: 13,
-    programs: 46,
+    programs: 52,
     accentColor: '#f97316',
     accentGlow: 'rgba(249,115,22,0.20)',
     accentBorder: 'rgba(249,115,22,0.35)',

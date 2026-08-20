@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expand, Shrink } from 'lucide-react';
 import { useLesson } from '../../../../../lessons/LessonContext';
@@ -66,9 +66,17 @@ const parseDataStructure = (val: any) => {
     try {
       const jsonStr = isTuple ? `[${cleaned.slice(1, -1)}]` : cleaned;
       const formattedJson = jsonStr.replace(/'/g, '"');
+      const parsed = JSON.parse(formattedJson);
+      if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+        return {
+          variant: 'matrix' as const,
+          items: parsed as Array<Array<string | number>>,
+          matrix: parsed as Array<Array<string | number>>
+        };
+      }
       return {
         variant: isTuple ? ('tuple' as const) : ('array' as const),
-        items: JSON.parse(formattedJson) as Array<string | number>
+        items: parsed as Array<string | number>
       };
     } catch {
       const items = cleaned.slice(1, -1).split(',').map(s => {
@@ -148,7 +156,8 @@ export const JavaFlowchartStage: React.FC = () => {
 
   // Global rule: step 0 = empty canvas (program not yet started).
   // currentStepIndex 1 shows step 0 of activeSteps, index 2 shows steps 0-1, etc.
-  const visibleSteps = currentStepIndex === 0 ? [] : activeSteps.slice(0, currentStepIndex);
+  const visibleSteps = (currentStepIndex === 0 ? [] : activeSteps.slice(0, currentStepIndex))
+    .filter(s => s.animationEvent?.type !== 'COMPLETE');
 
   // Auto-scroll to the active element, or bottom if not found
   useEffect(() => {
@@ -1541,7 +1550,7 @@ export const JavaFlowchartStage: React.FC = () => {
                 key="steps-canvas"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-row items-start justify-start gap-24 shrink-0 min-w-max pl-4 pr-32 pb-16"
+                className="flex flex-row items-start justify-center gap-16 shrink-0 min-w-max px-8 pb-6"
               >
                 {/* Left Column: Flowchart Nodes Chain */}
                 <div className="flex flex-col items-center gap-12 shrink-0">

@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 
 interface DataStructureBoxProps {
   name: string;
-  variant: 'array' | 'tuple' | 'table';
-  items: Array<string | number> | Record<string, string | number>;
+  variant: 'array' | 'tuple' | 'table' | 'matrix';
+  items: Array<string | number> | Array<Array<string | number>> | Record<string, string | number>;
+  matrix?: Array<Array<string | number>>;
   isActive?: boolean;
   highlightedIndex?: number;
   highlightedIndices?: number[];
   highlightedKey?: string;
+  highlightedCell?: [number, number];
   pointers?: { low?: number; mid?: number; high?: number };
   searchRange?: [number, number];
   sortedIndices?: number[];
@@ -22,10 +24,12 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
   name, 
   variant, 
   items, 
+  matrix: matrixProp,
   isActive,
   highlightedIndex,
   highlightedIndices,
   highlightedKey,
+  highlightedCell,
   pointers,
   searchRange,
   sortedIndices,
@@ -34,62 +38,137 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
   minIdx,
   keyIndex
 }) => {
+  const isMatrix = variant === 'matrix' || (Array.isArray(items) && items.length > 0 && Array.isArray(items[0]));
   const isTuple = variant === 'tuple';
   const isTable = variant === 'table';
-  const isArrayOrTuple = variant === 'array' || isTuple;
+  const isArrayOrTuple = !isMatrix && (variant === 'array' || isTuple);
+  const matrixData: Array<Array<string | number>> = isMatrix ? ((matrixProp || items) as Array<Array<string | number>>) : [];
   const arrayItems = isArrayOrTuple ? (items as Array<string | number>) : [];
   const dictItems = isTable ? Object.entries(items as Record<string, string | number>) : [];
 
-  const themeClasses = isTuple
+  const themeClasses = isMatrix
+    ? (isActive 
+        ? 'border-indigo-400 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.35)] scale-[1.02]' 
+        : 'border-indigo-500/30 bg-indigo-500/5')
+    : isTuple
     ? (isActive 
         ? 'border-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-[1.02]' 
         : 'border-cyan-500/30 bg-cyan-500/5')
     : isTable
     ? (isActive 
-        ? 'border-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.35)] scale-[1.02]' 
+        ? 'border-emerald-400 bg-emerald-500/10 shadow-[0_0_15px_rgba(160,185,129,0.35)] scale-[1.02]' 
         : 'border-emerald-500/30 bg-emerald-500/5')
     : (isActive 
         ? 'border-purple-400 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-[1.02]' 
         : 'border-purple-500/30 bg-purple-500/5');
 
-  const badgeTextClass = isTuple 
+  const badgeTextClass = isMatrix
+    ? 'text-indigo-300'
+    : isTuple 
     ? 'text-cyan-300' 
     : isTable 
     ? 'text-emerald-300' 
     : 'text-purple-300';
     
-  const gridBorderClass = isTuple 
+  const gridBorderClass = isMatrix
+    ? 'border-indigo-500/40'
+    : isTuple 
     ? 'border-cyan-500/30' 
     : isTable 
     ? 'border-emerald-500/30' 
     : 'border-purple-500/30';
     
-  const indexTextClass = isTuple ? 'text-cyan-400/70' : 'text-purple-400/70';
+  const indexTextClass = isMatrix ? 'text-indigo-400/80' : isTuple ? 'text-cyan-400/70' : 'text-purple-400/70';
 
   const hasRange = searchRange && searchRange.length === 2 && searchRange[0] <= searchRange[1];
+
+  if (isMatrix) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`flex flex-col p-3 rounded-none border-2 transition-all duration-500 ${
+          isActive 
+            ? 'border-indigo-400 bg-indigo-950/30 shadow-[0_0_20px_rgba(99,102,241,0.3)]' 
+            : 'border-indigo-500/40 bg-slate-950/60'
+        }`}
+        style={{ minWidth: 'fit-content' }}
+      >
+        <div className="flex items-center justify-between pb-2 mb-2 border-b border-indigo-500/20">
+          <span className="text-xs font-black uppercase tracking-wider text-indigo-300 font-mono">
+            {name}
+          </span>
+          <span className="text-[10px] font-mono font-bold text-slate-400">
+            {matrixData.length} × {matrixData[0]?.length || 0}
+          </span>
+        </div>
+
+        <table className="border-collapse select-none font-mono">
+          <thead>
+            <tr>
+              <th className="p-2 text-[10px] font-bold text-slate-500 border border-slate-800 bg-slate-900/40">
+                
+              </th>
+              {matrixData[0]?.map((_, colIdx) => (
+                <th key={colIdx} className="px-4 py-1.5 text-xs font-extrabold text-indigo-400 border border-indigo-500/30 bg-indigo-950/40 min-w-14 text-center">
+                  [{colIdx}]
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {matrixData.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                <th className="px-3 py-2 text-xs font-extrabold text-indigo-400 border border-indigo-500/30 bg-indigo-950/40 text-center">
+                  [{rowIdx}]
+                </th>
+                {row.map((cellVal, colIdx) => {
+                  const isCellHighlighted = highlightedCell && highlightedCell[0] === rowIdx && highlightedCell[1] === colIdx;
+                  return (
+                    <td
+                      key={colIdx}
+                      className={`p-3 text-center border border-indigo-500/30 transition-all duration-300 ${
+                        isCellHighlighted
+                          ? 'bg-amber-500/30 border-amber-400 text-amber-200 shadow-[inset_0_0_12px_rgba(245,158,11,0.5)] scale-105'
+                          : 'bg-slate-900/40 text-white'
+                      }`}
+                    >
+                      <span className="text-base font-black font-mono text-amber-100">
+                        {typeof cellVal === 'string' ? `"${cellVal}"` : cellVal}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`flex flex-col gap-2 p-3.5 rounded-xl border-2 transition-all duration-500 ${themeClasses}`}
+      className={`flex flex-col gap-2 p-3.5 rounded-none border-2 transition-all duration-500 ${themeClasses}`}
       style={{ minWidth: 'fit-content' }}
     >
       <div className="flex items-center justify-between px-1">
         <span className={`text-[10px] font-black uppercase tracking-widest ${badgeTextClass} font-mono leading-none`}>
-          {name} {isTuple ? '(TUPLE)' : isTable ? '{DICT}' : '[LIST]'}
+          {name} {isTuple ? '(TUPLE)' : isTable ? '{DICT}' : '[ARRAY]'}
         </span>
         {hasRange && (
-          <span className="text-[9px] font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded-md shadow-sm">
+          <span className="text-[9px] font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded-none shadow-sm">
             Window: [{searchRange[0]}...{searchRange[1]}]
           </span>
         )}
       </div>
-      
+
       {isArrayOrTuple ? (
         <div className="flex flex-col gap-3">
           {/* Main Full Array Grid */}
-          <div className={`flex border ${gridBorderClass} rounded-lg overflow-hidden bg-slate-950/60 p-0.5`}>
+          <div className={`flex border ${gridBorderClass} rounded-none overflow-hidden bg-slate-950/60 p-0.5`}>
             {arrayItems.map((val, idx) => {
               const isHighlighted = idx === highlightedIndex || highlightedIndices?.includes(idx);
               const isOutOfRange = hasRange && (idx < searchRange[0] || idx > searchRange[1]);
@@ -106,7 +185,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
               return (
                 <div 
                   key={idx} 
-                  className={`flex flex-col items-center justify-center min-w-13.5 p-2 transition-all duration-500 rounded-md relative ${
+                  className={`flex flex-col items-center justify-center min-w-13.5 p-2 transition-all duration-500 rounded-none relative ${
                     idx !== arrayItems.length - 1 ? `border-r ${gridBorderClass}` : ''
                   } ${
                     isSwapping
@@ -221,11 +300,11 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
               <div className="flex items-center justify-center gap-3">
                 {/* 1. Left Eliminated Sub-Array */}
                 {searchRange[0] > 0 && (
-                  <div className="flex flex-col items-center gap-1 opacity-50 grayscale border border-rose-500/30 bg-rose-950/20 p-2 rounded-lg">
+                  <div className="flex flex-col items-center gap-1 opacity-50 grayscale border border-rose-500/30 bg-rose-950/20 p-2 rounded-none">
                     <span className="text-[8px] font-black font-mono text-rose-400 uppercase tracking-widest">
                       ✕ ELIMINATED LEFT HALF
                     </span>
-                    <div className="flex border border-rose-500/30 rounded overflow-hidden bg-slate-950/60">
+                    <div className="flex border border-rose-500/30 rounded-none overflow-hidden bg-slate-950/60">
                       {arrayItems.slice(0, searchRange[0]).map((val, i) => (
                         <div key={i} className="flex flex-col items-center px-2 py-1 border-r border-rose-500/20 last:border-0 min-w-9">
                           <span className="text-[8px] font-mono text-slate-500">[{i}]</span>
@@ -237,24 +316,24 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
                 )}
 
                 {/* 2. Active Search Sub-Array */}
-                <div className="flex flex-col items-center gap-1 border-2 border-cyan-400 bg-cyan-950/40 p-2 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-[1.02] z-10">
+                <div className="flex flex-col items-center gap-1 border-2 border-cyan-400 bg-cyan-950/40 p-2 rounded-none shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-[1.02] z-10">
                   <span className="text-[8px] font-black font-mono text-cyan-300 uppercase tracking-widest flex items-center gap-1">
                     <span>⚡ ACTIVE SUB-ARRAY</span>
                     <span>[{searchRange[0]}...{searchRange[1]}]</span>
                   </span>
-                  <div className="flex border border-cyan-400/50 rounded-lg overflow-hidden bg-slate-950/80 p-0.5">
+                  <div className="flex border border-cyan-400/50 rounded-none overflow-hidden bg-slate-950/80 p-0.5">
                     {arrayItems.slice(searchRange[0], searchRange[1] + 1).map((val, offset) => {
                       const actualIdx = searchRange[0] + offset;
                       const isMid = pointers?.mid === actualIdx;
                       return (
                         <div 
                           key={actualIdx} 
-                          className={`flex flex-col items-center px-3 py-1.5 border-r border-cyan-500/30 last:border-0 min-w-11 rounded-sm transition-all duration-300 ${
+                          className={`flex flex-col items-center px-3 py-1.5 border-r border-cyan-500/30 last:border-0 min-w-11 rounded-none transition-all duration-300 ${
                             isMid ? 'bg-amber-500/30 border border-amber-400 shadow-[inset_0_0_8px_rgba(245,158,11,0.5)] scale-105' : ''
                           }`}
                         >
                           {isMid && (
-                            <span className="text-[7px] font-black text-amber-200 bg-amber-950 border border-amber-400 px-1 rounded uppercase mb-0.5">MID</span>
+                            <span className="text-[7px] font-black text-amber-200 bg-amber-950 border border-amber-400 px-1 rounded-none uppercase mb-0.5">MID</span>
                           )}
                           <span className={`text-[8.5px] font-mono font-bold ${isMid ? 'text-amber-300 font-black' : 'text-cyan-400/80'}`}>[{actualIdx}]</span>
                           <span className={`text-xs font-mono font-extrabold ${isMid ? 'text-amber-100 font-black' : 'text-white'}`}>{val}</span>
@@ -266,11 +345,11 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
 
                 {/* 3. Right Eliminated Sub-Array */}
                 {searchRange[1] < arrayItems.length - 1 && (
-                  <div className="flex flex-col items-center gap-1 opacity-50 grayscale border border-rose-500/30 bg-rose-950/20 p-2 rounded-lg">
+                  <div className="flex flex-col items-center gap-1 opacity-50 grayscale border border-rose-500/30 bg-rose-950/20 p-2 rounded-none">
                     <span className="text-[8px] font-black font-mono text-rose-400 uppercase tracking-widest">
                       ✕ ELIMINATED RIGHT HALF
                     </span>
-                    <div className="flex border border-rose-500/30 rounded overflow-hidden bg-slate-950/60">
+                    <div className="flex border border-rose-500/30 rounded-none overflow-hidden bg-slate-950/60">
                       {arrayItems.slice(searchRange[1] + 1).map((val, i) => {
                         const actualIdx = searchRange[1] + 1 + i;
                         return (
