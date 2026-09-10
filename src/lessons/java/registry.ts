@@ -79,4 +79,16 @@ export const javaRegistry: Record<string, any> = {
     java_diagonal_sum_2d: javaLessons.java_diagonal_sum_2d,
     java_matrix_transpose: javaLessons.java_matrix_transpose,
   },
+  methods: {
+    java_method_basic: javaLessons.java_method_basic,
+    java_method_params: javaLessons.java_method_params,
+    java_method_return: javaLessons.java_method_return,
+    java_method_overloading: javaLessons.java_method_overloading,
+  },
+  recursion: {
+    java_recursion_factorial: javaLessons.java_recursion_factorial,
+    java_recursion_sum_n: javaLessons.java_recursion_sum_n,
+    java_recursion_fibonacci: javaLessons.java_recursion_fibonacci,
+    java_recursion_power: javaLessons.java_recursion_power,
+  },
 };

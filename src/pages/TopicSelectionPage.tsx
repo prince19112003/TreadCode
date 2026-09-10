@@ -73,6 +73,8 @@ const javaTopics = [
   { id: 'strings', number: '11', name: 'Strings', subtitle: 'Text & ASCII Character Processing', programsCount: 5, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#8b5cf6' },
   { id: 'arrays_1d', number: '12', name: '1D Arrays', subtitle: 'Indexed Array Memory', programsCount: 4, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#f59e0b' },
   { id: 'arrays_2d', number: '13', name: '2D Arrays', subtitle: 'Row-Column Matrix Grids', programsCount: 3, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#d97706' },
+  { id: 'methods', number: '14', name: 'Methods (Functions)', subtitle: 'Parameters, Return & Call Stack', programsCount: 4, difficulty: 'Intermediate' as const, category: 'functions', accentColor: '#a855f7' },
+  { id: 'recursion', number: '15', name: 'Recursion', subtitle: 'Base Cases & Recursive Call Stack', programsCount: 4, difficulty: 'Advanced' as const, category: 'functions', accentColor: '#ec4899' },
 ];
 
 /* =========================================================

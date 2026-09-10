@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expand, Shrink } from 'lucide-react';
 import { useLesson } from '../../../../../lessons/LessonContext';
@@ -15,6 +15,7 @@ import { FunctionStatementRow } from './elements/FunctionStatementRow';
 import { DataStructureBox } from './elements/DataStructureBox';
 import { UserInputPromptBox } from './elements/UserInputPromptBox';
 import { TypeCastBox } from './elements/TypeCastBox';
+import { FormatSpecifierBox } from './elements/FormatSpecifierBox';
 
 const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = () => {
   return null;
@@ -623,6 +624,18 @@ export const CFlowchartStage: React.FC = () => {
             />
           )}
 
+          {!isFunctionBody && ev?.type === 'C_FORMAT_SPECIFIER' && (
+            <FormatSpecifierBox
+              specifier={ev.specifier}
+              variableName={ev.variableName}
+              rawValue={ev.rawValue}
+              memoryAddress={ev.memoryAddress}
+              actionType={ev.actionType}
+              byteSize={ev.byteSize}
+              isActive={isLatest}
+            />
+          )}
+
           {!isFunctionBody && ev?.type === 'PRINT_VALUE' && (
             isDataStructure(ev.outputValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.outputValue);
@@ -635,7 +648,13 @@ export const CFlowchartStage: React.FC = () => {
                 </div>
               );
             })() : (
-              <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} colorTheme={isPrintLine ? 'default' : colorTheme} isSmall={isFunctionBody} />
+              <PrintBox 
+                variableName={ev.variableName} 
+                value={latestStep?.consoleOutput || ev.outputValue} 
+                isActive={isLatest} 
+                colorTheme={isPrintLine ? 'default' : colorTheme} 
+                isSmall={isFunctionBody} 
+              />
             )
           )}
 
@@ -1652,9 +1671,41 @@ export const CFlowchartStage: React.FC = () => {
                             </div>
                           );
                         })() : (
-                          <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLatest} />
+                          <PrintBox variableName={ev.variableName} value={step?.consoleOutput || ev.outputValue} isActive={isLatest} />
                         );
                       })()}
+
+                      {ev?.type === 'TYPE_CAST_TRANSFORM' && (
+                        <TypeCastBox
+                          fromType={ev.fromType}
+                          toType={ev.toType}
+                          fromValue={ev.fromValue}
+                          toValue={ev.toValue}
+                          variableName={ev.variableName}
+                          isActive={isLatest}
+                        />
+                      )}
+
+                      {ev?.type === 'C_FORMAT_SPECIFIER' && (
+                        <FormatSpecifierBox
+                          specifier={ev.specifier}
+                          variableName={ev.variableName}
+                          rawValue={ev.rawValue}
+                          memoryAddress={ev.memoryAddress}
+                          actionType={ev.actionType}
+                          byteSize={ev.byteSize}
+                          isActive={isLatest}
+                        />
+                      )}
+
+                      {ev?.type === 'USER_INPUT_PROMPT' && (
+                        <UserInputPromptBox
+                          prompt={ev.prompt}
+                          variableName={ev.variableName}
+                          value={ev.value}
+                          isActive={isLatest}
+                        />
+                      )}
 
                       {ev?.type === 'HIGHLIGHT_ARRAY_INDEX' && (
                         (() => {

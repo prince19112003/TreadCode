@@ -14,6 +14,7 @@ export const cRegistry: Record<string, any> = {
     c_relational_logical: cLessons.c_relational_logical,
     c_inc_dec: cLessons.c_inc_dec,
     c_circle_geometry: cLessons.c_circle_geometry,
+    c_temp_converter: cLessons.c_temp_converter,
   },
   user_input: {
     c_scanf_integer: cLessons.c_scanf_integer,

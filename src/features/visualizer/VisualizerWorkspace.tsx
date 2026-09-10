@@ -86,7 +86,7 @@ export const VisualizerWorkspace = React.memo(() => {
     'variables', 'type_casting', 'operators', 'operators_expressions', 'user_input', 'data_types',
     'if_statement', 'if_else', 'if_elif_else', 'match_case', 'switch_case',
     'for_loop', 'while_loop', 'do_while_loop', 'nested_loop', 'loop_control', 'loops',
-    'functions', 'recursion', 'strings', 'lists', 'tuples', 'dictionaries',
+    'functions', 'methods', 'recursion', 'strings', 'lists', 'tuples', 'dictionaries',
     'arrays', 'arrays_1d', 'arrays_2d', 'searching_sorting', 'array_operations',
     'searching', 'sorting',
   ].includes(lesson?.topic || '');

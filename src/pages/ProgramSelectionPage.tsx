@@ -159,22 +159,25 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'c_float', number: '02', friendlyName: 'Float & Double Data Types', description: 'Learn decimal storage with float and double precision in C.' },
       { id: 'c_char', number: '03', friendlyName: 'Char & ASCII Storage', description: 'Learn how C stores single characters using 1-byte ASCII codes.' },
       { id: 'c_swap_temp', number: '04', friendlyName: 'Swap Two Variables (Using Temp)', description: 'Understand variable value swapping using a third temporary memory slot in C.' },
+      { id: 'c_swap_no_temp', number: '05', friendlyName: 'Swap Two Variables (Without Temp)', description: 'Swap two variables using arithmetic addition and subtraction in C.' },
+      { id: 'c_constants', number: '06', friendlyName: 'Constants vs Variables (const)', description: 'See how normal variables change while const locks memory from modification.' },
     ],
     operators: [
       { id: 'c_arithmetic', number: '01', friendlyName: 'Arithmetic Operators (+, -, *, /, %)', description: 'Master C arithmetic operator evaluation rules and integer division vs modulo.' },
-      { id: 'c_relational_logical', number: '02', friendlyName: 'Relational & Logical Operators (&&, ||, !)', description: 'Combine multiple boolean evaluation conditions with logical operators in C.' },
+      { id: 'c_relational_logical', number: '02', friendlyName: 'Relational & Logical Operators (==, !=, <, >, &&, ||, !)', description: 'Combine multiple boolean evaluation conditions with logical operators in C.' },
       { id: 'c_inc_dec', number: '03', friendlyName: 'Pre-increment vs Post-increment (++i vs i++)', description: 'Understand side effects and memory evaluation timing of ++ operators in C.' },
       { id: 'c_circle_geometry', number: '04', friendlyName: 'Circle Area & Circumference Formulas', description: 'Apply mathematical float expressions for geometry calculations in C.' },
+      { id: 'c_temp_converter', number: '05', friendlyName: 'Celsius to Fahrenheit Converter', description: 'Master operator precedence and float conversion formula ((C * 9/5) + 32).' },
     ],
     user_input: [
-      { id: 'c_scanf_integer', number: '01', friendlyName: 'Read Console Integer Input (scanf)', description: 'Read standard user integer input using scanf with format specifiers.' },
-      { id: 'c_scanf_float', number: '02', friendlyName: 'Read Console Floating Point (scanf)', description: 'Read decimal floating point input using scanf.' },
-      { id: 'c_scanf_string', number: '03', friendlyName: 'Read String Input (scanf)', description: 'Read character array string input in C.' },
+      { id: 'c_scanf_integer', number: '01', friendlyName: 'Read Integer Input (scanf %d)', description: 'Read integer input with format specifier %d and &address-of operator.' },
+      { id: 'c_scanf_float', number: '02', friendlyName: 'Read Decimal Float (scanf %f)', description: 'Read floating point numbers with %f and %lf specifiers.' },
+      { id: 'c_scanf_string', number: '03', friendlyName: 'Read String Input (scanf %s)', description: 'Read string into char array buffer with automatic \\0 null-terminator.' },
     ],
     type_casting: [
-      { id: 'c_implicit_casting', number: '01', friendlyName: 'Implicit Widening Type Casting', description: 'Learn automatic conversion from smaller int to float without precision loss.' },
-      { id: 'c_explicit_casting', number: '02', friendlyName: 'Explicit Type Casting ((int)val)', description: 'Perform explicit type conversions in C.' },
-      { id: 'c_char_ascii', number: '03', friendlyName: 'Char to ASCII Integer Code Conversion', description: 'Understand single character storage as 1-byte ASCII integer codes.' },
+      { id: 'c_implicit_casting', number: '01', friendlyName: 'Implicit Type Promotion (int -> double)', description: 'Learn automatic widening conversion from smaller int to double without precision loss.' },
+      { id: 'c_explicit_casting', number: '02', friendlyName: 'Explicit Casting ((int)price truncation)', description: 'Perform manual type casting and see decimal fraction truncation in C.' },
+      { id: 'c_char_ascii', number: '03', friendlyName: 'Char to ASCII Code Conversion', description: 'Understand single character storage as 1-byte ASCII integer codes.' },
     ],
     if_else: [
       { id: 'c_even_odd', number: '01', friendlyName: 'Even or Odd Check in C', description: 'Understand conditional branch execution using modulo % and if-else in C.' },
@@ -478,6 +481,18 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
       { id: 'java_matrix_2d', number: '01', friendlyName: '2D Matrix Declaration & Traversal', description: 'Understand 2D array matrix row and column indexing in Java.' },
       { id: 'java_diagonal_sum_2d', number: '02', friendlyName: 'Primary Diagonal Sum of 2D Matrix', description: 'Learn matrix primary diagonal indexing (matrix[i][i]) in Java 2D arrays.' },
       { id: 'java_matrix_transpose', number: '03', friendlyName: '2D Matrix Transpose using Nested Loops', description: 'Learn matrix transposition (t[j][i] = mat[i][j]) using nested loops in Java.' },
+    ],
+    methods: [
+      { id: 'java_method_basic', number: '01', friendlyName: 'Method Declaration & Calling', description: 'Understand defining static methods and calling them from main.' },
+      { id: 'java_method_params', number: '02', friendlyName: 'Method with Parameters (Add Two Numbers)', description: 'Learn passing argument values into method parameters.' },
+      { id: 'java_method_return', number: '03', friendlyName: 'Method with Return Value (Square of a Number)', description: 'Understand returning computed results from methods back to caller.' },
+      { id: 'java_method_overloading', number: '04', friendlyName: 'Method Overloading in Java', description: 'Learn multiple methods with the same name but different parameter types.' },
+    ],
+    recursion: [
+      { id: 'java_recursion_factorial', number: '01', friendlyName: 'Factorial using Recursion', description: 'Understand base condition and recursive call stack execution (n * fact(n-1)).' },
+      { id: 'java_recursion_sum_n', number: '02', friendlyName: 'Sum of First N Natural Numbers', description: 'Learn recursive addition (n + sum(n-1)) with call stack tracking.' },
+      { id: 'java_recursion_fibonacci', number: '03', friendlyName: 'Fibonacci using Recursion', description: 'Learn tree-like recursion branches (fib(n-1) + fib(n-2)).' },
+      { id: 'java_recursion_power', number: '04', friendlyName: 'Power of a Number (a^b) using Recursion', description: 'Learn recursive exponent calculation (base * power(base, exp-1)).' },
     ],
   }
 };

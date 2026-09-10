@@ -4988,6 +4988,1049 @@ export const javaStringReverse: LessonProgram = {
   executionSteps: []
 };
 
+// ─── TOPIC 14: METHODS (FUNCTIONS) (4 Programs) ────────────────────────────────
+
+export const javaMethodBasic: LessonProgram = {
+  id: 'java_method_basic',
+  language: 'java',
+  topic: 'methods',
+  lessonNumber: 1,
+  friendlyName: 'Method Declaration & Calling',
+  learningObjective: 'Understand defining static methods and calling them from main in Java.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'greet' }, { type: 'punctuation', value: '()' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Hello from Method!"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Main start"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'greet' }, { type: 'punctuation', value: '();' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Main end"' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1, lineNum: 5,
+        explanationEnglish: 'JVM calls public static void main(String[] args). Main stack frame allocated.',
+        explanationHinglish: 'JVM ne main method execute kiya. Main frame call stack me push hua.',
+        memorySnapshot: { CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+      },
+      {
+        step: 2, lineNum: 6,
+        explanationEnglish: 'System.out.println prints "Main start".',
+        explanationHinglish: 'Console pe "Main start" print hua.',
+        memorySnapshot: { CallStack: 'main()' },
+        consoleOutput: 'Main start',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'msg', outputValue: 'Main start' }
+      },
+      {
+        step: 3, lineNum: 7,
+        explanationEnglish: 'Calling greet() method. Control jumps to line 2. greet() pushed to Call Stack.',
+        explanationHinglish: 'greet() method call hua. Program control line 2 par jump kiya aur greet() stack me push hua.',
+        memorySnapshot: { CallStack: 'main() -> greet()' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'greet', args: {} }
+      },
+      {
+        step: 4, lineNum: 3,
+        explanationEnglish: 'Inside greet(): System.out.println prints "Hello from Method!".',
+        explanationHinglish: 'greet() ke andar "Hello from Method!" print hua.',
+        memorySnapshot: { CallStack: 'main() -> greet()' },
+        consoleOutput: 'Hello from Method!',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'greetMsg', outputValue: 'Hello from Method!' }
+      },
+      {
+        step: 5, lineNum: 4,
+        explanationEnglish: 'greet() method finishes. Frame popped from Call Stack. Control returns to main at line 8.',
+        explanationHinglish: 'greet() execute ho gaya aur stack se pop hua. Control wapas main() me aaya.',
+        memorySnapshot: { CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: 'greet' }
+      },
+      {
+        step: 6, lineNum: 8,
+        explanationEnglish: 'System.out.println prints "Main end".',
+        explanationHinglish: 'Console pe "Main end" print hua.',
+        memorySnapshot: { CallStack: 'main()' },
+        consoleOutput: 'Main end',
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'endMsg', outputValue: 'Main end' }
+      },
+      {
+        step: 7, lineNum: 9,
+        explanationEnglish: 'Main method finished. Program execution complete.',
+        explanationHinglish: 'Main method complete hua. Program finish.',
+        memorySnapshot: {},
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
+  executionSteps: []
+};
+
+export const javaMethodParams: LessonProgram = {
+  id: 'java_method_params',
+  language: 'java',
+  topic: 'methods',
+  lessonNumber: 2,
+  friendlyName: 'Method with Parameters (Add Two Numbers)',
+  learningObjective: 'Learn passing argument values into Java method parameters.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'add' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'sum' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Sum = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'sum' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'x' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '10', paramId: 'x' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'y' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '20', paramId: 'y' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'add' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'x' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'y' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 10, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 11, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    x: { default: 10, min: 1, max: 100, label: 'x (Argument 1)' },
+    y: { default: 20, min: 1, max: 100, label: 'y (Argument 2)' },
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const x = Number(vars?.x ?? 10);
+    const y = Number(vars?.y ?? 20);
+    const sum = x + y;
+
+    return [
+      {
+        step: 1, lineNum: 6,
+        explanationEnglish: 'Main method starts.',
+        explanationHinglish: 'Main method start hua.',
+        memorySnapshot: { CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+      },
+      {
+        step: 2, lineNum: 7,
+        explanationEnglish: `Declare and initialize int x = ${x}.`,
+        explanationHinglish: `x = ${x} memory me store hua.`,
+        memorySnapshot: { x: `${x} [int]`, CallStack: 'main()' },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'x', value: x }
+      },
+      {
+        step: 3, lineNum: 8,
+        explanationEnglish: `Declare and initialize int y = ${y}.`,
+        explanationHinglish: `y = ${y} memory me store hua.`,
+        memorySnapshot: { x: `${x} [int]`, y: `${y} [int]`, CallStack: 'main()' },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'y', value: y }
+      },
+      {
+        step: 4, lineNum: 9,
+        explanationEnglish: `Call add(x, y) with arguments (${x}, ${y}). Control jumps to line 2.`,
+        explanationHinglish: `add(${x}, ${y}) method call hua. Parameters a=${x}, b=${y} pass hue.`,
+        memorySnapshot: { x: `${x} [int]`, y: `${y} [int]`, CallStack: 'main() -> add(a, b)' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'add', args: { a: x, b: y } }
+      },
+      {
+        step: 5, lineNum: 2,
+        explanationEnglish: `Inside add(): Parameter a = ${x}, Parameter b = ${y} allocated in add frame.`,
+        explanationHinglish: `add method frame me a = ${x} aur b = ${y} receive hue.`,
+        memorySnapshot: { a: `${x} [int]`, b: `${y} [int]`, CallStack: 'main() -> add(a, b)' },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'a', value: x }, { name: 'b', value: y }] }
+      },
+      {
+        step: 6, lineNum: 3,
+        explanationEnglish: `Compute int sum = a (${x}) + b (${y}) = ${sum}.`,
+        explanationHinglish: `sum = a (${x}) + b (${y}) = ${sum} calculate hua.`,
+        memorySnapshot: { a: `${x} [int]`, b: `${y} [int]`, sum: `${sum} [int]`, CallStack: 'main() -> add(a, b)' },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['a', 'b'],
+          operator: '+',
+          storeIn: 'sum',
+          result: sum
+        }
+      },
+      {
+        step: 7, lineNum: 4,
+        explanationEnglish: `System.out.println prints "Sum = ${sum}".`,
+        explanationHinglish: `Console pe "Sum = ${sum}" display hua.`,
+        memorySnapshot: { a: `${x} [int]`, b: `${y} [int]`, sum: `${sum} [int]`, CallStack: 'main() -> add(a, b)' },
+        consoleOutput: `Sum = ${sum}`,
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'sum', outputValue: `Sum = ${sum}` }
+      },
+      {
+        step: 8, lineNum: 5,
+        explanationEnglish: 'Method add() finishes and its frame is removed from Call Stack.',
+        explanationHinglish: 'add method complete hua aur stack se remove ho gaya.',
+        memorySnapshot: { x: `${x} [int]`, y: `${y} [int]`, CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: 'add' }
+      },
+      {
+        step: 9, lineNum: 10,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { x: `${x} [int]`, y: `${y} [int]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
+  executionSteps: []
+};
+
+export const javaMethodReturn: LessonProgram = {
+  id: 'java_method_return',
+  language: 'java',
+  topic: 'methods',
+  lessonNumber: 3,
+  friendlyName: 'Method with Return Value (Square of a Number)',
+  learningObjective: 'Understand returning computed results from Java methods back to caller.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'function', value: 'square' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'num' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'number', value: '5', paramId: 'num' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'result' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'square' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'num' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Square = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'result' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    num: { default: 5, min: 1, max: 20, label: 'Number (num)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const num = Number(vars?.num ?? 5);
+    const sq = num * num;
+
+    return [
+      {
+        step: 1, lineNum: 5,
+        explanationEnglish: 'Main method starts.',
+        explanationHinglish: 'Main method start hua.',
+        memorySnapshot: { CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+      },
+      {
+        step: 2, lineNum: 6,
+        explanationEnglish: `Declare int num = ${num}.`,
+        explanationHinglish: `num = ${num} memory me store hua.`,
+        memorySnapshot: { num: `${num} [int]`, CallStack: 'main()' },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'num', value: num }
+      },
+      {
+        step: 3, lineNum: 7,
+        explanationEnglish: `Call square(${num}). Control transfers to line 2.`,
+        explanationHinglish: `square(${num}) call hua. Parameter n=${num} pass hua.`,
+        memorySnapshot: { num: `${num} [int]`, CallStack: 'main() -> square(n)' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'square', args: { n: num } }
+      },
+      {
+        step: 4, lineNum: 2,
+        explanationEnglish: `Inside square(): Parameter n = ${num} allocated.`,
+        explanationHinglish: `square method me n = ${num} receive hua.`,
+        memorySnapshot: { n: `${num} [int]`, CallStack: 'main() -> square(n)' },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'n', value: num }
+      },
+      {
+        step: 5, lineNum: 3,
+        explanationEnglish: `Compute n (${num}) * n (${num}) = ${sq} and return to caller.`,
+        explanationHinglish: `${num} * ${num} = ${sq} calculate hua aur return kiya gaya.`,
+        memorySnapshot: { n: `${num} [int]`, CallStack: 'main() -> square(n)' },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['n', 'n'],
+          operator: '*',
+          storeIn: 'result',
+          result: sq
+        }
+      },
+      {
+        step: 6, lineNum: 7,
+        explanationEnglish: `Returned from square(): result = ${sq} stored in main's local variable.`,
+        explanationHinglish: `square se return aakar result = ${sq} store hua.`,
+        memorySnapshot: { num: `${num} [int]`, result: `${sq} [int]`, CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: 'square', returnValue: sq }
+      },
+      {
+        step: 7, lineNum: 8,
+        explanationEnglish: `System.out.println prints "Square = ${sq}".`,
+        explanationHinglish: `Console pe "Square = ${sq}" display hua.`,
+        memorySnapshot: { num: `${num} [int]`, result: `${sq} [int]`, CallStack: 'main()' },
+        consoleOutput: `Square = ${sq}`,
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'result', outputValue: `Square = ${sq}` }
+      },
+      {
+        step: 8, lineNum: 9,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { num: `${num} [int]`, result: `${sq} [int]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
+  executionSteps: []
+};
+
+export const javaMethodOverloading: LessonProgram = {
+  id: 'java_method_overloading',
+  language: 'java',
+  topic: 'methods',
+  lessonNumber: 4,
+  friendlyName: 'Method Overloading in Java',
+  learningObjective: 'Learn multiple methods with the same name but different parameter types/counts.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'function', value: 'multiply' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'function', value: 'multiply' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'a' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'b' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r1' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'multiply' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '4', paramId: 'i1' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'number', value: '5', paramId: 'i2' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 10, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'double' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r2' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'multiply' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '2.5', paramId: 'd1' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'number', value: '4.0', paramId: 'd2' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 11, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"r1 = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r1' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 12, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"r2 = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'r2' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 13, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 14, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    i1: { default: 4, label: 'int a' },
+    i2: { default: 5, label: 'int b' },
+    d1: { default: 2.5, label: 'double a' },
+    d2: { default: 4.0, label: 'double b' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    const i1 = Number(vars?.i1 ?? 4);
+    const i2 = Number(vars?.i2 ?? 5);
+    const d1 = Number(vars?.d1 ?? 2.5);
+    const d2 = Number(vars?.d2 ?? 4.0);
+    const r1 = i1 * i2;
+    const r2 = d1 * d2;
+
+    return [
+      {
+        step: 1, lineNum: 8,
+        explanationEnglish: 'Main method starts.',
+        explanationHinglish: 'Main method start hua.',
+        memorySnapshot: { CallStack: 'main()' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+      },
+      {
+        step: 2, lineNum: 9,
+        explanationEnglish: `Call multiply(int, int) with arguments (${i1}, ${i2}). Matches line 2 method signature.`,
+        explanationHinglish: `Integer arguments (${i1}, ${i2}) ke sath multiply(int, int) call hua.`,
+        memorySnapshot: { CallStack: 'main() -> multiply(int, int)' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'multiply(int, int)', args: { a: i1, b: i2 } }
+      },
+      {
+        step: 3, lineNum: 3,
+        explanationEnglish: `Inside multiply(int, int): compute ${i1} * ${i2} = ${r1} and return.`,
+        explanationHinglish: `multiply(int, int) me ${i1} * ${i2} = ${r1} compute hoke return hua.`,
+        memorySnapshot: { a: `${i1} [int]`, b: `${i2} [int]`, CallStack: 'main() -> multiply(int, int)' },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['a', 'b'],
+          operator: '*',
+          storeIn: 'r1',
+          result: r1
+        }
+      },
+      {
+        step: 4, lineNum: 9,
+        explanationEnglish: `Returned from multiply(int, int): int r1 = ${r1} stored in main.`,
+        explanationHinglish: `multiply(int, int) se return aakar r1 = ${r1} store hua.`,
+        memorySnapshot: { r1: `${r1} [int]`, CallStack: 'main()' },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'r1', value: r1 }
+      },
+      {
+        step: 5, lineNum: 10,
+        explanationEnglish: `Call multiply(double, double) with arguments (${d1}, ${d2}). Matches line 5 signature.`,
+        explanationHinglish: `Double arguments (${d1}, ${d2}) ke sath overloaded multiply(double, double) call hua.`,
+        memorySnapshot: { r1: `${r1} [int]`, CallStack: 'main() -> multiply(double, double)' },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'multiply(double, double)', args: { a: d1, b: d2 } }
+      },
+      {
+        step: 6, lineNum: 6,
+        explanationEnglish: `Inside multiply(double, double): compute ${d1} * ${d2} = ${r2} and return.`,
+        explanationHinglish: `multiply(double, double) me ${d1} * ${d2} = ${r2} compute hoke return hua.`,
+        memorySnapshot: { a: `${d1} [double]`, b: `${d2} [double]`, CallStack: 'main() -> multiply(double, double)' },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['a', 'b'],
+          operator: '*',
+          storeIn: 'r2',
+          result: r2
+        }
+      },
+      {
+        step: 7, lineNum: 10,
+        explanationEnglish: `Returned from multiply(double, double): double r2 = ${r2} stored in main.`,
+        explanationHinglish: `multiply(double, double) se return aakar r2 = ${r2} store hua.`,
+        memorySnapshot: { r1: `${r1} [int]`, r2: `${r2} [double]`, CallStack: 'main()' },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'r2', value: r2 }
+      },
+      {
+        step: 8, lineNum: 11,
+        explanationEnglish: `System.out.println prints "r1 = ${r1}".`,
+        explanationHinglish: `Console pe "r1 = ${r1}" display hua.`,
+        memorySnapshot: { r1: `${r1} [int]`, r2: `${r2} [double]`, CallStack: 'main()' },
+        consoleOutput: `r1 = ${r1}`,
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'r1', outputValue: `r1 = ${r1}` }
+      },
+      {
+        step: 9, lineNum: 12,
+        explanationEnglish: `System.out.println prints "r2 = ${r2}".`,
+        explanationHinglish: `Console pe "r2 = ${r2}" display hua.`,
+        memorySnapshot: { r1: `${r1} [int]`, r2: `${r2} [double]`, CallStack: 'main()' },
+        consoleOutput: `r2 = ${r2}`,
+        animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'r2', outputValue: `r2 = ${r2}` }
+      },
+      {
+        step: 10, lineNum: 13,
+        explanationEnglish: 'Program finished.',
+        explanationHinglish: 'Program finish hua.',
+        memorySnapshot: { r1: `${r1} [int]`, r2: `${r2} [double]` },
+        animationEvent: { type: 'COMPLETE' as const }
+      }
+    ];
+  },
+  executionSteps: []
+};
+
+// ─── TOPIC 15: RECURSION (4 Programs) ──────────────────────────────────────────
+
+export const javaRecursionFactorial: LessonProgram = {
+  id: 'java_recursion_factorial',
+  language: 'java',
+  topic: 'recursion',
+  lessonNumber: 1,
+  friendlyName: 'Factorial using Recursion',
+  learningObjective: 'Understand base condition and recursive call stack execution (n * fact(n-1)).',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fact' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<=' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fact' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '-' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ans' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fact' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '3', paramId: 'n' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Fact = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ans' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    n: { default: 3, min: 1, max: 6, label: 'Number n (1 to 6)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    let n = Number(vars?.n ?? 3);
+    n = Math.max(1, Math.min(6, Math.floor(n)));
+
+    const steps: ExecutionStep[] = [];
+    let stepNum = 1;
+
+    steps.push({
+      step: stepNum++, lineNum: 6,
+      explanationEnglish: 'Main method starts.',
+      explanationHinglish: 'Main method start hua.',
+      memorySnapshot: { CallStack: 'main()' },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Call fact(${n}) from main. Push to Call Stack.`,
+      explanationHinglish: `fact(${n}) call hua aur stack me push hua.`,
+      memorySnapshot: { CallStack: `main() -> fact(${n})` },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `fact(${n})`, args: { n } }
+    });
+
+    const callChain: number[] = [];
+    for (let k = n; k >= 1; k--) callChain.push(k);
+
+    let currentStack = 'main()';
+    callChain.forEach((val) => {
+      currentStack += ` -> fact(${val})`;
+      const isBase = val <= 1;
+
+      steps.push({
+        step: stepNum++, lineNum: 2,
+        explanationEnglish: `Entered fact(n) with n = ${val}.`,
+        explanationHinglish: `fact function me n = ${val} receive hua.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'n', value: val }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 3,
+        explanationEnglish: `Check base condition: n (${val}) <= 1 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Base condition check: n (${val}) <= 1 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: {
+          type: 'EVALUATE_CONDITION' as const,
+          condition: 'n <= 1',
+          formula: `${val} <= 1`,
+          inputs: ['n'],
+          result: isBase,
+          explanation: `${val} <= 1 is ${isBase ? 'True' : 'False'}`
+        }
+      });
+
+      if (!isBase) {
+        steps.push({
+          step: stepNum++, lineNum: 4,
+          explanationEnglish: `n > 1: Make recursive call fact(${val - 1}).`,
+          explanationHinglish: `Recursive call: fact(${val - 1}) call kiya gaya.`,
+          memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+          animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `fact(${val - 1})`, args: { n: val - 1 } }
+        });
+      }
+    });
+
+    // Base condition return 1
+    steps.push({
+      step: stepNum++, lineNum: 3,
+      explanationEnglish: 'Base condition reached: fact(1) returns 1.',
+      explanationHinglish: 'Base case true: fact(1) ne 1 return kiya.',
+      memorySnapshot: { n: '1 [int]', CallStack: currentStack },
+      animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: 'fact(1)', returnValue: 1 }
+    });
+
+    // Unwinding
+    let currentRes = 1;
+    for (let i = callChain.length - 2; i >= 0; i--) {
+      const val = callChain[i];
+      const prevRes = currentRes;
+      currentRes = val * prevRes;
+      const subStack = 'main() -> ' + callChain.slice(0, i + 1).map(v => `fact(${v})`).join(' -> ');
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `Unwinding: in fact(${val}), multiply n (${val}) * fact(${val - 1}) (${prevRes}) = ${currentRes}. Return ${currentRes}.`,
+        explanationHinglish: `Stack unwinding: fact(${val}) me ${val} * ${prevRes} = ${currentRes} compute hua aur return kiya.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: subStack },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['n', `${prevRes}`],
+          operator: '*',
+          storeIn: 'result',
+          result: currentRes
+        }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `fact(${val}) frame popped with return value ${currentRes}.`,
+        explanationHinglish: `fact(${val}) stack se pop hua, return = ${currentRes}.`,
+        memorySnapshot: { CallStack: subStack },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: `fact(${val})`, returnValue: currentRes }
+      });
+    }
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Result received in main: ans = ${currentRes}.`,
+      explanationHinglish: `main me final result ans = ${currentRes} store hua.`,
+      memorySnapshot: { ans: `${currentRes} [int]`, CallStack: 'main()' },
+      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'ans', value: currentRes }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 8,
+      explanationEnglish: `System.out.println prints "Fact = ${currentRes}".`,
+      explanationHinglish: `Console pe "Fact = ${currentRes}" display hua.`,
+      memorySnapshot: { ans: `${currentRes} [int]`, CallStack: 'main()' },
+      consoleOutput: `Fact = ${currentRes}`,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'ans', outputValue: `Fact = ${currentRes}` }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 9,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { ans: `${currentRes} [int]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
+  },
+  executionSteps: []
+};
+
+export const javaRecursionSumN: LessonProgram = {
+  id: 'java_recursion_sum_n',
+  language: 'java',
+  topic: 'recursion',
+  lessonNumber: 2,
+  friendlyName: 'Sum of First N Natural Numbers',
+  learningObjective: 'Learn recursive addition (n + sum(n-1)) with call stack tracking.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'function', value: 'sum' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<=' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'function', value: 'sum' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '-' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'total' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'sum' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '4', paramId: 'n' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Total = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'total' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    n: { default: 4, min: 1, max: 7, label: 'Number n (1 to 7)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    let n = Number(vars?.n ?? 4);
+    n = Math.max(1, Math.min(7, Math.floor(n)));
+
+    const steps: ExecutionStep[] = [];
+    let stepNum = 1;
+
+    steps.push({
+      step: stepNum++, lineNum: 6,
+      explanationEnglish: 'Main method starts.',
+      explanationHinglish: 'Main method start hua.',
+      memorySnapshot: { CallStack: 'main()' },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Call sum(${n}) from main. Push to Call Stack.`,
+      explanationHinglish: `sum(${n}) call hua aur stack me push hua.`,
+      memorySnapshot: { CallStack: `main() -> sum(${n})` },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `sum(${n})`, args: { n } }
+    });
+
+    const callChain: number[] = [];
+    for (let k = n; k >= 1; k--) callChain.push(k);
+
+    let currentStack = 'main()';
+    callChain.forEach((val) => {
+      currentStack += ` -> sum(${val})`;
+      const isBase = val <= 1;
+
+      steps.push({
+        step: stepNum++, lineNum: 2,
+        explanationEnglish: `Entered sum(n) with n = ${val}.`,
+        explanationHinglish: `sum function me n = ${val} receive hua.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'n', value: val }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 3,
+        explanationEnglish: `Base check: n (${val}) <= 1 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Base condition: n (${val}) <= 1 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: {
+          type: 'EVALUATE_CONDITION' as const,
+          condition: 'n <= 1',
+          formula: `${val} <= 1`,
+          inputs: ['n'],
+          result: isBase,
+          explanation: `${val} <= 1 is ${isBase ? 'True' : 'False'}`
+        }
+      });
+
+      if (!isBase) {
+        steps.push({
+          step: stepNum++, lineNum: 4,
+          explanationEnglish: `n > 1: Make recursive call sum(${val - 1}).`,
+          explanationHinglish: `Recursive call: sum(${val - 1}) call kiya gaya.`,
+          memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+          animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `sum(${val - 1})`, args: { n: val - 1 } }
+        });
+      }
+    });
+
+    // Base condition return 1
+    steps.push({
+      step: stepNum++, lineNum: 3,
+      explanationEnglish: 'Base condition reached: sum(1) returns 1.',
+      explanationHinglish: 'Base case true: sum(1) ne 1 return kiya.',
+      memorySnapshot: { n: '1 [int]', CallStack: currentStack },
+      animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: 'sum(1)', returnValue: 1 }
+    });
+
+    // Unwinding
+    let currentRes = 1;
+    for (let i = callChain.length - 2; i >= 0; i--) {
+      const val = callChain[i];
+      const prevRes = currentRes;
+      currentRes = val + prevRes;
+      const subStack = 'main() -> ' + callChain.slice(0, i + 1).map(v => `sum(${v})`).join(' -> ');
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `Unwinding: in sum(${val}), compute n (${val}) + sum(${val - 1}) (${prevRes}) = ${currentRes}. Return ${currentRes}.`,
+        explanationHinglish: `Stack unwinding: sum(${val}) me ${val} + ${prevRes} = ${currentRes} calculate hua aur return kiya.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: subStack },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['n', `${prevRes}`],
+          operator: '+',
+          storeIn: 'total',
+          result: currentRes
+        }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `sum(${val}) frame popped with return value ${currentRes}.`,
+        explanationHinglish: `sum(${val}) stack se pop hua, return = ${currentRes}.`,
+        memorySnapshot: { CallStack: subStack },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: `sum(${val})`, returnValue: currentRes }
+      });
+    }
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Result received in main: total = ${currentRes}.`,
+      explanationHinglish: `main me total = ${currentRes} store hua.`,
+      memorySnapshot: { total: `${currentRes} [int]`, CallStack: 'main()' },
+      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'total', value: currentRes }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 8,
+      explanationEnglish: `System.out.println prints "Total = ${currentRes}".`,
+      explanationHinglish: `Console pe "Total = ${currentRes}" display hua.`,
+      memorySnapshot: { total: `${currentRes} [int]`, CallStack: 'main()' },
+      consoleOutput: `Total = ${currentRes}`,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'total', outputValue: `Total = ${currentRes}` }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 9,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { total: `${currentRes} [int]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
+  },
+  executionSteps: []
+};
+
+export const javaRecursionFibonacci: LessonProgram = {
+  id: 'java_recursion_fibonacci',
+  language: 'java',
+  topic: 'recursion',
+  lessonNumber: 3,
+  friendlyName: 'Fibonacci using Recursion',
+  learningObjective: 'Learn tree-like recursion branches (fib(n-1) + fib(n-2)) in Java.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fib' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '<=' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'n' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fib' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '-' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fib' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'n' }, { type: 'text', value: ' ' }, { type: 'operator', value: '-' }, { type: 'text', value: ' ' }, { type: 'number', value: '2' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'f' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'fib' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '4', paramId: 'n' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Fib = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'f' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    n: { default: 4, min: 0, max: 6, label: 'Nth Fibonacci (0 to 6)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    let n = Number(vars?.n ?? 4);
+    n = Math.max(0, Math.min(6, Math.floor(n)));
+
+    const steps: ExecutionStep[] = [];
+    let stepNum = 1;
+
+    steps.push({
+      step: stepNum++, lineNum: 6,
+      explanationEnglish: 'Main method starts.',
+      explanationHinglish: 'Main method start hua.',
+      memorySnapshot: { CallStack: 'main()' },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Call fib(${n}) from main. Push to Call Stack.`,
+      explanationHinglish: `fib(${n}) call hua aur stack me push hua.`,
+      memorySnapshot: { CallStack: `main() -> fib(${n})` },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `fib(${n})`, args: { n } }
+    });
+
+    const fibHelper = (val: number, stackStr: string): number => {
+      const currentStack = `${stackStr} -> fib(${val})`;
+      const isBase = val <= 1;
+
+      steps.push({
+        step: stepNum++, lineNum: 2,
+        explanationEnglish: `Entered fib(n) with n = ${val}.`,
+        explanationHinglish: `fib me n = ${val} receive hua.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'n', value: val }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 3,
+        explanationEnglish: `Check base condition: n (${val}) <= 1 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Base condition: n (${val}) <= 1 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: {
+          type: 'EVALUATE_CONDITION' as const,
+          condition: 'n <= 1',
+          formula: `${val} <= 1`,
+          inputs: ['n'],
+          result: isBase,
+          explanation: `${val} <= 1 is ${isBase ? 'True' : 'False'}`
+        }
+      });
+
+      if (isBase) {
+        steps.push({
+          step: stepNum++, lineNum: 3,
+          explanationEnglish: `Base case met: fib(${val}) returns ${val}.`,
+          explanationHinglish: `Base case true: fib(${val}) ne ${val} return kiya.`,
+          memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+          animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: `fib(${val})`, returnValue: val }
+        });
+        return val;
+      }
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `Left branch: call fib(${val - 1}).`,
+        explanationHinglish: `Left recursion branch: fib(${val - 1}) call kiya.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `fib(${val - 1})`, args: { n: val - 1 } }
+      });
+      const left = fibHelper(val - 1, currentStack);
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `Right branch: call fib(${val - 2}).`,
+        explanationHinglish: `Right recursion branch: fib(${val - 2}) call kiya.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `fib(${val - 2})`, args: { n: val - 2 } }
+      });
+      const right = fibHelper(val - 2, currentStack);
+
+      const total = left + right;
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `In fib(${val}): sum left (${left}) + right (${right}) = ${total}. Return ${total}.`,
+        explanationHinglish: `fib(${val}) me left (${left}) + right (${right}) = ${total} return kiya.`,
+        memorySnapshot: { n: `${val} [int]`, CallStack: currentStack },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: [`${left}`, `${right}`],
+          operator: '+',
+          storeIn: 'f',
+          result: total
+        }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `fib(${val}) frame popped with return value ${total}.`,
+        explanationHinglish: `fib(${val}) stack se pop hua, return = ${total}.`,
+        memorySnapshot: { CallStack: currentStack },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: `fib(${val})`, returnValue: total }
+      });
+
+      return total;
+    };
+
+    const finalFib = fibHelper(n, 'main()');
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Result received in main: f = ${finalFib}.`,
+      explanationHinglish: `main me f = ${finalFib} store hua.`,
+      memorySnapshot: { f: `${finalFib} [int]`, CallStack: 'main()' },
+      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'f', value: finalFib }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 8,
+      explanationEnglish: `System.out.println prints "Fib = ${finalFib}".`,
+      explanationHinglish: `Console pe "Fib = ${finalFib}" display hua.`,
+      memorySnapshot: { f: `${finalFib} [int]`, CallStack: 'main()' },
+      consoleOutput: `Fib = ${finalFib}`,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'f', outputValue: `Fib = ${finalFib}` }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 9,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { f: `${finalFib} [int]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
+  },
+  executionSteps: []
+};
+
+export const javaRecursionPower: LessonProgram = {
+  id: 'java_recursion_power',
+  language: 'java',
+  topic: 'recursion',
+  lessonNumber: 4,
+  friendlyName: 'Power of a Number (a^b) using Recursion',
+  learningObjective: 'Learn recursive exponent calculation (base * power(base, exp-1)) in Java.',
+  lines: [
+    { lineNum: 1, tokens: [{ type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'class' }, { type: 'text', value: ' ' }, { type: 'function', value: 'Main' }, { type: 'text', value: ' {' }] },
+    { lineNum: 2, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'function', value: 'power' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'base' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'exp' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 3, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'if' }, { type: 'text', value: ' ' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'exp' }, { type: 'text', value: ' ' }, { type: 'operator', value: '==' }, { type: 'text', value: ' ' }, { type: 'number', value: '0' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ';' }] },
+    { lineNum: 4, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'return' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'base' }, { type: 'text', value: ' ' }, { type: 'operator', value: '*' }, { type: 'text', value: ' ' }, { type: 'function', value: 'power' }, { type: 'punctuation', value: '(' }, { type: 'variable', value: 'base' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'exp' }, { type: 'text', value: ' ' }, { type: 'operator', value: '-' }, { type: 'text', value: ' ' }, { type: 'number', value: '1' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 5, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 6, tokens: [{ type: 'text', value: '    ' }, { type: 'keyword', value: 'public' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'static' }, { type: 'text', value: ' ' }, { type: 'keyword', value: 'void' }, { type: 'text', value: ' ' }, { type: 'function', value: 'main' }, { type: 'punctuation', value: '(' }, { type: 'keyword', value: 'String' }, { type: 'punctuation', value: '[]' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'args' }, { type: 'punctuation', value: ')' }, { type: 'text', value: ' {' }] },
+    { lineNum: 7, tokens: [{ type: 'text', value: '        ' }, { type: 'keyword', value: 'int' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ans' }, { type: 'text', value: ' ' }, { type: 'operator', value: '=' }, { type: 'text', value: ' ' }, { type: 'function', value: 'power' }, { type: 'punctuation', value: '(' }, { type: 'number', value: '2', paramId: 'base' }, { type: 'punctuation', value: ',' }, { type: 'text', value: ' ' }, { type: 'number', value: '3', paramId: 'exp' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 8, tokens: [{ type: 'text', value: '        ' }, { type: 'function', value: 'System.out.println' }, { type: 'punctuation', value: '(' }, { type: 'string', value: '"Power = "' }, { type: 'text', value: ' ' }, { type: 'operator', value: '+' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'ans' }, { type: 'punctuation', value: ');' }] },
+    { lineNum: 9, tokens: [{ type: 'text', value: '    ' }, { type: 'punctuation', value: '}' }] },
+    { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
+  ],
+  editableVariables: {
+    base: { default: 2, min: 1, max: 10, label: 'Base (base)' },
+    exp: { default: 3, min: 0, max: 6, label: 'Exponent (exp)' }
+  },
+  generateSteps: (vars): ExecutionStep[] => {
+    let base = Number(vars?.base ?? 2);
+    let exp = Number(vars?.exp ?? 3);
+    base = Math.max(1, Math.min(10, Math.floor(base)));
+    exp = Math.max(0, Math.min(6, Math.floor(exp)));
+
+    const steps: ExecutionStep[] = [];
+    let stepNum = 1;
+
+    steps.push({
+      step: stepNum++, lineNum: 6,
+      explanationEnglish: 'Main method starts.',
+      explanationHinglish: 'Main method start hua.',
+      memorySnapshot: { CallStack: 'main()' },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: 'main', args: {} }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Call power(${base}, ${exp}) from main. Push to Call Stack.`,
+      explanationHinglish: `power(${base}, ${exp}) call hua aur stack me push hua.`,
+      memorySnapshot: { CallStack: `main() -> power(${base}, ${exp})` },
+      animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `power(${base}, ${exp})`, args: { base, exp } }
+    });
+
+    const callChain: number[] = [];
+    for (let k = exp; k >= 0; k--) callChain.push(k);
+
+    let currentStack = 'main()';
+    callChain.forEach((currentExp) => {
+      currentStack += ` -> power(${base}, ${currentExp})`;
+      const isBase = currentExp === 0;
+
+      steps.push({
+        step: stepNum++, lineNum: 2,
+        explanationEnglish: `Entered power() with base = ${base}, exp = ${currentExp}.`,
+        explanationHinglish: `power function me base = ${base}, exp = ${currentExp} receive hua.`,
+        memorySnapshot: { base: `${base} [int]`, exp: `${currentExp} [int]`, CallStack: currentStack },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES' as const, variables: [{ name: 'base', value: base }, { name: 'exp', value: currentExp }] }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 3,
+        explanationEnglish: `Check base condition: exp (${currentExp}) == 0 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        explanationHinglish: `Base condition: exp (${currentExp}) == 0 is ${isBase ? 'TRUE' : 'FALSE'}.`,
+        memorySnapshot: { base: `${base} [int]`, exp: `${currentExp} [int]`, CallStack: currentStack },
+        animationEvent: {
+          type: 'EVALUATE_CONDITION' as const,
+          condition: 'exp == 0',
+          formula: `${currentExp} == 0`,
+          inputs: ['exp'],
+          result: isBase,
+          explanation: `${currentExp} == 0 is ${isBase ? 'True' : 'False'}`
+        }
+      });
+
+      if (!isBase) {
+        steps.push({
+          step: stepNum++, lineNum: 4,
+          explanationEnglish: `exp > 0: Make recursive call power(${base}, ${currentExp - 1}).`,
+          explanationHinglish: `Recursive call: power(${base}, ${currentExp - 1}) call kiya gaya.`,
+          memorySnapshot: { base: `${base} [int]`, exp: `${currentExp} [int]`, CallStack: currentStack },
+          animationEvent: { type: 'FUNCTION_CALL' as const, functionName: `power(${base}, ${currentExp - 1})`, args: { base, exp: currentExp - 1 } }
+        });
+      }
+    });
+
+    // Base condition return 1
+    steps.push({
+      step: stepNum++, lineNum: 3,
+      explanationEnglish: `Base case met: power(${base}, 0) returns 1.`,
+      explanationHinglish: `Base case true: power(${base}, 0) ne 1 return kiya.`,
+      memorySnapshot: { base: `${base} [int]`, exp: '0 [int]', CallStack: currentStack },
+      animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: `power(${base}, 0)`, returnValue: 1 }
+    });
+
+    // Unwinding
+    let currentRes = 1;
+    for (let i = callChain.length - 2; i >= 0; i--) {
+      const e = callChain[i];
+      const prevRes = currentRes;
+      currentRes = base * prevRes;
+      const subStack = 'main() -> ' + callChain.slice(0, i + 1).map(cExp => `power(${base}, ${cExp})`).join(' -> ');
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `Unwinding: in power(${base}, ${e}), compute base (${base}) * power(${base}, ${e - 1}) (${prevRes}) = ${currentRes}. Return ${currentRes}.`,
+        explanationHinglish: `Stack unwinding: power(${base}, ${e}) me ${base} * ${prevRes} = ${currentRes} calculate hua aur return kiya.`,
+        memorySnapshot: { base: `${base} [int]`, exp: `${e} [int]`, CallStack: subStack },
+        animationEvent: {
+          type: 'COMPUTE' as const,
+          inputs: ['base', `${prevRes}`],
+          operator: '*',
+          storeIn: 'ans',
+          result: currentRes
+        }
+      });
+
+      steps.push({
+        step: stepNum++, lineNum: 4,
+        explanationEnglish: `power(${base}, ${e}) frame popped with return value ${currentRes}.`,
+        explanationHinglish: `power(${base}, ${e}) stack se pop hua, return = ${currentRes}.`,
+        memorySnapshot: { CallStack: subStack },
+        animationEvent: { type: 'FUNCTION_RETURN' as const, functionName: `power(${base}, ${e})`, returnValue: currentRes }
+      });
+    }
+
+    steps.push({
+      step: stepNum++, lineNum: 7,
+      explanationEnglish: `Result received in main: ans = ${currentRes}.`,
+      explanationHinglish: `main me final result ans = ${currentRes} store hua.`,
+      memorySnapshot: { ans: `${currentRes} [int]`, CallStack: 'main()' },
+      animationEvent: { type: 'CREATE_VARIABLE' as const, name: 'ans', value: currentRes }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 8,
+      explanationEnglish: `System.out.println prints "Power = ${currentRes}".`,
+      explanationHinglish: `Console pe "Power = ${currentRes}" display hua.`,
+      memorySnapshot: { ans: `${currentRes} [int]`, CallStack: 'main()' },
+      consoleOutput: `Power = ${currentRes}`,
+      animationEvent: { type: 'PRINT_VALUE' as const, variableName: 'ans', outputValue: `Power = ${currentRes}` }
+    });
+
+    steps.push({
+      step: stepNum++, lineNum: 9,
+      explanationEnglish: 'Program finished.',
+      explanationHinglish: 'Program finish hua.',
+      memorySnapshot: { ans: `${currentRes} [int]` },
+      animationEvent: { type: 'COMPLETE' as const }
+    });
+
+    return steps;
+  },
+  executionSteps: []
+};
+
 // Export all Java lessons map
 export const javaLessons = {
   java_types: javaTypes,
@@ -5042,5 +6085,13 @@ export const javaLessons = {
   java_matrix_2d: javaMatrix2D,
   java_diagonal_sum_2d: javaDiagonalSum2D,
   java_matrix_transpose: javaMatrixTranspose,
+  java_method_basic: javaMethodBasic,
+  java_method_params: javaMethodParams,
+  java_method_return: javaMethodReturn,
+  java_method_overloading: javaMethodOverloading,
+  java_recursion_factorial: javaRecursionFactorial,
+  java_recursion_sum_n: javaRecursionSumN,
+  java_recursion_fibonacci: javaRecursionFibonacci,
+  java_recursion_power: javaRecursionPower,
 };
 

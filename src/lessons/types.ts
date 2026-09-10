@@ -38,6 +38,7 @@ export type AnimationEvent =
   | { type: 'HIGHLIGHT_ARRAY_INDEX'; arrayName: string; index: number }
   | { type: 'USER_INPUT_PROMPT'; prompt: string; variableName: string; value: string | number }
   | { type: 'TYPE_CAST_TRANSFORM'; fromType: string; toType: string; fromValue: string | number; toValue: string | number; variableName: string }
+  | { type: 'C_FORMAT_SPECIFIER'; specifier: string; variableName: string; rawValue: string | number; memoryAddress?: string; actionType?: 'scanf' | 'printf'; byteSize?: number | string }
   | { type: 'EVALUATE_CONDITION'; condition?: string; variableName?: string; variableValue?: string | number; operator?: string; formula?: string; inputs?: string[]; result: boolean; explanation?: string }
   | { type: 'BREAK_EXECUTION'; explanation?: string }
   | { type: 'SKIP_EXECUTION'; explanation?: string }
