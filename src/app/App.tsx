@@ -48,7 +48,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     if (path.includes('/dsa') && lockDsa) return <LicenseModal onActivate={context.handleActivate} />;
     
     // Default course gating for non-python sections
-    if (!path.includes('/python')) {
+    if (!path.includes('/python') && !path.includes('/ml')) {
       return <LicenseModal onActivate={context.handleActivate} />;
     }
   }
@@ -283,7 +283,7 @@ export const App: React.FC = () => {
     >
       <BrowserRouter>
         {/* EULA agreement modal — runs once on first launch */}
-        <EulaModal />
+        {!showSplash && <EulaModal />}
 
         {/* Floating Chatbot-Style Bug / Feedback Widget (Shown after splash screen) */}
         {!showSplash && <FloatingFeedbackWidget />}

@@ -104,6 +104,34 @@ const dsaTopics = [
   { id: 'graph_astar', number: '21', name: 'A* Search Algorithm', subtitle: 'Heuristic Optimal Pathfinding f(n) = g(n) + h(n)', complexity: 'O(E log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#ec4899' },
 ];
 
+/* =========================================================
+   MACHINE LEARNING TOPIC DATA — Sequenced Learning Path
+   ========================================================= */
+const mlTopics = [
+  // ── SUPERVISED LEARNING: REGRESSION ───────────────────
+  { id: 'linear_regression', number: '01', name: 'Linear Regression', subtitle: 'Best-Fit Line, Slope (m), Intercept & MSE Residuals', programsCount: 1, difficulty: 'Beginner' as const, category: 'Supervised', modelType: 'Regression', accentColor: '#06b6d4' },
+  { id: 'polynomial_regression', number: '02', name: 'Polynomial Regression', subtitle: 'Non-linear Data Curves, Polynomial Degree & Curve Fitting', programsCount: 1, difficulty: 'Beginner' as const, category: 'Supervised', modelType: 'Regression', accentColor: '#0ea5e9' },
+  
+  // ── SUPERVISED LEARNING: CLASSIFICATION ───────────────
+  { id: 'logistic_regression', number: '03', name: 'Logistic Regression', subtitle: 'Binary Classes, Sigmoid S-Curve & Probability Threshold', programsCount: 1, difficulty: 'Beginner' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#3b82f6' },
+  { id: 'knn_classification', number: '04', name: 'K-Nearest Neighbors (KNN)', subtitle: 'Distance-Based Voting, Radius Search & Decision Boundaries', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#8b5cf6' },
+  { id: 'decision_tree', number: '05', name: 'Decision Tree Classifier', subtitle: 'Orthogonal Axis Splits, Information Gain & Space Partitioning', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#10b981' },
+  { id: 'svm', number: '06', name: 'Support Vector Machine (SVM)', subtitle: 'Maximum Margin Hyperplane, Margins & Support Vectors', programsCount: 1, difficulty: 'Advanced' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#ec4899' },
+  
+  // ── UNSUPERVISED LEARNING ─────────────────────────────
+  { id: 'kmeans_clustering', number: '07', name: 'K-Means Clustering', subtitle: 'Centroid Shift, Point Assignment & Cluster Convergence', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Unsupervised', modelType: 'Clustering', accentColor: '#f59e0b' },
+  
+  // ── OPTIMIZATION & MODEL EVALUATION ───────────────────
+  { id: 'gradient_descent', number: '08', name: 'Gradient Descent', subtitle: 'Convex Loss Curve, Step Size & Learning Rate (α) Tuning', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Optimization', modelType: 'Optimization', accentColor: '#f97316' },
+  { id: 'overfitting_underfitting', number: '09', name: 'Overfitting vs Underfitting', subtitle: 'Bias-Variance Tradeoff, Noise Fitting & Sweet Spot', programsCount: 1, difficulty: 'Beginner' as const, category: 'Evaluation', modelType: 'Evaluation', accentColor: '#a855f7' },
+  
+  // ── REINFORCEMENT LEARNING ────────────────────────────
+  { id: 'q_learning_grid', number: '10', name: 'Grid World (Q-Learning)', subtitle: 'Agent Environment, Penalties, Rewards & Policy Convergence', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Reinforcement', modelType: 'Reinforcement', accentColor: '#14b8a6' },
+  
+  // ── NEURAL NETWORKS FOUNDATION ────────────────────────
+  { id: 'single_perceptron', number: '11', name: 'Single Perceptron', subtitle: 'Artificial Neuron, Synaptic Weights, Bias & Step Activation', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Neural Nets', modelType: 'Neural Nets', accentColor: '#6366f1' },
+];
+
 const difficultyConfig = {
   Beginner:     { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.22)' },
   Intermediate: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
@@ -118,22 +146,26 @@ export const TopicSelectionPage: React.FC = () => {
   const { languageId } = useParams();
 
   const isDsa = languageId === 'dsa';
+  const isMl = languageId === 'ml';
 
   const topics = useMemo(() => {
     if (languageId === 'c') return cTopics;
     if (languageId === 'cpp') return cppTopics;
     if (languageId === 'java') return javaTopics;
     if (isDsa) return dsaTopics;
+    if (isMl) return mlTopics;
     return pythonTopics;
-  }, [languageId, isDsa]);
+  }, [languageId, isDsa, isMl]);
 
   const totalPrograms = useMemo(() => topics.reduce((s, t) => s + t.programsCount, 0), [topics]);
   const langDisplay = languageId
-    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
+    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA' : languageId === 'ml' ? 'Machine Learning' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
     : 'Python';
 
   const handleTopicClick = (topicId: string) => {
-    if (isDsa) {
+    if (isMl) {
+      navigate(`/visualizer/ml/${topicId}/ml_${topicId}`);
+    } else if (isDsa) {
       let programId = `dsa_${topicId}`;
       if (topicId === 'linear_search') programId = 'dsa_linear_search';
       else if (topicId === 'binary_search') programId = 'dsa_binary_search';
@@ -162,8 +194,6 @@ export const TopicSelectionPage: React.FC = () => {
     }
   };
 
-
-
   /* ── STANDARD LANGUAGE PAGE ────────────────────────────────────────────── */
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
@@ -176,7 +206,9 @@ export const TopicSelectionPage: React.FC = () => {
             {langDisplay} Topics
           </h1>
           <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
-            Select a topic to step through code execution and variable tracing.
+            {isMl
+              ? 'Intuitive, code-free algorithm playgrounds and visual model simulations.'
+              : 'Select a topic to step through code execution and variable tracing.'}
           </p>
         </motion.div>
 
@@ -184,7 +216,11 @@ export const TopicSelectionPage: React.FC = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2.5 mb-6 flex-wrap">
           {[
             { icon: Layers, label: `${topics.length} Topics`, color: '#6366f1' },
-            ...(!isDsa ? [{ icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' }] : []),
+            ...(isMl
+              ? [{ icon: BookOpen, label: `${topics.length} Interactive Playgrounds`, color: '#06b6d4' }]
+              : !isDsa
+              ? [{ icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' }]
+              : []),
             { icon: BarChart2, label: '3 Difficulty Levels', color: '#38bdf8' },
           ].map(stat => (
             <div
@@ -272,6 +308,19 @@ export const TopicSelectionPage: React.FC = () => {
                         <>
                           <span className="text-[9px] font-mono text-slate-400 font-bold uppercase tracking-wider">TIME COMPLEXITY</span>
                           <span className="text-[11px] font-mono font-black" style={{ color: topic.accentColor }}>{(topic as any).complexity}</span>
+                        </>
+                      ) : isMl ? (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
+                            <span className="text-[11px] font-mono font-bold text-slate-200">Interactive Model</span>
+                          </div>
+                          <span
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
+                            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
+                          >
+                            {topic.category}
+                          </span>
                         </>
                       ) : (
                         <>

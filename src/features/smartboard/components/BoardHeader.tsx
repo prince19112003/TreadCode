@@ -275,13 +275,42 @@ export const BoardHeader = React.memo<BoardHeaderProps>(({
                   ))}
                 </div>
 
-                {/* Shape tools */}
-                <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-lg bg-white/4 border border-white/6 shrink-0">
-                  <ToolBtn icon={<Minus size={13} />} active={tool === "line"} onClick={() => setTool("line")} title="Line" />
-                  <ToolBtn icon={<MoveRight size={13} />} active={tool === "arrow"} onClick={() => setTool("arrow")} title="Arrow" />
-                  <ToolBtn icon={<Square size={13} />} active={tool === "rect"} onClick={() => setTool("rect")} title="Rectangle" />
-                  <ToolBtn icon={<Circle size={13} />} active={tool === "circle"} onClick={() => setTool("circle")} title="Circle" />
+                {/* Shape tools & Auto-Snap */}
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-white/4 border border-white/6 shrink-0">
+                  <div className="flex items-center gap-0.5">
+                    <ToolBtn icon={<Minus size={13} />} active={tool === "line"} onClick={() => setTool("line")} title="Line" />
+                    <ToolBtn icon={<MoveRight size={13} />} active={tool === "arrow"} onClick={() => setTool("arrow")} title="Arrow" />
+                    <ToolBtn icon={<Square size={13} />} active={tool === "rect"} onClick={() => setTool("rect")} title="Rectangle" />
+                    <ToolBtn icon={<Circle size={13} />} active={tool === "circle"} onClick={() => setTool("circle")} title="Circle" />
+                  </div>
+                  <div className="w-px h-3.5 bg-white/10 mx-0.5" />
+                  <button
+                    onClick={() => setAutoSnapEnabled(!autoSnapEnabled)}
+                    className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all flex items-center gap-1 border cursor-pointer ${
+                      autoSnapEnabled
+                        ? "bg-amber-500/20 text-amber-300 border-amber-400/40 font-semibold shadow-xs"
+                        : "bg-white/4 text-white/40 border-white/6 hover:text-white/70"
+                    }`}
+                    title="Auto-Snap Hand-drawn Shapes"
+                  >
+                    <Sparkle size={11} className={autoSnapEnabled ? "text-amber-400" : ""} />
+                    <span>Auto-Snap</span>
+                  </button>
                 </div>
+
+                {/* Velocity Ink Toggle */}
+                <button
+                  onClick={() => setVelocityMode(!velocityMode)}
+                  className={`px-2.5 py-1 text-[10px] font-medium rounded-lg transition-all flex items-center gap-1 border shrink-0 cursor-pointer ${
+                    velocityMode
+                      ? "bg-violet-500/20 text-violet-300 border-violet-400/40 font-semibold shadow-xs shadow-violet-500/20"
+                      : "bg-white/4 text-white/40 border-white/6 hover:text-white/70"
+                  }`}
+                  title="Dynamic Speed-Sensitive Velocity Ink"
+                >
+                  <Zap size={11} className={velocityMode ? "text-violet-400" : ""} />
+                  <span>Velocity Ink</span>
+                </button>
               </div>
             )}
           </div>

@@ -154,6 +154,66 @@ const languages = [
     ),
   },
   {
+    id: 'ml',
+    name: 'Machine Learning',
+    enabled: true,
+    creator: 'AI & Data Science',
+    year: 'Modern',
+    tagline: 'Visual Models, Neural Nets & Intuitive Playgrounds.',
+    topics: 11,
+    programs: 11,
+    accentColor: '#06b6d4',
+    accentGlow: 'rgba(6,182,212,0.22)',
+    accentBorder: 'rgba(6,182,212,0.38)',
+    Icon: () => (
+      <svg viewBox="0 0 128 128" className="w-full h-full">
+        <defs>
+          <linearGradient id="mlCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#0891b2" />
+          </linearGradient>
+          <linearGradient id="mlPurpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#6366f1" />
+          </linearGradient>
+          <linearGradient id="mlSynapseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.7" />
+          </linearGradient>
+        </defs>
+
+        {/* Neural Network Synapses */}
+        <line x1="28" y1="36" x2="64" y2="28" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        <line x1="28" y1="36" x2="64" y2="64" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        <line x1="28" y1="36" x2="64" y2="100" stroke="url(#mlSynapseGrad)" strokeWidth="2" opacity="0.4" />
+        <line x1="28" y1="92" x2="64" y2="28" stroke="url(#mlSynapseGrad)" strokeWidth="2" opacity="0.4" />
+        <line x1="28" y1="92" x2="64" y2="64" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        <line x1="28" y1="92" x2="64" y2="100" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+
+        <line x1="64" y1="28" x2="100" y2="48" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="100" y2="48" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="100" y2="80" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="100" x2="100" y2="80" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+
+        {/* Input Layer Nodes */}
+        <circle cx="28" cy="36" r="8" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="28" cy="92" r="8" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+
+        {/* Hidden Layer Nodes */}
+        <circle cx="64" cy="28" r="9" fill="url(#mlPurpleGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="64" cy="64" r="10" fill="url(#mlPurpleGrad)" stroke="#22d3ee" strokeWidth="2" />
+        <circle cx="64" cy="100" r="9" fill="url(#mlPurpleGrad)" stroke="#ffffff" strokeWidth="2" />
+
+        {/* Output Layer Nodes */}
+        <circle cx="100" cy="48" r="8.5" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="100" cy="80" r="8.5" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+
+        {/* Central Core Pulse */}
+        <circle cx="64" cy="64" r="4" fill="#ffffff" />
+      </svg>
+    ),
+  },
+  {
     id: 'oops',
     name: 'OOPs',
     enabled: false,
@@ -363,7 +423,7 @@ export const LanguageSelectionPage: React.FC = () => {
                             className="text-xs px-2.5 py-1 rounded-md font-mono font-bold text-white"
                             style={{ background: `${lang.accentGlow}`, border: `1px solid ${lang.accentBorder}` }}
                           >
-                            {programsCount} Programs
+                            {programsCount} {lang.id === 'ml' ? 'Models' : 'Programs'}
                           </div>
                         )}
                       </div>
