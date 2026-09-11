@@ -5,24 +5,24 @@ import { useLessonStore } from '../../../lessons/useLessonStore';
 
 // Map event type to a short human label + color
 const EVENT_LABEL: Record<string, { label: string; color: string }> = {
-  CREATE_VARIABLE: { label: '📦 Declare', color: 'bg-blue-500 text-white' },
-  UPDATE_VARIABLE: { label: '✏️ Assign', color: 'bg-amber-500 text-black' },
-  COMPUTE:         { label: '⚡ Compute', color: 'bg-violet-500 text-white' },
-  PRINT_VALUE:     { label: '🖨️ Output', color: 'bg-green-500 text-black' },
-  COPY_VALUE:      { label: '📋 Copy', color: 'bg-cyan-500 text-black' },
-  SWAP:            { label: '🔄 Swap', color: 'bg-orange-500 text-black' },
-  COMPLETE:        { label: '✅ Done', color: 'bg-emerald-500 text-black' },
-  NONE:            { label: '▶ Run', color: 'bg-slate-600 text-white' },
+  CREATE_VARIABLE: { label: 'Declare', color: 'bg-blue-600 text-white' },
+  UPDATE_VARIABLE: { label: 'Assign', color: 'bg-amber-500 text-black' },
+  COMPUTE:         { label: 'Compute', color: 'bg-violet-600 text-white' },
+  PRINT_VALUE:     { label: 'Output', color: 'bg-emerald-600 text-white' },
+  COPY_VALUE:      { label: 'Copy', color: 'bg-cyan-600 text-white' },
+  SWAP:            { label: 'Swap', color: 'bg-orange-500 text-black' },
+  COMPLETE:        { label: 'Done', color: 'bg-emerald-500 text-black' },
+  NONE:            { label: 'Run', color: 'bg-slate-600 text-white' },
   // ── DSA Specific ────────────────────────────────────────────────────────
-  STACK_PUSH:      { label: '⬆ Push', color: 'bg-fuchsia-500 text-white' },
-  STACK_POP:       { label: '⬇ Pop', color: 'bg-rose-500 text-white' },
-  ENQUEUE:         { label: '↩ Enqueue', color: 'bg-cyan-500 text-black' },
-  DEQUEUE:         { label: '↪ Dequeue', color: 'bg-orange-500 text-black' },
-  SET_POINTERS:    { label: '🎯 Pointers', color: 'bg-indigo-500 text-white' },
-  COMPARE_INDICES: { label: '🔍 Compare', color: 'bg-blue-500 text-white' },
-  NODE_TRAVERSE:   { label: '→ Traverse', color: 'bg-purple-500 text-white' },
-  TREE_VISIT:      { label: '🌳 Visit', color: 'bg-green-600 text-white' },
-  LINKED_LIST_UPDATE: { label: '🔗 Link', color: 'bg-purple-600 text-white' }
+  STACK_PUSH:      { label: 'Push', color: 'bg-fuchsia-600 text-white' },
+  STACK_POP:       { label: 'Pop', color: 'bg-rose-600 text-white' },
+  ENQUEUE:         { label: 'Enqueue', color: 'bg-cyan-600 text-white' },
+  DEQUEUE:         { label: 'Dequeue', color: 'bg-orange-500 text-black' },
+  SET_POINTERS:    { label: 'Pointers', color: 'bg-indigo-600 text-white' },
+  COMPARE_INDICES: { label: 'Compare', color: 'bg-blue-600 text-white' },
+  NODE_TRAVERSE:   { label: 'Traverse', color: 'bg-purple-600 text-white' },
+  TREE_VISIT:      { label: 'Visit', color: 'bg-green-600 text-white' },
+  LINKED_LIST_UPDATE: { label: 'Link', color: 'bg-purple-600 text-white' }
 };
 
 export const ExplanationBar: React.FC = () => {

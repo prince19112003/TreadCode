@@ -131,12 +131,12 @@ export const QueueVisualStage: React.FC = () => {
           {/* Alert Banners */}
           <AnimatePresence>
             {isFull && (
-              <div className="px-3 py-1 bg-rose-950 border border-rose-500/60 text-rose-300 text-xs font-mono font-bold rounded-md animate-pulse shrink-0">
+              <div className="px-3 py-1 bg-rose-950 border border-rose-500/60 text-rose-300 text-xs font-mono font-bold rounded-md shrink-0">
                 ⚠ QUEUE OVERFLOW (FULL)
               </div>
             )}
             {isUnderflow && (
-              <div className="px-3 py-1 bg-amber-950 border border-amber-500/60 text-amber-300 text-xs font-mono font-bold rounded-md animate-pulse shrink-0">
+              <div className="px-3 py-1 bg-amber-950 border border-amber-500/60 text-amber-300 text-xs font-mono font-bold rounded-md shrink-0">
                 ⚠ QUEUE UNDERFLOW
               </div>
             )}

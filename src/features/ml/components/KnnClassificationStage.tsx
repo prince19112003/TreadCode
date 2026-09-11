@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { RotateCcw, Plus, Sliders, Sparkles, Target } from 'lucide-react';
+import { RotateCcw, Sparkles, Target } from 'lucide-react';
 
 interface Point2D {
   id: number;
@@ -29,7 +29,7 @@ const INITIAL_KNN_DATA: Point2D[] = [
 export const KnnClassificationStage: React.FC = () => {
   const [k, setK] = useState<number>(3);
   const [queryPt, setQueryPt] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
-  const [points, setPoints] = useState<Point2D[]>(INITIAL_KNN_DATA);
+  const [points] = useState<Point2D[]>(INITIAL_KNN_DATA);
   const [lastInsight, setLastInsight] = useState<string>('Click anywhere to place the target point. KNN finds the K-closest dots and votes.');
 
   // Find K-nearest neighbors using Euclidean Distance

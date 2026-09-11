@@ -188,7 +188,6 @@ export const MergeSortVisualStage: React.FC = () => {
         {/* Minimal Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
             <span className="font-extrabold text-purple-300 tracking-wider">
               MERGE SORT ALGORITHM (DIVIDE & CONQUER TREE)
             </span>

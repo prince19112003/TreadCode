@@ -188,7 +188,6 @@ export const HashMapOperationalPanel: React.FC = () => {
     <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
       <div className="px-3.5 py-2.5 bg-[#050711] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
           <span className="font-extrabold tracking-wider text-slate-200 text-[11px] uppercase">
             HASHMAP CONTROLS
           </span>

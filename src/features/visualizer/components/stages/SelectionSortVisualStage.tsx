@@ -139,7 +139,6 @@ export const SelectionSortVisualStage: React.FC = () => {
         {/* Minimal Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
             <span className="font-extrabold text-cyan-300 tracking-wider">
               SELECTION SORT VISUALIZER (MIN-SELECTION)
             </span>
@@ -186,8 +185,7 @@ export const SelectionSortVisualStage: React.FC = () => {
                   </span>
                 )}
                 {row.isActive && row.swapping && (
-                  <span className="text-[10px] font-mono text-rose-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                  <span className="text-[10px] font-mono text-rose-400 font-bold">
                     SWAP
                   </span>
                 )}

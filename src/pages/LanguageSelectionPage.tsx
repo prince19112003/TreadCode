@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Sparkles, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
-import { getLanguageStats } from '../lessons/registry';
 
 /* =========================================================
    LANGUAGE DATA
@@ -284,9 +283,6 @@ export const LanguageSelectionPage: React.FC = () => {
 
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-indigo-600/15 blur-[120px] pointer-events-none rounded-full" />
-
       <div className="flex flex-col items-center pt-4 md:pt-6 pb-12 px-4 min-h-full relative z-10">
 
         {/* Page Header */}
@@ -296,11 +292,6 @@ export const LanguageSelectionPage: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-6 md:mb-8 max-w-2xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-4 bg-indigo-950/60 border border-indigo-400/40 text-white shadow-md backdrop-blur-md">
-            <Sparkles className="w-4 h-4 text-indigo-300" />
-            <span>Interactive Code Visualization Platform</span>
-          </div>
-          
           <h1 className="text-3xl md:text-5xl font-black mb-3 tracking-tight text-white drop-shadow-sm">
             Choose a Language
           </h1>
@@ -314,9 +305,6 @@ export const LanguageSelectionPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 max-w-5xl w-full mx-auto pb-12">
           {languages.map((lang, index) => {
             const Icon = lang.Icon;
-            const stats = lang.enabled ? getLanguageStats(lang.id) : { topicsCount: lang.topics, programsCount: lang.programs };
-            const topicsCount = stats.topicsCount || lang.topics;
-            const programsCount = stats.programsCount || lang.programs;
             return (
               <motion.div
                 key={lang.id}
@@ -342,9 +330,9 @@ export const LanguageSelectionPage: React.FC = () => {
                   onMouseEnter={e => {
                     if (!lang.enabled) return;
                     const el = e.currentTarget as HTMLElement;
-                    el.style.transform = 'translateY(-4px)';
-                    el.style.boxShadow = `0 12px 32px -8px ${lang.accentGlow}, 0 0 0 1px ${lang.accentBorder}`;
-                    el.style.borderColor = lang.accentBorder;
+                    el.style.transform = 'translateY(-3px)';
+                    el.style.boxShadow = '0 10px 28px -6px rgba(0,0,0,0.5)';
+                    el.style.borderColor = 'rgba(255,255,255,0.25)';
                   }}
                   onMouseLeave={e => {
                     if (!lang.enabled) return;
@@ -408,26 +396,6 @@ export const LanguageSelectionPage: React.FC = () => {
                     <p className="text-xs md:text-sm font-medium mb-4 line-clamp-1 text-slate-200">
                       {lang.tagline}
                     </p>
-
-                    {/* Stats row for enabled languages */}
-                    {lang.enabled && (
-                      <div className="flex items-center gap-2 mb-4">
-                        <div
-                          className="text-xs px-2.5 py-1 rounded-md font-mono font-bold text-white"
-                          style={{ background: `${lang.accentGlow}`, border: `1px solid ${lang.accentBorder}` }}
-                        >
-                          {topicsCount} Topics
-                        </div>
-                        {lang.id !== 'dsa' && (
-                          <div
-                            className="text-xs px-2.5 py-1 rounded-md font-mono font-bold text-white"
-                            style={{ background: `${lang.accentGlow}`, border: `1px solid ${lang.accentBorder}` }}
-                          >
-                            {programsCount} {lang.id === 'ml' ? 'Models' : 'Programs'}
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {/* Meta */}
                     <div

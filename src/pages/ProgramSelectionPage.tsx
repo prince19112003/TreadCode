@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Code2, Play, ArrowRight } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
 
@@ -514,7 +514,6 @@ export const ProgramSelectionPage: React.FC = () => {
 
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
       <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-7xl mx-auto w-full min-h-full relative z-10">
 
         {/* Page Header */}
@@ -569,16 +568,12 @@ export const ProgramSelectionPage: React.FC = () => {
                     el.style.borderColor = 'rgba(99,102,241,0.5)';
                     el.style.transform = 'translateY(-3px)';
                     el.style.boxShadow = '0 10px 30px -8px rgba(99,102,241,0.25), 0 0 0 1px rgba(99,102,241,0.3)';
-                    const arrow = el.querySelector('.arrow-hint') as HTMLElement;
-                    if (arrow) arrow.style.opacity = '1';
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
                     el.style.borderColor = 'rgba(255,255,255,0.1)';
                     el.style.transform = 'translateY(0)';
                     el.style.boxShadow = 'none';
-                    const arrow = el.querySelector('.arrow-hint') as HTMLElement;
-                    if (arrow) arrow.style.opacity = '0';
                   }}
                 >
                   {/* Top row */}
@@ -605,16 +600,6 @@ export const ProgramSelectionPage: React.FC = () => {
                   <p className="text-xs font-medium leading-relaxed flex-1 text-slate-200">
                     {prog.description}
                   </p>
-
-                  {/* Bottom action hint */}
-                  <div
-                    className="arrow-hint flex items-center gap-2 mt-4 pt-3 transition-opacity duration-200 border-t border-white/10 text-indigo-300 text-xs font-bold"
-                    style={{ opacity: 0 }}
-                  >
-                    <Play className="w-3.5 h-3.5" />
-                    <span>Start Visualization</span>
-                    <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-                  </div>
                 </div>
               </motion.div>
             ))}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Play, RotateCcw, Plus, Activity, Sliders, Sparkles, CheckCircle2 } from 'lucide-react';
+import { RotateCcw, Plus, Sliders, Sparkles } from 'lucide-react';
 
 interface ClassDataPoint {
   x: number; // e.g. Study hours 0 to 10

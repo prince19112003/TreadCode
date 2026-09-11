@@ -280,7 +280,6 @@ export const DllOperationalPanel: React.FC = () => {
       {/* Sleek Minimal Header - Matching Stack, Queue & SLL Control Panels */}
       <div className="px-3.5 py-2.5 bg-[#070913] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
           <span className="font-bold tracking-wider text-slate-200 text-[11px]">DLL CONTROLS</span>
         </div>
         <div className="flex items-center gap-3 text-[11px]">

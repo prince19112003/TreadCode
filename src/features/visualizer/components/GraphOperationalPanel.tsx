@@ -1102,7 +1102,6 @@ export const GraphOperationalPanel: React.FC = () => {
       {/* Header */}
       <div className="px-4 py-3 bg-[#050711] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400" />
           <span className="font-extrabold tracking-wider text-slate-200 text-[11px] uppercase">
             {isBfs ? `GRAPH BFS (${graphPreset === '2' ? '9 NODES' : '7 NODES'})` : isDfs ? `GRAPH DFS (${graphPreset === '2' ? '9 NODES' : '7 NODES'})` : isDijkstra ? 'DIJKSTRA ALGORITHM' : isKruskal ? 'KRUSKAL MST ALGORITHM' : isPrims ? "PRIM'S MST ALGORITHM" : isAStar ? 'A* SEARCH ALGORITHM' : 'GRAPH FUNDAMENTALS'}
           </span>

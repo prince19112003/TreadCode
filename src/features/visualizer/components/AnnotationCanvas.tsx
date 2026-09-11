@@ -20,6 +20,7 @@ interface AnnotationCanvasProps {
   strokesRef: React.MutableRefObject<Stroke[]>;
   undoneRef?: React.MutableRefObject<Stroke[]>;
   revision?: number;
+  onStrokeStart?: () => void;
   onStrokeComplete?: () => void;
 }
 
@@ -71,6 +72,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   strokesRef,
   undoneRef,
   revision = 0,
+  onStrokeStart,
   onStrokeComplete,
 }) => {
   // Dual-Canvas architecture: committedCanvas (bottom) + liveCanvas (top)
@@ -213,6 +215,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!isActive || mode === 'palm' || !e.isPrimary) return;
+    if (onStrokeStart) onStrokeStart();
     isDrawing.current = true;
     const pt = getPos(e);
     liveCanvasRef.current?.setPointerCapture(e.pointerId);

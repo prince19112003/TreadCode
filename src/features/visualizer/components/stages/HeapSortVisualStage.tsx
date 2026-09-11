@@ -78,7 +78,6 @@ export const HeapSortVisualStage: React.FC = () => {
         {/* Minimal Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2.5 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
             <span className="font-extrabold text-amber-300 tracking-wider">
               HEAP SORT ALGORITHM (MAX-HEAP BINARY TREE + ARRAY)
             </span>

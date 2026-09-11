@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Play, Pause, RotateCcw, Plus, Activity, Sliders, ChevronRight, Sparkles } from 'lucide-react';
+import { Play, Pause, RotateCcw, Activity, Sliders, ChevronRight, Sparkles } from 'lucide-react';
 
 interface DataPoint {
   x: number; // 0 to 10
@@ -214,6 +214,37 @@ export const PolynomialRegressionStage: React.FC = () => {
           <div className="text-right">
             <span className="text-[10px] text-slate-500 block">Step</span>
             <span className="text-base font-mono font-bold text-sky-400">{epoch}</span>
+          </div>
+        </div>
+
+        {/* Live Mini MSE Loss Curve */}
+        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Activity size={12} className="text-sky-400" />
+            Loss Minimization Curve
+          </span>
+          <div className="h-20 w-full flex items-end gap-1 bg-[#060810] p-1.5 rounded-lg border border-slate-800/60 overflow-hidden">
+            {lossHistory.length > 1 ? (
+              <svg viewBox="0 0 100 40" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                <polyline
+                  fill="none"
+                  stroke="#38bdf8"
+                  strokeWidth="2"
+                  points={lossHistory
+                    .map((val, i) => {
+                      const maxL = Math.max(...lossHistory, 100);
+                      const x = (i / (lossHistory.length - 1)) * 100;
+                      const y = 36 - (val / maxL) * 32;
+                      return `${x},${Math.max(2, Math.min(38, y))}`;
+                    })
+                    .join(' ')}
+                />
+              </svg>
+            ) : (
+              <div className="text-[10px] text-slate-500 w-full text-center my-auto">
+                Step model to record loss curve
+              </div>
+            )}
           </div>
         </div>
 

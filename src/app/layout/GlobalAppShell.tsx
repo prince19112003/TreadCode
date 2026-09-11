@@ -439,21 +439,20 @@ export const GlobalAppShell: React.FC = () => {
       className="h-screen flex flex-col relative overflow-hidden"
       style={{ background: '#0a0b0f', fontFamily: "'Inter', sans-serif" }}
     >
-      {/* === BACKGROUND GRADIENT === */}
+      {/* === TECHNICAL GRID BACKGROUND === */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.08) 0%, transparent 70%)',
+          backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
         }}
       />
 
-      {/* === HEADER (Sleek Glassmorphism Top Bar) === */}
+      {/* === HEADER (Clean Top Bar) === */}
       <header
         data-tauri-drag-region
-        className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-linear-to-r from-[#070913]/95 via-[#0b0f24]/95 to-[#070913]/95 border-b border-indigo-500/20 backdrop-blur-xl shadow-lg"
+        className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-[#090a0f]/95 border-b border-slate-800/80 backdrop-blur-xl shadow-sm"
       >
-        {/* Subtle glowing cyan top border accent */}
-        <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
         {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
         <div className="flex items-center gap-3 shrink-0" data-tauri-drag-region>
           <button

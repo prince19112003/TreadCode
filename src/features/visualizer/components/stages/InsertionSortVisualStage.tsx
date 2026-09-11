@@ -129,7 +129,6 @@ export const InsertionSortVisualStage: React.FC = () => {
         {/* Minimal Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
             <span className="font-extrabold text-indigo-300 tracking-wider">
               INSERTION SORT VISUALIZER (KEY-INSERTION)
             </span>
@@ -176,8 +175,7 @@ export const InsertionSortVisualStage: React.FC = () => {
                   </span>
                 )}
                 {row.isActive && row.comparing && (
-                  <span className="text-[10px] font-mono text-amber-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  <span className="text-[10px] font-mono text-amber-400 font-bold">
                     SHIFT
                   </span>
                 )}

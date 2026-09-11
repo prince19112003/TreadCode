@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Play, Pause, RotateCcw, Plus, Activity, Sliders, ChevronRight, CheckCircle2, Sparkles, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Play, Pause, RotateCcw, Plus, Activity, Sliders, ChevronRight, Sparkles } from 'lucide-react';
 
 interface DataPoint {
   x: number; // 0 to 10 hours
@@ -28,10 +28,8 @@ export const LinearRegressionStage: React.FC = () => {
   const [epoch, setEpoch] = useState<number>(0);
   const [lossHistory, setLossHistory] = useState<number[]>([]);
   const [showResiduals, setShowResiduals] = useState<boolean>(true);
-  const [learningRate, setLearningRate] = useState<number>(0.015);
+  const [learningRate] = useState<number>(0.015);
   const [lastInsight, setLastInsight] = useState<string>('Click "Step 1 Iteration" or "Auto-Fit" to see how the line adjusts to minimize error.');
-
-  const animationRef = useRef<number | null>(null);
 
   // Compute Current MSE & Residuals
   const { mse, residuals, gradM, gradC } = useMemo(() => {

@@ -288,7 +288,7 @@ export const DataStructureBox: React.FC<DataStructureBoxProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-black uppercase tracking-wider font-mono text-cyan-300 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                   DIVIDED SUB-ARRAY BREAKDOWN
                 </span>
                 <span className="text-[8.5px] font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">

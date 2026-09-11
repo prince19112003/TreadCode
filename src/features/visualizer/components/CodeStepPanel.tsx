@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Pencil } from 'lucide-react';
 import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { CodeLine } from '../../../lessons/types';
 import { usePinchZoom } from '../../../shared/hooks/usePinchZoom';
@@ -323,16 +323,14 @@ export const CodeStepPanel = React.memo(() => {
             {lesson?.language === 'java' ? 'Main.java' : lesson?.language === 'cpp' ? 'main.cpp' : lesson?.language === 'c' ? 'main.c' : 'main.py'}
           </span>
           {Object.keys(editableVariables).length > 0 && (
-            <span className="text-[10px] text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 font-bold tracking-wider uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)]">
-              ✏ editable
+            <span
+              title="Editable code variables"
+              className="px-1.5 py-0.5 text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)]"
+            >
+              <Pencil className="w-3 h-3" />
             </span>
           )}
-          {lesson?.language !== 'python' && lesson?.language !== 'dsa' && (
-            <span className="text-[10px] text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 rounded-full px-2 py-0.5 font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              Under Development
-            </span>
-          )}
+
         </div>
         <div className="flex items-center gap-1 bg-black/40 rounded-lg border border-white/10 p-0.5">
           <button

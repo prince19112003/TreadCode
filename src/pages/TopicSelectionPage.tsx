@@ -197,7 +197,6 @@ export const TopicSelectionPage: React.FC = () => {
   /* ── STANDARD LANGUAGE PAGE ────────────────────────────────────────────── */
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-80 bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
       <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-6xl mx-auto w-full min-h-full relative z-10">
 
         {/* Page Header */}

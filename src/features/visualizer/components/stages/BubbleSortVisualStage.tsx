@@ -135,7 +135,6 @@ export const BubbleSortVisualStage: React.FC = () => {
         {/* Minimal Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
             <span className="font-extrabold text-amber-300 tracking-wider">
               BUBBLE SORT VISUALIZER (PASS-BY-PASS)
             </span>
@@ -177,14 +176,12 @@ export const BubbleSortVisualStage: React.FC = () => {
                 </span>
 
                 {row.isActive && row.comparing && (
-                  <span className="text-[10px] font-mono text-amber-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  <span className="text-[10px] font-mono text-amber-400 font-bold">
                     CMP [{row.comparing[0]},{row.comparing[1]}]
                   </span>
                 )}
                 {row.isActive && row.swapping && (
-                  <span className="text-[10px] font-mono text-rose-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                  <span className="text-[10px] font-mono text-rose-400 font-bold">
                     SWAP
                   </span>
                 )}

@@ -50,12 +50,12 @@ export const DllVisualStage: React.FC = () => {
           {/* Alert Banners */}
           <AnimatePresence>
             {isFull && (
-              <div className="px-3.5 py-1 bg-rose-950/80 border border-rose-500/60 text-rose-300 text-xs font-mono font-bold rounded-md animate-pulse shrink-0 shadow-lg">
+              <div className="px-3.5 py-1 bg-rose-950/80 border border-rose-500/60 text-rose-300 text-xs font-mono font-bold rounded-md shrink-0 shadow-lg">
                 ⚠ DLL CAPACITY REACHED ({listItems.length}/{CAPACITY})
               </div>
             )}
             {isUnderflow && (
-              <div className="px-3.5 py-1 bg-amber-950/80 border border-amber-500/60 text-amber-300 text-xs font-mono font-bold rounded-md animate-pulse shrink-0 shadow-lg">
+              <div className="px-3.5 py-1 bg-amber-950/80 border border-amber-500/60 text-amber-300 text-xs font-mono font-bold rounded-md shrink-0 shadow-lg">
                 ⚠ UNDERFLOW: LINKED LIST IS EMPTY
               </div>
             )}

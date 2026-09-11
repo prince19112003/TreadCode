@@ -173,9 +173,6 @@ export const GraphVisualStage = React.memo(() => {
         {/* Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/90 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2.5">
-            <span className={`w-2.5 h-2.5 rounded-full animate-pulse shadow-md ${
-              isPrims || isKruskal || isDijkstra || isAStar ? 'bg-amber-400 shadow-amber-400/80' : isBfs ? 'bg-cyan-400 shadow-cyan-400/80' : isDfs ? 'bg-purple-400 shadow-purple-400/80' : 'bg-emerald-400 shadow-emerald-400/80'
-            }`} />
             <span className="font-black text-amber-300 tracking-wider text-xs uppercase drop-shadow">
               {isAStar ? 'A* (A-STAR) SEARCH ALGORITHM [f(n) = g(n) + h(n)]' : isPrims ? "PRIM'S MINIMUM SPANNING TREE (MST)" : isKruskal ? "KRUSKAL'S MINIMUM SPANNING TREE (MST)" : isDijkstra ? "DIJKSTRA'S ALGORITHM (WEIGHTED GRAPH)" : isBfs ? 'GRAPH BREADTH-FIRST SEARCH (BFS)' : isDfs ? 'GRAPH DEPTH-FIRST SEARCH (DFS)' : 'GRAPH FUNDAMENTALS'}
             </span>
@@ -216,16 +213,15 @@ export const GraphVisualStage = React.memo(() => {
             <div className="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl min-h-95">
               <div className="w-full flex items-center justify-between font-mono text-xs text-slate-300 pb-2 border-b border-slate-900">
                 <span className="font-black text-amber-300 flex items-center gap-2 uppercase tracking-wide">
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
                   {isPrims ? 'PRIM MST GRAPH' : isKruskal ? 'KRUSKAL MST GRAPH' : isDijkstra ? 'WEIGHTED GRAPH NETWORK' : lesson?.topic === 'graph_basics' ? 'GRAPH FUNDAMENTALS NETWORK' : `7-Node Graph Network (${isBfs ? 'BFS' : 'DFS'})`}
                 </span>
                 {isPrims ? (
                   acceptedEdge ? (
-                    <span className="text-emerald-400 font-mono font-black text-xs animate-pulse">
+                    <span className="text-emerald-400 font-mono font-black text-xs">
                       Accepted {acceptedEdge.u}↔{acceptedEdge.v} (w={acceptedEdge.weight})
                     </span>
                   ) : testingEdge ? (
-                    <span className="text-amber-300 font-mono font-black text-xs animate-pulse">
+                    <span className="text-amber-300 font-mono font-black text-xs">
                       Testing Min Edge {testingEdge.u}↔{testingEdge.v} (w={testingEdge.weight})
                     </span>
                   ) : (
@@ -233,22 +229,22 @@ export const GraphVisualStage = React.memo(() => {
                   )
                 ) : isKruskal ? (
                   acceptedEdge ? (
-                    <span className="text-emerald-400 font-mono font-black text-xs animate-pulse">
+                    <span className="text-emerald-400 font-mono font-black text-xs">
                       Accepted {acceptedEdge.u}↔{acceptedEdge.v} (w={acceptedEdge.weight})
                     </span>
                   ) : rejectedEdge ? (
-                    <span className="text-rose-400 font-mono font-black text-xs animate-pulse">
+                    <span className="text-rose-400 font-mono font-black text-xs">
                       Cycle Skipped {rejectedEdge.u}↔{rejectedEdge.v}
                     </span>
                   ) : testingEdge ? (
-                    <span className="text-amber-300 font-mono font-black text-xs animate-pulse">
+                    <span className="text-amber-300 font-mono font-black text-xs">
                       Testing {testingEdge.u}↔{testingEdge.v} (w={testingEdge.weight})
                     </span>
                   ) : (
                     <span className="text-amber-400 font-mono font-bold">Kruskal Ready</span>
                   )
                 ) : isDijkstra && relaxingEdge ? (
-                  <span className={`font-mono font-black text-xs animate-pulse ${relaxingEdge.updated ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  <span className={`font-mono font-black text-xs ${relaxingEdge.updated ? 'text-emerald-400' : 'text-slate-400'}`}>
                     {relaxingEdge.updated ? `Relaxed ${relaxingEdge.u}↔${relaxingEdge.v} (w=${relaxingEdge.weight})` : `Checked ${relaxingEdge.u}↔${relaxingEdge.v}`}
                   </span>
                 ) : (
@@ -553,7 +549,7 @@ export const GraphVisualStage = React.memo(() => {
                               </td>
                               <td className="py-1.5 px-2 text-right font-mono text-[9px]">
                                 {isActive ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600 font-black animate-pulse">
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600 font-black">
                                     ACTIVE 🔍
                                   </span>
                                 ) : isClosed ? (
@@ -619,7 +615,7 @@ export const GraphVisualStage = React.memo(() => {
                               </td>
                               <td className="py-1.5 px-2.5 text-right font-mono text-[10px]">
                                 {isPickedMin ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600 font-black animate-pulse">
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600 font-black">
                                     MIN EDGE 🔍
                                   </span>
                                 ) : (
@@ -641,7 +637,6 @@ export const GraphVisualStage = React.memo(() => {
                 <div className="flex flex-col gap-2.5 font-mono">
                   <div className="flex items-center justify-between text-xs text-slate-300 pb-1 border-b border-slate-800">
                     <span className="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                       SORTED EDGES (DSU)
                     </span>
                     <span className="text-emerald-400 font-black text-xs">MST Wt = {totalMstWeight}</span>
@@ -690,7 +685,7 @@ export const GraphVisualStage = React.memo(() => {
                                     SKIPPED ❌
                                   </span>
                                 ) : status === 'TESTING' ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-200 border border-amber-600 font-black animate-pulse">
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-200 border border-amber-600 font-black">
                                     TESTING 🔍
                                   </span>
                                 ) : (
@@ -798,7 +793,6 @@ export const GraphVisualStage = React.memo(() => {
                   {/* Concept View Header & Mode Status */}
                   <div className="flex items-center justify-between text-xs text-slate-300 pb-1.5 border-b border-slate-800">
                     <span className="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5 text-xs">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                       {(mem.activeTab === 'list' || mem.concept === 'ADJACENCY_LIST') ? 'ADJACENCY LIST VIEW' : (mem.activeTab === 'neighbors' || mem.concept === 'NEIGHBORS') ? 'NEIGHBORS & DEGREE VIEW' : (mem.activeTab === 'weights' || mem.concept === 'EDGE_WEIGHTS') ? 'EDGE WEIGHTS VIEW' : 'ADJACENCY MATRIX (7×7)'}
                     </span>
                     <span className="text-cyan-400 font-bold text-[11px]">V=7 Vertices, E=9 Edges</span>
@@ -1103,11 +1097,10 @@ export const GraphVisualStage = React.memo(() => {
             
             <div className="w-full flex items-center justify-between font-mono text-xs text-slate-300 pb-2 border-b border-slate-900">
               <span className="font-black text-emerald-300 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 1. GRAPH NETWORK MESH (7 VERTICES)
               </span>
               
-              <span className="text-amber-300 font-mono font-black animate-pulse">
+              <span className="text-amber-300 font-mono font-black">
                 Inspecting Node [{inspectNode}] ➔ Neighbors: [{neighbors.join(', ') || 'None'}]
               </span>
             </div>

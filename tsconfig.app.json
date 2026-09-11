@@ -26,15 +26,11 @@
     /* Path Aliases */
     "paths": {
       "@app/*": ["./src/app/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@core/*": ["./src/core/*"],
       "@features/*": ["./src/features/*"],
       "@lessons/*": ["./src/lessons/*"],
       "@pages/*": ["./src/pages/*"],
       "@shared/*": ["./src/shared/*"],
-      "@state/*": ["./src/state/*"],
-      "@styles/*": ["./src/styles/*"],
-      "@theme/*": ["./src/theme/*"]
+      "@styles/*": ["./src/styles/*"]
     }
   },
   "include": ["src"]

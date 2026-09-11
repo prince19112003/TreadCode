@@ -708,7 +708,7 @@ export const JavaFlowchartStage: React.FC = () => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     className="flex items-center gap-2.5 px-4 py-1.5 bg-slate-900/90 border border-orange-500/40 rounded-xl shadow-md select-none"
                   >
-                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-orange-400" />
                     <span className="text-xs font-mono font-bold text-slate-300">
                       Loop Counter State: <span className="text-orange-400 font-extrabold">{counterVar}</span> = <span className="text-white font-black bg-orange-500/20 px-2 py-0.5 rounded border border-orange-500/30">{counterVal}</span>
                     </span>
@@ -1465,7 +1465,7 @@ export const JavaFlowchartStage: React.FC = () => {
                       }`}
                     >
                       <div className="absolute -top-3.5 left-6 px-3 py-0.5 bg-[#060814] text-xs font-black tracking-widest text-amber-400 border border-amber-500/30 rounded-lg uppercase flex items-center gap-2 shadow-lg select-none">
-                        <span className={`w-2 h-2 rounded-full ${isExecInFunc ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
+                        <span className={`w-2 h-2 rounded-full ${isExecInFunc ? 'bg-amber-400' : 'bg-slate-600'}`} />
                         {functionLines[0]?.tokens.find((t: any) => t.type === 'function')?.value || 'Method'}() block
                       </div>
 
@@ -1911,7 +1911,6 @@ export const JavaFlowchartStage: React.FC = () => {
                       <div className="flex flex-col gap-2 border-b border-emerald-500/20 pb-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-black font-mono tracking-widest text-emerald-400 uppercase flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                             SORTING PROGRESS TRACKER
                           </span>
                           <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-md">
@@ -1932,7 +1931,7 @@ export const JavaFlowchartStage: React.FC = () => {
 
                       {/* Current Action Indicator */}
                       {mem.swappingIndices ? (
-                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-amber-200 font-bold animate-pulse">
+                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-amber-200 font-bold">
                           <span>⇄ Swapping:</span>
                           <span className="text-white font-black bg-amber-950 px-1.5 py-0.5 rounded border border-amber-400">
                             {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[0]] : ''} ⇄ {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[1]] : ''}

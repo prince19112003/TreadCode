@@ -70,7 +70,6 @@ export const TreeVisualStage: React.FC = () => {
         {/* Minimal Header Status Bar */}
         <div className="flex items-center justify-between w-full bg-slate-950/80 border border-slate-800/80 px-4 py-2.5 rounded-xl shadow-lg backdrop-blur-md font-mono text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse shadow-[0_0_8px_rgba(139,92,246,0.8)]" />
             <span className="font-extrabold text-violet-300 tracking-wider">
               BINARY SEARCH TREE (STATIC 7-NODE BST)
             </span>
@@ -93,13 +92,12 @@ export const TreeVisualStage: React.FC = () => {
           
           <div className="w-full flex items-center justify-between font-mono text-[11px] text-slate-400 pb-2 border-b border-slate-900">
             <span className="font-bold text-violet-300 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
               BST STRUCTURE (ROOT = 25 | LEFT &lt; PARENT &lt; RIGHT)
             </span>
             
             {activeVal !== undefined && (
               <span className={`font-mono font-bold ${
-                isMatch ? 'text-emerald-400' : 'text-amber-300 animate-pulse'
+                isMatch ? 'text-emerald-400' : 'text-amber-300'
               }`}>
                 {isMatch ? `✓ MATCH FOUND [${activeVal}]` : `Inspecting Node [${activeVal}]`}
               </span>

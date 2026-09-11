@@ -146,7 +146,7 @@ export const ConditionBox: React.FC<ConditionBoxProps> = ({
           transition={{ duration: 0.3, delay: 0.15 }}
           className="mt-1 px-3 py-1 bg-red-950/80 border border-red-500/50 rounded-lg flex items-center gap-1.5 shadow-md select-none"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
           <span className="text-[10px] font-mono font-bold text-red-300 tracking-wider">
             Condition FALSE → Executing Next Branch (else / else if)
           </span>

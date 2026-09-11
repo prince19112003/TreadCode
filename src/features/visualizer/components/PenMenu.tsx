@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Pen, Eraser, Hand, Undo2, Redo2, Trash2, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
+import { Pen, Eraser, Undo2, Redo2, Trash2, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import type { Stroke } from './AnnotationCanvas';
 
@@ -51,19 +51,25 @@ export const PenMenu: React.FC = () => {
   const [isLeftEdge, setIsLeftEdge] = useState(false);
 
   const handleFabClick = () => {
-    if (isPenActive) {
-      // If Pen is currently ACTIVE, clicking the button switches to Palm/Hand mode and disables writing
-      setIsPenActive(false);
-      setMode('palm');
-      setIsOpen(false);
-      setActiveSubMenu('none');
-    } else {
-      // If Pen is INACTIVE (Palm mode), clicking the Pen button activates Blue Pen mode and opens radial menu
+    if (!isPenActive) {
+      // 1. Click pen button: Pen mode activates, menu opens, button turns active color
       setIsPenActive(true);
       setMode('pen');
       setIsOpen(true);
       setActiveSubMenu('none');
+    } else {
+      // 2. Click again: Switches back to Palm mode, closes menu, button returns to normal color
+      setIsPenActive(false);
+      setMode('palm');
+      setIsOpen(false);
+      setActiveSubMenu('none');
     }
+  };
+
+  const handleStrokeStart = () => {
+    // When faculty writes outside on the canvas, automatically hide the menu
+    setIsOpen(false);
+    setActiveSubMenu('none');
   };
 
   const handleUndo = () => {
@@ -168,7 +174,13 @@ export const PenMenu: React.FC = () => {
     id: `color-${c.hex}`,
     hex: c.hex,
     icon: <Pen className="w-4 h-4" style={{ color: c.hex }} />,
-    action: () => { setColor(c.hex); setMode('pen'); setIsPenActive(true); setActiveSubMenu('none'); },
+    action: () => {
+      setColor(c.hex);
+      setMode('pen');
+      setIsPenActive(true);
+      setActiveSubMenu('none');
+      setIsOpen(false);
+    },
     active: mode === 'pen' && color === c.hex,
   }));
 
@@ -180,22 +192,19 @@ export const PenMenu: React.FC = () => {
     { id: 'undo', icon: <Undo2 className={`w-4 h-4 ${canUndo ? 'text-white font-extrabold' : 'text-slate-600'}`} />, action: handleUndo, active: false, activeFill: '', activeStroke: '' },
     { id: 'redo', icon: <Redo2 className={`w-4 h-4 ${canRedo ? 'text-emerald-300 font-extrabold' : 'text-slate-600'}`} />, action: handleRedo, active: canRedo, activeFill: 'rgba(16, 185, 129, 0.4)', activeStroke: 'rgba(52, 211, 153, 0.8)' },
     {
-      id: 'mode',
+      id: 'eraser',
       icon: (
-        <div className={`p-1 rounded-lg transition-all ${mode === 'eraser' ? 'bg-rose-500/20 ring-2 ring-rose-400' : mode === 'palm' ? 'bg-amber-500/20 ring-2 ring-amber-400' : ''}`}>
-          {mode === 'eraser' ? (
-            <Eraser className="w-4 h-4 text-rose-400 font-bold" />
-          ) : mode === 'palm' ? (
-            <Hand className="w-4 h-4 text-amber-400 font-bold" />
-          ) : (
-            <Pen className="w-4 h-4 text-cyan-400 font-bold" />
-          )}
-        </div>
+        <Eraser className={`w-4 h-4 transition-all ${mode === 'eraser' ? 'text-rose-300 scale-110 font-bold' : 'text-slate-300'}`} />
       ),
-      action: () => { setMode(m => m === 'pen' ? 'eraser' : m === 'eraser' ? 'palm' : 'pen'); setActiveSubMenu('none'); },
-      active: mode !== 'pen',
-      activeFill: mode === 'eraser' ? 'rgba(225, 29, 72, 0.45)' : 'rgba(245, 158, 11, 0.45)',
-      activeStroke: mode === 'eraser' ? 'rgba(251, 113, 133, 0.9)' : 'rgba(252, 211, 77, 0.9)',
+      action: () => {
+        setMode(m => (m === 'eraser' ? 'pen' : 'eraser'));
+        setIsPenActive(true);
+        setActiveSubMenu('none');
+        setIsOpen(false);
+      },
+      active: mode === 'eraser',
+      activeFill: 'rgba(225, 29, 72, 0.45)',
+      activeStroke: 'rgba(251, 113, 133, 0.9)',
     },
     {
       id: 'thickness',
@@ -244,6 +253,7 @@ export const PenMenu: React.FC = () => {
       strokesRef={strokesRef}
       undoneRef={undoneRef}
       revision={revision}
+      onStrokeStart={handleStrokeStart}
       onStrokeComplete={handleStrokeComplete}
     />
   );
@@ -440,20 +450,26 @@ export const PenMenu: React.FC = () => {
           {/* Center FAB Toggle Button */}
           <motion.button
             onClick={(e) => { e.stopPropagation(); handleFabClick(); }}
-            whileTap={{ scale: 0.9 }}
-            className={`absolute inset-0 rounded-full flex items-center justify-center shadow-xl transition-all z-30 ${
+            whileTap={{ scale: 0.95 }}
+            className={`absolute inset-0 rounded-full flex items-center justify-center shadow-lg transition-colors z-30 cursor-pointer ${
               isPenActive
                 ? mode === 'eraser'
-                  ? 'bg-rose-600 text-white ring-4 ring-rose-400/60 shadow-lg shadow-rose-500/50 border border-rose-300'
-                  : 'bg-blue-600 text-white ring-4 ring-blue-400/60 shadow-lg shadow-blue-500/50 border border-blue-300 animate-pulse'
+                  ? 'bg-rose-600 text-white border border-rose-400'
+                  : 'bg-blue-600 text-white border border-blue-400'
                 : 'bg-slate-900/95 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/80 shadow-md'
             }`}
-            title={isPenActive ? 'Click Palm to Stop Writing (Return to Hand/Interact Mode)' : 'Click Pen to Start Writing (Blue Pen)'}
+            title={
+              !isPenActive
+                ? 'Tap to open Pen Menu and start drawing'
+                : mode === 'eraser'
+                ? 'Eraser Active (Tap to switch to Palm Mode)'
+                : 'Pen Active (Tap to switch to Palm Mode)'
+            }
           >
-            {isPenActive ? (
-              <Hand className="w-5.5 h-5.5 pointer-events-none text-white" />
+            {isPenActive && mode === 'eraser' ? (
+              <Eraser className="w-5.5 h-5.5 pointer-events-none text-white" />
             ) : (
-              <Pen className="w-5.5 h-5.5 pointer-events-none text-slate-300 group-hover:text-white" />
+              <Pen className={`w-5.5 h-5.5 pointer-events-none ${isPenActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
             )}
           </motion.button>
         </div>

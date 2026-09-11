@@ -242,7 +242,6 @@ export const QueueOperationalPanel: React.FC = () => {
       {/* Sleek Minimal Header - Matching Stack Control Panel */}
       <div className="px-3.5 py-2.5 bg-[#070913] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
           <span className="font-bold tracking-wider text-slate-200 text-[11px]">QUEUE CONTROLS</span>
         </div>
         <div className="flex items-center gap-3 text-[11px]">

@@ -1909,7 +1909,6 @@ export const CFlowchartStage: React.FC = () => {
                       <div className="flex flex-col gap-2 border-b border-emerald-500/20 pb-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-black font-mono tracking-widest text-emerald-400 uppercase flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                             SORTING PROGRESS TRACKER
                           </span>
                           <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-md">
@@ -1930,7 +1929,7 @@ export const CFlowchartStage: React.FC = () => {
 
                       {/* Current Action Indicator */}
                       {mem.swappingIndices ? (
-                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-amber-200 font-bold animate-pulse">
+                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-amber-200 font-bold">
                           <span>⇄ Swapping:</span>
                           <span className="text-white font-black bg-amber-950 px-1.5 py-0.5 rounded border border-amber-400">
                             {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[0]] : ''} ⇄ {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[1]] : ''}
