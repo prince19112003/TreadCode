@@ -48,7 +48,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     if (path.includes('/dsa') && lockDsa) return <LicenseModal onActivate={context.handleActivate} />;
     
     // Default course gating for non-python sections
-    if (!path.includes('/python') && !path.includes('/ml')) {
+    if (!path.includes('/python') && !path.includes('/ml') && !path.includes('/networking')) {
       return <LicenseModal onActivate={context.handleActivate} />;
     }
   }
@@ -150,7 +150,14 @@ export const App: React.FC = () => {
     if (savedTuning) {
       try {
         const { contrast, brightness, saturate } = JSON.parse(savedTuning);
-        document.documentElement.style.filter = `contrast(${contrast || 100}%) brightness(${brightness || 100}%) saturate(${saturate || 100}%)`;
+        const c = contrast || 100;
+        const b = brightness || 100;
+        const s = saturate || 100;
+        if (c === 100 && b === 100 && s === 100) {
+          document.documentElement.style.filter = 'none';
+        } else {
+          document.documentElement.style.filter = `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
+        }
       } catch (e) {
         console.error(e);
       }

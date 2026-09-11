@@ -213,6 +213,70 @@ const languages = [
     ),
   },
   {
+    id: 'networking',
+    name: 'Computer Networks',
+    enabled: true,
+    creator: 'ARPANET / IETF',
+    year: 'Core',
+    tagline: 'Protocols, Packet Flow, Routing & Layer Architecture.',
+    topics: 8,
+    programs: 8,
+    accentColor: '#0ea5e9',
+    accentGlow: 'rgba(14,165,233,0.20)',
+    accentBorder: 'rgba(14,165,233,0.38)',
+    Icon: () => (
+      <svg viewBox="0 0 128 128" className="w-full h-full">
+        <defs>
+          <linearGradient id="netCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
+          </linearGradient>
+          <linearGradient id="netLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.8" />
+          </linearGradient>
+        </defs>
+
+        {/* Outer Connection Ring */}
+        <circle cx="64" cy="64" r="44" fill="none" stroke="#0ea5e9" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.35" />
+
+        {/* Network Bus & Mesh Lines */}
+        <line x1="64" y1="64" x2="64" y2="24" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="102" y2="42" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="102" y2="86" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="64" y2="104" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="26" y2="86" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="26" y2="42" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+
+        {/* Cross Interconnects */}
+        <line x1="26" y1="42" x2="64" y2="24" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
+        <line x1="64" y1="24" x2="102" y2="42" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
+        <line x1="102" y1="42" x2="102" y2="86" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
+        <line x1="102" y1="86" x2="64" y2="104" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
+        <line x1="64" y1="104" x2="26" y2="86" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
+        <line x1="26" y1="86" x2="26" y2="42" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
+
+        {/* Peripheral Client / Host Nodes */}
+        <circle cx="64" cy="24" r="7" fill="url(#netCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="102" cy="42" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="102" cy="86" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="64" cy="104" r="7" fill="url(#netCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="26" cy="86" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="26" cy="42" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
+
+        {/* Data Packets in Flight */}
+        <rect x="62" y="40" width="4" height="6" rx="1.5" fill="#38bdf8" />
+        <rect x="80" y="50" width="6" height="4" rx="1.5" fill="#38bdf8" />
+        <rect x="42" y="72" width="6" height="4" rx="1.5" fill="#38bdf8" />
+
+        {/* Central Router Core */}
+        <circle cx="64" cy="64" r="14" fill="#0c101d" stroke="#0ea5e9" strokeWidth="2.5" />
+        <circle cx="64" cy="64" r="8" fill="url(#netCyanGrad)" />
+        <circle cx="64" cy="64" r="3" fill="#ffffff" />
+      </svg>
+    ),
+  },
+  {
     id: 'oops',
     name: 'OOPs',
     enabled: false,
@@ -374,7 +438,7 @@ export const LanguageSelectionPage: React.FC = () => {
                         style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)' }}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        In Progress 🚧
+                        In Progress
                       </span>
                     ) : (
                       <span

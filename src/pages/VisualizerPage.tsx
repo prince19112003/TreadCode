@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { VisualizerWorkspace } from '../features/visualizer/VisualizerWorkspace';
 import { MlVisualizerWorkspace } from '../features/ml/MlVisualizerWorkspace';
+import { NetworkingVisualizerWorkspace } from '../features/networking/NetworkingVisualizerWorkspace';
 import { getLessonAsync } from '../lessons/registry';
 import { LessonProvider } from '../lessons/LessonContext';
 import type { LessonProgram } from '../lessons/types';
@@ -14,7 +15,7 @@ export const VisualizerPage: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    if (!languageId || !topicId || !programId || languageId === 'ml') return;
+    if (!languageId || !topicId || !programId || languageId === 'ml' || languageId === 'networking') return;
 
     setLoading(true);
     getLessonAsync(languageId, topicId, programId).then((loadedLesson) => {
@@ -34,6 +35,11 @@ export const VisualizerPage: React.FC = () => {
   // Dedicated Lightweight Interactive ML Workspace
   if (languageId === 'ml') {
     return <MlVisualizerWorkspace topicId={topicId} programId={programId} />;
+  }
+
+  // Dedicated Interactive Computer Networks Workspace
+  if (languageId === 'networking') {
+    return <NetworkingVisualizerWorkspace topicId={topicId} programId={programId} />;
   }
 
   if (loading) {

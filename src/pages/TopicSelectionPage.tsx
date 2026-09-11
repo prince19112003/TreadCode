@@ -132,6 +132,100 @@ const mlTopics = [
   { id: 'single_perceptron', number: '11', name: 'Single Perceptron', subtitle: 'Artificial Neuron, Synaptic Weights, Bias & Step Activation', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Neural Nets', modelType: 'Neural Nets', accentColor: '#6366f1' },
 ];
 
+/* =========================================================
+   COMPUTER NETWORKS TOPIC DATA — Basics & Fundamentals
+   ========================================================= */
+const networkingTopics = [
+  {
+    id: 'osi_model',
+    number: '01',
+    name: 'OSI 7-Layer Model',
+    subtitle: 'Encapsulation & Decapsulation across Application to Physical',
+    programsCount: 1,
+    difficulty: 'Beginner' as const,
+    category: 'Architecture',
+    layer: 'L1 - L7 Layers',
+    accentColor: '#0ea5e9',
+  },
+  {
+    id: 'tcp_ip_model',
+    number: '02',
+    name: 'TCP/IP 4-Layer Suite',
+    subtitle: 'DoD Protocol Architecture & Packet Structure',
+    programsCount: 1,
+    difficulty: 'Beginner' as const,
+    category: 'Architecture',
+    layer: 'Internet Suite',
+    accentColor: '#38bdf8',
+  },
+  {
+    id: 'network_topologies',
+    number: '03',
+    name: 'Network Topologies',
+    subtitle: 'Star, Mesh, Bus, Ring & Hybrid Device Interconnections',
+    programsCount: 1,
+    difficulty: 'Beginner' as const,
+    category: 'Physical',
+    layer: 'Layer 1 & 2',
+    accentColor: '#06b6d4',
+  },
+  {
+    id: 'ipv4_addressing',
+    number: '04',
+    name: 'IPv4 Addressing & Classes',
+    subtitle: '32-Bit Dotted Decimal, Class A-E & Private Ranges',
+    programsCount: 1,
+    difficulty: 'Beginner' as const,
+    category: 'Addressing',
+    layer: 'Network (L3)',
+    accentColor: '#10b981',
+  },
+  {
+    id: 'tcp_vs_udp',
+    number: '05',
+    name: 'TCP vs UDP Protocols',
+    subtitle: 'Reliable Byte Stream vs Low-Latency Datagram Comparison',
+    programsCount: 1,
+    difficulty: 'Beginner' as const,
+    category: 'Transport',
+    layer: 'Transport (L4)',
+    accentColor: '#8b5cf6',
+  },
+  {
+    id: 'subnetting_cidr',
+    number: '06',
+    name: 'Subnetting & CIDR Basics',
+    subtitle: 'Slash Notation (/24, /27), Network Mask & Host Bits',
+    programsCount: 1,
+    difficulty: 'Intermediate' as const,
+    category: 'Addressing',
+    layer: 'Network (L3)',
+    accentColor: '#f59e0b',
+  },
+  {
+    id: 'tcp_handshake',
+    number: '07',
+    name: 'TCP 3-Way Handshake',
+    subtitle: 'SYN, SYN-ACK, ACK Connection Setup & FIN Teardown',
+    programsCount: 1,
+    difficulty: 'Intermediate' as const,
+    category: 'Transport',
+    layer: 'Transport (L4)',
+    accentColor: '#6366f1',
+  },
+  {
+    id: 'dns_resolution',
+    number: '08',
+    name: 'DNS Resolution Lifecycle',
+    subtitle: 'Client Query to Root, TLD & Authoritative Nameservers',
+    programsCount: 1,
+    difficulty: 'Intermediate' as const,
+    category: 'Application',
+    layer: 'Application (L7)',
+    accentColor: '#ec4899',
+  },
+];
+
 const difficultyConfig = {
   Beginner:     { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.22)' },
   Intermediate: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
@@ -147,6 +241,7 @@ export const TopicSelectionPage: React.FC = () => {
 
   const isDsa = languageId === 'dsa';
   const isMl = languageId === 'ml';
+  const isNetworking = languageId === 'networking';
 
   const topics = useMemo(() => {
     if (languageId === 'c') return cTopics;
@@ -154,17 +249,20 @@ export const TopicSelectionPage: React.FC = () => {
     if (languageId === 'java') return javaTopics;
     if (isDsa) return dsaTopics;
     if (isMl) return mlTopics;
+    if (isNetworking) return networkingTopics;
     return pythonTopics;
-  }, [languageId, isDsa, isMl]);
+  }, [languageId, isDsa, isMl, isNetworking]);
 
   const totalPrograms = useMemo(() => topics.reduce((s, t) => s + t.programsCount, 0), [topics]);
   const langDisplay = languageId
-    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA' : languageId === 'ml' ? 'Machine Learning' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
+    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA' : languageId === 'ml' ? 'Machine Learning' : languageId === 'networking' ? 'Computer Networks' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
     : 'Python';
 
   const handleTopicClick = (topicId: string) => {
     if (isMl) {
       navigate(`/visualizer/ml/${topicId}/ml_${topicId}`);
+    } else if (isNetworking) {
+      navigate(`/visualizer/networking/${topicId}/net_${topicId}`);
     } else if (isDsa) {
       let programId = `dsa_${topicId}`;
       if (topicId === 'linear_search') programId = 'dsa_linear_search';
@@ -207,6 +305,8 @@ export const TopicSelectionPage: React.FC = () => {
           <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
             {isMl
               ? 'Intuitive, code-free algorithm playgrounds and visual model simulations.'
+              : isNetworking
+              ? 'Interactive packet flow, protocol handshakes, and network topology simulations.'
               : 'Select a topic to step through code execution and variable tracing.'}
           </p>
         </motion.div>
@@ -217,10 +317,12 @@ export const TopicSelectionPage: React.FC = () => {
             { icon: Layers, label: `${topics.length} Topics`, color: '#6366f1' },
             ...(isMl
               ? [{ icon: BookOpen, label: `${topics.length} Interactive Playgrounds`, color: '#06b6d4' }]
+              : isNetworking
+              ? [{ icon: BookOpen, label: `${topics.length} Network Topics`, color: '#0ea5e9' }]
               : !isDsa
               ? [{ icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' }]
               : []),
-            { icon: BarChart2, label: '3 Difficulty Levels', color: '#38bdf8' },
+            { icon: BarChart2, label: isNetworking ? '2 Difficulty Levels' : '3 Difficulty Levels', color: '#38bdf8' },
           ].map(stat => (
             <div
               key={stat.label}
@@ -313,6 +415,19 @@ export const TopicSelectionPage: React.FC = () => {
                           <div className="flex items-center gap-1.5">
                             <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
                             <span className="text-[11px] font-mono font-bold text-slate-200">Interactive Model</span>
+                          </div>
+                          <span
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
+                            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
+                          >
+                            {topic.category}
+                          </span>
+                        </>
+                      ) : isNetworking ? (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
+                            <span className="text-[11px] font-mono font-bold text-slate-200">{(topic as any).layer}</span>
                           </div>
                           <span
                             className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"

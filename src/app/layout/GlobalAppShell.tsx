@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X, ArrowLeft } from 'lucide-react';
 import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -325,6 +325,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
    ========================================================= */
 export const GlobalAppShell: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === '/' || location.pathname === '/languages';
   const breadcrumbs = useBreadcrumbs();
   const [searchOpen, setSearchOpen] = useState(false);
   const [smartBoardOpen, setSmartBoardOpen] = useState(false);
@@ -344,6 +346,14 @@ export const GlobalAppShell: React.FC = () => {
       setDismissedAnnouncement(rawAnnouncement);
     }
   };
+
+  const handleBack = useCallback(() => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/languages');
+    }
+  }, [navigate]);
 
   // If new announcement text arrives from Admin Panel, reset dismissal so user sees it
   useEffect(() => {
@@ -387,7 +397,7 @@ export const GlobalAppShell: React.FC = () => {
     return () => clearInterval(interval);
   }, [licenseContext, location.pathname]);
 
-  // Global Shortcuts & Trackpad/Gesture Navigation (Alt+Left: Back, Alt+Right: Forward, Alt+Home: Home, Mouse Side Buttons)
+  // Global Shortcuts & Trackpad/Gesture Navigation (Alt+Left: Back, Alt+Right: Forward, Alt+Home: Home, Esc: Back, Mouse Side Buttons)
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -401,7 +411,7 @@ export const GlobalAppShell: React.FC = () => {
       // Alt+Left or Cmd+Left -> Back
       if ((e.altKey || e.metaKey) && e.key === 'ArrowLeft') {
         e.preventDefault();
-        navigate(-1);
+        handleBack();
       }
       // Alt+Right or Cmd+Right -> Forward
       if ((e.altKey || e.metaKey) && e.key === 'ArrowRight') {
@@ -413,13 +423,22 @@ export const GlobalAppShell: React.FC = () => {
         e.preventDefault();
         navigate('/languages');
       }
+      // Esc -> Back (when not on home, search & smartboard are closed, and not typing in input)
+      if (e.key === 'Escape') {
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable;
+        if (!isInput && !searchOpen && !smartBoardOpen && location.pathname !== '/' && location.pathname !== '/languages') {
+          e.preventDefault();
+          handleBack();
+        }
+      }
     };
 
     // Trackpad / Gaming Mouse Back & Forward side buttons
     const mouseHandler = (e: MouseEvent) => {
       if (e.button === 3) {
         e.preventDefault();
-        navigate(-1);
+        handleBack();
       } else if (e.button === 4) {
         e.preventDefault();
         navigate(1);
@@ -432,7 +451,7 @@ export const GlobalAppShell: React.FC = () => {
       window.removeEventListener('keydown', keyHandler);
       window.removeEventListener('mouseup', mouseHandler);
     };
-  }, [navigate]);
+  }, [navigate, handleBack, searchOpen, smartBoardOpen, location.pathname]);
 
   return (
     <div
@@ -453,25 +472,58 @@ export const GlobalAppShell: React.FC = () => {
         data-tauri-drag-region
         className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-[#090a0f]/95 border-b border-slate-800/80 backdrop-blur-xl shadow-sm"
       >
-        {/* LEFT: Logo Icon + App Title Name + Custom Co-Branding */}
-        <div className="flex items-center gap-3 shrink-0" data-tauri-drag-region>
+        {/* LEFT: Persistent Logo Icon + Morphing Brand / Back Navigation Button */}
+        <div className="flex items-center gap-1.5 shrink-0" data-tauri-drag-region>
           <button
             onClick={() => navigate('/languages')}
-            className="flex items-center gap-2 shrink-0 group py-1 px-1.5 rounded-lg hover:bg-white/5 transition-all"
-            title="Home"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer group shrink-0"
+            title={isHome ? "TreadCode Home" : "Home (Go to Languages)"}
           >
             <div className="w-7 h-7 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <TreadCodeLogo size={26} />
             </div>
-            <span className="font-extrabold text-base tracking-tight select-none">
-              <span className="text-white">Tread</span>
-              <span className="text-indigo-400">Code</span>
-            </span>
           </button>
+
+          <AnimatePresence mode="wait" initial={false}>
+            {isHome ? (
+              <motion.button
+                key="brand-name"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                onClick={() => navigate('/languages')}
+                className="flex items-center group py-1 px-1 rounded-lg hover:bg-white/5 transition-all select-none cursor-pointer"
+                title="TreadCode Home"
+              >
+                <span className="font-extrabold text-base tracking-tight select-none">
+                  <span className="text-white">Tread</span>
+                  <span className="text-indigo-400">Code</span>
+                </span>
+              </motion.button>
+            ) : (
+              <motion.button
+                key="brand-back"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                onClick={handleBack}
+                className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 hover:border-indigo-400/60 text-indigo-200 hover:text-white transition-all shadow-xs select-none cursor-pointer group"
+                title="Go Back (Esc or Alt+←)"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-indigo-400 group-hover:-translate-x-1 transition-transform duration-200 ease-out" />
+                <span className="font-bold text-xs tracking-wide">Back</span>
+                <kbd className="hidden sm:inline-block text-[9px] font-mono px-1 py-0.2 rounded bg-indigo-950/60 border border-indigo-400/30 text-indigo-300 ml-0.5 opacity-80">
+                  Esc
+                </kbd>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Co-Branding Institution Badge if configured on License Key */}
           {licenseContext?.licenseDetails?.customBranding?.institutionName && (
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-indigo-500/30 bg-indigo-950/30 text-indigo-200 text-[11px] font-semibold shrink-0">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-indigo-500/30 bg-indigo-950/30 text-indigo-200 text-[11px] font-semibold shrink-0 ml-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>{licenseContext.licenseDetails.customBranding.badgeText || `Licensed to: ${licenseContext.licenseDetails.customBranding.institutionName}`}</span>
             </div>
