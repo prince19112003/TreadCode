@@ -28,6 +28,7 @@ export interface FeedbackItem {
   message: string;
   timestamp: string;
   status: 'pending' | 'resolved';
+  adminReply?: string;
   systemDetails: {
     platform: string;
     userAgent: string;

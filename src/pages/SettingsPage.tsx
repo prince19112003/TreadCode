@@ -809,6 +809,13 @@ export const SettingsPage: React.FC = () => {
                               }`}>
                                 {item.category === 'bug' ? 'Bug Report' : item.category === 'feature' ? 'Feature Request' : 'Feedback'}
                               </span>
+                              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                                item.status === 'resolved'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                  : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                              }`}>
+                                {item.status === 'resolved' ? 'Resolved' : 'Pending'}
+                              </span>
                               <span className="text-[11px] font-mono text-slate-500">
                                 {new Date(item.timestamp).toLocaleString()}
                               </span>
@@ -823,6 +830,17 @@ export const SettingsPage: React.FC = () => {
                           <p className="text-xs font-medium text-slate-200 bg-black/40 p-3 rounded-xl border border-white/5 leading-relaxed whitespace-pre-wrap">
                             "{item.message}"
                           </p>
+
+                          {/* Admin Resolution & Reply */}
+                          {item.adminReply && (
+                            <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs space-y-1">
+                              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                                <CheckCircle2 size={12} />
+                                <span>Admin Resolution & Reply</span>
+                              </div>
+                              <p className="text-emerald-200 font-mono text-xs whitespace-pre-wrap">{item.adminReply}</p>
+                            </div>
+                          )}
 
                           {/* System Diagnostic Spec Grid */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[10px] font-mono text-slate-400">
