@@ -557,6 +557,7 @@ export const GlobalAppShell: React.FC = () => {
 
         {/* RIGHT: SmartBoard + Search + GitHub Glass + Settings */}
         <div className="flex items-center gap-2 shrink-0">
+          {!licenseContext?.settings?.disableSmartBoard && (
           <button
             onClick={() => setSmartBoardOpen(true)}
             title="Open Interactive Smart Board (Ctrl+B)"
@@ -568,6 +569,7 @@ export const GlobalAppShell: React.FC = () => {
               ⌘B
             </kbd>
           </button>
+          )}
 
           <button
             onClick={() => setSearchOpen(true)}

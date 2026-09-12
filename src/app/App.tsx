@@ -33,24 +33,45 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const path = location.pathname;
   const isLanguages = path === '/languages';
 
-  // Retrieve locking states
+  // Global Maintenance Mode check
+  if (context.settings.maintenanceMode) {
+    return (
+      <div className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-[#05070f] text-white p-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-3 text-amber-400 font-bold text-xl font-mono">
+          !
+        </div>
+        <h2 className="text-xl font-bold mb-1 tracking-tight font-mono">System Maintenance</h2>
+        <p className="text-xs text-slate-400 max-w-sm font-mono">
+          {context.settings.maintenanceMessage || 'TreadCode is currently offline for scheduled updates. Please try again shortly.'}
+        </p>
+      </div>
+    );
+  }
+
+  // Retrieve locking states for each course module
   const lockPython = !!context.settings.lockPython;
+  const lockC = !!context.settings.lockC;
   const lockCpp = !!context.settings.lockCpp;
   const lockJava = !!context.settings.lockJava;
   const lockDsa = !!context.settings.lockDsa;
+  const lockMl = !!context.settings.lockMl;
+  const lockNetworking = !!context.settings.lockNetworking;
+  const lockOops = !!context.settings.lockOops;
+  const lockSql = !!context.settings.lockSql;
+  const lockJs = !!context.settings.lockJs;
 
   // Intercept locked path routes if license is not activated yet
   if (!context.activated && !isLanguages) {
     if (path.includes('/python') && lockPython) return <LicenseModal onActivate={context.handleActivate} />;
+    if ((path.includes('/c/') || path.endsWith('/c')) && (lockC || lockCpp)) return <LicenseModal onActivate={context.handleActivate} />;
     if (path.includes('/cpp') && lockCpp) return <LicenseModal onActivate={context.handleActivate} />;
     if (path.includes('/java') && lockJava) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/c/') && lockCpp) return <LicenseModal onActivate={context.handleActivate} />;
     if (path.includes('/dsa') && lockDsa) return <LicenseModal onActivate={context.handleActivate} />;
-    
-    // Default course gating for non-python sections
-    if (!path.includes('/python') && !path.includes('/ml') && !path.includes('/networking')) {
-      return <LicenseModal onActivate={context.handleActivate} />;
-    }
+    if (path.includes('/ml') && lockMl) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/networking') && lockNetworking) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/oops') && lockOops) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/sql') && lockSql) return <LicenseModal onActivate={context.handleActivate} />;
+    if (path.includes('/javascript') && lockJs) return <LicenseModal onActivate={context.handleActivate} />;
   }
 
   return <>{children}</>;
@@ -293,7 +314,7 @@ export const App: React.FC = () => {
         {!showSplash && <EulaModal />}
 
         {/* Floating Chatbot-Style Bug / Feedback Widget (Shown after splash screen) */}
-        {!showSplash && <FloatingFeedbackWidget />}
+        {!showSplash && !settings.disableFeedbackWidget && <FloatingFeedbackWidget />}
 
         {showSplash ? (
           <SplashPage onComplete={() => setShowSplash(false)} />
