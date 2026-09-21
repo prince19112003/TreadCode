@@ -58,6 +58,14 @@ hookContent = hookContent.replace(/prince19112003\/FlowTrace/g, REPO);
 writeFileSync(hookPath, hookContent);
 console.log('✔ Patched CURRENT_VERSION in useUpdateChecker.ts');
 
+// 5. Synchronize Digital Product Hub (Store Website) Catalogue
+try {
+  const { syncStoreCatalogue } = await import('./sync_store_catalogue.js');
+  syncStoreCatalogue(newVersion);
+} catch (e) {
+  console.warn('Store catalogue sync skipped:', e.message);
+}
+
 // 5. Build Native Windows Installer (.exe setup)
 try {
   console.log('\n⚙️ Building Native Windows Setup Installer (.exe)...');

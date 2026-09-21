@@ -1,8 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Lock } from 'lucide-react';
+import { Lock, Download, RefreshCw, AlertCircle } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
+import { useModuleStore, MODULE_SIZE_MAP } from '@shared/hooks/useModuleStore';
+import { LicenseContext } from '@app/App';
+import { LicenseModal } from '@shared/components/ui/LicenseModal';
+import { db } from '@shared/config/firebase';
+import { ref, get } from 'firebase/database';
+
+const PACK_IDS = new Set(['c', 'cpp', 'java', 'dsa', 'ml', 'networking', 'javascript', 'sql', 'oops']);
+
+function isVersionNewer(remote?: string, local?: string): boolean {
+  if (!remote || !local) return false;
+  if (remote === local) return false;
+  const rParts = remote.split('.').map(n => parseInt(n, 10) || 0);
+  const lParts = local.split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(rParts.length, lParts.length); i++) {
+    const r = rParts[i] ?? 0;
+    const l = lParts[i] ?? 0;
+    if (r > l) return true;
+    if (r < l) return false;
+  }
+  return false;
+}
 
 /* =========================================================
    LANGUAGE DATA
@@ -344,6 +365,80 @@ const languages = [
    ========================================================= */
 export const LanguageSelectionPage: React.FC = () => {
   const navigate = useNavigate();
+  const licenseContext = useContext(LicenseContext);
+  const [showLicensePrompt, setShowLicensePrompt] = useState(false);
+  const { moduleStatus, downloadProgress, installedVersions, init, installModule } = useModuleStore();
+
+  const [manualRemoteVersions, setManualRemoteVersions] = useState<Record<string, string>>({});
+
+  const remoteModuleVersions: Record<string, string> = licenseContext?.settings?.moduleVersions || {};
+
+  const handleCheckUpdate = useCallback(async () => {
+    if (!navigator.onLine) return;
+    try {
+      const versionsRef = ref(db, 'global_settings/moduleVersions');
+      const snap = await get(versionsRef);
+      if (snap.exists()) {
+        const val = snap.val() as Record<string, string>;
+        if (val) {
+          setManualRemoteVersions(prev => ({ ...prev, ...val }));
+        }
+      }
+    } catch (err) {
+      console.warn('Update check failed:', err);
+    }
+  }, []);
+
+  useEffect(() => { init(); }, [init]);
+
+  // Automatic internet check: runs on initial mount & automatically whenever internet connects
+  useEffect(() => {
+    if (navigator.onLine) {
+      handleCheckUpdate();
+    }
+    const handleOnline = () => {
+      handleCheckUpdate();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [handleCheckUpdate]);
+
+  const rawTier = licenseContext?.trialInfo?.isTrialActive
+    ? 'enterprise'
+    : (licenseContext?.activated
+      ? (licenseContext?.licenseDetails?.tier?.toLowerCase() || 'community')
+      : 'community');
+
+  const activeTier = (rawTier === 'developer' || rawTier === 'standard' || rawTier === 'professional')
+    ? 'professional'
+    : (rawTier === 'ultimate' || rawTier === 'enterprise')
+    ? 'enterprise'
+    : (rawTier === 'free' || rawTier === 'community')
+    ? 'community'
+    : rawTier;
+
+  const isModuleLockedForTier = (moduleKey: string) => {
+    // 1. Dynamic override from Admin Settings if configured
+    const tierAccess = licenseContext?.settings?.tierAccess?.[activeTier] || licenseContext?.settings?.tierAccess?.[rawTier];
+    if (tierAccess) {
+      const key = moduleKey === 'javascript' ? ('js' in tierAccess ? 'js' : 'javascript') : moduleKey;
+      if (typeof tierAccess[key] === 'boolean') {
+        return !tierAccess[key];
+      }
+    }
+
+    // 2. Default fallbacks
+    if (activeTier === 'community' || activeTier === 'free') {
+      return moduleKey !== 'python';
+    }
+    if (activeTier === 'professional') {
+      if (moduleKey === 'ml' || moduleKey === 'networking') return true;
+      return false;
+    }
+    return false;
+  };
 
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
@@ -369,6 +464,35 @@ export const LanguageSelectionPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 max-w-5xl w-full mx-auto pb-12">
           {languages.map((lang, index) => {
             const Icon = lang.Icon;
+            const isLangEnabled = Boolean(lang.enabled || licenseContext?.settings?.enabledModules?.[lang.id]);
+            const isPack = PACK_IDS.has(lang.id);
+            const status = isPack ? (moduleStatus[lang.id] || 'not_installed') : 'installed';
+            const isInstalled = !isPack || status === 'installed';
+            const isDownloading = status === 'downloading';
+            const isError = status === 'error';
+            const progress = downloadProgress[lang.id] || 0;
+            const sizeText = MODULE_SIZE_MAP[lang.id] || '';
+            const isLocked = isModuleLockedForTier(lang.id);
+
+            const remoteVer = manualRemoteVersions[lang.id] || remoteModuleVersions[lang.id];
+            const installedVer = installedVersions[lang.id] || (isInstalled ? '1.0.0' : undefined);
+            const hasUpdate = isPack && isInstalled && !isDownloading && Boolean(remoteVer && installedVer && isVersionNewer(remoteVer, installedVer));
+
+            const handleCardClick = () => {
+              if (!isLangEnabled) return;
+              if (isLocked) {
+                setShowLicensePrompt(true);
+                return;
+              }
+              if (!isInstalled) {
+                if (!isDownloading) {
+                  installModule(lang.id);
+                }
+                return;
+              }
+              navigate(`/topics/${lang.id}`);
+            };
+
             return (
               <motion.div
                 key={lang.id}
@@ -377,70 +501,91 @@ export const LanguageSelectionPage: React.FC = () => {
                 transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
               >
                 <div
-                  role={lang.enabled ? 'button' : 'region'}
-                  tabIndex={lang.enabled ? 0 : -1}
-                  aria-label={lang.enabled ? `Select ${lang.name}` : `${lang.name} — Coming Soon`}
-                  onClick={() => lang.enabled && navigate(`/topics/${lang.id}`)}
-                  onKeyDown={e => { if (lang.enabled && (e.key === 'Enter' || e.key === ' ')) navigate(`/topics/${lang.id}`); }}
+                  role={isLangEnabled ? 'button' : 'region'}
+                  tabIndex={isLangEnabled ? 0 : -1}
+                  aria-label={
+                    !isLangEnabled
+                      ? `${lang.name} — Coming Soon`
+                      : !isInstalled
+                        ? `${lang.name} — Click to install (${sizeText})`
+                        : `Select ${lang.name}`
+                  }
+                  onClick={handleCardClick}
+                  onKeyDown={e => {
+                    if (isLangEnabled && (e.key === 'Enter' || e.key === ' ')) {
+                      handleCardClick();
+                    }
+                  }}
                   className="relative flex flex-col overflow-hidden rounded-2xl transition-all duration-300 min-h-64 p-6 group select-none"
                   style={{
-                    background: 'rgba(12, 14, 22, 0.85)',
-                    border: `1px solid ${lang.enabled ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
-                    cursor: lang.enabled ? 'pointer' : 'default',
-                    opacity: lang.enabled ? 1 : 0.4,
+                    background: !isLangEnabled
+                      ? 'rgba(12, 14, 22, 0.5)'
+                      : !isInstalled
+                        ? 'rgba(13, 16, 24, 0.75)'
+                        : 'rgba(12, 14, 22, 0.85)',
+                    border: `1px solid ${
+                      !isLangEnabled
+                        ? 'rgba(255,255,255,0.05)'
+                        : !isInstalled
+                          ? 'rgba(255,255,255,0.07)'
+                          : 'rgba(255,255,255,0.12)'
+                    }`,
+                    cursor: !isLangEnabled
+                      ? 'default'
+                      : 'pointer',
+                    opacity: !isLangEnabled ? 0.4 : 1,
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
                   }}
                   onMouseEnter={e => {
-                    if (!lang.enabled) return;
+                    if (!isLangEnabled) return;
                     const el = e.currentTarget as HTMLElement;
-                    el.style.transform = 'translateY(-3px)';
-                    el.style.boxShadow = '0 10px 28px -6px rgba(0,0,0,0.5)';
-                    el.style.borderColor = 'rgba(255,255,255,0.25)';
+                    el.style.transform = 'translateY(-4px)';
+                    el.style.boxShadow = `0 12px 30px -10px ${lang.accentGlow}`;
+                    el.style.borderColor = lang.accentBorder;
                   }}
                   onMouseLeave={e => {
-                    if (!lang.enabled) return;
+                    if (!isLangEnabled) return;
                     const el = e.currentTarget as HTMLElement;
                     el.style.transform = 'translateY(0)';
                     el.style.boxShadow = 'none';
-                    el.style.borderColor = 'rgba(255,255,255,0.12)';
+                    el.style.borderColor = !isInstalled
+                      ? 'rgba(255,255,255,0.07)'
+                      : 'rgba(255,255,255,0.12)';
                   }}
                 >
                   {/* Background Watermark Icon on right side of card */}
-                  <div className="absolute -right-6 top-1/2 -translate-y-1/2 w-48 h-48 opacity-15 pointer-events-none group-hover:opacity-30 group-hover:scale-105 transition-all duration-500 flex items-center justify-center shrink-0">
+                  <div
+                    className="absolute -right-6 top-1/2 -translate-y-1/2 w-48 h-48 pointer-events-none group-hover:scale-105 transition-all duration-500 flex items-center justify-center shrink-0"
+                    style={{
+                      opacity: !isInstalled ? 0.04 : 0.15,
+                      filter: !isInstalled ? 'grayscale(1)' : 'none',
+                    }}
+                  >
                     <Icon />
                   </div>
 
-                  {/* Top row: Icon + Badge */}
-                  <div className="relative z-10 flex justify-between items-start mb-6">
+                  {/* Top row: Icon + Action / Badge */}
+                  <div className="relative z-10 flex justify-between items-start mb-5">
                     <div
                       className="w-13 h-13 rounded-2xl p-2.5 flex items-center justify-center transition-transform group-hover:scale-105"
                       style={{
-                        background: lang.enabled ? `${lang.accentGlow}` : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${lang.enabled ? lang.accentBorder : 'rgba(255,255,255,0.08)'}`,
-                        filter: lang.enabled ? 'none' : 'grayscale(1)',
+                        background: !isInstalled
+                          ? 'rgba(255,255,255,0.03)'
+                          : lang.accentGlow,
+                        border: `1px solid ${
+                          !isInstalled
+                            ? 'rgba(255,255,255,0.08)'
+                            : lang.accentBorder
+                        }`,
+                        filter: !isInstalled ? 'grayscale(1)' : 'none',
                       }}
                     >
                       <Icon />
                     </div>
 
-                    {(lang.id === 'python' || lang.id === 'dsa') ? (
-                      <span
-                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
-                        style={{ color: '#4ade80', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        Available
-                      </span>
-                    ) : lang.enabled ? (
-                      <span
-                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
-                        style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)' }}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        In Progress
-                      </span>
-                    ) : (
+                    {/* Top Right Action / Badge */}
+                    {!isLangEnabled ? (
                       <span
                         className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"
                         style={{ color: '#94a3b8', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
@@ -448,26 +593,159 @@ export const LanguageSelectionPage: React.FC = () => {
                         <Lock className="w-2.5 h-2.5" />
                         Soon
                       </span>
+                    ) : isLocked ? (
+                      <span
+                        className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
+                        style={
+                          lang.id === 'ml' || lang.id === 'networking'
+                            ? { color: '#c084fc', background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.35)' }
+                            : { color: '#f59e0b', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)' }
+                        }
+                      >
+                        <Lock className="w-2.5 h-2.5" />
+                        {lang.id === 'ml' || lang.id === 'networking' ? 'Enterprise' : 'Professional'}
+                      </span>
+                    ) : hasUpdate ? (
+                      /* On-card Direct Update Button (replaces AVAILABLE when update is detected) */
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          installModule(lang.id, remoteVer);
+                        }}
+                        title={`New version v${remoteVer} available (Installed: v${installedVer}). Click to update now.`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 cursor-pointer shadow-sm hover:scale-105 active:scale-95 text-amber-300 bg-amber-500/20 border border-amber-500/45 hover:bg-amber-500/30 animate-pulse"
+                      >
+                        <RefreshCw className="w-3 h-3 text-amber-400" />
+                        <span>Update</span>
+                        {sizeText && (
+                          <span className="text-[9px] font-mono text-amber-300/80">
+                            ({sizeText})
+                          </span>
+                        )}
+                      </button>
+                    ) : isInstalled ? (
+                      /* Clean Available badge (automatically turns into Update button when update is detected online) */
+                      <span
+                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full shrink-0"
+                        style={{ color: '#4ade80', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
+                      >
+                        Available
+                      </span>
+                    ) : isDownloading ? (
+                      /* Downloading state badge */
+                      <span
+                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1.5 shrink-0"
+                        style={{ color: '#38bdf8', background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)' }}
+                      >
+                        <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                        {progress > 0 ? `${progress}%` : 'Starting'}
+                      </span>
+                    ) : isError ? (
+                      /* Retry button on error */
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          installModule(lang.id);
+                        }}
+                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                        style={{ color: '#f87171', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.35)' }}
+                      >
+                        <AlertCircle className="w-2.5 h-2.5" />
+                        Retry
+                      </button>
+                    ) : (
+                      /* On-card Direct Install Button */
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          installModule(lang.id);
+                        }}
+                        title={`Download ${lang.name} module`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 cursor-pointer shadow-sm hover:scale-105 active:scale-95 text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 hover:bg-indigo-500/25 hover:border-indigo-400"
+                      >
+                        <Download className="w-3 h-3 text-indigo-400" />
+                        <span>Download</span>
+                        {sizeText && (
+                          <span className="text-[9px] font-mono text-indigo-300/70">
+                            ({sizeText})
+                          </span>
+                        )}
+                      </button>
                     )}
                   </div>
 
                   {/* Language Info */}
                   <div className="relative mt-auto">
-                    <h2 className="text-2xl font-black mb-1 tracking-tight text-white group-hover:text-indigo-200 transition-colors">
+                    <h2
+                      className="text-2xl font-black mb-1 tracking-tight transition-colors"
+                      style={{
+                        color: !isInstalled ? '#64748b' : 'white',
+                      }}
+                    >
                       {lang.name}
                     </h2>
-                    
-                    <p className="text-xs md:text-sm font-medium mb-4 line-clamp-1 text-slate-200">
+
+                    <p
+                      className="text-xs md:text-sm font-medium mb-3 line-clamp-1 transition-colors"
+                      style={{
+                        color: !isInstalled ? '#475569' : '#e2e8f0',
+                      }}
+                    >
                       {lang.tagline}
                     </p>
 
+                    {/* On-card Progress Bar when downloading */}
+                    {isDownloading && (
+                      <div className="mb-3 pt-1">
+                        <div className="flex justify-between items-center text-[10px] font-mono text-sky-400 mb-1 font-semibold">
+                          <span className="flex items-center gap-1">
+                            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                            Downloading pack...
+                          </span>
+                          <span>{progress}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                          <motion.div
+                            className="h-full bg-linear-to-r from-indigo-500 via-sky-400 to-emerald-400 rounded-full"
+                            initial={{ width: '0%' }}
+                            animate={{ width: `${Math.max(progress, 5)}%` }}
+                            transition={{ duration: 0.2 }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* On-card hint when not installed and idle */}
+                    {!isInstalled && !isDownloading && !isError && lang.enabled && (
+                      <div className="mb-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
+                        <Download className="w-3 h-3 text-slate-500" />
+                        <span>Click card or Download</span>
+                      </div>
+                    )}
+
                     {/* Meta */}
                     <div
-                      className="text-xs font-mono border-t pt-3 flex items-center justify-between text-slate-300"
-                      style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                      className="text-xs font-mono border-t pt-3 flex items-center justify-between transition-colors"
+                      style={{
+                        borderColor: !isInstalled ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+                        color: !isInstalled ? '#475569' : '#cbd5e1',
+                      }}
                     >
-                      <span>By <strong className="font-bold text-white">{lang.creator}</strong></span>
-                      <span className="font-bold text-white">{lang.year}</span>
+                      <span>
+                        By{' '}
+                        <strong
+                          style={{ color: !isInstalled ? '#64748b' : 'white' }}
+                          className="font-bold"
+                        >
+                          {lang.creator}
+                        </strong>
+                      </span>
+                      <span
+                        style={{ color: !isInstalled ? '#64748b' : 'white' }}
+                        className="font-bold"
+                      >
+                        {lang.year}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -476,6 +754,13 @@ export const LanguageSelectionPage: React.FC = () => {
           })}
         </div>
       </div>
+
+      {showLicensePrompt && (
+        <LicenseModal
+          onActivate={licenseContext?.handleActivate || (async () => false)}
+          onClose={() => setShowLicensePrompt(false)}
+        />
+      )}
     </PageTransition>
   );
 };

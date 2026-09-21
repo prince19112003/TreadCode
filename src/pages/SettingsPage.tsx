@@ -1,19 +1,16 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  Monitor, Info, Volume2, ArrowLeft, Key, ShieldCheck, 
-  Sun, Tv, Play, VolumeX, MessageSquarePlus, Laptop,
-  Building2, CheckCircle2, HelpCircle, Eye, RefreshCw, ExternalLink, Globe
-} from 'lucide-react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
+import { Codicon } from '@shared/components/ui/Codicon';
+import { ExtensionsTab } from '@shared/components/ui/ExtensionsTab';
+import { PlansTab } from '@shared/components/ui/PlansTab';
+import { FeedbackTab } from '@shared/components/ui/FeedbackTab';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion, AnimatePresence } from 'motion/react';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { LicenseModal } from '@shared/components/ui/LicenseModal';
 import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LicenseContext } from '../app/App';
-import { db } from '../shared/config/firebase';
-import type { FeedbackItem } from '../shared/config/firebase';
-import { ref, onValue } from 'firebase/database';
+import { unlinkDeviceFromLicense } from '../shared/config/firebase';
 
 export const applyDisplayTuning = (contrast: number, brightness: number, sharpness: number) => {
   if (contrast === 100 && brightness === 100 && sharpness === 100) {
@@ -24,12 +21,13 @@ export const applyDisplayTuning = (contrast: number, brightness: number, sharpne
   localStorage.setItem('flowtrace_display_tuning', JSON.stringify({ contrast, brightness, saturate: sharpness }));
 };
 
-type SettingTab = 'display' | 'voice' | 'licensing' | 'feedback' | 'about';
+type SettingTab = 'display' | 'voice' | 'licensing' | 'feedback' | 'about' | 'extensions' | 'plans';
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const licenseContext = useContext(LicenseContext);
-  const { hasUpdate, latestVersion, currentVersion, checkNow, isChecking } = useUpdateChecker();
+  const { hasUpdate, latestVersion, currentVersion, checkNow, isChecking, downloadUrl } = useUpdateChecker();
 
   // Dynamic version state
   const [displayVersion, setDisplayVersion] = useState(currentVersion);
@@ -46,8 +44,23 @@ export const SettingsPage: React.FC = () => {
     }
   }, []);
 
-  // Tab 1 (Default: Classroom Display)
-  const [activeTab, setActiveTab] = useState<SettingTab>('display');
+  // Tab initialization (respects ?tab= query parameter, e.g. /settings?tab=plans)
+  const [activeTab, setActiveTab] = useState<SettingTab>(() => {
+    if (typeof window !== 'undefined') {
+      const paramTab = new URLSearchParams(window.location.search).get('tab');
+      if (paramTab && ['display', 'voice', 'licensing', 'feedback', 'about', 'extensions', 'plans'].includes(paramTab)) {
+        return paramTab as SettingTab;
+      }
+    }
+    return 'display';
+  });
+
+  useEffect(() => {
+    const paramTab = new URLSearchParams(location.search).get('tab');
+    if (paramTab && ['display', 'voice', 'licensing', 'feedback', 'about', 'extensions', 'plans'].includes(paramTab)) {
+      setActiveTab(paramTab as SettingTab);
+    }
+  }, [location.search]);
 
   // Display Tuning States (Sharpness replaces Saturation)
   const [contrastVal, setContrastVal] = useState(() => {
@@ -78,6 +91,8 @@ export const SettingsPage: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [policyDoc, setPolicyDoc] = useState<'privacy' | 'terms' | null>(null);
   const [checkToast, setCheckToast] = useState<string | null>(null);
+  const [showDevicesList, setShowDevicesList] = useState(false);
+  const [unlinkingHwid, setUnlinkingHwid] = useState<string | null>(null);
 
   // Voice States
   const [isVoiceModeEnabled, setIsVoiceModeEnabled] = useState(
@@ -99,27 +114,6 @@ export const SettingsPage: React.FC = () => {
       return next;
     });
   };
-
-  // Feedback Submissions Real-Time Listener
-  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
-
-  useEffect(() => {
-    const feedbackRef = ref(db, 'feedbacks');
-    const unsubscribe = onValue(feedbackRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const items: FeedbackItem[] = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key],
-        })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        setFeedbackList(items);
-      } else {
-        setFeedbackList([]);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   // Load Display Tuning filter on mount
   useEffect(() => {
@@ -194,18 +188,35 @@ export const SettingsPage: React.FC = () => {
 
 
 
-  const rawKey = localStorage.getItem('flowtrace_license_key') || '';
-  const maskedKey = rawKey 
-    ? (rawKey.length <= 6 ? `${rawKey.slice(0, 2)}****` : `${rawKey.slice(0, 4)}-****-****-${rawKey.slice(-4)}`) 
-    : 'No License Active';
+  const isActivated = Boolean(licenseContext?.activated);
+  const activeKeyStr = isActivated 
+    ? (licenseContext?.licenseDetails?.licenseKey || localStorage.getItem('flowtrace_license_key') || '')
+    : '';
+  const maskedKey = isActivated && activeKeyStr 
+    ? (activeKeyStr.length <= 6 ? `${activeKeyStr.slice(0, 2)}****` : `${activeKeyStr.slice(0, 4)}-****-****-${activeKeyStr.slice(-4)}`) 
+    : 'No Active License';
 
-  // ORDER: 1. Display & Projection, 2. Voice & Audio, 3. License & Device, 4. Feedback, 5. About & Updates
+  const rawExpiry = isActivated ? licenseContext?.licenseDetails?.expiresAt : undefined;
+  const formattedExpiry = useMemo(() => {
+    if (!rawExpiry) return 'Perpetual / Lifetime';
+    try {
+      const d = new Date(rawExpiry);
+      if (isNaN(d.getTime())) return rawExpiry;
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return rawExpiry;
+    }
+  }, [rawExpiry]);
+
+  // ORDER: 1. Display & Projection, 2. Voice & Audio, 3. Extensions, 4. Plans & Access, 5. License & Device, 6. Feedback, 7. About & Updates
   const navTabs = [
-    { id: 'display', label: 'Display & Projection', icon: Monitor, iconColor: 'text-indigo-400', badge: activePreset !== 'default' ? 'Tuned' : undefined },
-    { id: 'voice', label: 'Voice & Audio', icon: Volume2, iconColor: 'text-amber-400' },
-    { id: 'licensing', label: 'License & Device', icon: Key, iconColor: 'text-emerald-400', badge: licenseContext?.activated ? 'Active' : 'Unregistered' },
-    { id: 'feedback', label: 'Feedback & Reports', icon: MessageSquarePlus, iconColor: 'text-sky-400' },
-    { id: 'about', label: 'About & Updates', icon: Info, iconColor: 'text-purple-400', badge: hasUpdate ? 'Update Ready' : undefined },
+    { id: 'display', label: 'Display & Projection', iconName: 'vm', iconColor: 'text-indigo-400', badge: activePreset !== 'default' ? 'Tuned' : undefined },
+    { id: 'voice', label: 'Voice & Audio', iconName: 'unmute', iconColor: 'text-amber-400' },
+    { id: 'extensions', label: 'Module Extensions', iconName: 'package', iconColor: 'text-violet-400' },
+    { id: 'plans', label: 'Plans & Access', iconName: 'credit-card', iconColor: 'text-indigo-400' },
+    { id: 'licensing', label: 'License & Device', iconName: 'key', iconColor: 'text-emerald-400', badge: licenseContext?.activated ? 'Active' : 'Unregistered' },
+    { id: 'feedback', label: 'Support & Complaints', iconName: 'feedback', iconColor: 'text-sky-400' },
+    { id: 'about', label: 'About & Updates', iconName: 'info', iconColor: 'text-purple-400', badge: hasUpdate ? 'Update Ready' : undefined },
   ];
 
   return (
@@ -246,9 +257,9 @@ export const SettingsPage: React.FC = () => {
                 }`}
                 title={hasUpdate ? `Try Latest Release v${latestVersion} Instantly on Web` : "Open TreadCode Web Cloud Edition"}
               >
-                <Globe size={13} className="text-indigo-400" />
+                <Codicon name="globe" size={13} className="text-indigo-400" />
                 <span>{hasUpdate ? `Try v${latestVersion} Web` : "Launch Cloud Edition"}</span>
-                <ExternalLink size={11} />
+                <Codicon name="link-external" size={11} />
               </button>
             </div>
             <p className="text-slate-400 text-sm">
@@ -260,7 +271,7 @@ export const SettingsPage: React.FC = () => {
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm font-bold transition-all shadow-md shrink-0 self-start md:self-auto cursor-pointer"
           >
-            <ArrowLeft size={16} />
+            <Codicon name="arrow-left" size={16} />
             <span>Back to Visualizer</span>
           </button>
         </motion.div>
@@ -274,7 +285,7 @@ export const SettingsPage: React.FC = () => {
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center shrink-0">
-                <RefreshCw size={18} className="text-indigo-400" />
+                <Codicon name="refresh" size={18} className="text-indigo-400" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -293,7 +304,7 @@ export const SettingsPage: React.FC = () => {
               onClick={() => setShowPreviewModal(true)}
               className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all shrink-0 cursor-pointer flex items-center gap-2"
             >
-              <RefreshCw size={14} />
+              <Codicon name="refresh" size={14} />
               <span>Update Now (v{latestVersion})</span>
             </button>
           </motion.div>
@@ -309,7 +320,6 @@ export const SettingsPage: React.FC = () => {
             </span>
 
             {navTabs.map(tab => {
-              const Icon = tab.icon;
               const isActive = activeTab === tab.id;
 
               return (
@@ -323,7 +333,7 @@ export const SettingsPage: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon size={16} className={isActive ? 'text-white' : tab.iconColor} />
+                    <Codicon name={tab.iconName} size={16} className={isActive ? 'text-white' : tab.iconColor} />
                     <span>{tab.label}</span>
                   </div>
 
@@ -345,7 +355,7 @@ export const SettingsPage: React.FC = () => {
             {/* Quick Classroom Tip Box */}
             <div className="mt-4 p-3.5 rounded-xl bg-slate-900/80 border border-white/10 text-[11px] text-slate-300 font-mono space-y-1.5 shadow-md">
               <div className="flex items-center gap-1.5 text-amber-400 font-bold">
-                <HelpCircle size={13} />
+                <Codicon name="question" size={13} />
                 <span>Classroom Tip</span>
               </div>
               <p className="leading-relaxed">
@@ -358,6 +368,12 @@ export const SettingsPage: React.FC = () => {
           <div className="md:col-span-8">
             <AnimatePresence mode="wait">
               
+              {/* TAB: EXTENSIONS */}
+              {activeTab === 'extensions' && <ExtensionsTab />}
+
+              {/* TAB: PLANS & ACCESS */}
+              {activeTab === 'plans' && <PlansTab />}
+
               {/* TAB 1: DISPLAY & PROJECTION */}
               {activeTab === 'display' && (
                 <motion.div
@@ -370,7 +386,7 @@ export const SettingsPage: React.FC = () => {
                 >
                   <div className="border-b border-white/5 pb-4">
                     <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Monitor size={18} className="text-indigo-400" />
+                      <Codicon name="vm" size={18} className="text-indigo-400" />
                       <span>Classroom & Projector Display Tuning</span>
                     </h2>
                     <p className="text-xs text-slate-400 mt-1">
@@ -397,7 +413,7 @@ export const SettingsPage: React.FC = () => {
                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                           activePreset === 'default' ? 'bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/15 text-indigo-400'
                         }`}>
-                          <Monitor size={18} />
+                          <Codicon name="vm" size={18} />
                         </div>
                         <span className="font-extrabold text-white">Standard Dark</span>
                         <span className="text-[10px] font-mono text-indigo-300/80 font-medium">True Color · 100%</span>
@@ -415,7 +431,7 @@ export const SettingsPage: React.FC = () => {
                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                           activePreset === 'projector' ? 'bg-sky-500/30 text-sky-300' : 'bg-sky-500/15 text-sky-400'
                         }`}>
-                          <Tv size={18} />
+                          <Codicon name="screen-normal" size={18} />
                         </div>
                         <span className="font-extrabold text-white">Classroom Projector</span>
                         <span className="text-[10px] font-mono text-sky-300/80 font-medium">Boosted · 130% Sat</span>
@@ -433,7 +449,7 @@ export const SettingsPage: React.FC = () => {
                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                           activePreset === 'smartboard' ? 'bg-purple-500/30 text-purple-300' : 'bg-purple-500/15 text-purple-400'
                         }`}>
-                          <Eye size={18} />
+                          <Codicon name="eye" size={18} />
                         </div>
                         <span className="font-extrabold text-white">High Contrast</span>
                         <span className="text-[10px] font-mono text-purple-300/80 font-medium">Vivid · 150% Sat</span>
@@ -451,7 +467,7 @@ export const SettingsPage: React.FC = () => {
                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                           activePreset === 'daylight' ? 'bg-amber-500/30 text-amber-300' : 'bg-amber-500/15 text-amber-400'
                         }`}>
-                          <Sun size={18} />
+                          <Codicon name="color-mode" size={18} />
                         </div>
                         <span className="font-extrabold text-white">Daylight Visibility</span>
                         <span className="text-[10px] font-mono text-amber-300/80 font-medium">Bright · 140% Sat</span>
@@ -498,7 +514,7 @@ export const SettingsPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <Eye size={14} className="text-indigo-400" />
+                          <Codicon name="eye" size={14} className="text-indigo-400" />
                           <span>Color Vividness & Saturation</span>
                         </span>
                         <span className="text-[11px] text-slate-400">Level: {sharpnessVal}%</span>
@@ -542,7 +558,7 @@ export const SettingsPage: React.FC = () => {
                 >
                   <div className="border-b border-white/5 pb-4">
                     <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Volume2 size={18} className="text-amber-400" />
+                      <Codicon name="unmute" size={18} className="text-amber-400" />
                       <span>Voice & Narration</span>
                     </h2>
                     <p className="text-xs text-slate-400 mt-1">
@@ -588,7 +604,7 @@ export const SettingsPage: React.FC = () => {
                           : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30'
                       }`}
                     >
-                      {isPlayingTestAudio ? <VolumeX size={14} /> : <Play size={14} />}
+                      {isPlayingTestAudio ? <Codicon name="mute" size={14} /> : <Codicon name="play" size={14} />}
                       <span>{isPlayingTestAudio ? 'Stop' : 'Test Voice'}</span>
                     </button>
                   </div>
@@ -652,7 +668,7 @@ export const SettingsPage: React.FC = () => {
                 >
                   <div className="border-b border-white/5 pb-4">
                     <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Key size={18} className="text-emerald-400" />
+                      <Codicon name="key" size={18} className="text-emerald-400" />
                       <span>License & Device Binding</span>
                     </h2>
                     <p className="text-xs text-slate-400 mt-1">
@@ -661,212 +677,356 @@ export const SettingsPage: React.FC = () => {
                   </div>
 
                   {/* Status Banner */}
-                  <div className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                    licenseContext?.activated
-                      ? 'bg-emerald-950/40 border-emerald-500/40 shadow-lg'
-                      : 'bg-rose-950/40 border-rose-500/40 shadow-lg'
+                  <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
+                    isActivated
+                      ? 'bg-linear-to-r from-emerald-950/70 via-slate-900/90 to-emerald-950/40 border-emerald-500/40 shadow-[0_0_25px_-5px_rgba(16,185,129,0.18)]'
+                      : 'bg-linear-to-r from-rose-950/50 via-slate-900/90 to-amber-950/30 border-rose-500/30 shadow-[0_0_20px_-5px_rgba(244,63,94,0.15)]'
                   }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        licenseContext?.activated ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                        isActivated 
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-inner' 
+                          : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                       }`}>
-                        <ShieldCheck size={22} />
+                        <Codicon name="shield" size={20} className={isActivated ? 'text-emerald-400' : 'text-rose-400'} />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-sm text-white">
-                            {licenseContext?.activated ? 'Verified License Active' : 'Unregistered Software'}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-white font-mono tracking-wide">
+                            {isActivated 
+                              ? `${licenseContext?.licenseDetails?.tier || 'VIP Pass'} Edition`
+                              : 'Unregistered Software'}
                           </span>
-                          {licenseContext?.licenseDetails?.tier && (
-                            <span className="px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 font-mono text-[10px] font-black uppercase">
-                              {licenseContext.licenseDetails.tier} EDITION
-                            </span>
-                          )}
+                          <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider border ${
+                            isActivated
+                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                              : 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                          }`}>
+                            {isActivated ? 'ACTIVE' : 'INACTIVE'}
+                          </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {licenseContext?.activated ? 'Full unlimited access to all algorithm visualizers.' : 'Please enter your institutional license key to unlock features.'}
+                        <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                          {isActivated 
+                            ? 'All visualizer modules unlocked on this device' 
+                            : 'Enter an institutional license key to unlock modules'}
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => setShowChangeKeyInput(true)}
-                      className="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold font-mono transition-all shrink-0 cursor-pointer"
-                    >
-                      {licenseContext?.activated ? 'Change Key' : 'Activate License'}
-                    </button>
+                    <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+                      {isActivated ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setShowChangeKeyInput(true)}
+                            className="px-3.5 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                          >
+                            <Codicon name="key" size={13} className="text-indigo-400" />
+                            <span>Change Key</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to deactivate and remove this license key from this device?')) {
+                                await licenseContext?.deactivateLicense();
+                              }
+                            }}
+                            className="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-400 text-rose-200 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                            title="Unlink and remove key from this device"
+                          >
+                            <Codicon name="log-out" size={13} className="text-rose-400" />
+                            <span>Remove Key</span>
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setShowChangeKeyInput(true)}
+                          className="px-4 py-2 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/40 rounded-xl text-xs font-bold font-mono shadow-md shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-2"
+                        >
+                          <Codicon name="key" size={14} />
+                          <span>Activate License</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Institution Co-Branding */}
-                  {licenseContext?.licenseDetails?.customBranding?.institutionName && (
-                    <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 flex items-center gap-3">
-                      <Building2 size={20} className="text-amber-400 shrink-0" />
-                      <div>
-                        <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider block">INSTITUTION LICENSE</span>
-                        <span className="text-sm font-bold text-amber-200">
-                          {licenseContext.licenseDetails.customBranding.institutionName}
-                        </span>
+                  {isActivated && licenseContext?.licenseDetails?.customBranding?.institutionName && (
+                    <div className="p-3.5 rounded-xl bg-linear-to-r from-indigo-950/40 via-slate-900/80 to-purple-950/40 border border-indigo-500/30 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Codicon name="organization" size={16} className="text-indigo-400 shrink-0" />
+                        <div>
+                          <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider block">Licensed To</span>
+                          <span className="text-xs font-bold font-mono text-white">
+                            {licenseContext.licenseDetails.customBranding.institutionName}
+                          </span>
+                        </div>
                       </div>
+                      {licenseContext.licenseDetails.customBranding.badgeText && (
+                        <span className="text-[10px] font-mono text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/40 font-bold">
+                          {licenseContext.licenseDetails.customBranding.badgeText}
+                        </span>
+                      )}
                     </div>
                   )}
 
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    
-                    {/* License Key Box (Protected / Non-Copyable) */}
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 flex flex-col gap-2 shadow-md select-none">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono text-indigo-300 uppercase tracking-wider font-bold">License Key</span>
-                        <span className="text-[9px] font-mono font-bold text-slate-400 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">Protected</span>
+                  {/* Unified 4-in-1 Table Panel for Key Details */}
+                  <div className="bg-[#0b0e1b] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 border-b border-white/10">
+                      {/* 1. License Key */}
+                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+                            <Codicon name="key" size={13} className="text-indigo-400" />
+                            License Key
+                          </span>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            isActivated
+                              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
+                          }`}>
+                            {isActivated ? 'Protected' : 'Unregistered'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
+                          <span className="font-mono text-xs text-white font-semibold tracking-wider select-none pointer-events-none">
+                            {isActivated ? maskedKey : 'No Active License'}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {isActivated ? 'Verified' : 'Inactive'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between bg-black/70 border border-white/10 rounded-lg px-3 py-2.5">
-                        <span className="font-mono text-xs text-white font-semibold tracking-wider select-none pointer-events-none">{maskedKey}</span>
-                        <ShieldCheck size={14} className="text-indigo-400/70 shrink-0" />
+
+                      {/* 2. Hardware Signature (HWID) */}
+                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+                            <Codicon name="chip" size={13} className="text-cyan-400" />
+                            Hardware Signature (HWID)
+                          </span>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            isActivated
+                              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
+                          }`}>
+                            {isActivated ? 'Bound' : 'Unbound'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
+                          <span className="font-mono text-xs text-cyan-200 truncate max-w-55 select-none pointer-events-none" title={licenseContext?.hwid || 'TC-DEVICE-AUTO'}>
+                            {licenseContext?.hwid || 'TC-DEVICE-AUTO'}
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
+                            This Device
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* HWID Hardware Signature Box (Protected / Non-Copyable) */}
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 flex flex-col gap-2 shadow-md select-none">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono text-emerald-300 uppercase tracking-wider font-bold">Device ID (HWID)</span>
-                        <span className="text-[9px] font-mono font-bold text-slate-400 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">Non-Exportable</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
+                      {/* 3. Expiry & Validity */}
+                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+                            <Codicon name="calendar" size={13} className="text-emerald-400" />
+                            Expiry & Validity
+                          </span>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            isActivated
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
+                          }`}>
+                            {isActivated ? 'Active' : 'Unregistered'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
+                          <span className="font-mono text-xs text-slate-200 select-none">
+                            {isActivated ? formattedExpiry : 'Perpetual / Lifetime'}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {isActivated ? 'Licensed' : 'No Expiry'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between bg-black/70 border border-white/10 rounded-lg px-3 py-2.5">
-                        <span className="font-mono text-xs text-slate-300 truncate max-w-44 select-none pointer-events-none">{licenseContext?.hwid || 'N/A'}</span>
-                        <ShieldCheck size={14} className="text-emerald-400/70 shrink-0" />
+
+                      {/* 4. Plan Edition */}
+                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+                            <Codicon name="shield" size={13} className="text-purple-400" />
+                            Plan Edition
+                          </span>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            isActivated
+                              ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
+                          }`}>
+                            {isActivated ? 'Active' : 'Free'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
+                          <span className="font-mono text-xs text-purple-200 select-none font-semibold">
+                            {isActivated 
+                              ? `${licenseContext?.licenseDetails?.tier || 'VIP Pass'} Edition`
+                              : 'Community Edition'}
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-400">
+                            {isActivated ? 'Full Access' : 'Standard'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-
                   </div>
 
-                  {/* Seat Capacity Progress */}
+                  {/* Registered Devices Section with Gradient Bar & Collapsible Logout List */}
                   {licenseContext?.activated && (
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 space-y-2 shadow-md">
-                      <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-slate-300">Registered Devices</span>
-                        <span className="text-indigo-300 font-bold">
-                          {licenseContext.licenseDetails.activeDevicesCount || 1} / {licenseContext.licenseDetails.maxDevices || 1} Registered
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-white/10 p-0.5">
-                        <div 
-                          className="bg-linear-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(100, ((licenseContext.licenseDetails.activeDevicesCount || 1) / (licenseContext.licenseDetails.maxDevices || 1)) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {/* TAB 4: FEEDBACK & REPORTS */}
-              {activeTab === 'feedback' && (
-                <motion.div
-                  key="feedback"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.25 }}
-                  className="bg-[#090b15] border border-white/10 rounded-2xl p-6 space-y-6"
-                >
-                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                    <div>
-                      <h2 className="text-xl font-black text-white flex items-center gap-2">
-                        <MessageSquarePlus className="text-indigo-400" size={20} />
-                        <span>Feedback & Diagnostic Reports</span>
-                      </h2>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Submitted bug reports, feature suggestions, and system telemetry.
-                      </p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold">
-                      {feedbackList.length} Submissions
-                    </span>
-                  </div>
-
-                  {feedbackList.length === 0 ? (
-                    <div className="py-16 text-center border-2 border-dashed border-white/10 rounded-2xl bg-slate-950/40 flex flex-col items-center justify-center gap-2">
-                      <MessageSquarePlus size={32} className="text-slate-600 mb-1" />
-                      <p className="text-xs font-bold text-slate-400">No Feedback Submitted Yet</p>
-                      <p className="text-[11px] text-slate-600">Submissions from the floating feedback tool will appear here.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {feedbackList.map((item) => (
-                        <div
-                          key={item.id}
-                          className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 space-y-3 shadow-lg hover:border-indigo-500/30 transition-all"
-                        >
-                          {/* Card Top Row */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                                item.category === 'bug'
-                                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                  : item.category === 'feature'
-                                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                                  : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
-                              }`}>
-                                {item.category === 'bug' ? 'Bug Report' : item.category === 'feature' ? 'Feature Request' : 'Feedback'}
-                              </span>
-                              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                                item.status === 'resolved'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                  : 'bg-zinc-800 text-zinc-400 border-zinc-700'
-                              }`}>
-                                {item.status === 'resolved' ? 'Resolved' : 'Pending'}
-                              </span>
-                              <span className="text-[11px] font-mono text-slate-500">
-                                {new Date(item.timestamp).toLocaleString()}
-                              </span>
-                            </div>
-
-                            <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-500/30 font-bold">
-                              Key: {item.systemDetails?.licenseKey || 'N/A'}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0e1b] border border-white/10 space-y-3.5 shadow-xl">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                            <Codicon name="vm" size={16} />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-white font-mono">
+                              Registered Devices
+                            </h3>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold font-mono">
+                              {licenseContext.licenseDetails.activeDevicesCount || 1} of {licenseContext.licenseDetails.maxDevices || 1} Bound
                             </span>
                           </div>
-
-                          {/* Message Body */}
-                          <p className="text-xs font-medium text-slate-200 bg-black/40 p-3 rounded-xl border border-white/5 leading-relaxed whitespace-pre-wrap">
-                            "{item.message}"
-                          </p>
-
-                          {/* Admin Resolution & Reply */}
-                          {item.adminReply && (
-                            <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs space-y-1">
-                              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                                <CheckCircle2 size={12} />
-                                <span>Admin Resolution & Reply</span>
-                              </div>
-                              <p className="text-emerald-200 font-mono text-xs whitespace-pre-wrap">{item.adminReply}</p>
-                            </div>
-                          )}
-
-                          {/* System Diagnostic Spec Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[10px] font-mono text-slate-400">
-                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate">
-                              <Laptop size={12} className="text-slate-500 shrink-0" />
-                              <span className="truncate">{item.systemDetails?.platform || 'Unknown OS'}</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate">
-                              <span className="text-slate-500 font-bold shrink-0">Res:</span>
-                              <span className="truncate">{item.systemDetails?.screenResolution || 'N/A'}</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate">
-                              <Globe size={12} className="text-slate-500 shrink-0" />
-                              <span className="truncate">{item.systemDetails?.language || 'en'}</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-white/2 border border-white/5 flex items-center gap-1.5 truncate" title={item.systemDetails?.userAgent}>
-                              <span className="text-slate-500 font-bold shrink-0">Agent:</span>
-                              <span className="truncate">{item.systemDetails?.userAgent ? item.systemDetails.userAgent.slice(0, 20) + '...' : 'Browser'}</span>
-                            </div>
-                          </div>
                         </div>
-                      ))}
+
+                        {/* Toggle Collapsible Devices Button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowDevicesList(prev => !prev)}
+                          className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono font-bold text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+                        >
+                          <span>{showDevicesList ? 'Hide Devices' : 'Manage Connected Devices'}</span>
+                          {showDevicesList ? <Codicon name="chevron-up" size={14} /> : <Codicon name="chevron-down" size={14} />}
+                        </button>
+                      </div>
+
+                      {/* Colorful Gradient Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/10 p-0.5">
+                          <div 
+                            className="bg-linear-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full rounded-full transition-all duration-500 shadow-sm shadow-indigo-500/50"
+                            style={{ width: `${Math.min(100, Math.max(8, ((licenseContext.licenseDetails.activeDevicesCount || 1) / (licenseContext.licenseDetails.maxDevices || 1)) * 100))}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                          <span>{licenseContext.licenseDetails.activeDevicesCount || 1} Active</span>
+                          <span className="text-emerald-400 font-medium">
+                            {Math.max(0, (licenseContext.licenseDetails.maxDevices || 1) - (licenseContext.licenseDetails.activeDevicesCount || 1))} slots free
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Collapsible Device List with Remote Logout / Disconnect */}
+                      <AnimatePresence>
+                        {showDevicesList && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden border-t border-white/10 pt-3.5 space-y-2"
+                          >
+                            <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+                              <span className="font-bold text-slate-300">Connected Hardware Devices</span>
+                              <span className="text-[10px] text-slate-500">Logout to unlink a device</span>
+                            </div>
+
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                              {(() => {
+                                const devicesMap = licenseContext.licenseDetails.devices || {};
+                                const deviceKeys = Object.keys(devicesMap);
+                                const currentHwid = licenseContext.hwid || 'TC-DEVICE-AUTO';
+
+                                // If devices map is empty, show at least current device
+                                const list = deviceKeys.length > 0
+                                  ? deviceKeys.map(devHwid => ({
+                                      hwid: devHwid,
+                                      activatedAt: devicesMap[devHwid]?.activatedAt,
+                                      isCurrent: devHwid === currentHwid
+                                    }))
+                                  : [{ hwid: currentHwid, activatedAt: undefined, isCurrent: true }];
+
+                                return list.map(({ hwid: devHwid, activatedAt, isCurrent }) => (
+                                  <div
+                                    key={devHwid}
+                                    className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                                      isCurrent
+                                        ? 'bg-indigo-950/30 border-indigo-500/40'
+                                        : 'bg-slate-900/60 border-white/10 hover:border-white/20'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                                        isCurrent
+                                          ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40'
+                                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                                      }`}>
+                                        <Codicon name="chip" size={13} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-mono text-xs font-bold text-white truncate max-w-42.5 sm:max-w-xs" title={devHwid}>
+                                            {devHwid}
+                                          </span>
+                                          {isCurrent && (
+                                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[9px] font-bold shrink-0">
+                                              This Device
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-[10px] font-mono text-slate-400 block truncate">
+                                          {activatedAt ? `Activated: ${new Date(activatedAt).toLocaleDateString('en-GB')}` : 'Hardware Bound'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      disabled={unlinkingHwid === devHwid}
+                                      onClick={async () => {
+                                        if (window.confirm(`Are you sure you want to disconnect and logout device: ${devHwid}?`)) {
+                                          setUnlinkingHwid(devHwid);
+                                          try {
+                                            await unlinkDeviceFromLicense(activeKeyStr, devHwid);
+                                            if (isCurrent) {
+                                              await licenseContext.deactivateLicense();
+                                            }
+                                          } catch (err) {
+                                            console.error('Failed to unlink device:', err);
+                                          } finally {
+                                            setUnlinkingHwid(null);
+                                          }
+                                        }
+                                      }}
+                                      className="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-400 text-rose-200 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
+                                      title="Logout and disconnect this device"
+                                    >
+                                      <Codicon name="log-out" size={12} />
+                                      <span>{unlinkingHwid === devHwid ? 'Logging out...' : 'Logout Device'}</span>
+                                    </button>
+                                  </div>
+                                ));
+                              })()}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
                 </motion.div>
               )}
+
+              {/* TAB 4: SUPPORT & COMPLAINTS */}
+              {activeTab === 'feedback' && <FeedbackTab />}
 
               {/* TAB 5: ABOUT & UPDATES */}
               {activeTab === 'about' && (
@@ -880,7 +1040,7 @@ export const SettingsPage: React.FC = () => {
                 >
                   <div className="border-b border-white/5 pb-4">
                     <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Info size={18} className="text-purple-400" />
+                      <Codicon name="info" size={18} className="text-purple-400" />
                       <span>About & Updates</span>
                     </h2>
                     <p className="text-xs text-slate-400 mt-1">
@@ -894,7 +1054,7 @@ export const SettingsPage: React.FC = () => {
                     <div className="flex items-center justify-between border-b border-white/5 pb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                          <Monitor size={18} className="text-indigo-400" />
+                          <Codicon name="vm" size={18} className="text-indigo-400" />
                         </div>
                         <div>
                           <span className="text-xs font-bold text-white block">Installed Software Version</span>
@@ -907,58 +1067,104 @@ export const SettingsPage: React.FC = () => {
                           onClick={() => setShowPreviewModal(true)}
                           className="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/30"
                         >
-                          <RefreshCw size={13} />
+                          <Codicon name="refresh" size={13} />
                           <span>Update Ready (v{latestVersion})</span>
                         </button>
                       ) : (
                         <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
-                          <CheckCircle2 size={13} />
+                          <Codicon name="pass" size={13} />
                           <span>Up to Date</span>
                         </span>
                       )}
                     </div>
 
-                    {/* Channels & Actions */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                      <span className="text-[11px] font-mono text-slate-400 font-medium">Update Channels:</span>
+                    {/* Action Toolbar & Channels */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono text-slate-400 font-medium">Update Channel:</span>
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
+                          Production Stable
+                        </span>
+                      </div>
 
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          onClick={async () => {
-                            setCheckToast("Checking server for updates...");
-                            await checkNow();
-                            setTimeout(() => {
-                              setCheckToast(null);
-                            }, 4000);
-                          }}
-                          disabled={isChecking}
-                          className="px-3.5 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                          title="Check server for updates"
-                        >
-                          <RefreshCw size={13} className={isChecking ? "animate-spin text-indigo-400" : "text-indigo-400"} />
-                          <span>{isChecking ? "Checking..." : "Check Updates"}</span>
-                        </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setCheckToast("Checking server for updates...");
+                          await checkNow();
+                          setTimeout(() => {
+                            setCheckToast(null);
+                          }, 4000);
+                        }}
+                        disabled={isChecking}
+                        className="px-3.5 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                        title="Check server for updates"
+                      >
+                        <Codicon name="refresh" size={13} className={isChecking ? "animate-spin text-indigo-400" : "text-indigo-400"} />
+                        <span>{isChecking ? "Checking..." : "Check for Updates"}</span>
+                      </button>
+                    </div>
 
+                    {/* ── 2 Update Options ── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Option 1: Instant Direct Setup */}
+                      <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex flex-col justify-between gap-3 hover:border-indigo-500/40 transition-colors">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono uppercase font-extrabold text-indigo-400 tracking-wider">
+                              Option 1: Instant Setup (.exe)
+                            </span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">
+                              Fastest
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
+                            Directly download & run the latest Windows installer setup without opening a browser.
+                          </p>
+                        </div>
                         <button
+                          type="button"
                           onClick={async () => {
-                            const exeUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+                            const target = downloadUrl || 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
                             try {
                               const { open } = await import('@tauri-apps/plugin-shell');
-                              await open(exeUrl);
+                              await open(target);
                             } catch (err) {
-                              window.open(exeUrl, '_blank');
+                              const a = document.createElement('a');
+                              a.href = target;
+                              a.download = 'TreadCode_latest_x64-setup.exe';
+                              a.target = '_blank';
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
                             }
                           }}
-                          className="px-3.5 py-2 rounded-xl border border-sky-500/30 bg-sky-950/40 hover:bg-sky-900/60 text-sky-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                          title="Direct installer link"
+                          className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/30"
                         >
-                          <Monitor size={13} className="text-sky-400" />
-                          <span>Direct .exe Link</span>
+                          <Codicon name="cloud-download" size={14} />
+                          <span>⚡ Download .exe Installer</span>
                         </button>
+                      </div>
 
+                      {/* Option 2: Official Web Store Section */}
+                      <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/25 flex flex-col justify-between gap-3 hover:border-sky-500/40 transition-colors">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono uppercase font-extrabold text-sky-400 tracking-wider">
+                              Option 2: Web Store Page
+                            </span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono">
+                              Catalogue Section
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
+                            Visit TreadCode's official catalogue page to check release notes, changelog & download from web.
+                          </p>
+                        </div>
                         <button
+                          type="button"
                           onClick={async () => {
-                            const webUrl = 'https://tread-code-smoky.vercel.app/';
+                            const webUrl = 'https://central-hub-6t3.pages.dev/items/treadcode';
                             try {
                               const { open } = await import('@tauri-apps/plugin-shell');
                               await open(webUrl);
@@ -966,12 +1172,11 @@ export const SettingsPage: React.FC = () => {
                               window.open(webUrl, '_blank');
                             }
                           }}
-                          className="px-3.5 py-2 rounded-xl border border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                          title="Open web edition"
+                          className="w-full py-2 px-3 rounded-lg bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-sky-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <Globe size={13} className="text-purple-400" />
-                          <span>Open Web App</span>
-                          <ExternalLink size={11} />
+                          <Codicon name="globe" size={14} className="text-sky-300" />
+                          <span>🌐 Open Web Store Section</span>
+                          <Codicon name="link-external" size={11} className="text-sky-400" />
                         </button>
                       </div>
                     </div>
@@ -997,7 +1202,7 @@ export const SettingsPage: React.FC = () => {
                   {/* Intellectual Property & Licensing Card */}
                   <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 flex flex-col gap-2.5 shadow-md">
                     <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <ShieldCheck size={16} className="text-purple-400 shrink-0" />
+                      <Codicon name="shield" size={16} className="text-purple-400 shrink-0" />
                       <span className="text-xs font-bold text-white">Intellectual Property & Licensing</span>
                     </div>
                     <div className="text-[11px] font-mono text-slate-300 space-y-1 leading-relaxed">

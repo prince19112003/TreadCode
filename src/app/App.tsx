@@ -4,8 +4,20 @@ import { AnimatePresence } from 'motion/react';
 import { GlobalAppShell } from './layout/GlobalAppShell';
 import { LoadingSpinner } from '@shared/components/ui/LoadingSpinner';
 import { EulaModal } from '@shared/components/ui/EulaModal';
+import { KeyIssuedNotificationModal } from '@shared/components/ui/KeyIssuedNotificationModal';
 import { SplashPage } from '../pages/SplashPage';
-import { fetchLicenseDetails, clearLicenseCache, type LicenseValidationResult } from '../shared/config/firebase';
+import {
+  fetchLicenseDetails,
+  clearLicenseCache,
+  loadLicenseCache,
+  getStoredOrGeneratedHwid,
+  resolveSystemHwid,
+  subscribeToDeviceKeyRequests,
+  checkOrStartDeviceTrial,
+  type LicenseValidationResult,
+  type KeyRequestItem,
+  type DeviceTrialInfo,
+} from '../shared/config/firebase';
 
 // Lazy loaded routes for scalability
 const LanguageSelectionPage = lazy(() => import('@pages/LanguageSelectionPage').then(m => ({ default: m.LanguageSelectionPage })));
@@ -20,8 +32,9 @@ export const LicenseContext = React.createContext<{
   hwid: string;
   settings: Record<string, any>;
   licenseDetails: LicenseValidationResult;
+  trialInfo?: DeviceTrialInfo;
   handleActivate: (key: string) => Promise<boolean>;
-  deactivateLicense: () => void;
+  deactivateLicense: () => Promise<void> | void;
 } | null>(null);
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,30 +61,65 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  // Retrieve locking states for each course module
-  const lockPython = !!context.settings.lockPython;
-  const lockC = !!context.settings.lockC;
-  const lockCpp = !!context.settings.lockCpp;
-  const lockJava = !!context.settings.lockJava;
-  const lockDsa = !!context.settings.lockDsa;
-  const lockMl = !!context.settings.lockMl;
-  const lockNetworking = !!context.settings.lockNetworking;
-  const lockOops = !!context.settings.lockOops;
-  const lockSql = !!context.settings.lockSql;
-  const lockJs = !!context.settings.lockJs;
+  // Determine user's active tier (normalized to community | professional | enterprise)
+  const rawTier = context.activated
+    ? (context.licenseDetails?.tier?.toLowerCase() || 'professional')
+    : (context.trialInfo?.isTrialActive ? 'enterprise' : 'community');
+  const activeTier = (rawTier === 'developer' || rawTier === 'standard' || rawTier === 'professional')
+    ? 'professional'
+    : (rawTier === 'ultimate' || rawTier === 'enterprise')
+      ? 'enterprise'
+      : (rawTier === 'free' || rawTier === 'starter' || rawTier === 'community')
+        ? 'community'
+        : rawTier;
 
-  // Intercept locked path routes if license is not activated yet
-  if (!context.activated && !isLanguages) {
-    if (path.includes('/python') && lockPython) return <LicenseModal onActivate={context.handleActivate} />;
-    if ((path.includes('/c/') || path.endsWith('/c')) && (lockC || lockCpp)) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/cpp') && lockCpp) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/java') && lockJava) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/dsa') && lockDsa) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/ml') && lockMl) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/networking') && lockNetworking) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/oops') && lockOops) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/sql') && lockSql) return <LicenseModal onActivate={context.handleActivate} />;
-    if (path.includes('/javascript') && lockJs) return <LicenseModal onActivate={context.handleActivate} />;
+  // Tier module permissions:
+  // - community (free): only Python is unlocked (all others require key activation)
+  // - professional (developer): all coding languages & DSA unlocked (ML & Networking require Enterprise)
+  // - enterprise (ultimate, custom): ALL courses unlocked
+  const isModuleLockedForTier = (moduleKey: string) => {
+    // 1. Dynamic override from Admin Settings if configured (check both new & legacy tier keys)
+    const tierAccess = context.settings?.tierAccess?.[activeTier] 
+      || (activeTier === 'professional' ? context.settings?.tierAccess?.['developer'] : undefined)
+      || (activeTier === 'enterprise' ? context.settings?.tierAccess?.['ultimate'] : undefined)
+      || (activeTier === 'community' ? context.settings?.tierAccess?.['free'] : undefined);
+
+    if (tierAccess) {
+      const key = moduleKey === 'javascript' ? ('js' in tierAccess ? 'js' : 'javascript') : moduleKey;
+      if (typeof tierAccess[key] === 'boolean') {
+        return !tierAccess[key];
+      }
+    }
+
+    // 2. Default fallbacks
+    if (activeTier === 'community') {
+      return moduleKey !== 'python';
+    }
+    if (activeTier === 'professional') {
+      if (moduleKey === 'ml' || moduleKey === 'networking') return true;
+      return false;
+    }
+    // Enterprise, Custom, or any other institution-named key: everything unlocked
+    return false;
+  };
+
+  // Intercept locked path routes based on tier or maintenance/admin overrides
+  if (!isLanguages) {
+    let currentModule = '';
+    if (path.includes('/python')) currentModule = 'python';
+    else if (path.includes('/c/') || path.endsWith('/c')) currentModule = 'c';
+    else if (path.includes('/cpp')) currentModule = 'cpp';
+    else if (path.includes('/java')) currentModule = 'java';
+    else if (path.includes('/dsa')) currentModule = 'dsa';
+    else if (path.includes('/ml')) currentModule = 'ml';
+    else if (path.includes('/networking')) currentModule = 'networking';
+    else if (path.includes('/oops')) currentModule = 'oops';
+    else if (path.includes('/sql')) currentModule = 'sql';
+    else if (path.includes('/javascript')) currentModule = 'javascript';
+
+    if (currentModule && isModuleLockedForTier(currentModule)) {
+      return <LicenseModal onActivate={context.handleActivate} />;
+    }
   }
 
   return <>{children}</>;
@@ -153,10 +201,27 @@ import { ref, onValue } from 'firebase/database';
 
 export const App: React.FC = () => {
   const [showSplash, setShowSplash] = React.useState(true);
-  const [activated, setActivated] = React.useState<boolean | null>(null);
-  const [hwid, setHwid] = React.useState('fallback-device-id-xxxx');
+  const [hwid, setHwid] = React.useState<string>(() => getStoredOrGeneratedHwid());
+  const [activated, setActivated] = React.useState<boolean | null>(() => {
+    const cached = loadLicenseCache();
+    const storedKey = typeof window !== 'undefined' ? localStorage.getItem('flowtrace_license_key') : null;
+    if (storedKey && cached && cached.isValid && cached.licenseKey === storedKey) {
+      return true;
+    }
+    return null;
+  });
   const [settings, setSettings] = React.useState<Record<string, any>>({});
-  const [licenseDetails, setLicenseDetails] = React.useState<LicenseValidationResult>({ isValid: false });
+  const [licenseDetails, setLicenseDetails] = React.useState<LicenseValidationResult>(() => {
+    const cached = loadLicenseCache();
+    const storedKey = typeof window !== 'undefined' ? localStorage.getItem('flowtrace_license_key') : null;
+    if (storedKey && cached && cached.isValid && cached.licenseKey === storedKey) {
+      return cached;
+    }
+    return { isValid: false };
+  });
+  const [pendingIssuedKey, setPendingIssuedKey] = React.useState<KeyRequestItem | null>(null);
+  const [dismissedNoticeKey, setDismissedNoticeKey] = React.useState<string | null>(() => typeof window !== 'undefined' ? localStorage.getItem('flowtrace_dismissed_notice_key') : null);
+  const [trialInfo, setTrialInfo] = React.useState<DeviceTrialInfo | null>(null);
 
   // Sync global settings from firebase database
   React.useEffect(() => {
@@ -191,107 +256,178 @@ export const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Verify license key status at startup & real-time sync with Admin Panel
-  React.useEffect(() => {
-    let unsubscribeLicense: (() => void) | null = null;
-    let unsubscribeBlacklist: (() => void) | null = null;
+  const unsubscribeLicenseRef = React.useRef<(() => void) | null>(null);
 
-    async function checkLicense() {
-      // 1. Fetch HWID from Tauri
-      let currentHwid = 'fallback-device-id-xxxx';
-      if ((window as any).__TAURI_INTERNALS__) {
-        try {
-          const { invoke } = await import('@tauri-apps/api/core') as any;
-          currentHwid = await invoke('get_hwid');
-        } catch (e) {
-          console.error('Failed to get HWID:', e);
+  const deactivateLicense = async () => {
+    if (unsubscribeLicenseRef.current) {
+      unsubscribeLicenseRef.current();
+      unsubscribeLicenseRef.current = null;
+    }
+    const cachedKey = localStorage.getItem('flowtrace_license_key');
+    const currentHwid = hwid || getStoredOrGeneratedHwid();
+    if (cachedKey && currentHwid) {
+      try {
+        const { remove, ref: dbRef } = await import('firebase/database');
+        await remove(dbRef(db, `licenses/${cachedKey}/devices/${currentHwid}`));
+      } catch (e) {
+        console.warn('Failed to unbind device on server:', e);
+      }
+    }
+    localStorage.removeItem('flowtrace_license_key');
+    clearLicenseCache();
+    setActivated(false);
+    setLicenseDetails({ isValid: false });
+  };
+
+  const attachLicenseListener = (key: string, currentHwid: string) => {
+    if (unsubscribeLicenseRef.current) {
+      unsubscribeLicenseRef.current();
+      unsubscribeLicenseRef.current = null;
+    }
+
+    const licenseRef = ref(db, `licenses/${key}`);
+    unsubscribeLicenseRef.current = onValue(licenseRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        deactivateLicense();
+        return;
+      }
+
+      const val = snapshot.val() || {};
+      const isBlocked = !!val.blocked;
+
+      // Expiry date check
+      let isExpired = false;
+      if (val.expiresAt) {
+        const expiry = new Date(val.expiresAt);
+        if (!isNaN(expiry.getTime()) && new Date() > expiry) {
+          isExpired = true;
         }
       }
+
+      const devices = val.devices || {};
+      const isDevicePresent = Boolean(devices[currentHwid]);
+
+      if (isBlocked || isExpired || !isDevicePresent) {
+        // Admin explicitly unlinked this device from the server, blocked, or expired
+        deactivateLicense();
+      } else {
+        setLicenseDetails(prev => ({
+          ...prev,
+          isValid: true,
+          tier: val.tier || prev.tier,
+          customBranding: val.customBranding || prev.customBranding,
+          expiresAt: val.expiresAt,
+          activeDevicesCount: Object.keys(devices).length,
+          maxDevices: val.maxDevices || prev.maxDevices,
+          devices: devices,
+          licenseKey: key,
+        }));
+        setActivated(true);
+      }
+    });
+  };
+
+  // Verify license key status at startup & real-time sync with Admin Panel
+  React.useEffect(() => {
+    let unsubscribeBlacklist: (() => void) | null = null;
+    let unsubscribeKeyRequests: (() => void) | null = null;
+
+    async function checkLicense() {
+      // 1. Resolve safe HWID
+      const currentHwid = await resolveSystemHwid();
       setHwid(currentHwid);
 
-      // Real-time HWID Blacklist listener: Auto-logout immediately if Admin blacklists this device HWID
+      // Real-time HWID Blacklist listener
       const blacklistRef = ref(db, `blacklisted_hwids/${currentHwid}`);
       unsubscribeBlacklist = onValue(blacklistRef, (snap) => {
         if (snap.exists() && snap.val()) {
-          localStorage.removeItem('flowtrace_license_key');
-          setActivated(false);
-          setLicenseDetails({ isValid: false, blocked: true });
+          deactivateLicense();
         }
       });
 
       // 2. Check local key
       const cachedKey = localStorage.getItem('flowtrace_license_key');
       if (cachedKey) {
-        const details = await fetchLicenseDetails(cachedKey, currentHwid);
-        setLicenseDetails(details);
-        setActivated(details.isValid);
-
-        // Real-time listener: Auto-logout immediately if Admin cancels license, removes device, blocks, or license expires
-        const licenseRef = ref(db, `licenses/${cachedKey}`);
-        unsubscribeLicense = onValue(licenseRef, (snapshot) => {
-          if (!snapshot.exists()) {
-            // License key was deleted by admin
-            localStorage.removeItem('flowtrace_license_key');
-            clearLicenseCache();
-            setActivated(false);
-            setLicenseDetails({ isValid: false });
-            return;
-          }
-
-          const val = snapshot.val() || {};
-          const isBlocked = !!val.blocked;
-          const isDeviceRegistered = val.devices && val.devices[currentHwid];
-
-          // Expiry date check — admin can extend this anytime to re-activate
-          let isExpired = false;
-          if (val.expiresAt) {
-            const expiry = new Date(val.expiresAt);
-            if (!isNaN(expiry.getTime()) && new Date() > expiry) {
-              isExpired = true;
-            }
-          }
-
-          if (isBlocked || !isDeviceRegistered || isExpired) {
-            // License blocked, device removed, or expired — clear offline cache immediately
-            localStorage.removeItem('flowtrace_license_key');
-            clearLicenseCache();
-            setActivated(false);
-            setLicenseDetails({ isValid: false, blocked: isBlocked, expired: isExpired, expiresAt: val.expiresAt });
-          } else if (val.expiresAt) {
-            // License is valid and has expiry — update local state with latest expiry info
-            setLicenseDetails(prev => ({ ...prev, expiresAt: val.expiresAt }));
-          }
-        });
+        const details = await fetchLicenseDetails(cachedKey, currentHwid, false);
+        if (details.isValid) {
+          setLicenseDetails(details);
+          setActivated(true);
+          attachLicenseListener(cachedKey, currentHwid);
+        } else {
+          deactivateLicense();
+        }
       } else {
         setActivated(false);
         setLicenseDetails({ isValid: false });
+      }
+
+      // 3. Real-time Device Key Request listener (Check if admin issued a key for this device)
+      unsubscribeKeyRequests = subscribeToDeviceKeyRequests(currentHwid, async (requests) => {
+        const fulfilled = requests.find(r => r.status === 'fulfilled' && r.assignedKey && !r.notifyDismissed);
+        if (fulfilled && fulfilled.assignedKey) {
+          const currentActiveKey = localStorage.getItem('flowtrace_license_key');
+          if (!currentActiveKey || currentActiveKey !== fulfilled.assignedKey) {
+            // Check if user dismissed this key on this machine
+            const localDismissed = typeof window !== 'undefined' ? localStorage.getItem('flowtrace_dismissed_notice_key') : null;
+            if (localDismissed === fulfilled.assignedKey) {
+              setPendingIssuedKey(null);
+              return;
+            }
+
+            // CRITICAL CHECK: Verify key actually exists and is active on Firebase server (not deleted by admin)
+            try {
+              const { get, ref: dbRef } = await import('firebase/database');
+              const licSnap = await get(dbRef(db, `licenses/${fulfilled.assignedKey}`));
+              if (licSnap.exists() && !licSnap.val()?.blocked) {
+                setPendingIssuedKey(fulfilled);
+              } else {
+                // Key was deleted or blocked by admin on server — NEVER show alert!
+                setPendingIssuedKey(null);
+              }
+            } catch {
+              setPendingIssuedKey(null);
+            }
+          } else {
+            setPendingIssuedKey(null);
+          }
+        } else {
+          setPendingIssuedKey(null);
+        }
+      });
+
+      // 4. Native Desktop 3-Day Keyless Trial check
+      try {
+        const trial = await checkOrStartDeviceTrial(currentHwid);
+        setTrialInfo(trial);
+      } catch (err) {
+        console.warn('Trial check failed:', err);
       }
     }
 
     checkLicense();
 
     return () => {
-      if (unsubscribeLicense) unsubscribeLicense();
+      if (unsubscribeLicenseRef.current) {
+        unsubscribeLicenseRef.current();
+        unsubscribeLicenseRef.current = null;
+      }
       if (unsubscribeBlacklist) unsubscribeBlacklist();
+      if (unsubscribeKeyRequests) unsubscribeKeyRequests();
     };
   }, []);
 
   const handleActivate = async (key: string): Promise<boolean> => {
-    const details = await fetchLicenseDetails(key, hwid);
+    const currentHwid = hwid || getStoredOrGeneratedHwid();
+    const details = await fetchLicenseDetails(key, currentHwid, true);
     if (details.isValid) {
       localStorage.setItem('flowtrace_license_key', key);
       setLicenseDetails(details);
       setActivated(true);
+      setPendingIssuedKey(null);
+      attachLicenseListener(key, currentHwid);
       return true;
     }
     return false;
-  };
-
-  const deactivateLicense = () => {
-    localStorage.removeItem('flowtrace_license_key');
-    clearLicenseCache();
-    setActivated(false);
-    setLicenseDetails({ isValid: false });
   };
 
   if (activated === null) {
@@ -305,6 +441,7 @@ export const App: React.FC = () => {
         hwid,
         settings,
         licenseDetails,
+        trialInfo: trialInfo || undefined,
         handleActivate,
         deactivateLicense,
       }}
@@ -312,6 +449,27 @@ export const App: React.FC = () => {
       <BrowserRouter>
         {/* EULA agreement modal — runs once on first launch */}
         {!showSplash && <EulaModal />}
+
+        {/* Real-time In-App Key Ready Alert (Shown until user activates this license) */}
+        {!showSplash && pendingIssuedKey && dismissedNoticeKey !== pendingIssuedKey.assignedKey && (
+          <KeyIssuedNotificationModal
+            request={pendingIssuedKey}
+            onActivate={async (k) => {
+              const success = await handleActivate(k);
+              if (success) {
+                setPendingIssuedKey(null);
+              }
+              return success;
+            }}
+            onDismiss={() => {
+              if (pendingIssuedKey?.assignedKey) {
+                setDismissedNoticeKey(pendingIssuedKey.assignedKey);
+                localStorage.setItem('flowtrace_dismissed_notice_key', pendingIssuedKey.assignedKey);
+              }
+              setPendingIssuedKey(null);
+            }}
+          />
+        )}
 
         {/* Floating Chatbot-Style Bug / Feedback Widget (Shown after splash screen) */}
         {!showSplash && !settings.disableFeedbackWidget && <FloatingFeedbackWidget />}

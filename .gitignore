@@ -56,3 +56,11 @@ desktop.ini
 # Temporary Files
 scratch/
 *.tmp
+
+# Distribution packs & large binary staging
+dist-packs/
+public/releases/
+*.exe
+*.msi
+*.dmg
+*.apk

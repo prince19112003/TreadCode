@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, FileText, CheckCircle2 } from 'lucide-react';
 import { TreadCodeLogo } from './MindTraceLogo';
-import { db } from '../../config/firebase';
+import { db, resolveSystemHwid } from '../../config/firebase';
 import { ref, set, get } from 'firebase/database';
 
 export const EulaModal: React.FC = () => {
@@ -20,17 +20,9 @@ export const EulaModal: React.FC = () => {
     const acceptedAt = new Date().toISOString();
     localStorage.setItem('flowtrace_eula_accepted', acceptedAt);
 
-    // Fetch system HWID & send telemetry data to Firebase Admin Panel
+    // Fetch safe HWID & send telemetry data to Firebase Admin Panel
     try {
-      let hwid = 'web-browser-' + Math.random().toString(36).substring(2, 9);
-      if ((window as any).__TAURI_INTERNALS__) {
-        try {
-          const { invoke } = await import('@tauri-apps/api/core') as any;
-          hwid = await invoke('get_hwid');
-        } catch (e) {
-          console.error(e);
-        }
-      }
+      const hwid = await resolveSystemHwid();
 
       const activeKey = localStorage.getItem('flowtrace_license_key') || 'Unregistered';
       const installationRef = ref(db, `installations/${hwid}`);

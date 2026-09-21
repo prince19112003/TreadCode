@@ -6,11 +6,14 @@ fn get_hwid() -> String {
   if let Ok(networks) = sys.networks() {
     for net in networks.values() {
       if !net.addrs.is_empty() {
-        return format!("{:?}", net.name);
+        let clean: String = net.name.chars().filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_').collect();
+        if !clean.is_empty() {
+          return clean;
+        }
       }
     }
   }
-  "fallback-device-id-xxxx".to_string()
+  "DEVICE-PRIMARY".to_string()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

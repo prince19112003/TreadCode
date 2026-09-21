@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, BarChart2, Layers } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
+import { useModuleStore } from '@shared/hooks/useModuleStore';
 
 /* =========================================================
    STANDARD LANGUAGE TOPIC DATA
@@ -238,6 +239,20 @@ const difficultyConfig = {
 export const TopicSelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const { languageId } = useParams();
+  const { moduleStatus, isInitialized, init } = useModuleStore();
+
+  useEffect(() => {
+    init();
+  }, [init]);
+
+  useEffect(() => {
+    if (isInitialized && languageId && languageId !== 'python') {
+      const PACK_IDS = ['c', 'cpp', 'java', 'dsa', 'ml', 'networking'];
+      if (PACK_IDS.includes(languageId) && moduleStatus[languageId] !== 'installed') {
+        navigate('/');
+      }
+    }
+  }, [isInitialized, languageId, moduleStatus, navigate]);
 
   const isDsa = languageId === 'dsa';
   const isMl = languageId === 'ml';

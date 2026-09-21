@@ -38,8 +38,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
       ]
     : realChangelog;
 
-  // Download URLs — GitHub Releases fallback instead of non-existent Vercel setup path
-  const fallbackWinUrl = `https://github.com/prince19112003/FlowTrace/releases/latest`;
+  // Direct Windows Installer setup executable
+  const fallbackWinUrl = `https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe`;
   const downloadUrl = isPreview ? fallbackWinUrl : (realDownloadUrl || fallbackWinUrl);
   const apkUrl = isPreview ? null : realApkUrl;
   const macUrl = isPreview ? null : realMacUrl;
@@ -135,10 +135,11 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
   };
 
   // ── Action: Open Windows .exe installer ─────────────────────────────────────
-  const handleOpenExe = async () => {
+  const _handleOpenExe = async () => {
     await openUrl(downloadUrl);
     setPhase('opened');
   };
+  void _handleOpenExe;
 
   // ── Action: Open Android APK ────────────────────────────────────────────────
   const handleOpenApk = async () => {
@@ -410,120 +411,125 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                     )}
 
                     {/* ── Multiple Download Options ── */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                    {/* ── Two Clear Update Options ── */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
 
-                      {/* Row 1: Auto-Update + Dismiss */}
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        {/* Dismiss */}
-                        <button
-                          onClick={handleDismiss}
-                          style={{
-                            padding: '10px 12px',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '10px',
-                            background: 'rgba(255,255,255,0.05)',
-                            color: 'rgba(148,163,184,0.8)',
-                            cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-                            fontFamily: 'system-ui',
-                            transition: 'all 0.2s',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Later
-                        </button>
-
-                        {/* Auto-Update & Restart — native Tauri, only useful for signed builds */}
-                        <motion.button
-                          onClick={handleAutoUpdate}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
-                          style={{
-                            flex: 2, padding: '10px 12px',
-                            border: 'none', borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                            color: 'white',
-                            cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-                            fontFamily: 'system-ui',
-                            boxShadow: '0 0 24px rgba(99,102,241,0.4)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                          }}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 3v11M8 10l4 4 4-4M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          Auto-Update & Restart
-                        </motion.button>
+                      {/* Option 1: Direct Download & Auto-Update */}
+                      <div style={{
+                        padding: '12px 14px',
+                        background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12))',
+                        border: '1px solid rgba(99,102,241,0.3)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'system-ui' }}>
+                            Option 1: Instant Direct Setup (.exe)
+                          </span>
+                          <span style={{ fontSize: '10px', color: 'rgba(148,163,184,0.7)', fontFamily: 'system-ui' }}>
+                            Fastest
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '11px', color: 'rgba(203,213,225,0.8)', margin: 0, fontFamily: 'system-ui' }}>
+                          Directly download and run the latest Windows installer setup without leaving the app.
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                          <motion.button
+                            onClick={handleAutoUpdate}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            style={{
+                              flex: 1, padding: '10px 14px',
+                              border: 'none', borderRadius: '10px',
+                              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                              color: 'white',
+                              cursor: 'pointer', fontSize: '12px', fontWeight: 700,
+                              fontFamily: 'system-ui',
+                              boxShadow: '0 0 20px rgba(99,102,241,0.35)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                            }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 3v11M8 10l4 4 4-4M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <span>⚡ Download & Install .exe</span>
+                          </motion.button>
+                        </div>
                       </div>
 
-                      {/* Row 2: Manual download options */}
+                      {/* Option 2: Official Web Store / Catalogue */}
                       <div style={{
-                        padding: '10px 12px',
-                        background: 'rgba(0,0,0,0.3)',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        borderRadius: '10px',
+                        padding: '12px 14px',
+                        background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
                       }}>
-                        <p style={{
-                          fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em',
-                          textTransform: 'uppercase', color: 'rgba(148,163,184,0.5)',
-                          fontFamily: 'system-ui', marginBottom: '8px',
-                        }}>
-                          Manual Download Options
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'system-ui' }}>
+                            Option 2: Download from Official Web Store
+                          </span>
+                          <span style={{ fontSize: '10px', color: 'rgba(148,163,184,0.7)', fontFamily: 'system-ui' }}>
+                            Store Page
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '11px', color: 'rgba(203,213,225,0.8)', margin: 0, fontFamily: 'system-ui' }}>
+                          Open our web catalogue store to review release notes, screenshots, and download from the web.
                         </p>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-
-                          {/* Profile / Website Download Page */}
-                          <button
-                            onClick={() => openUrl(downloadUrl || 'https://github.com/prince19112003/FlowTrace/releases').then(() => setPhase('opened'))}
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                          <motion.button
+                            onClick={() => openUrl('https://central-hub-6t3.pages.dev/items/treadcode')}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             style={{
-                              flex: 1, minWidth: '130px',
-                              padding: '8px 10px',
-                              border: '1px solid rgba(168,85,247,0.35)',
-                              borderRadius: '8px',
-                              background: 'rgba(168,85,247,0.1)',
-                              color: '#c084fc',
-                              cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                              flex: 1, padding: '10px 14px',
+                              border: '1px solid rgba(56,189,248,0.4)',
+                              borderRadius: '10px',
+                              background: 'rgba(56,189,248,0.12)',
+                              color: '#38bdf8',
+                              cursor: 'pointer', fontSize: '12px', fontWeight: 700,
                               fontFamily: 'system-ui',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
-                              transition: 'all 0.15s',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                             }}
-                            title="Open direct releases & installer download page in browser"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="12" cy="12" r="10"/>
                               <line x1="2" y1="12" x2="22" y2="12"/>
                               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
                             </svg>
-                            🌐 Direct Download Page
-                          </button>
+                            <span>🌐 Open Web Store Release Page ↗</span>
+                          </motion.button>
+                        </div>
+                      </div>
 
-                          {/* Windows .exe */}
-                          <button
-                            onClick={handleOpenExe}
-                            style={{
-                              flex: 1, minWidth: '130px',
-                              padding: '8px 10px',
-                              border: '1px solid rgba(56,189,248,0.3)',
-                              borderRadius: '8px',
-                              background: 'rgba(56,189,248,0.08)',
-                              color: '#7dd3fc',
-                              cursor: 'pointer', fontSize: '11px', fontWeight: 600,
-                              fontFamily: 'system-ui',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
-                              transition: 'all 0.15s',
-                            }}
-                            title={`Download Windows installer: ${downloadUrl}`}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                              <polyline points="7 10 12 15 17 10"/>
-                              <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            🖥️ Windows .exe
-                          </button>
+                      {/* Dismiss / Later */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
+                        <button
+                          onClick={handleDismiss}
+                          style={{
+                            padding: '8px 14px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '8px',
+                            background: 'transparent',
+                            color: 'rgba(148,163,184,0.7)',
+                            cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                            fontFamily: 'system-ui',
+                          }}
+                        >
+                          Remind Me Later
+                        </button>
+                      </div>
 
-                          {/* Android APK — only shown if URL is set */}
+                      {/* Secondary download options: APK, macOS, Copy Link */}
+                      {(apkUrl || macUrl || downloadUrl) && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '2px' }}>
                           {apkUrl && (
                             <button
+                              type="button"
                               onClick={handleOpenApk}
                               style={{
                                 flex: 1, minWidth: '130px',
@@ -547,9 +553,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                             </button>
                           )}
 
-                          {/* macOS — only shown if URL is set */}
                           {macUrl && (
                             <button
+                              type="button"
                               onClick={() => openUrl(macUrl).then(() => setPhase('opened'))}
                               style={{
                                 flex: 1, minWidth: '130px',
@@ -575,6 +581,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
 
                           {/* Copy Link */}
                           <button
+                            type="button"
                             onClick={handleCopyLink}
                             style={{
                               padding: '8px 12px',
@@ -601,7 +608,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                             )}
                           </button>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     <p style={{

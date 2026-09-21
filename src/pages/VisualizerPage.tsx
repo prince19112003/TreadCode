@@ -3,7 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { VisualizerWorkspace } from '../features/visualizer/VisualizerWorkspace';
 import { MlVisualizerWorkspace } from '../features/ml/MlVisualizerWorkspace';
 import { NetworkingVisualizerWorkspace } from '../features/networking/NetworkingVisualizerWorkspace';
-import { getLessonAsync } from '../lessons/registry';
+import { getLessonAsync, isModuleInstalled } from '../lessons/registry';
 import { LessonProvider } from '../lessons/LessonContext';
 import type { LessonProgram } from '../lessons/types';
 import { Loader2 } from 'lucide-react';
@@ -31,6 +31,7 @@ export const VisualizerPage: React.FC = () => {
   }, [languageId, topicId, programId]);
 
   if (!languageId || !topicId || !programId) return <Navigate to="/" />;
+  if (languageId !== 'python' && !isModuleInstalled(languageId)) return <Navigate to="/" />;
 
   // Dedicated Lightweight Interactive ML Workspace
   if (languageId === 'ml') {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, Sparkles, ExternalLink, Megaphone, X, ArrowLeft } from 'lucide-react';
+import { Code2, Search, Settings, ChevronRight, Home, Presentation, ArrowUpCircle, Clock, ExternalLink, Megaphone, X, ArrowLeft } from 'lucide-react';
 import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -520,14 +520,6 @@ export const GlobalAppShell: React.FC = () => {
               </motion.button>
             )}
           </AnimatePresence>
-
-          {/* Co-Branding Institution Badge if configured on License Key */}
-          {licenseContext?.licenseDetails?.customBranding?.institutionName && (
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-indigo-500/30 bg-indigo-950/30 text-indigo-200 text-[11px] font-semibold shrink-0 ml-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{licenseContext.licenseDetails.customBranding.badgeText || `Licensed to: ${licenseContext.licenseDetails.customBranding.institutionName}`}</span>
-            </div>
-          )}
         </div>
 
         {/* CENTER: Breadcrumb (Always Perfectly Centered in Header) */}
@@ -611,6 +603,22 @@ export const GlobalAppShell: React.FC = () => {
             }
           `}</style>
 
+          {/* Native Desktop 3-Day Keyless Trial Pill (Desktop only, if trial is active & no paid key) */}
+          {isNativeApp() && !licenseContext?.activated && licenseContext?.trialInfo?.isTrialActive && (
+            <button
+              onClick={() => navigate('/settings')}
+              title="3-Day Desktop Trial Active (All 287 Courses & Domains Unlocked). Click to view plans."
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-300 bg-amber-500/15 border border-amber-500/35 hover:bg-amber-500/25 transition-all shadow-sm cursor-pointer"
+            >
+              <Clock size={12} className="text-amber-400 shrink-0" />
+              <span>
+                3-Day Trial: {licenseContext.trialInfo.daysRemaining > 0
+                  ? `${licenseContext.trialInfo.daysRemaining}d Left`
+                  : `${licenseContext.trialInfo.hoursRemaining}h Left`}
+              </span>
+            </button>
+          )}
+
           {/* Persistent Glowing Update Ready button in header (Tauri-only, until user updates) */}
           {hasUpdate && (
             <div className="flex items-center gap-1.5 shrink-0">
@@ -619,7 +627,7 @@ export const GlobalAppShell: React.FC = () => {
                 title="New software update available! Click to update."
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-white bg-linear-to-r from-rose-600 via-indigo-600 to-purple-600 hover:from-rose-500 hover:to-indigo-500 transition-all shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse cursor-pointer"
               >
-                <Sparkles size={13} className="animate-spin-slow" />
+                <ArrowUpCircle size={13} />
                 <span>Update Ready</span>
               </button>
 

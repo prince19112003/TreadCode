@@ -22,6 +22,7 @@ export interface UpdateStatus {
 
 // Current App Version built into this .exe (patched by npm run release <version>)
 const CURRENT_VERSION = '1.0.8';
+const DEFAULT_EXE_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
 
 // ── Native Desktop / Mobile context guard ─────────────────────────────────────
 // Only show update UI when running inside native desktop app (Tauri) or Android APK. Never in web browsers (Vercel).
@@ -33,17 +34,13 @@ export const isNativeApp = (): boolean => {
     '__TAURI_METADATA__' in window ||
     !!(window as any).Capacitor ||
     !!(window as any).AndroidBridge ||
-    navigator.userAgent.includes('TreadCodeNative') ||
-    navigator.userAgent.includes('Tauri')
+    !!(window as any).webkit?.messageHandlers
   );
 };
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useUpdateChecker(): UpdateStatus & {
-  dismiss: () => void;
-  checkNow: () => void;
-} {
+export const useUpdateChecker = () => {
   const [status, setStatus] = useState<UpdateStatus>({
     hasUpdate: false,
     latestVersion: null,
@@ -53,7 +50,7 @@ export function useUpdateChecker(): UpdateStatus & {
     lastChecked: null,
     error: null,
     updateObj: null,
-    downloadUrl: null,
+    downloadUrl: DEFAULT_EXE_URL,
     apkUrl: null,
     macUrl: null,
   });
@@ -132,7 +129,7 @@ export function useUpdateChecker(): UpdateStatus & {
             lastChecked: new Date(),
             error: null,
             updateObj: null,
-            downloadUrl: winUrl,
+            downloadUrl: winUrl || DEFAULT_EXE_URL,
             apkUrl,
             macUrl,
           });
@@ -152,6 +149,7 @@ export function useUpdateChecker(): UpdateStatus & {
         lastChecked: new Date(),
         error: null,
         updateObj: null,
+        downloadUrl: s.downloadUrl || DEFAULT_EXE_URL,
       }));
     }
   }, []);
