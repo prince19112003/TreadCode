@@ -482,7 +482,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                         </p>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                           <motion.button
-                            onClick={() => openUrl('https://central-hub-6t3.pages.dev/items/treadcode')}
+                            onClick={() => openUrl('https://fadewyng.pages.dev/items/treadcode')}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             style={{

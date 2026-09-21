@@ -1164,11 +1164,11 @@ export const SettingsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={async () => {
-                            const webUrl = 'https://central-hub-6t3.pages.dev/items/treadcode';
+                            const webUrl = 'https://fadewyng.pages.dev/items/treadcode';
                             try {
                               const { open } = await import('@tauri-apps/plugin-shell');
                               await open(webUrl);
-                            } catch (err) {
+                            } catch {
                               window.open(webUrl, '_blank');
                             }
                           }}
