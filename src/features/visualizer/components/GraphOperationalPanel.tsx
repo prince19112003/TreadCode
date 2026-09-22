@@ -103,6 +103,598 @@ const DIJKSTRA_GRAPH2_EDGES = [
   { u: '7', v: '8', weight: 4 },
 ];
 
+interface FundamentalsNode {
+  id: string;
+  x: number;
+  y: number;
+  set?: 'U' | 'V';
+}
+
+interface FundamentalsEdge {
+  u: string;
+  v: string;
+  weight?: number;
+  isSelfLoop?: boolean;
+  curve?: number;
+  directed?: boolean;
+  isCycle?: boolean;
+}
+
+interface FundamentalsComponent {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface FundamentalsConcept {
+  id: string;
+  label: string;
+  category: 'core' | 'types' | 'structures' | 'representations';
+  title: string;
+  mathNotation: string;
+  descriptionEnglish: string;
+  descriptionHinglish: string;
+  nodes: FundamentalsNode[];
+  edges: FundamentalsEdge[];
+  isDirected?: boolean;
+  isMultiGraph?: boolean;
+  isBipartite?: boolean;
+  isDisconnected?: boolean;
+  components?: FundamentalsComponent[];
+  defaultTab?: 'theory' | 'matrix' | 'list' | 'neighbors';
+  defaultInspectNode?: string;
+  properties: Array<{ label: string; value: string }>;
+  dsaRelevance: string;
+}
+
+const FUNDAMENTALS_CONCEPTS: Record<string, FundamentalsConcept> = {
+  vertices: {
+    id: 'vertices',
+    label: 'Vertices (V)',
+    category: 'core',
+    title: 'Vertices / Nodes (V)',
+    mathNotation: 'G = (V, E), where V is a non-empty set of vertices: |V| = 7',
+    descriptionEnglish: 'Vertices are the fundamental discrete entities or states in a network. In this network, |V| = 7.',
+    descriptionHinglish: 'Vertices graph ke main nodes ya states hote hain. Is network mein |V| = 7 nodes hain.',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Vertex Count |V|', value: '7' },
+      { label: 'Node Set V', value: '{1, 2, 3, 4, 5, 6, 7}' },
+      { label: 'Isolated Vertices', value: '0' },
+      { label: 'Min Degree', value: '2' },
+    ],
+    dsaRelevance: 'Vertices model states in dynamic programming, cities in pathfinding, or vertices in topological sort.',
+  },
+  edges: {
+    id: 'edges',
+    label: 'Edges (E)',
+    category: 'core',
+    title: 'Edges / Links (E)',
+    mathNotation: 'E ⊆ V × V. Undirected: {u, v} unordered pairs: |E| = 9',
+    descriptionEnglish: 'Edges represent connections or relationships between pairs of vertices. In this network, |E| = 9.',
+    descriptionHinglish: 'Edges do nodes ke beech sambandh (connections) darshate hain. Is network mein |E| = 9 edges hain.',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Edge Count |E|', value: '9' },
+      { label: 'Max Possible Edges', value: '21 (V*(V-1)/2)' },
+      { label: 'Graph Density', value: '0.43 (Sparse)' },
+      { label: 'Symmetry', value: 'Undirected {u, v}' },
+    ],
+    dsaRelevance: 'Edge density decides whether an Adjacency List O(V + E) or Adjacency Matrix O(V²) is optimal.',
+  },
+  degree: {
+    id: 'degree',
+    label: 'Degree & Neighbors',
+    category: 'core',
+    title: 'Degree & Connected Neighbors',
+    mathNotation: 'deg(v) = |N(v)|. Handshaking Lemma: Σ deg(v) = 2|E|',
+    descriptionEnglish: 'The degree of a vertex is the count of edges incident to it. Neighbors are all directly adjacent nodes.',
+    descriptionHinglish: 'Kisi vertex ka degree usse judi edges ki sankhya hai. Neighbors direct connected nodes hote hain.',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'neighbors',
+    properties: [
+      { label: 'Handshaking Lemma', value: 'Σ deg(v) = 2|E| = 18' },
+      { label: 'Sum of Degrees', value: '18 (Always Even)' },
+      { label: 'Average Degree', value: '2.57' },
+      { label: 'Max Degree node', value: 'Node [3] (deg = 4)' },
+    ],
+    dsaRelevance: 'Degree determines traversal branching in BFS/DFS. In bipartite graphs, degrees sum to |E| per partition.',
+  },
+  multigraph: {
+    id: 'multigraph',
+    label: 'Self-Loops & Multi-Edge',
+    category: 'core',
+    title: 'Multigraph (Pseudograph)',
+    mathNotation: 'Self-loop: (u, u) ∈ E. Parallel edges: e₁ ≠ e₂ with same endpoints.',
+    descriptionEnglish: 'A multigraph allows parallel edges between the same two nodes or self-loops incident to the same node.',
+    descriptionHinglish: 'Multigraph mein ek hi node par self-loop aur do nodes ke beech multiple edges allowed hoti hain.',
+    nodes: [
+      { id: '1', x: 120, y: 170 },
+      { id: '2', x: 260, y: 170 },
+      { id: '3', x: 400, y: 170 },
+    ],
+    edges: [
+      { u: '1', v: '1', isSelfLoop: true },
+      { u: '1', v: '2' },
+      { u: '2', v: '3', curve: -35 },
+      { u: '2', v: '3', curve: 35 },
+    ],
+    isMultiGraph: true,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Self-Loops', value: '1 on Node [1]' },
+      { label: 'Parallel Edges', value: '2 between [2] and [3]' },
+      { label: 'Simple Graph?', value: 'No (Multigraph)' },
+      { label: 'Handshaking contribution', value: 'Self-loop adds 2 to degree' },
+    ],
+    dsaRelevance: 'Most DSA shortest path algorithms require sanitizing multigraphs into simple graphs by taking min edge weights.',
+  },
+  null_graph: {
+    id: 'null_graph',
+    label: 'Null / Empty Graph',
+    category: 'types',
+    title: 'Null Graph (N₅)',
+    mathNotation: 'N_n = (V, ∅) where |V| = 5, |E| = 0. All vertices are isolated.',
+    descriptionEnglish: 'A Null or Empty Graph contains vertices but zero edges. Every vertex has degree 0.',
+    descriptionHinglish: 'Null Graph mein vertices hote hain par koi edge nahi hoti (|E| = 0). Sabhi nodes isolated hain.',
+    nodes: [
+      { id: '1', x: 110, y: 100 },
+      { id: '2', x: 260, y: 70 },
+      { id: '3', x: 410, y: 100 },
+      { id: '4', x: 170, y: 250 },
+      { id: '5', x: 350, y: 250 },
+    ],
+    edges: [],
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Vertex Count |V|', value: '5' },
+      { label: 'Edge Count |E|', value: '0' },
+      { label: 'Degree of all nodes', value: '0' },
+      { label: 'Connected Components', value: '5' },
+    ],
+    dsaRelevance: 'Represents initial state in Disjoint Set Union (DSU / Kruskal) before edges are united.',
+  },
+  trivial_graph: {
+    id: 'trivial_graph',
+    label: 'Trivial Graph',
+    category: 'types',
+    title: 'Trivial Graph (K₁)',
+    mathNotation: 'G = ({1}, ∅). |V| = 1, |E| = 0. Smallest possible non-empty graph.',
+    descriptionEnglish: 'A Trivial Graph consists of a single isolated vertex with no edges.',
+    descriptionHinglish: 'Trivial Graph mein sirf 1 akela node hota hai aur koi edge nahi hoti.',
+    nodes: [
+      { id: '1', x: 260, y: 170 },
+    ],
+    edges: [],
+    defaultInspectNode: '1',
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Vertex Count |V|', value: '1' },
+      { label: 'Edge Count |E|', value: '0' },
+      { label: 'deg(1)', value: '0' },
+      { label: 'Is Connected?', value: 'Trivially Yes' },
+    ],
+    dsaRelevance: 'Common edge-case boundary check in coding interviews: single-node inputs for BFS/DFS and path algorithms.',
+  },
+  complete_graph: {
+    id: 'complete_graph',
+    label: 'Complete Graph (Kn)',
+    category: 'types',
+    title: 'Complete Graph (K₅)',
+    mathNotation: 'K_n: |E| = n(n-1)/2. For K₅: |E| = 5(4)/2 = 10 edges.',
+    descriptionEnglish: 'A Complete Graph is a simple graph where every pair of distinct vertices is connected by an edge.',
+    descriptionHinglish: 'Complete Graph mein har do nodes ke beech direct edge hoti hai (maximum possible connections).',
+    nodes: [
+      { id: '1', x: 260, y: 60 },
+      { id: '2', x: 400, y: 145 },
+      { id: '3', x: 350, y: 275 },
+      { id: '4', x: 170, y: 275 },
+      { id: '5', x: 120, y: 145 },
+    ],
+    edges: [
+      { u: '1', v: '2' },
+      { u: '1', v: '3' },
+      { u: '1', v: '4' },
+      { u: '1', v: '5' },
+      { u: '2', v: '3' },
+      { u: '2', v: '4' },
+      { u: '2', v: '5' },
+      { u: '3', v: '4' },
+      { u: '3', v: '5' },
+      { u: '4', v: '5' },
+    ],
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Vertex Count |V|', value: '5' },
+      { label: 'Edge Count |E|', value: '10' },
+      { label: 'Regularity', value: '4-Regular (n-1)' },
+      { label: 'Density', value: '1.0 (Max Possible)' },
+    ],
+    dsaRelevance: 'Worst-case density scenario for adjacency matrices. Prim\'s algorithm O(V²) outperforms Kruskal\'s on complete graphs.',
+  },
+  directed_graph: {
+    id: 'directed_graph',
+    label: 'Directed Graph',
+    category: 'types',
+    title: 'Directed Graph (Digraph)',
+    mathNotation: 'E ⊆ V × V. Ordered pairs (u, v) representing direction u → v.',
+    descriptionEnglish: 'Edges have specific direction from source to destination. Nodes have distinct in-degrees and out-degrees.',
+    descriptionHinglish: 'Directed Graph mein edges arrows ke sath direction darshati hain (u se v tak).',
+    nodes: [
+      { id: '1', x: 85, y: 170 },
+      { id: '2', x: 215, y: 80 },
+      { id: '3', x: 215, y: 260 },
+      { id: '4', x: 335, y: 80 },
+      { id: '5', x: 335, y: 260 },
+      { id: '6', x: 445, y: 170 },
+    ],
+    edges: [
+      { u: '1', v: '2', weight: 3, directed: true },
+      { u: '1', v: '3', weight: 2, directed: true },
+      { u: '2', v: '4', weight: 4, directed: true },
+      { u: '3', v: '2', weight: 1, directed: true },
+      { u: '3', v: '5', weight: 5, directed: true },
+      { u: '4', v: '6', weight: 2, directed: true },
+      { u: '5', v: '4', weight: 3, directed: true },
+      { u: '5', v: '6', weight: 6, directed: true },
+    ],
+    isDirected: true,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Edge Count |E|', value: '8 directed' },
+      { label: 'In-Degree sum', value: 'Σ in-deg = 8' },
+      { label: 'Out-Degree sum', value: 'Σ out-deg = 8' },
+      { label: 'Symmetric matrix?', value: 'No (Asymmetric)' },
+    ],
+    dsaRelevance: 'Models web links (PageRank), task dependency schedules, and is the prerequisite for Topological Sort.',
+  },
+  undirected_graph: {
+    id: 'undirected_graph',
+    label: 'Undirected Graph',
+    category: 'types',
+    title: 'Undirected Graph',
+    mathNotation: 'E ⊆ {{u, v} | u, v ∈ V}. Bidirectional edges: {u, v} ≡ {v, u}.',
+    descriptionEnglish: 'Edges represent bidirectional symmetrical connections with no fixed orientation.',
+    descriptionHinglish: 'Undirected Graph mein edges dono directions mein chal sakti hain ({u, v} barabar hai {v, u}).',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Orientation', value: 'Bidirectional' },
+      { label: 'Matrix Property', value: 'Symmetric (M = Mᵀ)' },
+      { label: 'Edge Count |E|', value: '9' },
+      { label: 'Handshaking lemma', value: 'Holds' },
+    ],
+    dsaRelevance: 'Used in social networks (Facebook mutual friends), 2-way road networks, and Minimum Spanning Trees.',
+  },
+  weighted_graph: {
+    id: 'weighted_graph',
+    label: 'Weighted Graph',
+    category: 'types',
+    title: 'Weighted Graph',
+    mathNotation: 'G = (V, E, w) where w: E → ℝ⁺ assigns numerical cost to each edge.',
+    descriptionEnglish: 'Every edge carries a numeric weight representing cost, physical distance, latency, or capacity.',
+    descriptionHinglish: 'Har edge par ek number (weight ya cost) hota hai jo distance ya latency darshata hai.',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: [
+      { u: '1', v: '2', weight: 4 },
+      { u: '1', v: '3', weight: 2 },
+      { u: '1', v: '4', weight: 5 },
+      { u: '2', v: '3', weight: 1 },
+      { u: '2', v: '5', weight: 7 },
+      { u: '3', v: '5', weight: 3 },
+      { u: '3', v: '6', weight: 8 },
+      { u: '4', v: '7', weight: 6 },
+      { u: '6', v: '7', weight: 2 },
+    ],
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Weights Range', value: '1 to 8' },
+      { label: 'Min Weight', value: '1 (Edge 2↔3)' },
+      { label: 'Max Weight', value: '8 (Edge 3↔6)' },
+      { label: 'Total Weight', value: '38' },
+    ],
+    dsaRelevance: 'Dijkstra and Prim algorithms rely strictly on non-negative weighted edges; Bellman-Ford supports negative weights.',
+  },
+  unweighted_graph: {
+    id: 'unweighted_graph',
+    label: 'Unweighted Graph',
+    category: 'types',
+    title: 'Unweighted Graph',
+    mathNotation: '∀ e ∈ E, weight(e) = 1 (Uniform unit cost per edge).',
+    descriptionEnglish: 'All edges carry equal cost. Shortest path is solved directly using standard BFS in O(V + E).',
+    descriptionHinglish: 'Sabhi edges ka weight saman (1) hota hai. Shortest path direct BFS se O(V + E) mein mil jata hai.',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES.map(e => ({ u: e.u, v: e.v })),
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Edge Weights', value: 'None (Unit 1)' },
+      { label: 'Shortest Path Time', value: 'O(V + E) via BFS' },
+      { label: 'Priority Queue?', value: 'Not needed' },
+      { label: 'Storage', value: 'Simple Adjacency List' },
+    ],
+    dsaRelevance: 'When unweighted, BFS provides the exact minimum hop count shortest path without priority queues.',
+  },
+  connected_graph: {
+    id: 'connected_graph',
+    label: 'Connected Graph',
+    category: 'structures',
+    title: 'Connected Graph',
+    mathNotation: '∀ u, v ∈ V, ∃ path between u and v. Connected components = 1.',
+    descriptionEnglish: 'A graph is connected if there is at least one path between every pair of vertices.',
+    descriptionHinglish: 'Graph connected hota hai jab kisi bhi node se doosre node tak path available ho (1 component).',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Connected Components', value: '1' },
+      { label: 'Min Edges for V=7', value: '6 (Tree minimum)' },
+      { label: 'Actual Edges', value: '9' },
+      { label: 'BFS reachability', value: '100% from any node' },
+    ],
+    dsaRelevance: 'A single BFS or DFS invocation visits all vertices if and only if the graph is connected.',
+  },
+  disconnected_graph: {
+    id: 'disconnected_graph',
+    label: 'Disconnected Graph',
+    category: 'structures',
+    title: 'Disconnected Graph (2 Components)',
+    mathNotation: 'G = C₁ ∪ C₂. V(C₁) ∩ V(C₂) = ∅, E(C₁, C₂) = ∅.',
+    descriptionEnglish: 'A disconnected graph contains two or more independent subgraphs with no edge connecting them.',
+    descriptionHinglish: 'Disconnected graph mein do alag independent components hote hain jinme koi aapsi edge nahi hoti.',
+    nodes: [
+      { id: '1', x: 90, y: 115 },
+      { id: '2', x: 200, y: 115 },
+      { id: '3', x: 145, y: 235 },
+      { id: '4', x: 335, y: 115 },
+      { id: '5', x: 435, y: 115 },
+      { id: '6', x: 335, y: 235 },
+      { id: '7', x: 435, y: 235 },
+    ],
+    edges: [
+      { u: '1', v: '2' },
+      { u: '2', v: '3' },
+      { u: '3', v: '1' },
+      { u: '4', v: '5' },
+      { u: '4', v: '6' },
+      { u: '5', v: '7' },
+      { u: '6', v: '7' },
+    ],
+    isDisconnected: true,
+    components: [
+      { id: 'c1', label: 'Component 1 (C₁)', x: 50, y: 55, width: 190, height: 230 },
+      { id: 'c2', label: 'Component 2 (C₂)', x: 285, y: 55, width: 195, height: 230 },
+    ],
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Connected Components', value: '2 (C₁ & C₂)' },
+      { label: 'Component 1 Nodes', value: '{1, 2, 3}' },
+      { label: 'Component 2 Nodes', value: '{4, 5, 6, 7}' },
+      { label: 'Cross-Component Edges', value: '0' },
+    ],
+    dsaRelevance: 'Solving "Number of Connected Components" (LeetCode 323) using Disjoint Set Union (DSU) or outer BFS loops.',
+  },
+  cyclic_graph: {
+    id: 'cyclic_graph',
+    label: 'Cyclic Graph',
+    category: 'structures',
+    title: 'Cyclic Graph (Cycle Present)',
+    mathNotation: '∃ closed walk v₀-v₁-...-vₖ with v₀ = vₖ. Highlighted cycle: 1-2-3-4-5-1.',
+    descriptionEnglish: 'A graph is cyclic if it contains at least one cycle where a node can reach itself through distinct edges.',
+    descriptionHinglish: 'Cyclic graph mein kam se kam ek aisi loop hoti hai jisme chalte hue wapas usi node par aa sakte hain.',
+    nodes: [
+      { id: '1', x: 130, y: 90 },
+      { id: '2', x: 260, y: 70 },
+      { id: '3', x: 390, y: 150 },
+      { id: '4', x: 310, y: 265 },
+      { id: '5', x: 150, y: 265 },
+    ],
+    edges: [
+      { u: '1', v: '2', isCycle: true },
+      { u: '2', v: '3', isCycle: true },
+      { u: '3', v: '4', isCycle: true },
+      { u: '4', v: '5', isCycle: true },
+      { u: '5', v: '1', isCycle: true },
+      { u: '2', v: '4' },
+    ],
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Cycle Present?', value: 'Yes (Length 5)' },
+      { label: 'Is a Tree?', value: 'No (Trees are acyclic)' },
+      { label: 'Cycle Detection', value: 'DFS back-edges / DSU' },
+      { label: 'Total Edges', value: '6' },
+    ],
+    dsaRelevance: 'Deadlock detection in operating systems and detecting infinite dependency loops in package managers.',
+  },
+  dag_graph: {
+    id: 'dag_graph',
+    label: 'DAG (Acyclic)',
+    category: 'structures',
+    title: 'Directed Acyclic Graph (DAG)',
+    mathNotation: 'Directed graph with NO directed cycles. Admits a topological ordering.',
+    descriptionEnglish: 'A DAG is a directed graph with no closed paths. Nodes can be sorted in a linear sequence.',
+    descriptionHinglish: 'DAG ek directed graph hai jisme koi cycle nahi hoti. Isme topological ordering sambhav hai.',
+    nodes: [
+      { id: '1', x: 85, y: 170 },
+      { id: '2', x: 210, y: 85 },
+      { id: '3', x: 210, y: 255 },
+      { id: '4', x: 335, y: 85 },
+      { id: '5', x: 335, y: 255 },
+      { id: '6', x: 445, y: 170 },
+    ],
+    edges: [
+      { u: '1', v: '2', directed: true },
+      { u: '1', v: '3', directed: true },
+      { u: '2', v: '4', directed: true },
+      { u: '3', v: '4', directed: true },
+      { u: '3', v: '5', directed: true },
+      { u: '4', v: '6', directed: true },
+      { u: '5', v: '6', directed: true },
+    ],
+    isDirected: true,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Has Cycle?', value: 'No (Acyclic)' },
+      { label: 'Topological Sort', value: 'Valid (1, 2/3, 4/5, 6)' },
+      { label: 'Source Node', value: 'Node [1] (in-deg 0)' },
+      { label: 'Sink Node', value: 'Node [6] (out-deg 0)' },
+    ],
+    dsaRelevance: 'Powers Kahn\'s algorithm, LeetCode Course Schedule, git commit history, and build systems (Make/Webpack).',
+  },
+  bipartite_graph: {
+    id: 'bipartite_graph',
+    label: 'Bipartite Graph',
+    category: 'structures',
+    title: 'Bipartite Graph (2 Partitions)',
+    mathNotation: 'V = U ∪ V, U ∩ V = ∅. Every edge connects a node in U to a node in V.',
+    descriptionEnglish: 'Vertices are partitioned into two disjoint sets U and V with edges only between the sets.',
+    descriptionHinglish: 'Graph do alag sets U aur V mein banta hota hai jisme sabhi edges U se V mein connect hoti hain.',
+    nodes: [
+      { id: 'U1', x: 140, y: 85, set: 'U' },
+      { id: 'U2', x: 140, y: 170, set: 'U' },
+      { id: 'U3', x: 140, y: 255, set: 'U' },
+      { id: 'V1', x: 380, y: 85, set: 'V' },
+      { id: 'V2', x: 380, y: 170, set: 'V' },
+      { id: 'V3', x: 380, y: 255, set: 'V' },
+    ],
+    edges: [
+      { u: 'U1', v: 'V1' },
+      { u: 'U1', v: 'V2' },
+      { u: 'U2', v: 'V1' },
+      { u: 'U2', v: 'V3' },
+      { u: 'U3', v: 'V2' },
+      { u: 'U3', v: 'V3' },
+    ],
+    isBipartite: true,
+    defaultTab: 'theory',
+    properties: [
+      { label: 'Set U', value: '{U1, U2, U3}' },
+      { label: 'Set V', value: '{V1, V2, V3}' },
+      { label: 'Internal Edges (U-U / V-V)', value: '0 (None)' },
+      { label: 'Odd Length Cycle?', value: 'Impossible (2-Colorable)' },
+    ],
+    dsaRelevance: 'Graph 2-coloring test via BFS/DFS (LeetCode 785) and Maximum Bipartite Matching algorithms.',
+  },
+  adj_matrix: {
+    id: 'adj_matrix',
+    label: 'Adj Matrix',
+    category: 'representations',
+    title: 'Adjacency Matrix (7×7 Grid)',
+    mathNotation: 'M[u][v] = 1 (or weight) if (u, v) ∈ E, else 0. Space: O(V²). Lookup: O(1).',
+    descriptionEnglish: 'A 2D matrix of size V × V. Symmetric for undirected graphs. Best for dense graphs.',
+    descriptionHinglish: 'V × V size ka 2D matrix. Undirected graph ke liye symmetric hota hai.',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'matrix',
+    properties: [
+      { label: 'Space Complexity', value: 'O(V²)' },
+      { label: 'Edge Lookup', value: 'O(1) Instant' },
+      { label: 'Matrix Dimensions', value: '7 × 7 (49 cells)' },
+      { label: 'Symmetry', value: 'Symmetric (Undirected)' },
+    ],
+    dsaRelevance: 'Used in Warshall\'s and Floyd-Warshall all-pairs shortest paths algorithms.',
+  },
+  adj_list: {
+    id: 'adj_list',
+    label: 'Adj List',
+    category: 'representations',
+    title: 'Adjacency List (Linked Vectors)',
+    mathNotation: 'adj[u] = [v₁, v₂, ...] for all neighbors of vertex u. Space: O(V + E).',
+    descriptionEnglish: 'An array of dynamic lists where each cell stores only connected neighbor vertices.',
+    descriptionHinglish: 'Array of lists jisme har index par sirf jude huye neighbors store hote hain. Space O(V + E).',
+    nodes: [
+      { id: '1', x: 120, y: 65 },
+      { id: '4', x: 320, y: 65 },
+      { id: '2', x: 80, y: 170 },
+      { id: '3', x: 250, y: 170 },
+      { id: '7', x: 440, y: 170 },
+      { id: '5', x: 160, y: 275 },
+      { id: '6', x: 360, y: 275 },
+    ],
+    edges: GRAPH_7_EDGES,
+    defaultTab: 'list',
+    properties: [
+      { label: 'Space Complexity', value: 'O(V + E) Optimal' },
+      { label: 'Iterate Neighbors', value: 'O(deg(u))' },
+      { label: 'Best For', value: 'Sparse Graphs (95%+ DSA problems)' },
+      { label: 'Storage Savings', value: 'Saves 60%+ memory vs Matrix' },
+    ],
+    dsaRelevance: 'The universal representation used in competitive programming and technical interviews.',
+  },
+};
+
 export const GraphOperationalPanel: React.FC = () => {
   const lesson = useLessonStore(s => s.lesson);
   const setCustomSteps = useLessonStore(s => s.setCustomSteps);
@@ -117,18 +709,14 @@ export const GraphOperationalPanel: React.FC = () => {
   const isAStar = lesson?.topic === 'graph_astar';
 
   const [selectedInspectNode, setSelectedInspectNode] = useState<string>('1');
+  const [activeConceptKey, setActiveConceptKey] = useState<string>('vertices');
   const [startNode, setStartNode] = useState<string>('1');
   const [targetNode, setTargetNode] = useState<string>('6');
   const [graphPreset, setGraphPreset] = useState<'1' | '2'>('1');
-  const [edgesList] = useState(GRAPH_7_EDGES);
 
   const activeNodes = graphPreset === '2'
     ? (isDijkstra || isKruskal || isPrims || isAStar ? DIJKSTRA_GRAPH2_NODES : GRAPH_GRAPH2_NODES)
     : (isDijkstra || isKruskal || isPrims || isAStar ? DIJKSTRA_NODES : GRAPH_7_NODES);
-
-  const activeEdges = graphPreset === '2'
-    ? (isDijkstra || isKruskal || isPrims || isAStar ? DIJKSTRA_GRAPH2_EDGES : GRAPH_GRAPH2_EDGES)
-    : (isDijkstra || isKruskal || isPrims || isAStar ? DIJKSTRA_EDGES : GRAPH_7_EDGES);
 
   // Switch Preset Handler
   const handleSwitchPreset = (p: '1' | '2') => {
@@ -147,39 +735,91 @@ export const GraphOperationalPanel: React.FC = () => {
   };
 
   // Dispatch Fundamentals Graph Steps
-  const updateGraphState = useCallback((
-    edges: { u: string; v: string; weight?: number }[],
-    inspectNode: string,
-    actionMsg: string,
-    activeTab: 'matrix' | 'list' | 'neighbors' | 'weights' = 'neighbors'
+  const selectFundamentalsConcept = useCallback((
+    conceptId: string,
+    nodeOverride?: string,
+    tabOverride?: 'theory' | 'matrix' | 'list' | 'neighbors'
   ) => {
-    const eList = (edges && edges.length > 0) ? edges : activeEdges;
-    const neighbors = eList
-      .filter(e => e.u === inspectNode || e.v === inspectNode)
-      .map(e => (e.u === inspectNode ? e.v : e.u));
+    const concept = FUNDAMENTALS_CONCEPTS[conceptId] || FUNDAMENTALS_CONCEPTS.vertices;
+    const inspectNode = nodeOverride || concept.defaultInspectNode || concept.nodes[0]?.id || '1';
+    const activeTab = tabOverride || concept.defaultTab || 'theory';
+
+    // Calculate neighbors for the inspected node
+    const isDirected = concept.isDirected === true;
+    const inNeighbors: string[] = [];
+    const outNeighbors: string[] = [];
+    const neighborsSet = new Set<string>();
+
+    concept.edges.forEach(e => {
+      if (e.isSelfLoop && e.u === inspectNode) {
+        neighborsSet.add(e.u);
+      } else if (isDirected || e.directed) {
+        if (e.u === inspectNode) {
+          outNeighbors.push(e.v);
+          neighborsSet.add(e.v);
+        }
+        if (e.v === inspectNode) {
+          inNeighbors.push(e.u);
+          neighborsSet.add(e.u);
+        }
+      } else {
+        if (e.u === inspectNode) neighborsSet.add(e.v);
+        if (e.v === inspectNode) neighborsSet.add(e.u);
+      }
+    });
+
+    const neighbors = Array.from(neighborsSet);
+    const inDeg = inNeighbors.length;
+    const outDeg = outNeighbors.length;
+    const degree = isDirected ? inDeg + outDeg : neighbors.length;
 
     const step: ExecutionStep = {
       step: 1,
       lineNum: 1,
-      explanationEnglish: `Graph Fundamentals: Inspecting Node [${inspectNode}]. Connected Neighbors: [${neighbors.length > 0 ? neighbors.join(', ') : 'None'}]. ${actionMsg}`,
-      explanationHinglish: `Graph Fundamentals: Node [${inspectNode}] inspect kiya. Connected Neighbors: [${neighbors.length > 0 ? neighbors.join(', ') : 'Koi nahi'}]. ${actionMsg}`,
+      explanationEnglish: `[${concept.title}]: ${concept.descriptionEnglish} Inspecting Node [${inspectNode}] (Degree: ${degree}).`,
+      explanationHinglish: `[${concept.title}]: ${concept.descriptionHinglish} Node [${inspectNode}] inspect kiya (Degree: ${degree}).`,
       memorySnapshot: {
+        concept: concept.id,
+        conceptTitle: concept.title,
+        description: concept.descriptionEnglish,
+        category: concept.category,
+        mathNotation: concept.mathNotation,
+        properties: concept.properties,
+        dsaRelevance: concept.dsaRelevance,
+        nodes: concept.nodes,
+        edges: concept.edges,
+        isDirected: concept.isDirected ?? false,
+        isMultiGraph: concept.isMultiGraph ?? false,
+        isBipartite: concept.isBipartite ?? false,
+        isDisconnected: concept.isDisconnected ?? false,
+        components: concept.components,
+        activeTab,
         inspectNode,
         neighbors,
+        inNeighbors,
+        outNeighbors,
+        inDegree: inDeg,
+        outDegree: outDeg,
+        degree,
         inspectingNeighbors: neighbors,
-        degree: neighbors.length,
-        activeTab,
-        concept: activeTab === 'matrix' ? 'ADJACENCY_MATRIX' : activeTab === 'list' ? 'ADJACENCY_LIST' : activeTab === 'weights' ? 'EDGE_WEIGHTS' : 'NEIGHBORS',
       },
-      consoleOutput: `> Node [${inspectNode}] Degree = ${neighbors.length} (Neighbors: ${neighbors.join(', ') || 'None'})`,
+      consoleOutput: `> [${concept.title}] Node [${inspectNode}] Degree = ${degree} (Neighbors: ${neighbors.join(', ') || 'None'})`,
       animationEvent: { type: 'NONE' } as any,
     };
 
+    setActiveConceptKey(conceptId);
     setSelectedInspectNode(inspectNode);
     setCustomSteps([step]);
     setIsPlaying(false);
     setTimeout(() => goToStep(0), 20);
-  }, [setCustomSteps, goToStep, setIsPlaying, activeEdges]);
+  }, [setCustomSteps, goToStep, setIsPlaying]);
+
+  // Initial auto-select on mount for graph_basics
+  useEffect(() => {
+    if (lesson?.topic === 'graph_basics') {
+      selectFundamentalsConcept('vertices');
+    }
+  }, [lesson?.topic, selectFundamentalsConcept]);
 
   // Generate BFS Steps
   const handleRunBfs = useCallback((startV: string, pOverride?: '1' | '2') => {
@@ -1091,10 +1731,10 @@ export const GraphOperationalPanel: React.FC = () => {
       handleRunPrims(defaultStart);
     } else if (isAStar) {
       handleRunAStar(defaultStart, defaultTarget);
-    } else {
-      updateGraphState(activeEdges, defaultStart, 'Default Mesh Network Initialized.');
+    } else if (lesson?.topic === 'graph_basics') {
+      selectFundamentalsConcept(activeConceptKey || 'vertices', defaultStart);
     }
-  }, [lesson?.id, graphPreset, isBfs, isDfs, isDijkstra, isKruskal, isPrims, isAStar, handleRunBfs, handleRunDfs, handleRunDijkstra, handleRunKruskal, handleRunPrims, handleRunAStar, updateGraphState, activeEdges]);
+  }, [lesson?.id, lesson?.topic, graphPreset, isBfs, isDfs, isDijkstra, isKruskal, isPrims, isAStar, handleRunBfs, handleRunDfs, handleRunDijkstra, handleRunKruskal, handleRunPrims, handleRunAStar, selectFundamentalsConcept, activeConceptKey]);
 
   return (
     <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
@@ -1110,6 +1750,33 @@ export const GraphOperationalPanel: React.FC = () => {
           {isBfs ? 'FIFO Queue Simulation' : isDfs ? 'LIFO Stack Backtracking' : isDijkstra ? 'Priority Queue' : isKruskal ? 'Disjoint Set Union (DSU)' : isPrims ? 'Min-Heap Priority Queue' : isAStar ? 'Heuristic f(n) = g + h' : 'Vertices'}
         </span>
       </div>
+
+      {/* Pinned Stable Node Inspector (Graph Fundamentals, Never Scrolls) */}
+      {!isBfs && !isDfs && !isDijkstra && !isKruskal && !isPrims && !isAStar && (
+        <div className="px-3.5 py-2.5 bg-[#060814] border-b border-slate-800/90 shrink-0 font-mono flex flex-col gap-1.5 shadow-md">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider px-0.5">
+            <span className="text-amber-400 font-bold">Inspect Node</span>
+            <span className="text-[10px] text-amber-300 font-black px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-800">
+              Active: Node [{selectedInspectNode}]
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {((FUNDAMENTALS_CONCEPTS[activeConceptKey] || FUNDAMENTALS_CONCEPTS.vertices).nodes).map(n => n.id).map(id => (
+              <button
+                key={id}
+                onClick={() => selectFundamentalsConcept(activeConceptKey, id)}
+                className={`min-w-7 h-7 px-2 rounded-md font-mono text-xs font-bold transition-all border ${
+                  selectedInspectNode === id
+                    ? 'bg-amber-500 text-slate-950 border-amber-300 font-black shadow-sm'
+                    : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-300'
+                }`}
+              >
+                {id}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Control Panel Body */}
       <div className="flex-1 overflow-y-auto p-3.5 flex flex-col justify-between gap-4">
@@ -1251,59 +1918,116 @@ export const GraphOperationalPanel: React.FC = () => {
             </div>
           ) : (
             /* GRAPH FUNDAMENTALS CONTROLS */
-            <div className="flex flex-col gap-2.5">
-              {/* Compact Concept Selector Buttons */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-bold px-0.5 flex items-center gap-1">
-                  <Eye size={11} className="text-cyan-400" /> SELECT CONCEPT TO VISUALIZE
-                </span>
-
-                <div className="grid grid-cols-2 gap-1.5 font-mono text-[11px]">
-                  <button
-                    onClick={() => updateGraphState(edgesList, selectedInspectNode, `Visualizing Adjacency Matrix (7×7 Grid).`, 'matrix')}
-                    className="py-1.5 px-2 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-200 font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
-                  >
-                    📊 Matrix
-                  </button>
-                  <button
-                    onClick={() => updateGraphState(edgesList, selectedInspectNode, `Visualizing Adjacency List (Linked Vectors).`, 'list')}
-                    className="py-1.5 px-2 rounded-lg bg-purple-950/50 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
-                  >
-                    🔗 Adj List
-                  </button>
-                  <button
-                    onClick={() => updateGraphState(edgesList, selectedInspectNode, `Visualizing Node Neighbors & Degree.`, 'neighbors')}
-                    className="py-1.5 px-2 rounded-lg bg-amber-950/50 hover:bg-amber-900/80 border border-amber-500/40 text-amber-200 font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
-                  >
-                    🎯 Neighbors
-                  </button>
-                  <button
-                    onClick={() => updateGraphState(edgesList, selectedInspectNode, `Visualizing Floating Edge Weights.`, 'weights')}
-                    className="py-1.5 px-2 rounded-lg bg-emerald-950/50 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-200 font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
-                  >
-                    ⚖️ Weights
-                  </button>
+            <div className="flex flex-col gap-3 font-mono">
+              {/* Section A: Core Elements */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider px-0.5 border-b border-slate-800/80 pb-0.5">
+                  <span>Core Elements</span>
+                  <span className="text-[8.5px] text-slate-500">Definitions</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-[10.5px]">
+                  {[
+                    { id: 'vertices', label: 'Vertices (V)' },
+                    { id: 'edges', label: 'Edges (E)' },
+                    { id: 'degree', label: 'Degree & Neighbors' },
+                    { id: 'multigraph', label: 'Self-Loops / Multi-Edge' },
+                  ].map(btn => (
+                    <button
+                      key={btn.id}
+                      onClick={() => selectFundamentalsConcept(btn.id)}
+                      className={`py-1.5 px-2 rounded-md font-mono text-[10.5px] text-left transition-all border ${
+                        activeConceptKey === btn.id
+                          ? 'bg-slate-800 border-indigo-400 text-indigo-200 font-bold'
+                          : 'bg-slate-950/90 hover:bg-slate-900 border-slate-800/90 text-slate-300'
+                      }`}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Compact Node Inspector Bar */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-bold px-0.5 flex items-center gap-1">
-                  <Eye size={11} className="text-amber-400" /> INSPECT NODE
-                </span>
-
-                <div className="grid grid-cols-7 gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                  {GRAPH_7_NODES.map(id => (
+              {/* Section B: Graph Types */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider px-0.5 border-b border-slate-800/80 pb-0.5">
+                  <span>Graph Types</span>
+                  <span className="text-[8.5px] text-slate-500">Classification</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-[10.5px]">
+                  {[
+                    { id: 'null_graph', label: 'Null / Empty Graph' },
+                    { id: 'trivial_graph', label: 'Trivial Graph (V=1)' },
+                    { id: 'directed_graph', label: 'Directed Graph' },
+                    { id: 'undirected_graph', label: 'Undirected Graph' },
+                    { id: 'weighted_graph', label: 'Weighted Graph' },
+                    { id: 'unweighted_graph', label: 'Unweighted Graph' },
+                    { id: 'complete_graph', label: 'Complete Graph (Kn)' },
+                  ].map(btn => (
                     <button
-                      key={id}
-                      onClick={() => updateGraphState(edgesList, id, `Inspecting Node [${id}]: Neighbors & Degree.`)}
-                      className={`py-1 rounded-lg font-mono text-xs font-bold transition-all border ${
-                        selectedInspectNode === id
-                          ? 'bg-amber-500 text-slate-950 border-amber-300 font-black shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                          : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                      key={btn.id}
+                      onClick={() => selectFundamentalsConcept(btn.id)}
+                      className={`py-1.5 px-2 rounded-md font-mono text-[10.5px] text-left transition-all border ${
+                        activeConceptKey === btn.id
+                          ? 'bg-slate-800 border-indigo-400 text-indigo-200 font-bold'
+                          : 'bg-slate-950/90 hover:bg-slate-900 border-slate-800/90 text-slate-300'
                       }`}
                     >
-                      {id}
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section C: Topological Structures */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider px-0.5 border-b border-slate-800/80 pb-0.5">
+                  <span>Topological Structures</span>
+                  <span className="text-[8.5px] text-slate-500">Connectivity</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-[10.5px]">
+                  {[
+                    { id: 'connected_graph', label: 'Connected Graph' },
+                    { id: 'disconnected_graph', label: 'Disconnected (2 Subgraphs)' },
+                    { id: 'cyclic_graph', label: 'Cyclic Graph' },
+                    { id: 'dag_graph', label: 'DAG (Acyclic)' },
+                    { id: 'bipartite_graph', label: 'Bipartite (U & V)' },
+                  ].map(btn => (
+                    <button
+                      key={btn.id}
+                      onClick={() => selectFundamentalsConcept(btn.id)}
+                      className={`py-1.5 px-2 rounded-md font-mono text-[10.5px] text-left transition-all border ${
+                        activeConceptKey === btn.id
+                          ? 'bg-slate-800 border-indigo-400 text-indigo-200 font-bold'
+                          : 'bg-slate-950/90 hover:bg-slate-900 border-slate-800/90 text-slate-300'
+                      }`}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section D: Data Representations */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider px-0.5 border-b border-slate-800/80 pb-0.5">
+                  <span>Data Representations</span>
+                  <span className="text-[8.5px] text-slate-500">Storage</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-[10.5px]">
+                  {[
+                    { id: 'adj_matrix', label: 'Adjacency Matrix' },
+                    { id: 'adj_list', label: 'Adjacency List' },
+                  ].map(btn => (
+                    <button
+                      key={btn.id}
+                      onClick={() => selectFundamentalsConcept(btn.id)}
+                      className={`py-1.5 px-2 rounded-md font-mono text-[10.5px] text-left transition-all border ${
+                        activeConceptKey === btn.id
+                          ? 'bg-slate-800 border-indigo-400 text-indigo-200 font-bold'
+                          : 'bg-slate-950/90 hover:bg-slate-900 border-slate-800/90 text-slate-300'
+                      }`}
+                    >
+                      {btn.label}
                     </button>
                   ))}
                 </div>

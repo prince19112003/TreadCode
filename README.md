@@ -67,6 +67,7 @@ All detailed architectural, security, algorithmic, curriculum, and operational m
 | Document | Description |
 | :--- | :--- |
 | 🏗️ [**System Architecture Guide**](file:///c:/Users/princ/Desktop/Code%20Visualizer/documentation/ARCHITECTURE.md) | Deep technical breakdown of the memory model, execution stepper, ink engine, update pipeline, and source code mapping. |
+| 🎨 [**Design System & Interface Hierarchy**](file:///c:/Users/princ/Desktop/Code%20Visualizer/documentation/DESIGN.md) | Complete UI design tokens, component hierarchy tree, data interfaces, state machine models, and 3-pane layout architecture. |
 | 🛡️ [**Security & Safety Blueprint**](file:///c:/Users/princ/Desktop/Code%20Visualizer/documentation/SECURITY_AND_SAFETY.md) | Zero-to-hundred security specs: HWID derivation, 6-device unlinking, sandboxed execution, and Ed25519 signatures. |
 | ⚡ [**Algorithms & Performance**](file:///c:/Users/princ/Desktop/Code%20Visualizer/documentation/ALGORITHMS_AND_PERFORMANCE.md) | Mathematical inking (Douglas-Peucker & Chaikin), virtual memory algorithms, BST positioning, and sub-80MB RAM optimization. |
 | 📖 [**Curriculum & Syllabus**](file:///c:/Users/princ/Desktop/Code%20Visualizer/documentation/CURRICULUM_AND_SYLLABUS.md) | Complete course catalog of all 287 interactive visual lessons across all 7 subject domains. |

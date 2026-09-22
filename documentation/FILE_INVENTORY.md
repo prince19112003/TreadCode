@@ -150,3 +150,20 @@ public/releases/*.msi
 # Dependency folders
 node_modules/
 ```
+
+---
+
+## 7. Official Technical Documentation (`documentation/`)
+
+| Document File | Status | Primary Scope & Coverage |
+| :--- | :--- | :--- |
+| `documentation/ARCHITECTURE.md` | Active | Core system architecture, Tauri Rust backend, step engine, and licensing design. |
+| `documentation/DESIGN.md` | Active | Complete UI design system, tokens, component hierarchy, interfaces, and state flow. |
+| `documentation/ALGORITHMS_AND_PERFORMANCE.md` | Active | Runtime complexity, step compiler benchmarks, memory optimization, and canvas FPS. |
+| `documentation/CURRICULUM_AND_SYLLABUS.md` | Active | Comprehensive 100+ program catalog across Python, C, C++, Java, and DSA. |
+| `documentation/ADMIN_PANEL_GUIDE.md` | Active | Guide for managing licenses, device limits, syllabus locks, and telemetry via Admin APK. |
+| `documentation/COMMANDS_AND_OPERATIONS.md` | Active | CLI operations, build scripts, development workflows, and testing commands. |
+| `documentation/SECURITY_AND_SAFETY.md` | Active | Cryptographic HWID validation, EULA enforcement, anti-tamper, and offline validation. |
+| `documentation/UPDATE_GUIDE.md` | Active | Multi-channel release deployment for desktop installer, OTA course packs, and web store. |
+| `documentation/FILE_INVENTORY.md` | Active | Authoritative directory map and repository file maintenance audit. |
+

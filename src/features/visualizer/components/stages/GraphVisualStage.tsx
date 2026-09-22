@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useLessonStore } from '../../../../lessons/useLessonStore';
 
 const GRAPH_7_NODES = ['1', '2', '3', '4', '5', '6', '7'];
@@ -28,12 +28,17 @@ interface GraphNode {
   id: string;
   x: number;
   y: number;
+  set?: 'U' | 'V';
 }
 
 interface WeightedEdge {
   u: string;
   v: string;
   weight?: number;
+  isSelfLoop?: boolean;
+  curve?: number;
+  directed?: boolean;
+  isCycle?: boolean;
 }
 
 const GRAPH_7_EDGES: WeightedEdge[] = [
@@ -76,6 +81,14 @@ export const GraphVisualStage = React.memo(() => {
 
   const mem = (stepSnapshot?.memorySnapshot as any) || {};
   
+  const [fundamentalsTab, setFundamentalsTab] = useState<'theory' | 'matrix' | 'list' | 'neighbors'>('theory');
+
+  useEffect(() => {
+    if (mem.activeTab) {
+      setFundamentalsTab(mem.activeTab);
+    }
+  }, [mem.activeTab, mem.concept]);
+  
   // Algorithm specific state
   const isBfs = mem.isBfs === true;
   const isDfs = mem.isDfs === true;
@@ -86,9 +99,8 @@ export const GraphVisualStage = React.memo(() => {
   const isAlgo = isBfs || isDfs || isDijkstra || isKruskal || isPrims || isAStar;
 
   const rawNodes: GraphNode[] = Array.isArray(mem.nodes) ? mem.nodes : [];
-  const rawEdges: WeightedEdge[] = Array.isArray(mem.edges) ? mem.edges : [];
-  const edges: WeightedEdge[] = (rawEdges && rawEdges.length > 0)
-    ? rawEdges
+  const edges: WeightedEdge[] = mem.edges !== undefined
+    ? mem.edges
     : (isDijkstra || isKruskal || isPrims || isAStar)
     ? DIJKSTRA_EDGES
     : GRAPH_7_EDGES;
@@ -260,7 +272,112 @@ export const GraphVisualStage = React.memo(() => {
                   shapeRendering="geometricPrecision"
                   textRendering="geometricPrecision"
                 >
-                  
+                  <defs>
+                    <marker
+                      id="arrowhead"
+                      viewBox="0 0 10 10"
+                      refX="33"
+                      refY="5"
+                      markerUnits="userSpaceOnUse"
+                      markerWidth="9"
+                      markerHeight="8"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#60a5fa" />
+                    </marker>
+                    <marker
+                      id="arrowhead-inspected"
+                      viewBox="0 0 10 10"
+                      refX="33"
+                      refY="5"
+                      markerUnits="userSpaceOnUse"
+                      markerWidth="9"
+                      markerHeight="8"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f59e0b" />
+                    </marker>
+                    <marker
+                      id="arrowhead-cycle"
+                      viewBox="0 0 10 10"
+                      refX="33"
+                      refY="5"
+                      markerUnits="userSpaceOnUse"
+                      markerWidth="9"
+                      markerHeight="8"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#34d399" />
+                    </marker>
+                  </defs>
+
+                  {/* Disconnected Subgraph Bounding Boxes */}
+                  {mem.isDisconnected && Array.isArray(mem.components) && mem.components.map((c: any) => (
+                    <g key={c.id}>
+                      <rect
+                        x={c.x}
+                        y={c.y}
+                        width={c.width}
+                        height={c.height}
+                        rx="12"
+                        fill="rgba(15, 23, 42, 0.45)"
+                        stroke="#334155"
+                        strokeWidth="1.5"
+                        strokeDasharray="4 4"
+                      />
+                      <text
+                        x={c.x + 12}
+                        y={c.y + 20}
+                        className="font-mono text-[10px] font-bold fill-slate-400 select-none"
+                      >
+                        {c.label}
+                      </text>
+                    </g>
+                  ))}
+
+                  {/* Bipartite Graph Column Partitions */}
+                  {mem.isBipartite && (
+                    <g>
+                      <rect
+                        x={95}
+                        y={45}
+                        width={125}
+                        height={250}
+                        rx="12"
+                        fill="rgba(30, 27, 75, 0.25)"
+                        stroke="#4f46e5"
+                        strokeWidth="1.5"
+                        strokeDasharray="4 4"
+                      />
+                      <text
+                        x={110}
+                        y={68}
+                        className="font-mono text-[10px] font-black fill-indigo-400 select-none"
+                      >
+                        PARTITION SET U
+                      </text>
+
+                      <rect
+                        x={335}
+                        y={45}
+                        width={125}
+                        height={250}
+                        rx="12"
+                        fill="rgba(6, 78, 59, 0.25)"
+                        stroke="#059669"
+                        strokeWidth="1.5"
+                        strokeDasharray="4 4"
+                      />
+                      <text
+                        x={350}
+                        y={68}
+                        className="font-mono text-[10px] font-black fill-emerald-400 select-none"
+                      >
+                        PARTITION SET V
+                      </text>
+                    </g>
+                  )}
+
                   {/* Connecting Edges with Weights */}
                   {edges.map((edge, idx) => {
                     const uNode = nodes.find(n => n.id === edge.u);
@@ -291,24 +408,73 @@ export const GraphVisualStage = React.memo(() => {
 
                     const isInspectingEdge = targetNodeToInspect !== undefined && (
                       (edge.u === targetNodeToInspect && targetNeighborList.includes(edge.v)) ||
-                      (edge.v === targetNodeToInspect && targetNeighborList.includes(edge.u))
+                      (edge.v === targetNodeToInspect && targetNeighborList.includes(edge.u)) ||
+                      (edge.isSelfLoop && edge.u === targetNodeToInspect)
                     );
 
                     const isVisitedEdge = !isDijkstra && !isKruskal && !isPrims && !isAStar && visited.includes(edge.u) && visited.includes(edge.v);
+                    const isCycleEdge = edge.isCycle === true;
+                    const isDirectedEdge = mem.isDirected || edge.directed;
+                    const markerUrl = isInspectingEdge ? "url(#arrowhead-inspected)" : isCycleEdge ? "url(#arrowhead-cycle)" : "url(#arrowhead)";
 
-                    // Midpoint for weight text label badge
                     const midX = (uNode.x + vNode.x) / 2;
                     const midY = (uNode.y + vNode.y) / 2;
 
+                    // 1. Self-Loop Edge
+                    if (edge.isSelfLoop) {
+                      return (
+                        <g key={`edge-self-${edge.u}-${idx}`}>
+                          <path
+                            d={`M ${uNode.x - 10} ${uNode.y - 20} C ${uNode.x - 38} ${uNode.y - 65}, ${uNode.x + 38} ${uNode.y - 65}, ${uNode.x + 10} ${uNode.y - 20}`}
+                            fill="none"
+                            stroke={isInspectingEdge ? '#f59e0b' : '#60a5fa'}
+                            strokeWidth="2.5"
+                            markerEnd={isDirectedEdge ? markerUrl : undefined}
+                          />
+                          <text
+                            x={uNode.x}
+                            y={uNode.y - 48}
+                            textAnchor="middle"
+                            className="font-mono text-[9px] font-bold fill-amber-300 select-none"
+                          >
+                            loop
+                          </text>
+                        </g>
+                      );
+                    }
+
+                    // 2. Curved Parallel Edge
+                    if (edge.curve) {
+                      const dx = vNode.x - uNode.x;
+                      const dy = vNode.y - uNode.y;
+                      const len = Math.hypot(dx, dy) || 1;
+                      const nx = -dy / len;
+                      const ny = dx / len;
+                      const cx = midX + nx * edge.curve;
+                      const cy = midY + ny * edge.curve;
+
+                      return (
+                        <g key={`edge-curve-${edge.u}-${edge.v}-${idx}`}>
+                          <path
+                            d={`M ${uNode.x} ${uNode.y} Q ${cx} ${cy} ${vNode.x} ${vNode.y}`}
+                            fill="none"
+                            stroke={isInspectingEdge ? '#f59e0b' : '#60a5fa'}
+                            strokeWidth="2.5"
+                            markerEnd={isDirectedEdge ? markerUrl : undefined}
+                          />
+                        </g>
+                      );
+                    }
+
                     return (
                       <g key={`edge-g-${edge.u}-${edge.v}-${idx}`}>
-                        {/* Line */}
+                        {/* Normal Line */}
                         <line
                           x1={uNode.x}
                           y1={uNode.y}
                           x2={vNode.x}
                           y2={vNode.y}
-                          strokeWidth={isMstEdge ? 4.5 : isTestingEdge ? 4.5 : isShortestPathEdge ? 4.5 : isRelaxingThisEdge ? 4 : isInspectingEdge ? 4.5 : 2.5}
+                          strokeWidth={isMstEdge ? 4 : isTestingEdge ? 4 : isShortestPathEdge ? 4 : isRelaxingThisEdge ? 3.5 : isInspectingEdge ? 3.5 : isCycleEdge ? 3 : 2}
                           stroke={
                             isMstEdge
                               ? '#10b981'
@@ -322,25 +488,28 @@ export const GraphVisualStage = React.memo(() => {
                               ? (relaxingEdge?.updated ? '#10b981' : '#f59e0b')
                               : isInspectingEdge
                               ? '#f59e0b'
+                              : isCycleEdge
+                              ? '#34d399'
                               : isVisitedEdge
                               ? (isBfs ? '#06b6d4' : '#a855f7')
-                              : '#334155'
+                              : '#475569'
                           }
+                          markerEnd={isDirectedEdge ? markerUrl : undefined}
                           className="transition-all duration-300"
                         />
 
                         {/* Edge Weight Text Label (No Box, Floating Center Above Line) */}
-                        {(isDijkstra || isKruskal || isPrims || isAStar || lesson?.topic === 'graph_basics') && edge.weight !== undefined && (
+                        {(isDijkstra || isKruskal || isPrims || isAStar || (lesson?.topic === 'graph_basics' && edge.weight !== undefined)) && (
                           <g transform={`translate(${midX}, ${midY})`}>
-                            {/* Dark halo outline for 100% contrast over any line */}
+                            {/* Dark halo outline for contrast over line */}
                             <text
                               x="0"
                               y="-8"
                               textAnchor="middle"
                               stroke="#050711"
-                              strokeWidth="5"
+                              strokeWidth="4"
                               strokeLinejoin="round"
-                              className="font-mono text-sm font-black select-none pointer-events-none opacity-90"
+                              className="font-mono text-xs font-bold select-none pointer-events-none opacity-90"
                             >
                               {edge.weight}
                             </text>
@@ -348,11 +517,11 @@ export const GraphVisualStage = React.memo(() => {
                               x="0"
                               y="-8"
                               textAnchor="middle"
-                              className={`font-mono text-sm font-black select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] ${
+                              className={`font-mono text-xs font-bold select-none pointer-events-none ${
                                 isMstEdge || isShortestPathEdge
                                   ? 'fill-emerald-300 font-black'
                                   : isTestingEdge || isRelaxingThisEdge || isInspectingEdge
-                                  ? 'fill-amber-300 font-black scale-110'
+                                  ? 'fill-amber-300 font-black'
                                   : isRejectedEdge
                                   ? 'fill-rose-400 font-black'
                                   : 'fill-cyan-300 font-bold'
@@ -381,37 +550,57 @@ export const GraphVisualStage = React.memo(() => {
                     const isVisited = visited.includes(id);
                     const isMstNode = (isKruskal || isPrims) && (mstSet.includes(id) || mstEdges.some(e => e.u === id || e.v === id));
 
+                    const isSetU = node.set === 'U';
+                    const isSetV = node.set === 'V';
+
+                    let fillClass = 'fill-slate-950';
+                    let strokeColor = '#475569';
+                    let strokeW = '2';
+
+                    if (isInspectedNode) {
+                      fillClass = 'fill-amber-950/90';
+                      strokeColor = '#f59e0b';
+                      strokeW = '3';
+                    } else if (isInspectedNeighbor) {
+                      fillClass = 'fill-cyan-950/90';
+                      strokeColor = '#06b6d4';
+                      strokeW = '2.5';
+                    } else if (isSetU) {
+                      fillClass = 'fill-indigo-950/90';
+                      strokeColor = '#818cf8';
+                      strokeW = '2.5';
+                    } else if (isSetV) {
+                      fillClass = 'fill-emerald-950/90';
+                      strokeColor = '#34d399';
+                      strokeW = '2.5';
+                    } else if (isMstNode || isSettled || isVisited) {
+                      fillClass = 'fill-emerald-950/90';
+                      strokeColor = '#10b981';
+                      strokeW = '2.5';
+                    } else if (isActive) {
+                      fillClass = 'fill-amber-950/90';
+                      strokeColor = '#f59e0b';
+                      strokeW = '3';
+                    } else if (isInBuffer) {
+                      fillClass = isBfs ? 'fill-cyan-950/90' : 'fill-purple-950/90';
+                      strokeColor = isBfs ? '#06b6d4' : '#c084fc';
+                      strokeW = '2';
+                    }
+
                     return (
                       <g key={`graph-node-${id}`} transform={`translate(${node.x}, ${node.y})`}>
                         {/* Circle */}
                         <circle
-                          r="26"
-                          className={`transition-all duration-300 ${
-                            isInspectedNode
-                              ? 'fill-amber-950 stroke-amber-400 shadow-[0_0_35px_rgba(251,191,36,1)] ring-4 ring-amber-400/60'
-                              : isInspectedNeighbor
-                              ? 'fill-cyan-950 stroke-cyan-400 shadow-[0_0_25px_rgba(6,182,212,1)] ring-2 ring-cyan-400/60'
-                              : isMstNode
-                              ? 'fill-emerald-950 stroke-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.9)]'
-                              : isActive
-                              ? 'fill-amber-950 stroke-amber-400 shadow-[0_0_30px_rgba(251,191,36,1)] ring-4 ring-amber-400/50'
-                              : isSettled
-                              ? 'fill-emerald-950 stroke-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.9)]'
-                              : isInBuffer
-                              ? isBfs
-                                ? 'fill-cyan-600 stroke-cyan-300'
-                                : 'fill-purple-600 stroke-purple-300'
-                              : isVisited
-                              ? 'fill-emerald-950 stroke-emerald-400'
-                              : 'fill-purple-950/80 stroke-purple-500'
-                          }`}
-                          strokeWidth="3"
+                          r="24"
+                          className={`transition-all duration-200 ${fillClass}`}
+                          stroke={strokeColor}
+                          strokeWidth={strokeW}
                         />
                         {/* Text */}
                         <text
-                          y="6"
+                          y="5"
                           textAnchor="middle"
-                          className="fill-white font-mono font-black text-lg select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                          className="fill-white font-mono font-bold text-sm select-none pointer-events-none"
                         >
                           {id}
                         </text>
@@ -788,184 +977,284 @@ export const GraphVisualStage = React.memo(() => {
                   )}
                 </div>
               ) : lesson?.topic === 'graph_basics' ? (
-                /* ================= GRAPH FUNDAMENTALS (MINIMAL SINGLE CONCEPT CARD) ================= */
-                <div className="flex flex-col gap-3 font-mono">
-                  {/* Concept View Header & Mode Status */}
-                  <div className="flex items-center justify-between text-xs text-slate-300 pb-1.5 border-b border-slate-800">
-                    <span className="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5 text-xs">
-                      {(mem.activeTab === 'list' || mem.concept === 'ADJACENCY_LIST') ? 'ADJACENCY LIST VIEW' : (mem.activeTab === 'neighbors' || mem.concept === 'NEIGHBORS') ? 'NEIGHBORS & DEGREE VIEW' : (mem.activeTab === 'weights' || mem.concept === 'EDGE_WEIGHTS') ? 'EDGE WEIGHTS VIEW' : 'ADJACENCY MATRIX (7×7)'}
-                    </span>
-                    <span className="text-cyan-400 font-bold text-[11px]">V=7 Vertices, E=9 Edges</span>
-                  </div>
+                /* ================= GRAPH FUNDAMENTALS (DYNAMIC INSPECTOR & DATA STRUCTURES) ================= */
+                (() => {
+                  const currentConceptTitle = mem.conceptTitle || 'Graph Concept';
+                  const isDigraph = mem.isDirected === true || edges.some(e => e.directed);
+                  const inNeighbors: string[] = Array.isArray(mem.inNeighbors) ? mem.inNeighbors : [];
+                  const outNeighbors: string[] = Array.isArray(mem.outNeighbors) ? mem.outNeighbors : [];
+                  const isMultigraph = mem.isMultiGraph === true;
 
-                  {/* 1. ADJACENCY MATRIX VIEW */}
-                  {(!mem.activeTab || mem.activeTab === 'matrix' || mem.concept === 'ADJACENCY_MATRIX' || mem.concept === 'GRAPH_STRUCTURE') && (
-                    <div className="flex flex-col gap-2 bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 shadow-2xl">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
-                        <span className="text-cyan-400 flex items-center gap-1.5">
-                          <span>📊 2D Adjacency Matrix</span>
-                          <span className="text-slate-500 font-normal">(7 × 7 Array)</span>
-                        </span>
-                        <span className="text-[10px] text-amber-300 px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800 font-mono">
-                          M[u][v] = Weight
-                        </span>
-                      </div>
+                  // Dynamic Adjacency Matrix & List computation
+                  const nodeList = nodes.map(n => n.id);
+                  const matrix: Record<string, Record<string, number>> = {};
+                  const adjListMap: Record<string, Array<{ v: string; weight?: number }>> = {};
 
-                      <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/60 p-2">
-                        <table className="w-full text-center font-mono text-[11px] border-collapse">
-                          <thead>
-                            <tr className="text-amber-400 border-b border-slate-800 text-[11px]">
-                              <th className="p-1.5 font-bold">u \ v</th>
-                              {['0','1','2','3','4','5','6'].map(n => (
-                                <th key={n} className={`p-1.5 font-bold ${mem.inspectNode === n ? 'text-amber-300 bg-amber-950/60 rounded' : ''}`}>
-                                  [{n}]
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800/60">
-                            {[
-                              { u: '0', row: [0, 4, 2, 5, 0, 0, 0] },
-                              { u: '1', row: [4, 0, 1, 0, 7, 0, 0] },
-                              { u: '2', row: [2, 1, 0, 0, 3, 8, 0] },
-                              { u: '3', row: [5, 0, 0, 0, 0, 0, 6] },
-                              { u: '4', row: [0, 7, 3, 0, 0, 0, 0] },
-                              { u: '5', row: [0, 0, 8, 0, 0, 0, 2] },
-                              { u: '6', row: [0, 0, 0, 6, 0, 2, 0] },
-                            ].map(r => {
-                              const isInspectedRow = mem.inspectNode === r.u;
-                              return (
-                                <tr key={r.u} className={`transition-colors ${isInspectedRow ? 'bg-amber-950/40 text-amber-200' : 'hover:bg-slate-900/50'}`}>
-                                  <td className="p-1.5 font-black text-amber-400 border-r border-slate-800/80">[{r.u}]</td>
-                                  {r.row.map((w, colIdx) => (
-                                    <td key={colIdx} className={`p-1.5 font-mono font-bold text-xs ${w > 0 ? 'text-cyan-300 font-black bg-cyan-950/30' : 'text-slate-700'}`}>
-                                      {w}
-                                    </td>
-                                  ))}
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+                  nodeList.forEach(u => {
+                    matrix[u] = {};
+                    adjListMap[u] = [];
+                    nodeList.forEach(v => {
+                      matrix[u][v] = 0;
+                    });
+                  });
 
-                  {/* 2. ADJACENCY LIST VIEW */}
-                  {(mem.activeTab === 'list' || mem.concept === 'ADJACENCY_LIST') && (
-                    <div className="flex flex-col gap-2 bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 shadow-2xl">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 pb-1 border-b border-slate-800/80">
-                        <span className="text-purple-400 flex items-center gap-1.5">
-                          <span>🔗 Adjacency List Structure</span>
-                          <span className="text-slate-500 font-normal">(Linked Vector Array)</span>
-                        </span>
-                      </div>
+                  edges.forEach(e => {
+                    const w = typeof e.weight === 'number' ? e.weight : 1;
+                    if (matrix[e.u] && matrix[e.u][e.v] !== undefined) {
+                      matrix[e.u][e.v] = isMultigraph ? matrix[e.u][e.v] + w : w;
+                    }
+                    if (adjListMap[e.u]) {
+                      adjListMap[e.u].push({ v: e.v, weight: e.weight });
+                    }
+                    if (!isDigraph && !e.directed && !e.isSelfLoop) {
+                      if (matrix[e.v] && matrix[e.v][e.u] !== undefined) {
+                        matrix[e.v][e.u] = isMultigraph ? matrix[e.v][e.u] + w : w;
+                      }
+                      if (adjListMap[e.v]) {
+                        adjListMap[e.v].push({ v: e.u, weight: e.weight });
+                      }
+                    }
+                  });
 
-                      <div className="flex flex-col gap-1.5 text-xs">
-                        {[
-                          { u: '0', nbrs: [{ v: '1', w: 4 }, { v: '2', w: 2 }, { v: '3', w: 5 }] },
-                          { u: '1', nbrs: [{ v: '0', w: 4 }, { v: '2', w: 1 }, { v: '4', w: 7 }] },
-                          { u: '2', nbrs: [{ v: '0', w: 2 }, { v: '1', w: 1 }, { v: '4', w: 3 }, { v: '5', w: 8 }] },
-                          { u: '3', nbrs: [{ v: '0', w: 5 }, { v: '6', w: 6 }] },
-                          { u: '4', nbrs: [{ v: '1', w: 7 }, { v: '2', w: 3 }] },
-                          { u: '5', nbrs: [{ v: '2', w: 8 }, { v: '6', w: 2 }] },
-                          { u: '6', nbrs: [{ v: '3', w: 6 }, { v: '5', w: 2 }] },
-                        ].map(item => {
-                          const isSelected = mem.inspectNode === item.u;
-                          return (
-                            <div
-                              key={`adj-list-${item.u}`}
-                              className={`p-2 rounded-xl border flex items-center gap-2 transition-all ${
-                                isSelected
-                                  ? 'bg-amber-950/50 border-amber-500 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
-                                  : 'bg-slate-900/60 border-slate-800/80 text-slate-300'
+                  return (
+                    <div className="flex flex-col gap-2.5 font-mono">
+                      {/* Top Bar: Concept Title & Sub-tabs */}
+                      <div className="flex flex-col gap-2 bg-slate-950/90 border border-slate-800/90 rounded-xl p-2.5">
+                        <div className="flex items-center justify-between text-xs border-b border-slate-800/80 pb-2">
+                          <span className="font-black text-amber-300 tracking-wide text-[12px] uppercase">
+                            {currentConceptTitle}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-bold">
+                            |V|={nodes.length}, |E|={edges.length}
+                          </span>
+                        </div>
+
+                        {/* Interactive Sub-tabs */}
+                        <div className="grid grid-cols-3 gap-1 text-[11px]">
+                          {[
+                            { id: 'theory', label: 'Overview' },
+                            { id: 'matrix', label: 'Matrix' },
+                            { id: 'list', label: 'Adj List' },
+                          ].map(tab => (
+                            <button
+                              key={tab.id}
+                              onClick={() => setFundamentalsTab(tab.id as any)}
+                              className={`py-1 rounded text-center font-bold transition-colors border ${
+                                fundamentalsTab === tab.id || (tab.id === 'theory' && fundamentalsTab === 'neighbors')
+                                  ? 'bg-slate-800 border-amber-400/80 text-amber-300'
+                                  : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
                               }`}
                             >
-                              <span className="px-2 py-0.5 rounded-lg bg-purple-950 text-purple-300 font-black text-xs border border-purple-800 shrink-0">
-                                adj[{item.u}]
-                              </span>
-                              <span className="text-slate-500 font-bold text-xs">➜</span>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                {item.nbrs.map((nbr, nIdx) => (
-                                  <span key={nIdx} className="px-2 py-0.5 rounded-lg bg-slate-950 border border-slate-700 text-cyan-300 font-bold text-[11px] flex items-center gap-1">
-                                    Node [{nbr.v}] <span className="text-amber-400 font-black">(w:{nbr.w})</span>
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3. NEIGHBORS & DEGREE VIEW */}
-                  {(mem.activeTab === 'neighbors' || mem.concept === 'NEIGHBORS') && (
-                    <div className="flex flex-col gap-3 bg-slate-950/90 border border-slate-800 rounded-2xl p-4 shadow-2xl">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-300 pb-2 border-b border-slate-800">
-                        <span className="text-amber-400 flex items-center gap-1.5">
-                          <span>🎯 Node Neighbors & Degree Inspector</span>
-                        </span>
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs">
-                          Degree = {mem.degree || 3}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-2 text-xs">
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-400 font-bold">Inspected Node:</span>
-                          <span className="text-amber-300 font-black text-sm">Node [{mem.inspectNode || '0'}]</span>
+                              {tab.label}
+                            </button>
+                          ))}
                         </div>
+                      </div>
 
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-2">
-                          <span className="text-slate-400 font-bold">Direct Connected Neighbors:</span>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {((mem.neighbors && mem.neighbors.length > 0) ? mem.neighbors : ['1', '2', '3']).map((nbr: string) => (
-                              <span key={nbr} className="px-3 py-1 rounded-xl bg-cyan-950 text-cyan-300 border border-cyan-700 font-black text-xs flex items-center gap-1 shadow-md">
-                                Node [{nbr}]
+                      {/* TAB 1: OVERVIEW (CLEAN & SIMPLE) */}
+                      {(fundamentalsTab === 'theory' || fundamentalsTab === 'neighbors') && (
+                        <div className="flex flex-col gap-2.5 bg-slate-950/90 border border-slate-800 rounded-xl p-3">
+                          {/* 1. Concise 1-2 sentence concept explanation */}
+                          <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/90 text-slate-200 text-xs leading-relaxed">
+                            {mem.description || 'Basic graph element representing vertices and edges in network topology.'}
+                          </div>
+
+                          {/* 2. Key Metrics Bar */}
+                          <div className="grid grid-cols-3 gap-1.5 text-center">
+                            <div className="p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex flex-col gap-0.5">
+                              <span className="text-[9.5px] text-slate-400 uppercase font-bold">Vertices</span>
+                              <span className="text-sm font-black text-amber-300">{nodes.length}</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex flex-col gap-0.5">
+                              <span className="text-[9.5px] text-slate-400 uppercase font-bold">Edges</span>
+                              <span className="text-sm font-black text-cyan-300">{edges.length}</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex flex-col gap-0.5">
+                              <span className="text-[9.5px] text-slate-400 uppercase font-bold">Type</span>
+                              <span className="text-xs font-bold text-slate-200">
+                                {isDigraph ? 'Directed' : 'Undirected'}
                               </span>
-                            ))}
+                            </div>
+                          </div>
+
+                          {/* 3. Inspected Node Live Status */}
+                          <div className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 flex flex-col gap-2">
+                            <div className="flex items-center justify-between text-xs border-b border-slate-800/80 pb-1.5">
+                              <span className="text-slate-300 font-bold">
+                                Node [{inspectNode}] Status:
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-xs">
+                                {isDigraph
+                                  ? `In: ${mem.inDegree ?? inNeighbors.length} | Out: ${mem.outDegree ?? outNeighbors.length}`
+                                  : `Degree = ${mem.degree ?? neighbors.length}`}
+                              </span>
+                            </div>
+
+                            {isDigraph ? (
+                              <div className="flex flex-col gap-1 text-[11.5px]">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400">Incoming:</span>
+                                  <span className="text-cyan-300 font-bold">
+                                    {inNeighbors.length > 0 ? inNeighbors.map(n => `[${n}]`).join(', ') : 'None'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400">Outgoing:</span>
+                                  <span className="text-amber-300 font-bold">
+                                    {outNeighbors.length > 0 ? outNeighbors.map(n => `[${n}]`).join(', ') : 'None'}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col gap-1 text-[11.5px]">
+                                <span className="text-slate-400 font-semibold">Direct Connected Neighbors:</span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {neighbors.length > 0 ? (
+                                    neighbors.map(n => (
+                                      <span
+                                        key={n}
+                                        className="px-2 py-0.5 rounded bg-slate-950 text-cyan-300 border border-cyan-800 font-bold text-xs"
+                                      >
+                                        Node [{n}]
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="text-slate-500 italic text-[11px]">No connected edges (Isolated Node)</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
+                      )}
 
-                  {/* 4. EDGE WEIGHTS VIEW */}
-                  {(mem.activeTab === 'weights' || mem.concept === 'EDGE_WEIGHTS') && (
-                    <div className="flex flex-col gap-2 bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 shadow-2xl">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 pb-1 border-b border-slate-800">
-                        <span className="text-emerald-400 flex items-center gap-1.5">
-                          <span>⚖️ Weighted Edges Table</span>
-                          <span className="text-slate-500 font-normal">(Distance / Latency)</span>
-                        </span>
-                        <span className="text-amber-300 font-bold text-[11px]">9 Edges Total</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-1.5 text-xs">
-                        {[
-                          { u: '0', v: '1', weight: 4 },
-                          { u: '0', v: '2', weight: 2 },
-                          { u: '0', v: '3', weight: 5 },
-                          { u: '1', v: '2', weight: 1 },
-                          { u: '1', v: '4', weight: 7 },
-                          { u: '2', v: '4', weight: 3 },
-                          { u: '2', v: '5', weight: 8 },
-                          { u: '3', v: '6', weight: 6 },
-                          { u: '5', v: '6', weight: 2 },
-                        ].map((e, idx) => (
-                          <div key={idx} className="p-2 rounded-xl bg-slate-900/70 border border-slate-800 flex items-center justify-between font-mono">
-                            <span className="font-bold text-slate-200">Connection [{e.u} ↔ {e.v}]</span>
-                            <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-black border border-emerald-800">
-                              Weight = {e.weight}
+                      {/* TAB 2: ADJACENCY MATRIX (V x V) */}
+                      {fundamentalsTab === 'matrix' && (
+                        <div className="flex flex-col gap-2 bg-slate-950/90 border border-slate-800 rounded-xl p-3">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 border-b border-slate-800 pb-1.5">
+                            <span className="text-cyan-400">
+                              Adjacency Matrix ({nodeList.length} × {nodeList.length})
+                            </span>
+                            <span className="text-[10px] text-amber-300 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
+                              M[u][v] = {edges.some(e => typeof e.weight === 'number') ? 'Weight' : '1 / 0'}
                             </span>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
-                </div>
+                          {nodeList.length === 0 ? (
+                            <div className="p-4 text-center text-slate-500 text-xs">
+                              Empty Graph: No Vertices to display.
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/70 p-1.5">
+                              <table className="w-full text-center font-mono text-[11px] border-collapse">
+                                <thead>
+                                  <tr className="text-amber-400 border-b border-slate-800 text-[11px]">
+                                    <th className="p-1.5 font-bold">u \ v</th>
+                                    {nodeList.map(n => (
+                                      <th
+                                        key={n}
+                                        className={`p-1.5 font-bold ${inspectNode === n ? 'text-amber-300 bg-slate-800' : ''}`}
+                                      >
+                                        [{n}]
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/60">
+                                  {nodeList.map(u => {
+                                    const isInspected = inspectNode === u;
+                                    return (
+                                      <tr
+                                        key={u}
+                                        className={`transition-colors ${isInspected ? 'bg-slate-800/60 text-amber-200' : 'hover:bg-slate-900/80'}`}
+                                      >
+                                        <td className="p-1.5 font-black text-amber-400 border-r border-slate-800">[{u}]</td>
+                                        {nodeList.map(v => {
+                                          const cell = matrix[u]?.[v] ?? 0;
+                                          return (
+                                            <td
+                                              key={v}
+                                              className={`p-1.5 font-bold text-xs ${
+                                                cell > 0 ? 'text-cyan-300 bg-cyan-950/40' : 'text-slate-600'
+                                              }`}
+                                            >
+                                              {cell}
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                          <div className="text-[9.5px] text-slate-500">
+                            Space Complexity: O(V²). Best suited for dense graphs or constant time O(1) edge lookup.
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TAB 3: ADJACENCY LIST */}
+                      {fundamentalsTab === 'list' && (
+                        <div className="flex flex-col gap-2 bg-slate-950/90 border border-slate-800 rounded-xl p-3">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 border-b border-slate-800 pb-1.5">
+                            <span className="text-cyan-400">Adjacency List (Vector of Vectors)</span>
+                            <span className="text-[10px] text-slate-400">Space O(V + E)</span>
+                          </div>
+
+                          {nodeList.length === 0 ? (
+                            <div className="p-4 text-center text-slate-500 text-xs">
+                              Empty Graph: No Vertices.
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-1 max-h-72 overflow-y-auto pr-1">
+                              {nodeList.map(u => {
+                                const nbrList = adjListMap[u] || [];
+                                const isInspected = inspectNode === u;
+                                return (
+                                  <div
+                                    key={`adj-${u}`}
+                                    className={`p-1.5 rounded-lg border flex items-center gap-2 transition-colors ${
+                                      isInspected
+                                        ? 'bg-slate-800 border-amber-400/80 text-amber-200'
+                                        : 'bg-slate-900/70 border-slate-800 text-slate-300'
+                                    }`}
+                                  >
+                                    <span className="px-1.5 py-0.5 rounded bg-slate-950 text-cyan-300 font-bold text-xs border border-slate-800 shrink-0">
+                                      adj[{u}]
+                                    </span>
+                                    <span className="text-slate-600 font-bold text-xs">➔</span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      {nbrList.length === 0 ? (
+                                        <span className="text-slate-600 text-[11px] italic">null / empty</span>
+                                      ) : (
+                                        nbrList.map((nbr, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-[11px] flex items-center gap-1 font-bold"
+                                          >
+                                            [{nbr.v}]
+                                            {typeof nbr.weight === 'number' && (
+                                              <span className="text-amber-400 font-normal">w:{nbr.weight}</span>
+                                            )}
+                                          </span>
+                                        ))
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <div className="text-[9.5px] text-slate-500">
+                            Space Complexity: O(V + E). Standard choice for BFS, DFS, and sparse graphs.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
                 /* ================= BFS / DFS BUFFERS ================= */
                 <>
@@ -1164,24 +1453,57 @@ export const GraphVisualStage = React.memo(() => {
         )}
 
         {/* High-Contrast Sharp Legend Footer */}
-        <div className="flex items-center justify-center gap-6 font-mono text-xs text-slate-300 pt-3 border-t border-slate-800/80 w-full">
-          <div className="flex items-center gap-2 font-bold">
-            <span className="w-3 h-3 rounded-full bg-slate-800 border border-slate-600" />
-            <span>Unvisited Node</span>
+        {lesson?.topic === 'graph_basics' ? (
+          <div className="flex items-center justify-center gap-5 font-mono text-xs text-slate-300 pt-3 border-t border-slate-800/80 w-full flex-wrap">
+            <div className="flex items-center gap-1.5 font-bold">
+              <span className="w-3 h-3 rounded-full bg-slate-900 border-2 border-slate-600" />
+              <span>Vertex (V)</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-bold">
+              <span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-200" />
+              <span>Inspected Node</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-bold">
+              <span className="w-3 h-3 rounded-full bg-cyan-600 border border-cyan-300" />
+              <span>Direct Neighbor</span>
+            </div>
+            {mem.isBipartite && (
+              <div className="flex items-center gap-1.5 font-bold">
+                <span className="w-3 h-3 rounded-full bg-emerald-600 border border-emerald-300" />
+                <span>Partition U / V</span>
+              </div>
+            )}
+            {mem.isDisconnected && (
+              <div className="flex items-center gap-1.5 font-bold">
+                <span className="w-3 h-2 border border-dashed border-indigo-400" />
+                <span>Components (C1, C2)</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 font-bold">
+              <span className="w-4 h-0.5 bg-slate-400" />
+              <span>Edge (E)</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 font-bold">
-            <span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-200" />
-            <span>Testing / Active Edge</span>
+        ) : (
+          <div className="flex items-center justify-center gap-6 font-mono text-xs text-slate-300 pt-3 border-t border-slate-800/80 w-full">
+            <div className="flex items-center gap-2 font-bold">
+              <span className="w-3 h-3 rounded-full bg-slate-800 border border-slate-600" />
+              <span>Unvisited Node</span>
+            </div>
+            <div className="flex items-center gap-2 font-bold">
+              <span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-200" />
+              <span>Testing / Active Edge</span>
+            </div>
+            <div className="flex items-center gap-2 font-bold">
+              <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-200" />
+              <span>Accepted MST / Shortest Edge</span>
+            </div>
+            <div className="flex items-center gap-2 font-bold">
+              <span className="w-3 h-3 rounded-full bg-rose-500 border border-rose-300" />
+              <span>Cycle Skipped Edge</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 font-bold">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-200" />
-            <span>Accepted MST / Shortest Edge</span>
-          </div>
-          <div className="flex items-center gap-2 font-bold">
-            <span className="w-3 h-3 rounded-full bg-rose-500 border border-rose-300" />
-            <span>Cycle Skipped Edge</span>
-          </div>
-        </div>
+        )}
 
       </div>
     </div>
