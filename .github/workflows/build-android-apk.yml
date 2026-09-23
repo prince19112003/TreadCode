@@ -36,7 +36,9 @@ jobs:
 
       - name: Generate Gradle Wrapper
         working-directory: android
-        run: gradle wrapper --gradle-version 8.5
+        run: |
+          gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
 
       - name: Install dependencies
         run: npm ci
@@ -44,20 +46,21 @@ jobs:
       - name: Build web application
         run: npm run build
 
-      - name: Sync Capacitor Android
-        run: npx cap sync android
+      - name: Copy web assets to Android
+        run: |
+          mkdir -p android/app/src/main/assets/public
+          cp -r dist/* android/app/src/main/assets/public/
 
       - name: Build Android APK via Gradle
         working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Rename and Prepare APK
         run: |
           mkdir -p release-apk
-          find android/app/build/outputs/apk -name "*.apk" -exec cp {} release-apk/TreadCode_1.0.8.apk \; || true
-          cp release-apk/TreadCode_1.0.8.apk release-apk/TreadCode-SmartBoard.apk || true
+          find android/app/build/outputs/apk -name "*.apk" -exec cp {} release-apk/TreadCode_1.0.8.apk \;
+          cp release-apk/TreadCode_1.0.8.apk release-apk/TreadCode-SmartBoard.apk
+          ls -la release-apk/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
