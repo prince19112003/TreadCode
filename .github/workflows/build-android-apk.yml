@@ -34,6 +34,10 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      - name: Generate Gradle Wrapper
+        working-directory: android
+        run: gradle wrapper --gradle-version 8.5
+
       - name: Install dependencies
         run: npm ci
 
@@ -46,9 +50,8 @@ jobs:
       - name: Build Android APK via Gradle
         working-directory: android
         run: |
-          gradle wrapper --gradle-version 8.5 || true
-          chmod +x gradlew || true
-          ./gradlew assembleDebug --no-daemon || gradle assembleDebug
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - name: Rename and Prepare APK
         run: |
