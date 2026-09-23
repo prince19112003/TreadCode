@@ -11,14 +11,23 @@ import { useUpdateChecker } from '@shared/hooks/useUpdateChecker';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LicenseContext } from '../app/App';
 import { unlinkDeviceFromLicense } from '../shared/config/firebase';
+import { useThemeStore } from '@shared/hooks/useThemeStore';
 
-export const applyDisplayTuning = (contrast: number, brightness: number, sharpness: number) => {
-  if (contrast === 100 && brightness === 100 && sharpness === 100) {
+export const applyDisplayTuning = (contrast: number, brightness: number, saturate: number, sharpness: number = 100) => {
+  if (contrast === 100 && brightness === 100 && saturate === 100 && sharpness === 100) {
     document.documentElement.style.filter = 'none';
   } else {
-    document.documentElement.style.filter = `contrast(${contrast}%) brightness(${brightness}%) saturate(${sharpness}%)`;
+    let filterStr = `contrast(${contrast}%) brightness(${brightness}%) saturate(${saturate}%)`;
+    if (sharpness !== 100) {
+      if (sharpness < 100) {
+        filterStr += ` blur(${(100 - sharpness) * 0.015}px)`;
+      } else {
+        filterStr += ` drop-shadow(0 0 ${(sharpness - 100) * 0.008}px rgba(255,255,255,0.18))`;
+      }
+    }
+    document.documentElement.style.filter = filterStr;
   }
-  localStorage.setItem('flowtrace_display_tuning', JSON.stringify({ contrast, brightness, saturate: sharpness }));
+  localStorage.setItem('flowtrace_display_tuning', JSON.stringify({ contrast, brightness, saturate, sharpness }));
 };
 
 type SettingTab = 'display' | 'voice' | 'licensing' | 'feedback' | 'about' | 'extensions' | 'plans';
@@ -28,6 +37,8 @@ export const SettingsPage: React.FC = () => {
   const location = useLocation();
   const licenseContext = useContext(LicenseContext);
   const { hasUpdate, latestVersion, currentVersion, checkNow, isChecking, downloadUrl } = useUpdateChecker();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
 
   // Dynamic version state
   const [displayVersion, setDisplayVersion] = useState(currentVersion);
@@ -62,7 +73,7 @@ export const SettingsPage: React.FC = () => {
     }
   }, [location.search]);
 
-  // Display Tuning States (Sharpness replaces Saturation)
+  // Display Tuning States (Contrast, Brightness, Saturation, Sharpness)
   const [contrastVal, setContrastVal] = useState(() => {
     const saved = localStorage.getItem('flowtrace_display_tuning');
     if (saved) {
@@ -77,10 +88,17 @@ export const SettingsPage: React.FC = () => {
     }
     return 100;
   });
-  const [sharpnessVal, setSharpnessVal] = useState(() => {
+  const [saturateVal, setSaturateVal] = useState(() => {
     const saved = localStorage.getItem('flowtrace_display_tuning');
     if (saved) {
       try { return JSON.parse(saved).saturate || 100; } catch (e) { console.error(e); }
+    }
+    return 100;
+  });
+  const [sharpnessVal, setSharpnessVal] = useState(() => {
+    const saved = localStorage.getItem('flowtrace_display_tuning');
+    if (saved) {
+      try { return JSON.parse(saved).sharpness || 100; } catch (e) { console.error(e); }
     }
     return 100;
   });
@@ -105,7 +123,7 @@ export const SettingsPage: React.FC = () => {
   const [selectedHiVoice, setSelectedHiVoice] = useState<string>(
     () => localStorage.getItem('flowtrace_voice_hi') || ''
   );
-  const [isPlayingTestAudio, setIsPlayingTestAudio] = useState(false);
+  const [testingVoiceLang, setTestingVoiceLang] = useState<'en' | 'hi' | null>(null);
 
   const toggleVoiceMode = () => {
     setIsVoiceModeEnabled(prev => {
@@ -117,15 +135,22 @@ export const SettingsPage: React.FC = () => {
 
   // Load Display Tuning filter on mount
   useEffect(() => {
-    applyDisplayTuning(contrastVal, brightnessVal, sharpnessVal);
-  }, [contrastVal, brightnessVal, sharpnessVal]);
+    applyDisplayTuning(contrastVal, brightnessVal, saturateVal, sharpnessVal);
+  }, [contrastVal, brightnessVal, saturateVal, sharpnessVal]);
 
-  const handleTuneChange = (c: number, b: number, s: number, preset: 'default' | 'projector' | 'smartboard' | 'daylight' = 'default') => {
+  const handleTuneChange = (
+    c: number,
+    b: number,
+    s: number,
+    sh: number = 100,
+    preset: 'default' | 'projector' | 'smartboard' | 'daylight' = 'default'
+  ) => {
     setContrastVal(c);
     setBrightnessVal(b);
-    setSharpnessVal(s);
+    setSaturateVal(s);
+    setSharpnessVal(sh);
     setActivePreset(preset);
-    applyDisplayTuning(c, b, s);
+    applyDisplayTuning(c, b, s, sh);
   };
 
   useEffect(() => {
@@ -136,16 +161,16 @@ export const SettingsPage: React.FC = () => {
 
         if (!selectedEnVoice) {
           const liam = voices.find(v => v.name.includes('Liam')) ||
-                       voices.find(v => v.name.includes('Google US English')) ||
-                       voices.find(v => v.lang.includes('en-US')) ||
-                       voices.find(v => v.lang.includes('en'));
+            voices.find(v => v.name.includes('Google US English')) ||
+            voices.find(v => v.lang.includes('en-US')) ||
+            voices.find(v => v.lang.includes('en'));
           if (liam) setSelectedEnVoice(liam.name);
         }
 
         if (!selectedHiVoice) {
           const emily = voices.find(v => v.name.includes('Emily')) ||
-                        voices.find(v => v.lang.includes('hi')) ||
-                        voices.find(v => v.name.toLowerCase().includes('hindi'));
+            voices.find(v => v.lang.includes('hi')) ||
+            voices.find(v => v.name.toLowerCase().includes('hindi'));
           if (emily) setSelectedHiVoice(emily.name);
         }
       };
@@ -165,23 +190,28 @@ export const SettingsPage: React.FC = () => {
     localStorage.setItem('flowtrace_voice_hi', voiceName);
   };
 
-  const playTestVoice = () => {
+  const playTestVoice = (lang: 'en' | 'hi' = 'en') => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
 
-    if (isPlayingTestAudio) {
-      setIsPlayingTestAudio(false);
+    if (testingVoiceLang === lang) {
+      setTestingVoiceLang(null);
       return;
     }
 
-    const text = "Hello! TreadCode is ready for your classroom presentation.";
+    const isEn = lang === 'en';
+    const text = isEn
+      ? "Hello! TreadCode is ready for your classroom presentation."
+      : "नमस्ते! ट्रेडकोड आपकी कक्षा प्रस्तुति के लिए तैयार है।";
     const utterance = new SpeechSynthesisUtterance(text);
-    const voice = availableVoices.find(v => v.name === selectedEnVoice) || availableVoices[0];
+    const voice = isEn
+      ? (availableVoices.find(v => v.name === selectedEnVoice) || availableVoices[0])
+      : (availableVoices.find(v => v.name === selectedHiVoice) || availableVoices.find(v => v.lang.includes('hi')) || availableVoices[0]);
     if (voice) utterance.voice = voice;
 
-    utterance.onstart = () => setIsPlayingTestAudio(true);
-    utterance.onend = () => setIsPlayingTestAudio(false);
-    utterance.onerror = () => setIsPlayingTestAudio(false);
+    utterance.onstart = () => setTestingVoiceLang(lang);
+    utterance.onend = () => setTestingVoiceLang(null);
+    utterance.onerror = () => setTestingVoiceLang(null);
 
     window.speechSynthesis.speak(utterance);
   };
@@ -189,11 +219,11 @@ export const SettingsPage: React.FC = () => {
 
 
   const isActivated = Boolean(licenseContext?.activated);
-  const activeKeyStr = isActivated 
+  const activeKeyStr = isActivated
     ? (licenseContext?.licenseDetails?.licenseKey || localStorage.getItem('flowtrace_license_key') || '')
     : '';
-  const maskedKey = isActivated && activeKeyStr 
-    ? (activeKeyStr.length <= 6 ? `${activeKeyStr.slice(0, 2)}****` : `${activeKeyStr.slice(0, 4)}-****-****-${activeKeyStr.slice(-4)}`) 
+  const maskedKey = isActivated && activeKeyStr
+    ? (activeKeyStr.length <= 6 ? `${activeKeyStr.slice(0, 2)}****` : `${activeKeyStr.slice(0, 4)}-****-****-${activeKeyStr.slice(-4)}`)
     : 'No Active License';
 
   const rawExpiry = isActivated ? licenseContext?.licenseDetails?.expiresAt : undefined;
@@ -210,115 +240,93 @@ export const SettingsPage: React.FC = () => {
 
   // ORDER: 1. Display & Projection, 2. Voice & Audio, 3. Extensions, 4. Plans & Access, 5. License & Device, 6. Feedback, 7. About & Updates
   const navTabs = [
-    { id: 'display', label: 'Display & Projection', iconName: 'vm', iconColor: 'text-indigo-400', badge: activePreset !== 'default' ? 'Tuned' : undefined },
-    { id: 'voice', label: 'Voice & Audio', iconName: 'unmute', iconColor: 'text-amber-400' },
-    { id: 'extensions', label: 'Module Extensions', iconName: 'package', iconColor: 'text-violet-400' },
-    { id: 'plans', label: 'Plans & Access', iconName: 'credit-card', iconColor: 'text-indigo-400' },
-    { id: 'licensing', label: 'License & Device', iconName: 'key', iconColor: 'text-emerald-400', badge: licenseContext?.activated ? 'Active' : 'Unregistered' },
-    { id: 'feedback', label: 'Support & Complaints', iconName: 'feedback', iconColor: 'text-sky-400' },
-    { id: 'about', label: 'About & Updates', iconName: 'info', iconColor: 'text-purple-400', badge: hasUpdate ? 'Update Ready' : undefined },
+    { id: 'display', label: 'Display & Projection', iconName: 'vm' },
+    { id: 'voice', label: 'Voice & Narration', iconName: 'unmute' },
+    { id: 'extensions', label: 'Module Extensions', iconName: 'package' },
+    { id: 'plans', label: 'Plans & Access', iconName: 'credit-card' },
+    { id: 'licensing', label: 'License & Device', iconName: 'key' },
+    { id: 'feedback', label: 'Support & Feedback', iconName: 'feedback' },
+    { id: 'about', label: 'About & Updates', iconName: 'info', badge: hasUpdate ? 'Update' : undefined },
   ];
 
   return (
-    <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full bg-[#050510]">
-      <div className="flex flex-col py-8 md:py-10 px-4 md:px-8 max-w-6xl mx-auto w-full min-h-full">
+    <PageTransition className={`flex flex-col flex-1 overflow-y-auto w-full transition-colors duration-150 ${isLight ? 'bg-slate-50 text-slate-800' : 'bg-[#050510] text-white'}`}>
+      <div className="flex flex-col py-6 md:py-8 px-4 md:px-8 max-w-6xl mx-auto w-full min-h-full">
 
         {/* Page Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6"
-        >
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+        <div className={`mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <h1 className={`text-xl md:text-2xl font-bold tracking-tight leading-none ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 Settings
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-bold">
+              <span className={`text-[11px] font-mono mt-1 font-medium tracking-wide ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
                 v{displayVersion}
               </span>
-
-              {/* Web Cloud Edition Link */}
-              <button
-                onClick={async () => {
-                  const webUrl = "https://tread-code-smoky.vercel.app/";
-                  try {
-                    const { open } = await import('@tauri-apps/plugin-shell');
-                    await open(webUrl);
-                  } catch (err) {
-                    window.open(webUrl, "_blank", "noopener,noreferrer");
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer border ${
-                  hasUpdate
-                    ? 'bg-indigo-900/60 hover:bg-indigo-900 border-indigo-400/60 text-indigo-200'
-                    : 'bg-indigo-950/50 hover:bg-indigo-900/80 border-indigo-500/30 text-indigo-300 hover:text-white'
-                }`}
-                title={hasUpdate ? `Try Latest Release v${latestVersion} Instantly on Web` : "Open TreadCode Web Cloud Edition"}
-              >
-                <Codicon name="globe" size={13} className="text-indigo-400" />
-                <span>{hasUpdate ? `Try v${latestVersion} Web` : "Launch Cloud Edition"}</span>
-                <Codicon name="link-external" size={11} />
-              </button>
             </div>
-            <p className="text-slate-400 text-sm">
-              Configure display contrast for projectors, voice output, code font size, and license keys.
-            </p>
+
+            {/* Web Cloud Edition Link - Highlighted Yellow */}
+            <button
+              onClick={async () => {
+                const webUrl = "https://tread-code-smoky.vercel.app/";
+                try {
+                  const { open } = await import('@tauri-apps/plugin-shell');
+                  await open(webUrl);
+                } catch {
+                  window.open(webUrl, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-slate-950 shadow-xs hover:shadow transition-all cursor-pointer border border-amber-300"
+              title="Open TreadCode Web Cloud Edition"
+            >
+              <span>Launch Cloud Edition</span>
+              <Codicon name="link-external" size={11} className="text-slate-900" />
+            </button>
           </div>
 
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm font-bold transition-all shadow-md shrink-0 self-start md:self-auto cursor-pointer"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors shrink-0 self-start sm:self-auto cursor-pointer ${isLight ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 shadow-xs' : 'bg-[#0f121a] hover:bg-[#151924] border-slate-800 text-slate-200'
+              }`}
           >
-            <Codicon name="arrow-left" size={16} />
-            <span>Back to Visualizer</span>
+            <Codicon name="arrow-left" size={14} />
+            <span>Back</span>
           </button>
-        </motion.div>
+        </div>
 
         {/* Update Banner */}
         {hasUpdate && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center shrink-0">
-                <Codicon name="refresh" size={18} className="text-indigo-400" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-white">Software Update Available</span>
-                  <span className="px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-mono text-[10px] font-bold">
-                    v{latestVersion}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  A new release of TreadCode is ready to install with visualizer enhancements.
-                </p>
-              </div>
+          <div className={`mb-6 p-3 rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+            isLight ? 'bg-blue-50/60 border-blue-200' : 'bg-[#0f1422] border-blue-500/20'
+          }`}>
+            <div className="flex items-center gap-2.5">
+              <Codicon name="refresh" size={14} className="text-blue-500" />
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                A new version (v{latestVersion}) is ready to install.
+              </span>
             </div>
 
             <button
               onClick={() => setShowPreviewModal(true)}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all shrink-0 cursor-pointer flex items-center gap-2"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors shrink-0 cursor-pointer shadow-xs"
             >
-              <Codicon name="refresh" size={14} />
-              <span>Update Now (v{latestVersion})</span>
+              View Update
             </button>
-          </motion.div>
+          </div>
         )}
 
         {/* Main 2-Column Dashboard Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start pb-6">
-          
-          {/* Left Navigation Sidebar */}
-          <div className="md:col-span-4 flex flex-col gap-2 bg-[#090b15] border border-white/10 rounded-2xl p-3 backdrop-blur-xl">
-            <span className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 px-3 py-2">
-              SETTINGS
-            </span>
 
+          {/* Left Navigation Sidebar */}
+          <div
+            className="md:col-span-4 flex flex-col gap-2 rounded-xl p-3 transition-colors border"
+            style={{
+              background: isLight ? '#ffffff' : '#0b0d13',
+              borderColor: isLight ? '#cbd5e1' : '#1e2433',
+              boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+            }}
+          >
             {navTabs.map(tab => {
               const isActive = activeTab === tab.id;
 
@@ -326,48 +334,37 @@ export const SettingsPage: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as SettingTab)}
-                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all duration-200 text-xs font-bold text-left cursor-pointer ${
-                    isActive
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-indigo-400'
-                      : 'text-slate-300 hover:text-white hover:bg-white/5'
-                  }`}
+                  className={`flex items-center justify-between px-4 py-3.5 rounded-lg transition-all duration-150 text-sm font-semibold text-left cursor-pointer ${isActive
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : isLight
+                      ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      : 'text-slate-300 hover:text-white hover:bg-[#151924]'
+                    }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Codicon name={tab.iconName} size={16} className={isActive ? 'text-white' : tab.iconColor} />
+                  <div className="flex items-center gap-3.5">
+                    <Codicon name={tab.iconName} size={19} className={isActive ? 'text-white' : (isLight ? 'text-slate-500' : 'text-slate-400')} />
                     <span>{tab.label}</span>
                   </div>
 
                   {tab.badge && (
-                    <span className={`text-[9px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                      isActive 
-                        ? 'bg-white/20 text-white' 
-                        : tab.badge === 'Update Ready' 
-                          ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-                          : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/30'
-                    }`}>
+                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${isActive
+                      ? 'bg-white/20 border-white/30 text-white'
+                      : isLight
+                        ? 'bg-blue-50 border-blue-200 text-blue-700'
+                        : 'bg-blue-900/40 border-blue-700 text-blue-300'
+                      }`}>
                       {tab.badge}
                     </span>
                   )}
                 </button>
               );
             })}
-
-            {/* Quick Classroom Tip Box */}
-            <div className="mt-4 p-3.5 rounded-xl bg-slate-900/80 border border-white/10 text-[11px] text-slate-300 font-mono space-y-1.5 shadow-md">
-              <div className="flex items-center gap-1.5 text-amber-400 font-bold">
-                <Codicon name="question" size={13} />
-                <span>Classroom Tip</span>
-              </div>
-              <p className="leading-relaxed">
-                Use <strong className="text-white">Classroom Projector</strong> preset when presenting on high-lumens smartboards to boost node visibility.
-              </p>
-            </div>
           </div>
 
           {/* Right Content Panel */}
           <div className="md:col-span-8">
             <AnimatePresence mode="wait">
-              
+
               {/* TAB: EXTENSIONS */}
               {activeTab === 'extensions' && <ExtensionsTab />}
 
@@ -382,163 +379,166 @@ export const SettingsPage: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-[#090b15] border border-white/10 rounded-2xl p-6 space-y-6 shadow-xl"
+                  className="rounded-lg p-6 space-y-6 transition-colors border"
+                  style={{
+                    background: isLight ? '#ffffff' : '#0b0d13',
+                    borderColor: isLight ? '#cbd5e1' : '#1e2433',
+                    boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+                  }}
                 >
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Codicon name="vm" size={18} className="text-indigo-400" />
-                      <span>Classroom & Projector Display Tuning</span>
+                  <div className="border-b pb-4" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <h2 className={`text-base font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <Codicon name="vm" size={18} className={isLight ? 'text-blue-600' : 'text-blue-400'} />
+                      <span>Display & Projection Tuning</span>
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Boost contrast, brightness, and color saturation for projectors, smartboards, and daylight classrooms.
+                    <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                      Calibrate contrast, brightness, color saturation, and sharpness for projectors and external displays.
                     </p>
                   </div>
 
-                  {/* Presets Grid with Rich Colors & High Contrast */}
+                  {/* Presets Grid */}
                   <div>
-                    <label className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-3 block">
-                      Presentation Presets
+                    <label className={`text-xs font-semibold uppercase tracking-wider mb-2.5 block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                      Color Presets
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+
                       {/* Standard Dark */}
                       <button
-                        onClick={() => handleTuneChange(100, 100, 100, 'default')}
-                        className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                          activePreset === 'default'
-                            ? 'border-indigo-500 bg-indigo-950/80 text-white shadow-lg ring-2 ring-indigo-500/40 shadow-indigo-500/25'
-                            : 'border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-indigo-500/40 hover:bg-white/10'
-                        }`}
+                        type="button"
+                        onClick={() => handleTuneChange(100, 100, 100, 100, 'default')}
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'default'
+                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
+                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                          }`}
                       >
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                          activePreset === 'default' ? 'bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/15 text-indigo-400'
-                        }`}>
-                          <Codicon name="vm" size={18} />
-                        </div>
-                        <span className="font-extrabold text-white">Standard Dark</span>
-                        <span className="text-[10px] font-mono text-indigo-300/80 font-medium">True Color · 100%</span>
+                        <div className="font-bold text-xs">Standard</div>
+                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>100% Native</div>
                       </button>
 
                       {/* Classroom Projector */}
                       <button
-                        onClick={() => handleTuneChange(140, 120, 130, 'projector')}
-                        className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                          activePreset === 'projector'
-                            ? 'border-sky-500 bg-sky-950/80 text-white shadow-lg ring-2 ring-sky-500/40 shadow-sky-500/25'
-                            : 'border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-sky-500/40 hover:bg-white/10'
-                        }`}
+                        type="button"
+                        onClick={() => handleTuneChange(140, 120, 130, 110, 'projector')}
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'projector'
+                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
+                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                          }`}
                       >
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                          activePreset === 'projector' ? 'bg-sky-500/30 text-sky-300' : 'bg-sky-500/15 text-sky-400'
-                        }`}>
-                          <Codicon name="screen-normal" size={18} />
-                        </div>
-                        <span className="font-extrabold text-white">Classroom Projector</span>
-                        <span className="text-[10px] font-mono text-sky-300/80 font-medium">Boosted · 130% Sat</span>
+                        <div className="font-bold text-xs">Projector</div>
+                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>130% Sat</div>
                       </button>
 
                       {/* High Contrast */}
                       <button
-                        onClick={() => handleTuneChange(125, 110, 150, 'smartboard')}
-                        className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                          activePreset === 'smartboard'
-                            ? 'border-purple-500 bg-purple-950/80 text-white shadow-lg ring-2 ring-purple-500/40 shadow-purple-500/25'
-                            : 'border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-purple-500/40 hover:bg-white/10'
-                        }`}
+                        type="button"
+                        onClick={() => handleTuneChange(125, 110, 150, 120, 'smartboard')}
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'smartboard'
+                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
+                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                          }`}
                       >
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                          activePreset === 'smartboard' ? 'bg-purple-500/30 text-purple-300' : 'bg-purple-500/15 text-purple-400'
-                        }`}>
-                          <Codicon name="eye" size={18} />
-                        </div>
-                        <span className="font-extrabold text-white">High Contrast</span>
-                        <span className="text-[10px] font-mono text-purple-300/80 font-medium">Vivid · 150% Sat</span>
+                        <div className="font-bold text-xs">High Contrast</div>
+                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>150% Sat</div>
                       </button>
 
                       {/* Daylight Visibility */}
                       <button
-                        onClick={() => handleTuneChange(160, 130, 140, 'daylight')}
-                        className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                          activePreset === 'daylight'
-                            ? 'border-amber-500 bg-amber-950/80 text-white shadow-lg ring-2 ring-amber-500/40 shadow-amber-500/25'
-                            : 'border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-amber-500/40 hover:bg-white/10'
-                        }`}
+                        type="button"
+                        onClick={() => handleTuneChange(160, 130, 140, 115, 'daylight')}
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'daylight'
+                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
+                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                          }`}
                       >
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                          activePreset === 'daylight' ? 'bg-amber-500/30 text-amber-300' : 'bg-amber-500/15 text-amber-400'
-                        }`}>
-                          <Codicon name="color-mode" size={18} />
-                        </div>
-                        <span className="font-extrabold text-white">Daylight Visibility</span>
-                        <span className="text-[10px] font-mono text-amber-300/80 font-medium">Bright · 140% Sat</span>
+                        <div className="font-bold text-xs">Daylight</div>
+                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>140% Sat</div>
                       </button>
 
                     </div>
                   </div>
 
                   {/* Sliders */}
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-white block">Screen Contrast</span>
-                        <span className="text-[11px] text-slate-400">Level: {contrastVal}%</span>
+                  <div className="space-y-4 pt-4 border-t" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+
+                    {/* 1. Contrast */}
+                    <div className="flex items-center justify-between gap-4">
+                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Screen Contrast</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={80}
+                          max={180}
+                          step={5}
+                          value={contrastVal}
+                          onChange={e => handleTuneChange(Number(e.target.value), brightnessVal, saturateVal, sharpnessVal, 'default')}
+                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                        />
+                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{contrastVal}%</span>
                       </div>
-                      <input
-                        type="range"
-                        min={80}
-                        max={180}
-                        step={5}
-                        value={contrastVal}
-                        onChange={e => handleTuneChange(Number(e.target.value), brightnessVal, sharpnessVal, 'default')}
-                        className="w-44 accent-indigo-500 cursor-pointer"
-                      />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-white block">Screen Brightness</span>
-                        <span className="text-[11px] text-slate-400">Level: {brightnessVal}%</span>
+                    {/* 2. Brightness */}
+                    <div className="flex items-center justify-between gap-4">
+                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Screen Brightness</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={80}
+                          max={150}
+                          step={5}
+                          value={brightnessVal}
+                          onChange={e => handleTuneChange(contrastVal, Number(e.target.value), saturateVal, sharpnessVal, 'default')}
+                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                        />
+                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{brightnessVal}%</span>
                       </div>
-                      <input
-                        type="range"
-                        min={80}
-                        max={150}
-                        step={5}
-                        value={brightnessVal}
-                        onChange={e => handleTuneChange(contrastVal, Number(e.target.value), sharpnessVal, 'default')}
-                        className="w-44 accent-indigo-500 cursor-pointer"
-                      />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <Codicon name="eye" size={14} className="text-indigo-400" />
-                          <span>Color Vividness & Saturation</span>
-                        </span>
-                        <span className="text-[11px] text-slate-400">Level: {sharpnessVal}%</span>
+                    {/* 3. Saturation */}
+                    <div className="flex items-center justify-between gap-4">
+                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Color Saturation</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={80}
+                          max={180}
+                          step={5}
+                          value={saturateVal}
+                          onChange={e => handleTuneChange(contrastVal, brightnessVal, Number(e.target.value), sharpnessVal, 'default')}
+                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                        />
+                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{saturateVal}%</span>
                       </div>
-                      <input
-                        type="range"
-                        min={80}
-                        max={180}
-                        step={5}
-                        value={sharpnessVal}
-                        onChange={e => handleTuneChange(contrastVal, brightnessVal, Number(e.target.value), 'default')}
-                        className="w-44 accent-indigo-500 cursor-pointer"
-                      />
                     </div>
 
-                    <div className="pt-2 flex items-center justify-between">
-                      <span className="text-[11px] font-mono text-slate-400">
-                        {activePreset === 'default' ? 'Standard Dark (True native gamut)' : `Active Preset: ${activePreset}`}
-                      </span>
+                    {/* 4. Sharpness */}
+                    <div className="flex items-center justify-between gap-4">
+                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Screen Sharpness</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={80}
+                          max={150}
+                          step={5}
+                          value={sharpnessVal}
+                          onChange={e => handleTuneChange(contrastVal, brightnessVal, saturateVal, Number(e.target.value), 'default')}
+                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                        />
+                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{sharpnessVal}%</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
                       <button
-                        onClick={() => handleTuneChange(100, 100, 100, 'default')}
-                        className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20"
+                        type="button"
+                        onClick={() => handleTuneChange(100, 100, 100, 100, 'default')}
+                        className={`text-xs font-medium cursor-pointer px-3 py-1.5 rounded-md border transition-colors ${isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                          : 'bg-[#0f121a] hover:bg-[#151924] text-slate-300 border-slate-800'
+                          }`}
                       >
-                        Reset to Standard Dark
+                        Reset
                       </button>
                     </div>
 
@@ -554,102 +554,140 @@ export const SettingsPage: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-[#090b15] border border-white/10 rounded-2xl p-6 space-y-6"
+                  className="rounded-lg p-6 space-y-5 transition-colors border"
+                  style={{
+                    background: isLight ? '#ffffff' : '#0b0d13',
+                    borderColor: isLight ? '#cbd5e1' : '#1e2433',
+                    boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+                  }}
                 >
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Codicon name="unmute" size={18} className="text-amber-400" />
+                  <div className="border-b pb-4" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <h2 className={`text-base font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <Codicon name="unmute" size={18} className={isLight ? 'text-blue-600' : 'text-blue-400'} />
                       <span>Voice & Narration</span>
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Configure speech voices for English and Hindi step-by-step narration.
+                    <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                      Speech synthesis settings for step-by-step code execution.
                     </p>
                   </div>
 
                   {/* Narration Toggle */}
-                  <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 flex items-center justify-between shadow-md">
+                  <div
+                    className="p-4 rounded-lg border flex items-center justify-between"
+                    style={{
+                      background: isLight ? '#f8fafc' : '#0f121a',
+                      borderColor: isLight ? '#e2e8f0' : '#1e2433',
+                    }}
+                  >
                     <div>
-                      <span className="text-xs font-bold text-white block">Audio Narration</span>
-                      <span className="text-[11px] text-slate-400">
-                        Show the voice toggle icon in the explanation bar during execution.
+                      <span className={`text-xs font-semibold block ${isLight ? 'text-slate-900' : 'text-white'}`}>Audio Narration</span>
+                      <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Enable voice explanations during visual step execution
                       </span>
                     </div>
 
                     <button
+                      type="button"
                       onClick={toggleVoiceMode}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        isVoiceModeEnabled ? 'bg-indigo-600' : 'bg-slate-700'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isVoiceModeEnabled ? 'bg-blue-600' : (isLight ? 'bg-slate-300' : 'bg-slate-700')
+                        }`}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                          isVoiceModeEnabled ? 'translate-x-5' : 'translate-x-0'
-                        }`}
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${isVoiceModeEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
                       />
                     </button>
                   </div>
 
-                  {/* Audio Test Bar */}
-                  <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 flex items-center justify-between shadow-md">
-                    <div>
-                      <span className="text-xs font-bold text-white block">Speaker Test</span>
-                      <span className="text-[11px] text-slate-400">Play a sample sentence to test the selected voice.</span>
-                    </div>
+                  {/* Voice Selectors with Inline Test Buttons */}
+                  <div className="space-y-3">
 
-                    <button
-                      onClick={playTestVoice}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isPlayingTestAudio
-                          ? 'bg-rose-600 text-white'
-                          : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30'
-                      }`}
+                    {/* English Voice */}
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border"
+                      style={{
+                        background: isLight ? '#f8fafc' : '#0f121a',
+                        borderColor: isLight ? '#e2e8f0' : '#1e2433',
+                      }}
                     >
-                      {isPlayingTestAudio ? <Codicon name="mute" size={14} /> : <Codicon name="play" size={14} />}
-                      <span>{isPlayingTestAudio ? 'Stop' : 'Test Voice'}</span>
-                    </button>
-                  </div>
-
-                  {/* Voice Selectors */}
-                  <div className="space-y-4">
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl bg-slate-900/60 border border-white/10 shadow-md">
                       <div>
-                        <span className="text-xs font-bold text-white block">English Voice</span>
-                        <span className="text-[11px] text-slate-400">Default speaker for English explanation lines.</span>
+                        <span className={`text-xs font-semibold block ${isLight ? 'text-slate-900' : 'text-white'}`}>English Voice</span>
+                        <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Primary speaker for English narration</span>
                       </div>
-                      <select
-                        value={selectedEnVoice}
-                        onChange={e => handleEnVoiceChange(e.target.value)}
-                        className="bg-slate-900 border border-slate-700/60 text-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-indigo-500 max-w-60 cursor-pointer"
-                      >
-                        {availableVoices
-                          .filter(v => v.lang.includes('en'))
-                          .map(v => (
-                            <option key={v.name} value={v.name}>
-                              {v.name} ({v.lang})
-                            </option>
-                          ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={selectedEnVoice}
+                          onChange={e => handleEnVoiceChange(e.target.value)}
+                          className={`rounded-md px-2.5 py-1.5 text-xs outline-none max-w-56 cursor-pointer border ${isLight
+                            ? 'bg-white border-slate-300 text-slate-800 focus:border-blue-500'
+                            : 'bg-[#0b0d13] border-slate-700 text-slate-200 focus:border-blue-500'
+                            }`}
+                        >
+                          {availableVoices
+                            .filter(v => v.lang.includes('en'))
+                            .map(v => (
+                              <option key={v.name} value={v.name}>
+                                {v.name} ({v.lang})
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => playTestVoice('en')}
+                          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer shrink-0 border ${testingVoiceLang === 'en'
+                            ? 'bg-rose-600 border-rose-600 text-white'
+                            : isLight
+                              ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700'
+                              : 'bg-[#0b0d13] hover:bg-[#151924] border-slate-700 text-slate-200'
+                            }`}
+                        >
+                          {testingVoiceLang === 'en' ? 'Stop' : 'Test'}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl bg-slate-900/60 border border-white/10 shadow-md">
+                    {/* Hindi Voice */}
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border"
+                      style={{
+                        background: isLight ? '#f8fafc' : '#0f121a',
+                        borderColor: isLight ? '#e2e8f0' : '#1e2433',
+                      }}
+                    >
                       <div>
-                        <span className="text-xs font-bold text-white block">Hindi Voice</span>
-                        <span className="text-[11px] text-slate-400">Default speaker for Hindi explanation lines.</span>
+                        <span className={`text-xs font-semibold block ${isLight ? 'text-slate-900' : 'text-white'}`}>Hindi Voice</span>
+                        <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Primary speaker for Hindi narration</span>
                       </div>
-                      <select
-                        value={selectedHiVoice}
-                        onChange={e => handleHiVoiceChange(e.target.value)}
-                        className="bg-slate-900 border border-slate-700/60 text-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-indigo-500 max-w-60 cursor-pointer"
-                      >
-                        {availableVoices
-                          .filter(v => v.lang.includes('hi') || v.lang.includes('en'))
-                          .map(v => (
-                            <option key={v.name} value={v.name}>
-                              {v.name} ({v.lang})
-                            </option>
-                          ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={selectedHiVoice}
+                          onChange={e => handleHiVoiceChange(e.target.value)}
+                          className={`rounded-md px-2.5 py-1.5 text-xs outline-none max-w-56 cursor-pointer border ${isLight
+                            ? 'bg-white border-slate-300 text-slate-800 focus:border-blue-500'
+                            : 'bg-[#0b0d13] border-slate-700 text-slate-200 focus:border-blue-500'
+                            }`}
+                        >
+                          {availableVoices
+                            .filter(v => v.lang.includes('hi') || v.lang.includes('en'))
+                            .map(v => (
+                              <option key={v.name} value={v.name}>
+                                {v.name} ({v.lang})
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => playTestVoice('hi')}
+                          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer shrink-0 border ${testingVoiceLang === 'hi'
+                            ? 'bg-rose-600 border-rose-600 text-white'
+                            : isLight
+                              ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700'
+                              : 'bg-[#0b0d13] hover:bg-[#151924] border-slate-700 text-slate-200'
+                            }`}
+                        >
+                          {testingVoiceLang === 'hi' ? 'Stop' : 'Test'}
+                        </button>
+                      </div>
                     </div>
 
                   </div>
@@ -664,65 +702,60 @@ export const SettingsPage: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-[#090b15] border border-white/10 rounded-2xl p-6 space-y-6"
+                  className="rounded-lg p-6 space-y-6 transition-colors border"
+                  style={{
+                    background: isLight ? '#ffffff' : '#0b0d13',
+                    borderColor: isLight ? '#cbd5e1' : '#1e2433',
+                    boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+                  }}
                 >
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Codicon name="key" size={18} className="text-emerald-400" />
-                      <span>License & Device Binding</span>
+                  <div className="border-b pb-4" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <h2 className={`text-base font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <Codicon name="key" size={18} className={isLight ? 'text-blue-600' : 'text-blue-400'} />
+                      <span>License & Device</span>
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Manage your institutional license key, seat allocation, and device hardware signature.
+                    <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                      Manage license status, hardware signature binding, and device seat allocation.
                     </p>
                   </div>
 
                   {/* Status Banner */}
-                  <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
-                    isActivated
-                      ? 'bg-linear-to-r from-emerald-950/70 via-slate-900/90 to-emerald-950/40 border-emerald-500/40 shadow-[0_0_25px_-5px_rgba(16,185,129,0.18)]'
-                      : 'bg-linear-to-r from-rose-950/50 via-slate-900/90 to-amber-950/30 border-rose-500/30 shadow-[0_0_20px_-5px_rgba(244,63,94,0.15)]'
+                  <div className={`p-4 rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 ${
+                    isLight ? 'bg-slate-50 border-slate-300' : 'bg-[#0f121a] border-[#1e2433]'
                   }`}>
-                    <div className="flex items-center gap-3.5">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                        isActivated 
-                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-inner' 
-                          : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                      }`}>
-                        <Codicon name="shield" size={20} className={isActivated ? 'text-emerald-400' : 'text-rose-400'} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-white font-mono tracking-wide">
-                            {isActivated 
-                              ? `${licenseContext?.licenseDetails?.tier || 'VIP Pass'} Edition`
-                              : 'Unregistered Software'}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider border ${
-                            isActivated
-                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                              : 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                          }`}>
-                            {isActivated ? 'ACTIVE' : 'INACTIVE'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold text-sm font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                           {isActivated 
-                            ? 'All visualizer modules unlocked on this device' 
-                            : 'Enter an institutional license key to unlock modules'}
-                        </p>
+                            ? `${licenseContext?.licenseDetails?.tier || 'VIP Pass'} Edition`
+                            : 'Unregistered Software'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-[4px] font-mono text-[10px] font-bold uppercase tracking-wider border ${
+                          isActivated
+                            ? isLight ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                            : isLight ? 'bg-slate-200 border-slate-300 text-slate-700' : 'bg-slate-800 border-slate-700 text-slate-400'
+                        }`}>
+                          {isActivated ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
                       </div>
+                      <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        {isActivated 
+                          ? 'All visualizer modules unlocked on this hardware signature' 
+                          : 'Activate a valid license key to unlock all modules'}
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                       {isActivated ? (
                         <>
                           <button
                             type="button"
                             onClick={() => setShowChangeKeyInput(true)}
-                            className="px-3.5 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors cursor-pointer ${
+                              isLight ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700' : 'bg-[#0f121a] hover:bg-[#151924] border-slate-700 text-slate-200'
+                            }`}
                           >
-                            <Codicon name="key" size={13} className="text-indigo-400" />
-                            <span>Change Key</span>
+                            Change Key
                           </button>
                           <button
                             type="button"
@@ -731,21 +764,20 @@ export const SettingsPage: React.FC = () => {
                                 await licenseContext?.deactivateLicense();
                               }
                             }}
-                            className="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-400 text-rose-200 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-                            title="Unlink and remove key from this device"
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors cursor-pointer ${
+                              isLight ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700' : 'bg-rose-950/30 hover:bg-rose-950/50 border-rose-800/60 text-rose-300'
+                            }`}
                           >
-                            <Codicon name="log-out" size={13} className="text-rose-400" />
-                            <span>Remove Key</span>
+                            Remove Key
                           </button>
                         </>
                       ) : (
                         <button
                           type="button"
                           onClick={() => setShowChangeKeyInput(true)}
-                          className="px-4 py-2 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400/40 rounded-xl text-xs font-bold font-mono shadow-md shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-2"
+                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-semibold transition-colors cursor-pointer"
                         >
-                          <Codicon name="key" size={14} />
-                          <span>Activate License</span>
+                          Activate License
                         </button>
                       )}
                     </div>
@@ -753,179 +785,163 @@ export const SettingsPage: React.FC = () => {
 
                   {/* Institution Co-Branding */}
                   {isActivated && licenseContext?.licenseDetails?.customBranding?.institutionName && (
-                    <div className="p-3.5 rounded-xl bg-linear-to-r from-indigo-950/40 via-slate-900/80 to-purple-950/40 border border-indigo-500/30 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Codicon name="organization" size={16} className="text-indigo-400 shrink-0" />
-                        <div>
-                          <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider block">Licensed To</span>
-                          <span className="text-xs font-bold font-mono text-white">
-                            {licenseContext.licenseDetails.customBranding.institutionName}
-                          </span>
-                        </div>
+                    <div
+                      className="p-3.5 rounded-lg border flex items-center justify-between"
+                      style={{
+                        background: isLight ? '#f8fafc' : '#0f121a',
+                        borderColor: isLight ? '#e2e8f0' : '#1e2433',
+                      }}
+                    >
+                      <div>
+                        <span className={`text-[10px] font-mono font-bold uppercase tracking-wider block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Licensed Organization</span>
+                        <span className={`text-xs font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {licenseContext.licenseDetails.customBranding.institutionName}
+                        </span>
                       </div>
                       {licenseContext.licenseDetails.customBranding.badgeText && (
-                        <span className="text-[10px] font-mono text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/40 font-bold">
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[4px] border font-bold ${
+                          isLight ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-blue-500/20 border-blue-500/40 text-blue-300'
+                        }`}>
                           {licenseContext.licenseDetails.customBranding.badgeText}
                         </span>
                       )}
                     </div>
                   )}
 
-                  {/* Unified 4-in-1 Table Panel for Key Details */}
-                  <div className="bg-[#0b0e1b] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 border-b border-white/10">
+                  {/* Clean 2x2 Specifications Grid */}
+                  <div
+                    className="border rounded-lg overflow-hidden divide-y"
+                    style={{
+                      background: isLight ? '#ffffff' : '#0f121a',
+                      borderColor: isLight ? '#cbd5e1' : '#1e2433',
+                    }}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
                       {/* 1. License Key */}
-                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
-                            <Codicon name="key" size={13} className="text-indigo-400" />
-                            License Key
-                          </span>
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                            isActivated
-                              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
-                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
-                          }`}>
-                            {isActivated ? 'Protected' : 'Unregistered'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
-                          <span className="font-mono text-xs text-white font-semibold tracking-wider select-none pointer-events-none">
-                            {isActivated ? maskedKey : 'No Active License'}
-                          </span>
-                          <span className="text-[10px] font-mono text-slate-500">
-                            {isActivated ? 'Verified' : 'Inactive'}
-                          </span>
-                        </div>
+                      <div className="p-4 flex flex-col justify-center gap-1.5">
+                        <span className={`text-[11px] font-mono uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          License Key
+                        </span>
+                        <span className={`font-mono text-xs font-semibold tracking-wider select-none ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {isActivated ? maskedKey : 'No Active License'}
+                        </span>
                       </div>
 
-                      {/* 2. Hardware Signature (HWID) */}
-                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
-                            <Codicon name="chip" size={13} className="text-cyan-400" />
-                            Hardware Signature (HWID)
-                          </span>
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                            isActivated
-                              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
-                          }`}>
-                            {isActivated ? 'Bound' : 'Unbound'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
-                          <span className="font-mono text-xs text-cyan-200 truncate max-w-55 select-none pointer-events-none" title={licenseContext?.hwid || 'TC-DEVICE-AUTO'}>
+                      {/* 2. Hardware Signature */}
+                      <div className="p-4 flex flex-col justify-center gap-1.5">
+                        <span className={`text-[11px] font-mono uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Hardware Signature (HWID)
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-mono text-xs truncate max-w-56 select-none ${isLight ? 'text-slate-900' : 'text-white'}`} title={licenseContext?.hwid || 'TC-DEVICE-AUTO'}>
                             {licenseContext?.hwid || 'TC-DEVICE-AUTO'}
                           </span>
-                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
+                          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${
+                            isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          }`}>
                             This Device
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
-                      {/* 3. Expiry & Validity */}
-                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
-                            <Codicon name="calendar" size={13} className="text-emerald-400" />
-                            Expiry & Validity
-                          </span>
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                            isActivated
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
-                          }`}>
-                            {isActivated ? 'Active' : 'Unregistered'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
-                          <span className="font-mono text-xs text-slate-200 select-none">
-                            {isActivated ? formattedExpiry : 'Perpetual / Lifetime'}
-                          </span>
-                          <span className="text-[10px] font-mono text-slate-500">
-                            {isActivated ? 'Licensed' : 'No Expiry'}
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                      {/* 3. Validity */}
+                      <div className="p-4 flex flex-col justify-center gap-1.5">
+                        <span className={`text-[11px] font-mono uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Validity & Expiry
+                        </span>
+                        <span className={`font-mono text-xs select-none ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {isActivated ? formattedExpiry : 'Perpetual / Lifetime'}
+                        </span>
                       </div>
 
                       {/* 4. Plan Edition */}
-                      <div className="p-4 sm:p-5 flex flex-col justify-between gap-2.5 hover:bg-white/2 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
-                            <Codicon name="shield" size={13} className="text-purple-400" />
-                            Plan Edition
-                          </span>
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                            isActivated
-                              ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                              : 'bg-zinc-800/80 text-zinc-400 border-zinc-700'
-                          }`}>
-                            {isActivated ? 'Active' : 'Free'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-[#070a14] border border-white/5 rounded-xl px-3.5 py-2.5">
-                          <span className="font-mono text-xs text-purple-200 select-none font-semibold">
-                            {isActivated 
-                              ? `${licenseContext?.licenseDetails?.tier || 'VIP Pass'} Edition`
-                              : 'Community Edition'}
-                          </span>
-                          <span className="text-[10px] font-mono text-emerald-400">
-                            {isActivated ? 'Full Access' : 'Standard'}
-                          </span>
-                        </div>
+                      <div className="p-4 flex flex-col justify-center gap-1.5">
+                        <span className={`text-[11px] font-mono uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Plan Tier
+                        </span>
+                        <span className={`font-mono text-xs select-none font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {isActivated 
+                            ? `${licenseContext?.licenseDetails?.tier || 'VIP Pass'} Edition`
+                            : 'Community Edition'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Registered Devices Section with Gradient Bar & Collapsible Logout List */}
+                  {/* Registered Devices Section */}
                   {licenseContext?.activated && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0e1b] border border-white/10 space-y-3.5 shadow-xl">
+                    <div
+                      className="p-4 sm:p-5 rounded-lg border space-y-3.5"
+                      style={{
+                        background: isLight ? '#ffffff' : '#0f121a',
+                        borderColor: isLight ? '#cbd5e1' : '#1e2433',
+                      }}
+                    >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
-                            <Codicon name="vm" size={16} />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-bold text-white font-mono">
-                              Registered Devices
-                            </h3>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold font-mono">
-                              {licenseContext.licenseDetails.activeDevicesCount || 1} of {licenseContext.licenseDetails.maxDevices || 1} Bound
-                            </span>
-                          </div>
+                        <div>
+                          <h3 className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                            Registered Devices
+                          </h3>
+                          <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                            {licenseContext.licenseDetails.activeDevicesCount || 1} of {licenseContext.licenseDetails.maxDevices || 1} seats bound
+                          </span>
                         </div>
 
                         {/* Toggle Collapsible Devices Button */}
                         <button
                           type="button"
                           onClick={() => setShowDevicesList(prev => !prev)}
-                          className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono font-bold text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+                          className={`px-3 py-1.5 rounded-md border text-xs font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto ${
+                            isLight ? 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-700' : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white'
+                          }`}
                         >
                           <span>{showDevicesList ? 'Hide Devices' : 'Manage Connected Devices'}</span>
-                          {showDevicesList ? <Codicon name="chevron-up" size={14} /> : <Codicon name="chevron-down" size={14} />}
+                          {showDevicesList ? <Codicon name="chevron-up" size={13} /> : <Codicon name="chevron-down" size={13} />}
                         </button>
                       </div>
 
-                      {/* Colorful Gradient Progress Bar */}
-                      <div className="space-y-1">
-                        <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/10 p-0.5">
-                          <div 
-                            className="bg-linear-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full rounded-full transition-all duration-500 shadow-sm shadow-indigo-500/50"
-                            style={{ width: `${Math.min(100, Math.max(8, ((licenseContext.licenseDetails.activeDevicesCount || 1) / (licenseContext.licenseDetails.maxDevices || 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                          <span>{licenseContext.licenseDetails.activeDevicesCount || 1} Active</span>
-                          <span className="text-emerald-400 font-medium">
-                            {Math.max(0, (licenseContext.licenseDetails.maxDevices || 1) - (licenseContext.licenseDetails.activeDevicesCount || 1))} slots free
-                          </span>
-                        </div>
-                      </div>
+                      {/* Clean Progress Bar with Dynamic Green -> Yellow -> Red Status */}
+                      {(() => {
+                        const activeCount = licenseContext.licenseDetails.activeDevicesCount || 1;
+                        const maxCount = licenseContext.licenseDetails.maxDevices || 1;
+                        const usageRatio = activeCount / maxCount;
+                        const usagePct = Math.min(100, Math.max(8, usageRatio * 100));
+                        const freeSlots = Math.max(0, maxCount - activeCount);
+                        
+                        // Dynamic progression: Green (<60%) -> Yellow (60-85%) -> Red (>85% / Full)
+                        const barColor = usageRatio >= 0.85
+                          ? 'bg-rose-500'
+                          : usageRatio >= 0.6
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500';
 
-                      {/* Collapsible Device List with Remote Logout / Disconnect */}
+                        const freeSlotsColor = freeSlots === 0
+                          ? (isLight ? 'text-rose-600' : 'text-rose-400')
+                          : freeSlots <= 1
+                            ? (isLight ? 'text-amber-600' : 'text-amber-400')
+                            : (isLight ? 'text-emerald-600' : 'text-emerald-400');
+
+                        return (
+                          <div className="space-y-1.5">
+                            <div className={`w-full h-2 rounded-full overflow-hidden border p-0.5 ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950 border-slate-800'}`}>
+                              <div 
+                                className={`${barColor} h-full rounded-full transition-all duration-500`}
+                                style={{ width: `${usagePct}%` }}
+                              />
+                            </div>
+                            <div className={`flex items-center justify-between text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                              <span>{activeCount} of {maxCount} devices active</span>
+                              <span className={`${freeSlotsColor} font-semibold`}>
+                                {freeSlots === 0 ? 'Seat limit reached (0 slots free)' : `${freeSlots} ${freeSlots === 1 ? 'slot' : 'slots'} free`}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Collapsible Device List */}
                       <AnimatePresence>
                         {showDevicesList && (
                           <motion.div
@@ -933,11 +949,12 @@ export const SettingsPage: React.FC = () => {
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="overflow-hidden border-t border-white/10 pt-3.5 space-y-2"
+                            className="overflow-hidden border-t pt-3.5 space-y-2"
+                            style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}
                           >
-                            <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                              <span className="font-bold text-slate-300">Connected Hardware Devices</span>
-                              <span className="text-[10px] text-slate-500">Logout to unlink a device</span>
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Connected Hardware Devices</span>
+                              <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Unlink a device to free up seats</span>
                             </div>
 
                             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -946,7 +963,6 @@ export const SettingsPage: React.FC = () => {
                                 const deviceKeys = Object.keys(devicesMap);
                                 const currentHwid = licenseContext.hwid || 'TC-DEVICE-AUTO';
 
-                                // If devices map is empty, show at least current device
                                 const list = deviceKeys.length > 0
                                   ? deviceKeys.map(devHwid => ({
                                       hwid: devHwid,
@@ -958,35 +974,28 @@ export const SettingsPage: React.FC = () => {
                                 return list.map(({ hwid: devHwid, activatedAt, isCurrent }) => (
                                   <div
                                     key={devHwid}
-                                    className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                                    className={`flex items-center justify-between p-2.5 rounded-md border transition-all ${
                                       isCurrent
-                                        ? 'bg-indigo-950/30 border-indigo-500/40'
-                                        : 'bg-slate-900/60 border-white/10 hover:border-white/20'
+                                        ? isLight ? 'bg-blue-50/70 border-blue-300' : 'bg-blue-950/20 border-blue-500/40'
+                                        : isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0f121a] border-slate-800'
                                     }`}
                                   >
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                                        isCurrent
-                                          ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40'
-                                          : 'bg-slate-800 text-slate-400 border-slate-700'
-                                      }`}>
-                                        <Codicon name="chip" size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-mono text-xs font-bold text-white truncate max-w-42.5 sm:max-w-xs" title={devHwid}>
-                                            {devHwid}
-                                          </span>
-                                          {isCurrent && (
-                                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[9px] font-bold shrink-0">
-                                              This Device
-                                            </span>
-                                          )}
-                                        </div>
-                                        <span className="text-[10px] font-mono text-slate-400 block truncate">
-                                          {activatedAt ? `Activated: ${new Date(activatedAt).toLocaleDateString('en-GB')}` : 'Hardware Bound'}
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`font-mono text-xs font-semibold truncate max-w-44 sm:max-w-xs ${isLight ? 'text-slate-900' : 'text-white'}`} title={devHwid}>
+                                          {devHwid}
                                         </span>
+                                        {isCurrent && (
+                                          <span className={`px-1.5 py-0.5 rounded border font-mono text-[9px] font-bold shrink-0 ${
+                                            isLight ? 'bg-emerald-100 border-emerald-300 text-emerald-800' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                                          }`}>
+                                            This Device
+                                          </span>
+                                        )}
                                       </div>
+                                      <span className={`text-[10px] font-mono block truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        {activatedAt ? `Activated: ${new Date(activatedAt).toLocaleDateString('en-GB')}` : 'Hardware Bound'}
+                                      </span>
                                     </div>
 
                                     <button
@@ -1007,7 +1016,9 @@ export const SettingsPage: React.FC = () => {
                                           }
                                         }
                                       }}
-                                      className="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-400 text-rose-200 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
+                                      className={`px-2 py-1 rounded text-xs font-mono font-semibold border transition-colors flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50 ${
+                                        isLight ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700' : 'bg-rose-500/20 hover:bg-rose-500/30 border-rose-500/40 text-rose-200'
+                                      }`}
                                       title="Logout and disconnect this device"
                                     >
                                       <Codicon name="log-out" size={12} />
@@ -1036,90 +1047,112 @@ export const SettingsPage: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-[#090b15] border border-white/10 rounded-2xl p-6 space-y-6"
+                  className="rounded-lg p-6 space-y-5 transition-colors border"
+                  style={{
+                    background: isLight ? '#ffffff' : '#0b0d13',
+                    borderColor: isLight ? '#cbd5e1' : '#1e2433',
+                    boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+                  }}
                 >
-                  <div className="border-b border-white/5 pb-4">
-                    <h2 className="text-lg font-black text-white flex items-center gap-2">
-                      <Codicon name="info" size={18} className="text-purple-400" />
+                  <div className="border-b pb-4" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <h2 className={`text-base font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <Codicon name="info" size={18} className={isLight ? 'text-blue-600' : 'text-blue-400'} />
                       <span>About & Updates</span>
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                       Software version information, release updates, and legal policies.
                     </p>
                   </div>
 
                   {/* Software Version Card */}
-                  <div className="p-5 rounded-2xl bg-slate-900/60 border border-white/10 flex flex-col gap-4 shadow-md">
-                    {/* Top Row */}
-                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                          <Codicon name="vm" size={18} className="text-indigo-400" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-white block">Installed Software Version</span>
-                          <span className="text-xs font-mono font-semibold text-slate-300">TreadCode Desktop v{displayVersion}</span>
-                        </div>
+                  <div
+                    className="p-5 rounded-lg border space-y-4"
+                    style={{
+                      background: isLight ? '#f8fafc' : '#0f121a',
+                      borderColor: isLight ? '#e2e8f0' : '#1e2433',
+                    }}
+                  >
+                    {/* Software Identity & Status Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                      <div>
+                        <h3 className={`text-sm font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          TreadCode Desktop
+                        </h3>
+                        <p className={`text-xs font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Version {displayVersion}
+                        </p>
                       </div>
 
-                      {hasUpdate ? (
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        {hasUpdate ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowPreviewModal(true)}
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#fa5a3f] hover:bg-[#ea4f34] text-white cursor-pointer flex items-center gap-1.5 transition-colors shadow-xs"
+                          >
+                            <Codicon name="refresh" size={13} />
+                            <span>Update Ready (v{latestVersion})</span>
+                          </button>
+                        ) : (
+                          <span className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 ${
+                            isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
+                          }`}>
+                            <Codicon name="pass" size={13} />
+                            <span>Up to Date</span>
+                          </span>
+                        )}
+
                         <button
-                          onClick={() => setShowPreviewModal(true)}
-                          className="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/30"
+                          type="button"
+                          onClick={async () => {
+                            setCheckToast("Checking server for updates...");
+                            await checkNow();
+                            setTimeout(() => {
+                              setCheckToast(null);
+                            }, 4000);
+                          }}
+                          disabled={isChecking}
+                          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                            isLight ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 shadow-xs' : 'bg-[#151924] hover:bg-[#1d2332] border-slate-700/60 text-slate-200'
+                          }`}
+                          title="Check server for updates"
                         >
-                          <Codicon name="refresh" size={13} />
-                          <span>Update Ready (v{latestVersion})</span>
+                          <Codicon name="refresh" size={13} className={isChecking ? "animate-spin text-[#fa5a3f]" : "text-[#fa5a3f]"} />
+                          <span>{isChecking ? "Checking..." : "Check for Updates"}</span>
                         </button>
-                      ) : (
-                        <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5">
-                          <Codicon name="pass" size={13} />
-                          <span>Up to Date</span>
-                        </span>
-                      )}
-                    </div>
 
-                    {/* Action Toolbar & Channels */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-b border-white/5 pb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono text-slate-400 font-medium">Update Channel:</span>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
-                          Production Stable
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowPreviewModal(true)}
+                          className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                            isLight
+                              ? 'bg-white hover:bg-[#fff5f3] border-[#fa5a3f]/30 text-[#c73820]'
+                              : 'bg-[#181112] hover:bg-[#201517] border-[#fa5a3f]/40 text-[#ff8a75]'
+                          }`}
+                          title="Preview the software update dialog"
+                        >
+                          <Codicon name="eye" size={13} />
+                          <span>Preview Dialog</span>
+                        </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setCheckToast("Checking server for updates...");
-                          await checkNow();
-                          setTimeout(() => {
-                            setCheckToast(null);
-                          }, 4000);
-                        }}
-                        disabled={isChecking}
-                        className="px-3.5 py-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
-                        title="Check server for updates"
-                      >
-                        <Codicon name="refresh" size={13} className={isChecking ? "animate-spin text-indigo-400" : "text-indigo-400"} />
-                        <span>{isChecking ? "Checking..." : "Check for Updates"}</span>
-                      </button>
                     </div>
 
-                    {/* ── 2 Update Options ── */}
+                    {/* 2 Update Options */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       {/* Option 1: Instant Direct Setup */}
-                      <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex flex-col justify-between gap-3 hover:border-indigo-500/40 transition-colors">
+                      <div
+                        className="p-4 rounded-lg border flex flex-col justify-between gap-3"
+                        style={{
+                          background: isLight ? '#f1f5f9' : '#141822',
+                          borderColor: isLight ? '#cbd5e1' : '#222a3a',
+                        }}
+                      >
                         <div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-mono uppercase font-extrabold text-indigo-400 tracking-wider">
-                              Option 1: Instant Setup (.exe)
-                            </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">
-                              Fastest
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
-                            Directly download & run the latest Windows installer setup without opening a browser.
+                          <span className={`text-xs font-semibold tracking-wide block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                            Windows Installer (.exe)
+                          </span>
+                          <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                            Offline installer setup package for Windows.
                           </p>
                         </div>
                         <button
@@ -1139,26 +1172,27 @@ export const SettingsPage: React.FC = () => {
                               document.body.removeChild(a);
                             }
                           }}
-                          className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/30"
+                          className="w-full py-2 px-3 rounded-lg bg-[#fa5a3f] hover:bg-[#ea4f34] active:bg-[#d84429] text-white text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                         >
-                          <Codicon name="cloud-download" size={14} />
-                          <span>⚡ Download .exe Installer</span>
+                          <Codicon name="cloud-download" size={13} />
+                          <span>Download .exe Setup</span>
                         </button>
                       </div>
 
                       {/* Option 2: Official Web Store Section */}
-                      <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/25 flex flex-col justify-between gap-3 hover:border-sky-500/40 transition-colors">
+                      <div
+                        className="p-4 rounded-lg border flex flex-col justify-between gap-3"
+                        style={{
+                          background: isLight ? '#f1f5f9' : '#141822',
+                          borderColor: isLight ? '#cbd5e1' : '#222a3a',
+                        }}
+                      >
                         <div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-mono uppercase font-extrabold text-sky-400 tracking-wider">
-                              Option 2: Web Store Page
-                            </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono">
-                              Catalogue Section
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-300 font-medium mt-1.5 leading-snug">
-                            Visit TreadCode's official catalogue page to check release notes, changelog & download from web.
+                          <span className={`text-xs font-semibold tracking-wide block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                            Web Catalogue & Changelog
+                          </span>
+                          <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                            View release notes and web installation portal.
                           </p>
                         </div>
                         <button
@@ -1172,11 +1206,13 @@ export const SettingsPage: React.FC = () => {
                               window.open(webUrl, '_blank');
                             }
                           }}
-                          className="w-full py-2 px-3 rounded-lg bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-sky-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          className={`w-full py-2 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isLight ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 shadow-xs' : 'bg-[#0f121a] hover:bg-[#181d29] border-slate-700/80 text-slate-200'
+                          }`}
                         >
-                          <Codicon name="globe" size={14} className="text-sky-300" />
-                          <span>🌐 Open Web Store Section</span>
-                          <Codicon name="link-external" size={11} className="text-sky-400" />
+                          <Codicon name="globe" size={13} className={isLight ? 'text-[#fa5a3f]' : 'text-[#ff7e66]'} />
+                          <span>Open Catalogue Page</span>
+                          <Codicon name="link-external" size={11} className={isLight ? 'text-slate-400' : 'text-slate-500'} />
                         </button>
                       </div>
                     </div>
@@ -1187,51 +1223,66 @@ export const SettingsPage: React.FC = () => {
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="text-[11px] font-mono px-3.5 py-2 rounded-xl bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 flex items-center gap-2 mt-1"
+                        className={`text-[11px] font-mono px-3.5 py-2 rounded-lg border flex items-center gap-2 mt-1 ${
+                          hasUpdate
+                            ? isLight
+                              ? 'bg-[#fff5f3] border-[#fa5a3f]/30 text-[#c73820]'
+                              : 'bg-[#181112] border-[#fa5a3f]/40 text-[#ff8a75]'
+                            : isLight
+                              ? 'bg-slate-50 border-slate-200 text-slate-700'
+                              : 'bg-[#131722] border-slate-800 text-slate-300'
+                        }`}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                        <span className={`w-1.5 h-1.5 rounded-full ${hasUpdate ? 'bg-[#fa5a3f]' : 'bg-emerald-500'}`} />
                         <span>{hasUpdate ? `Update Available: Version v${latestVersion} is ready to install.` : `Server Checked: You are running the latest version (v${displayVersion}).`}</span>
                       </motion.div>
                     )}
                   </div>
 
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    TreadCode is an animation-first code visualizer & algorithm teaching platform designed for faculty, professors, school computer labs, BCA, DCA, and B.Tech classrooms.
-                  </p>
-
-                  {/* Intellectual Property & Licensing Card */}
-                  <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 flex flex-col gap-2.5 shadow-md">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <Codicon name="shield" size={16} className="text-purple-400 shrink-0" />
-                      <span className="text-xs font-bold text-white">Intellectual Property & Licensing</span>
-                    </div>
-                    <div className="text-[11px] font-mono text-slate-300 space-y-1 leading-relaxed">
-                      <p className="text-white font-medium">
-                        Copyright (c) July 23, 2026 – Present Prince (prince19112003). All Rights Reserved.
-                      </p>
-                      <p className="text-slate-400 text-[10px]">
-                        Repository Initial Commit: July 23, 2026 at 01:11:21 +0530 (IST)
-                      </p>
-                      <p className="text-amber-300/90 text-[10px] pt-0.5">
-                        Licensed under Proprietary EULA. Unauthorized copying, decompilation, or distribution is strictly prohibited.
+                  {/* Clean Legal & Compliance Section */}
+                  <div
+                    className="p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    style={{
+                      background: isLight ? '#f8fafc' : '#0f121a',
+                      borderColor: isLight ? '#e2e8f0' : '#1e2433',
+                    }}
+                  >
+                    <div className="space-y-0.5">
+                      <span className={`text-xs font-semibold block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        Legal & Compliance
+                      </span>
+                      <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Licensed under Software Agreement · Copyright © 2026 Prince (prince19112003).
                       </p>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-4 pt-2 border-t border-white/5">
-                    <button
-                      onClick={() => setPolicyDoc('privacy')}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
-                    >
-                      Privacy Policy
-                    </button>
-                    <span className="text-slate-700">•</span>
-                    <button
-                      onClick={() => setPolicyDoc('terms')}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
-                    >
-                      Terms of Service
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setPolicyDoc('terms')}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+                          isLight
+                            ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 shadow-xs'
+                            : 'bg-[#141822] hover:bg-[#1a202c] border-slate-700/60 text-slate-200'
+                        }`}
+                      >
+                        <Codicon name="law" size={13} className={isLight ? 'text-slate-500' : 'text-slate-400'} />
+                        <span>Terms of Service</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPolicyDoc('privacy')}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
+                          isLight
+                            ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 shadow-xs'
+                            : 'bg-[#141822] hover:bg-[#1a202c] border-slate-700/60 text-slate-200'
+                        }`}
+                      >
+                        <Codicon name="shield" size={13} className={isLight ? 'text-slate-500' : 'text-slate-400'} />
+                        <span>Privacy Policy</span>
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -1240,59 +1291,221 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           {/* Settings Footer */}
-          <footer className="md:col-span-12 mt-6 pt-4 pb-2 border-t border-slate-800/80 text-center shrink-0 space-y-1">
-            <p className="text-[11px] font-mono tracking-wider text-slate-400 uppercase font-medium">
+          <footer className={`md:col-span-12 mt-6 pt-4 pb-2 border-t text-center shrink-0 space-y-1 ${isLight ? 'border-slate-200' : 'border-slate-800/80'}`}>
+            <p className={`text-[11px] font-mono tracking-wider uppercase font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Copyright © July 23, 2026 – Present Prince (prince19112003) · All Rights Reserved
             </p>
-            <p className="text-[10px] font-mono tracking-wider text-slate-400">
-              Licensed under Proprietary EULA · Unauthorized copying, decompilation, or distribution is strictly prohibited
+            <p className={`text-[10px] font-mono tracking-wider ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+              Licensed under Software Agreement · Unauthorized copying, decompilation, or distribution is strictly prohibited
             </p>
           </footer>
 
         </div>
       </div>
 
-      {/* Dynamic Privacy Policy / Terms Modal */}
+      {/* Modern, Minimal Professional Privacy Policy & Terms of Service Modal */}
       {policyDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-2xl border border-white/10 p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
-            style={{ background: 'rgba(10, 11, 18, 0.95)' }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            className={`w-full max-w-xl rounded-xl border shadow-2xl flex flex-col max-h-[85vh] overflow-hidden ${
+              isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-[#0d1017] border-slate-800 text-slate-200'
+            }`}
           >
-            <h2 className="text-xl font-bold mb-4 text-white">
-              {policyDoc === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
-            </h2>
-            
-            <div className="text-xs text-slate-400 space-y-3 leading-relaxed mb-6">
+            {/* Modal Header with Segmented Switcher and Close button */}
+            <div
+              className="flex items-center justify-between px-6 py-4 border-b shrink-0"
+              style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}
+            >
+              <div className={`inline-flex p-1 rounded-lg border ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-[#151923] border-slate-800'}`}>
+                <button
+                  type="button"
+                  onClick={() => setPolicyDoc('terms')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    policyDoc === 'terms'
+                      ? isLight ? 'bg-white text-slate-900 shadow-xs' : 'bg-blue-600 text-white shadow-xs'
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Codicon name="law" size={13} />
+                  <span>Terms of Service</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPolicyDoc('privacy')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    policyDoc === 'privacy'
+                      ? isLight ? 'bg-white text-slate-900 shadow-xs' : 'bg-blue-600 text-white shadow-xs'
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Codicon name="shield" size={13} />
+                  <span>Privacy Policy</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPolicyDoc(null)}
+                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                  isLight
+                    ? 'bg-white hover:bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800'
+                    : 'bg-[#151923] hover:bg-[#1f2636] border-slate-800 text-slate-400 hover:text-white'
+                }`}
+                title="Close"
+              >
+                <Codicon name="close" size={14} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="overflow-y-auto px-6 py-5 space-y-4 text-xs leading-relaxed">
               {policyDoc === 'privacy' ? (
                 <>
-                  <p className="font-semibold text-slate-200">Last updated: August 2026</p>
-                  <p>At TreadCode, we take your privacy seriously. This Privacy Policy details how we process user data within the desktop application.</p>
-                  <h3 className="font-semibold text-slate-200 mt-2">1. Information Collection</h3>
-                  <p>We do not collect personal identify information. The app reads your network hardware interface signature (HWID) purely to bind license key credentials securely on our licensing server database.</p>
-                  <h3 className="font-semibold text-slate-200 mt-2">2. Licensing Data Protection</h3>
-                  <p>All verification requests are processed securely using standard secure database nodes. No usage history, code scripts, or execution flows are tracked or stored externally.</p>
+                  <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: isLight ? '#f1f5f9' : '#1e2433' }}>
+                    <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      Privacy & Data Protection
+                    </span>
+                    <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Effective: August 2026
+                    </span>
+                  </div>
+
+                  <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                    TreadCode is built with a local-first privacy mindset. We believe learning tools should never track you or get in your way.
+                  </p>
+
+                  <div className="space-y-3 pt-1">
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        1. 100% Local-First Execution
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        All your code snippets, execution traces, variable states, and memory diagrams run directly on your own computer. None of your code or scripts are ever uploaded to cloud servers.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        2. Zero Personal Tracking
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        We never collect personal identity details, email addresses, student records, browsing histories, or keystrokes. Your work and study sessions remain completely private.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        3. Anonymous Hardware ID (HWID)
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        When activating a key or checking for updates, only an anonymous hashed hardware identifier is used to verify that your license seat limit is respected on the licensing server.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        4. Local Settings & Sandbox Storage
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        Your screen preferences, dark/light theme, narration voices, and offline tokens are stored locally on your device in standard system app storage.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        5. Direct Help & Support
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        If you ever need to transfer your license to a new computer or have questions, feel free to reach out via the in-app Feedback tab or directly to Prince.
+                      </p>
+                    </div>
+                  </div>
                 </>
               ) : (
                 <>
-                  <p className="font-semibold text-slate-200">Last updated: August 2026</p>
-                  <p>By using the TreadCode visualizer platform, you agree to comply with these terms.</p>
-                  <h3 className="font-semibold text-slate-200 mt-2">1. Software License</h3>
-                  <p>TreadCode grants you a non-exclusive, non-transferable internal license to access the algorithm visualization platform according to the limits authorized by your institution.</p>
-                  <h3 className="font-semibold text-slate-200 mt-2">2. Hardware Key Binding</h3>
-                  <p>Each license key is securely bound to the hardware signature of the target system. Sharing verification keys beyond the designated limits will result in key blockage.</p>
+                  <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: isLight ? '#f1f5f9' : '#1e2433' }}>
+                    <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      Terms of Service & License Agreement
+                    </span>
+                    <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Effective: August 2026
+                    </span>
+                  </div>
+
+                  <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                    By using TreadCode, you agree to these simple and fair terms designed to protect the software while keeping your experience smooth and transparent.
+                  </p>
+
+                  <div className="space-y-3 pt-1">
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        1. Software License & Usage
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        TreadCode is built to help you understand algorithms, memory behavior, and code flow visually. You are granted a personal license to use all visualizers, practice lessons, and diagnostics for self-learning, teaching, and study.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        2. Device Limits & Hardware Binding (HWID)
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        Your access key binds to your computer's hardware ID to activate your seat. Please keep your key safe and do not share or distribute keys across unauthorized devices to avoid automatic license locking.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        3. Respect the Work & Code
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        All visualizers, animation engines, themes, and application assets are created and owned by Prince (prince19112003). Please do not reverse-engineer, decompile, or repackage and resell the software.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        4. Classroom & Content Creation Rights
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        You are 100% welcome to use TreadCode in your YouTube tutorials, coding streams, college lectures, and classroom presentations. We only ask that you give a friendly shoutout to TreadCode.
+                      </p>
+                    </div>
+
+                    <div className={`p-3.5 rounded-lg border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#131722] border-slate-800/80'}`}>
+                      <h4 className={`font-semibold mb-1 ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        5. Updates & Direct Support
+                      </h4>
+                      <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                        We continuously work on performance improvements, bug fixes, and new visual modules. If you ever run into an issue or need help, reach out anytime through the in-app Feedback tab.
+                      </p>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
 
-            <button
-              onClick={() => setPolicyDoc(null)}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition-colors cursor-pointer"
+            {/* Modal Footer */}
+            <div
+              className="flex items-center justify-between px-6 py-3.5 border-t shrink-0"
+              style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}
             >
-              Accept & Close
-            </button>
+              <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                TreadCode Desktop · Legal Document
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setPolicyDoc(null)}
+                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer shadow-xs"
+              >
+                Close
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

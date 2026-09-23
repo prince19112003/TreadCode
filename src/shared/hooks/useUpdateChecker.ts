@@ -124,7 +124,7 @@ export const useUpdateChecker = () => {
             hasUpdate: true,
             latestVersion: data.version,
             currentVersion: CURRENT_VERSION,
-            changelog: notesStr ? notesStr.split('\n') : ['New Features & Enhancements Available'],
+            changelog: notesStr ? notesStr.split('\n').map((s: string) => s.trim()).filter(Boolean) : [],
             isChecking: false,
             lastChecked: new Date(),
             error: null,

@@ -1,9 +1,10 @@
 import React, { useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BookOpen, BarChart2, Layers } from 'lucide-react';
+import { BookOpen, Layers, ArrowLeft } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
 import { useModuleStore } from '@shared/hooks/useModuleStore';
+import { useThemeStore } from '@shared/hooks/useThemeStore';
 
 /* =========================================================
    STANDARD LANGUAGE TOPIC DATA
@@ -227,12 +228,6 @@ const networkingTopics = [
   },
 ];
 
-const difficultyConfig = {
-  Beginner:     { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.22)' },
-  Intermediate: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
-  Advanced:     { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)' },
-};
-
 /* =========================================================
    PAGE
    ========================================================= */
@@ -240,6 +235,7 @@ export const TopicSelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const { languageId } = useParams();
   const { moduleStatus, isInitialized, init } = useModuleStore();
+  const { isLight } = useThemeStore();
 
   useEffect(() => {
     init();
@@ -310,14 +306,27 @@ export const TopicSelectionPage: React.FC = () => {
   /* ── STANDARD LANGUAGE PAGE ────────────────────────────────────────────── */
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
-      <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-6xl mx-auto w-full min-h-full relative z-10">
+      <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 sm:px-6 max-w-7xl mx-auto w-full min-h-full relative z-10">
 
         {/* Page Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-white drop-shadow-sm">
+          <button
+            onClick={() => navigate('/languages')}
+            className={`inline-flex items-center gap-1.5 text-xs font-medium mb-3 cursor-pointer transition-colors ${
+              isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Modules</span>
+          </button>
+          <h1 className={`text-2xl md:text-3xl font-bold tracking-tight transition-colors ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
             {langDisplay} Topics
           </h1>
-          <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
+          <p className={`text-xs md:text-sm mt-1 transition-colors ${
+            isLight ? 'text-slate-600' : 'text-slate-400'
+          }`}>
             {isMl
               ? 'Intuitive, code-free algorithm playgrounds and visual model simulations.'
               : isNetworking
@@ -327,7 +336,7 @@ export const TopicSelectionPage: React.FC = () => {
         </motion.div>
 
         {/* Stats Bar */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2.5 mb-6 flex-wrap">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex gap-2 mb-6 flex-wrap">
           {[
             { icon: Layers, label: `${topics.length} Topics`, color: '#6366f1' },
             ...(isMl
@@ -337,12 +346,17 @@ export const TopicSelectionPage: React.FC = () => {
               : !isDsa
               ? [{ icon: BookOpen, label: `${totalPrograms} Programs`, color: '#a855f7' }]
               : []),
-            { icon: BarChart2, label: isNetworking ? '2 Difficulty Levels' : '3 Difficulty Levels', color: '#38bdf8' },
           ].map(stat => (
             <div
               key={stat.label}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
-              style={{ background: 'rgba(12, 14, 22, 0.8)', border: `1px solid ${stat.color}35` }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
+                isLight ? 'text-slate-800' : 'text-slate-200'
+              }`}
+              style={{
+                background: isLight ? '#ffffff' : '#0b0d13',
+                border: `1px solid ${isLight ? '#cbd5e1' : '#1e2433'}`,
+                boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+              }}
             >
               <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
               <span>{stat.label}</span>
@@ -350,16 +364,15 @@ export const TopicSelectionPage: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* Topic Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 pb-12">
+        {/* Topic Grid: 4 Cards per row on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 pb-12">
           {(topics as typeof pythonTopics).map((topic, index) => {
-            const diff = difficultyConfig[topic.difficulty];
             return (
               <motion.div
                 key={topic.id}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: index * 0.04, ease: 'easeOut' }}
+                transition={{ duration: 0.3, delay: index * 0.025, ease: 'easeOut' }}
               >
                 <div
                   role="button"
@@ -367,105 +380,95 @@ export const TopicSelectionPage: React.FC = () => {
                   aria-label={`Select topic ${topic.name}`}
                   onClick={() => handleTopicClick(topic.id)}
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleTopicClick(topic.id)}
-                  className="relative flex flex-col overflow-hidden rounded-2xl p-5 min-h-48 transition-all duration-300 group select-none"
+                  className="relative flex flex-col justify-between overflow-hidden rounded-lg p-4.5 min-h-42 transition-all duration-200 group select-none"
                   style={{
-                    background: 'rgba(12, 14, 22, 0.85)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: isLight ? '#ffffff' : '#0b0d13',
+                    border: `1px solid ${isLight ? '#cbd5e1' : '#1e2433'}`,
+                    boxShadow: isLight
+                      ? '0 1px 3px 0 rgba(15, 23, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.08)'
+                      : 'none',
                     cursor: 'pointer',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = `${topic.accentColor}60`;
-                    el.style.transform = 'translateY(-3px)';
-                    el.style.boxShadow = `0 10px 30px -8px ${topic.accentColor}25, 0 0 0 1px ${topic.accentColor}40`;
-                    const bar = el.querySelector('.accent-bar') as HTMLElement;
-                    if (bar) bar.style.opacity = '1';
+                    el.style.backgroundColor = isLight ? '#ffffff' : '#11141d';
+                    el.style.borderColor = topic.accentColor || '#3b82f6';
+                    el.style.transform = 'translateY(-2px)';
+                    el.style.boxShadow = isLight
+                      ? '0 14px 28px -4px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.08)'
+                      : '0 8px 24px -4px rgba(0, 0, 0, 0.85)';
                     const num = el.querySelector('.chapter-num') as HTMLElement;
-                    if (num) num.style.color = `${topic.accentColor}40`;
+                    if (num) num.style.color = isLight ? '#334155' : 'rgba(255, 255, 255, 0.45)';
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = 'rgba(255,255,255,0.1)';
+                    el.style.backgroundColor = isLight ? '#ffffff' : '#0b0d13';
+                    el.style.borderColor = isLight ? '#cbd5e1' : '#1e2433';
                     el.style.transform = 'translateY(0)';
-                    el.style.boxShadow = 'none';
-                    const bar = el.querySelector('.accent-bar') as HTMLElement;
-                    if (bar) bar.style.opacity = '0';
+                    el.style.boxShadow = isLight
+                      ? '0 1px 3px 0 rgba(15, 23, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.08)'
+                      : 'none';
                     const num = el.querySelector('.chapter-num') as HTMLElement;
-                    if (num) num.style.color = 'rgba(255,255,255,0.12)';
+                    if (num) num.style.color = isLight ? '#64748b' : 'rgba(255, 255, 255, 0.20)';
                   }}
                 >
-                  <div className="accent-bar absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-opacity duration-200" style={{ background: topic.accentColor, opacity: 0 }} />
-                  
-                  <div className="flex justify-between items-start mb-3">
+                  {/* Top Header: Watermark Number only */}
+                  <div className="flex justify-between items-start mb-1.5">
                     <span
-                      className="chapter-num font-black transition-colors duration-200"
-                      style={{ fontSize: '46px', lineHeight: 1, color: 'rgba(255,255,255,0.12)', fontFamily: "'JetBrains Mono', monospace" }}
+                      className="chapter-num font-mono font-black select-none transition-colors duration-200"
+                      style={{
+                        fontSize: '34px',
+                        lineHeight: 1,
+                        color: isLight ? '#64748b' : 'rgba(255, 255, 255, 0.20)'
+                      }}
                     >
                       {topic.number}
                     </span>
-                    <span
-                      className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0"
-                      style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}` }}
-                    >
-                      {topic.difficulty}
-                    </span>
                   </div>
 
-                  <div className="mt-auto">
-                    <h2 className="text-xl font-black mb-1 leading-tight tracking-tight text-white group-hover:text-indigo-200 transition-colors">
+                  {/* Body: Larger Topic Title & Subtitle */}
+                  <div className="mt-1">
+                    <h2 className={`text-xl font-bold mb-1 leading-snug tracking-tight transition-colors ${
+                      isLight ? 'text-slate-950 group-hover:text-blue-600' : 'text-white group-hover:text-blue-300'
+                    }`}>
                       {topic.name}
                     </h2>
-                    <p className="text-xs font-medium mb-4 text-slate-200 line-clamp-1">{topic.subtitle}</p>
-                    
-                    <div className="flex items-center justify-between text-xs font-bold pt-3 border-t text-white" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                      {'complexity' in topic ? (
-                        <>
-                          <span className="text-[9px] font-mono text-slate-400 font-bold uppercase tracking-wider">TIME COMPLEXITY</span>
-                          <span className="text-[11px] font-mono font-black" style={{ color: topic.accentColor }}>{(topic as any).complexity}</span>
-                        </>
-                      ) : isMl ? (
-                        <>
-                          <div className="flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
-                            <span className="text-[11px] font-mono font-bold text-slate-200">Interactive Model</span>
-                          </div>
-                          <span
-                            className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
-                            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
-                          >
-                            {topic.category}
-                          </span>
-                        </>
-                      ) : isNetworking ? (
-                        <>
-                          <div className="flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
-                            <span className="text-[11px] font-mono font-bold text-slate-200">{(topic as any).layer}</span>
-                          </div>
-                          <span
-                            className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
-                            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
-                          >
-                            {topic.category}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>{topic.programsCount} Programs</span>
-                          </div>
-                          <span
-                            className="text-[10px] font-mono px-2 py-0.5 rounded-md font-extrabold uppercase"
-                            style={{ color: topic.accentColor, background: `${topic.accentColor}15`, border: `1px solid ${topic.accentColor}30` }}
-                          >
-                            {topic.category}
-                          </span>
-                        </>
-                      )}
-                    </div>
+                    <p className={`text-xs line-clamp-1 leading-normal font-medium transition-colors ${
+                      isLight ? 'text-slate-600' : 'text-slate-400'
+                    }`}>
+                      {topic.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Footer: Functional info only */}
+                  <div className="flex items-center justify-between text-xs font-medium pt-2.5 mt-3.5 border-t" style={{
+                    borderColor: isLight ? '#cbd5e1' : '#171c26'
+                  }}>
+                    {'complexity' in topic ? (
+                      <>
+                        <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                          TIME COMPLEXITY
+                        </span>
+                        <span className="text-xs font-mono font-extrabold" style={{ color: topic.accentColor }}>
+                          {(topic as any).complexity}
+                        </span>
+                      </>
+                    ) : isMl ? (
+                      <div className={`flex items-center gap-1.5 ${isLight ? 'text-slate-800 font-semibold' : 'text-slate-300'}`}>
+                        <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
+                        <span className="text-xs font-mono font-semibold">Interactive Model</span>
+                      </div>
+                    ) : isNetworking ? (
+                      <div className={`flex items-center gap-1.5 ${isLight ? 'text-slate-800 font-semibold' : 'text-slate-300'}`}>
+                        <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
+                        <span className="text-xs font-mono font-semibold">{(topic as any).layer}</span>
+                      </div>
+                    ) : (
+                      <div className={`flex items-center gap-1.5 ${isLight ? 'text-slate-800 font-semibold' : 'text-slate-300'}`}>
+                        <BookOpen className="w-3.5 h-3.5" style={{ color: topic.accentColor }} />
+                        <span className="text-xs font-semibold">{topic.programsCount} Programs</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>

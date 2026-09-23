@@ -36,9 +36,6 @@ export const MODULE_SIZE_MAP: Record<string, string> = {
   dsa: '357 KB',
   ml: '8 KB',
   networking: '6 KB',
-  javascript: '180 KB',
-  sql: '120 KB',
-  oops: '95 KB',
 };
 
 export const MODULE_CATALOG: ModuleMeta[] = [
@@ -48,9 +45,6 @@ export const MODULE_CATALOG: ModuleMeta[] = [
   { id: 'dsa',        name: 'Data Structures & Algorithms',      topics: 26, programs: 30,  sizeKB: 357,  version: '1.0.0' },
   { id: 'ml',         name: 'Machine Learning',                  topics: 11, programs: 11,  sizeKB: 8,    version: '1.0.0', isMarkerOnly: true },
   { id: 'networking', name: 'Computer Networks',                 topics: 8,  programs: 8,   sizeKB: 6,    version: '1.0.0', isMarkerOnly: true },
-  { id: 'javascript', name: 'JavaScript',                        topics: 12, programs: 25,  sizeKB: 180,  version: '1.0.0' },
-  { id: 'sql',        name: 'SQL Database',                      topics: 10, programs: 20,  sizeKB: 120,  version: '1.0.0' },
-  { id: 'oops',       name: 'Object Oriented Programming',       topics: 8,  programs: 16,  sizeKB: 95,   version: '1.0.0' },
 ];
 
 export interface ModuleStoreState {

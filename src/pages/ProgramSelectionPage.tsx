@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Code2 } from 'lucide-react';
+import { Code2, ArrowLeft } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
+import { useThemeStore } from '@shared/hooks/useThemeStore';
 
 /* =========================================================
    FULL PROGRAM DATA (same as before, kept in this file)
@@ -503,6 +504,9 @@ const otherProgramsByLang: Record<string, Record<string, { id: string; number: s
 export const ProgramSelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const { languageId, topicId } = useParams();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   const programs = (languageId && topicId && otherProgramsByLang[languageId]?.[topicId])
     ? otherProgramsByLang[languageId][topicId]
     : (topicId && mockProgramsByTopic[topicId] ? mockProgramsByTopic[topicId] : []);
@@ -510,44 +514,75 @@ export const ProgramSelectionPage: React.FC = () => {
   const topicDisplayName = topicId
     ? topicId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
     : 'Programs';
-  const langDisplay = languageId?.toUpperCase() || 'Language';
+
+  const langDisplay = languageId
+    ? (languageId === 'cpp' ? 'C++' : languageId === 'dsa' ? 'DSA' : languageId === 'ml' ? 'Machine Learning' : languageId === 'networking' ? 'Computer Networks' : languageId.charAt(0).toUpperCase() + languageId.slice(1))
+    : 'Python';
 
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
-      <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 max-w-7xl mx-auto w-full min-h-full relative z-10">
+      <div className="flex flex-col pt-4 md:pt-6 pb-12 px-4 sm:px-6 max-w-7xl mx-auto w-full min-h-full relative z-10">
 
         {/* Page Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6 md:mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] font-mono font-extrabold text-indigo-300 bg-indigo-950/50 border border-indigo-400/30 px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-md shadow-sm">
-              {langDisplay} · {topicDisplayName}
-            </span>
-          </div>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="mb-6 md:mb-8">
+          <button
+            onClick={() => navigate(`/topics/${languageId || 'python'}`)}
+            className={`inline-flex items-center gap-1.5 text-xs font-medium mb-3 cursor-pointer transition-colors ${
+              isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{langDisplay} Topics</span>
+          </button>
 
-          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight text-white drop-shadow-sm">
-            {topicDisplayName} Programs
-          </h1>
-          <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
-            Select a program to step through step-by-step visual execution.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h1 className={`text-2xl md:text-3xl font-bold tracking-tight transition-colors ${
+                isLight ? 'text-slate-900' : 'text-white'
+              }`}>
+                {topicDisplayName} Programs
+              </h1>
+              <p className={`text-xs md:text-sm mt-1 transition-colors ${
+                isLight ? 'text-slate-600' : 'text-slate-400'
+              }`}>
+                Select a program to step through code execution and variable tracing.
+              </p>
+            </div>
+
+            <div
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold self-start sm:self-auto transition-colors ${
+                isLight ? 'text-slate-800' : 'text-slate-200'
+              }`}
+              style={{
+                background: isLight ? '#ffffff' : '#0b0d13',
+                border: `1px solid ${isLight ? '#cbd5e1' : '#1e2433'}`,
+                boxShadow: isLight ? '0 1px 3px 0 rgba(15, 23, 42, 0.08)' : 'none',
+              }}
+            >
+              <Code2 className="w-3.5 h-3.5 text-blue-500" />
+              <span>{programs.length} Programs</span>
+            </div>
+          </div>
         </motion.div>
 
         {/* Program Grid */}
         {programs.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center py-16">
-              <Code2 className="w-10 h-10 mx-auto mb-4 text-indigo-400 opacity-40" />
-              <p className="text-slate-300 font-medium">No programs found for this topic.</p>
+              <Code2 className={`w-10 h-10 mx-auto mb-3 ${isLight ? 'text-slate-400' : 'text-slate-600'}`} />
+              <p className={`text-sm font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                No programs found for this topic.
+              </p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 pb-12">
             {programs.map((prog, index) => (
               <motion.div
                 key={prog.id}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: index * 0.04, ease: 'easeOut' }}
+                transition={{ duration: 0.25, delay: index * 0.025, ease: 'easeOut' }}
               >
                 <div
                   role="button"
@@ -555,51 +590,62 @@ export const ProgramSelectionPage: React.FC = () => {
                   aria-label={`Open program ${prog.friendlyName}`}
                   onClick={() => navigate(`/visualizer/${languageId}/${topicId}/${prog.id}`)}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate(`/visualizer/${languageId}/${topicId}/${prog.id}`); }}
-                  className="flex flex-col min-h-50 p-5 rounded-2xl transition-all duration-300 group relative overflow-hidden select-none"
+                  className="flex flex-col justify-between h-full min-h-42 p-4.5 rounded-lg transition-all duration-200 group select-none cursor-pointer"
                   style={{
-                    background: 'rgba(12, 14, 22, 0.85)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    background: isLight ? '#ffffff' : '#0b0d13',
+                    border: `1px solid ${isLight ? '#cbd5e1' : '#1e2433'}`,
+                    boxShadow: isLight
+                      ? '0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)'
+                      : 'none',
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = 'rgba(99,102,241,0.5)';
-                    el.style.transform = 'translateY(-3px)';
-                    el.style.boxShadow = '0 10px 30px -8px rgba(99,102,241,0.25), 0 0 0 1px rgba(99,102,241,0.3)';
+                    el.style.backgroundColor = isLight ? '#ffffff' : '#11141d';
+                    el.style.borderColor = '#3b82f6';
+                    el.style.transform = 'translateY(-2px)';
+                    el.style.boxShadow = isLight
+                      ? '0 10px 20px -4px rgba(15, 23, 42, 0.10), 0 2px 6px -1px rgba(15, 23, 42, 0.04)'
+                      : '0 8px 20px -4px rgba(0, 0, 0, 0.7)';
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = 'rgba(255,255,255,0.1)';
+                    el.style.backgroundColor = isLight ? '#ffffff' : '#0b0d13';
+                    el.style.borderColor = isLight ? '#cbd5e1' : '#1e2433';
                     el.style.transform = 'translateY(0)';
-                    el.style.boxShadow = 'none';
+                    el.style.boxShadow = isLight
+                      ? '0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)'
+                      : 'none';
                   }}
                 >
-                  {/* Top row */}
-                  <div className="flex items-start justify-between mb-4 gap-2">
-                    <div className="flex items-center gap-3">
-                      {/* Icon */}
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-950/60 border border-indigo-400/30">
-                        <Code2 className="w-5 h-5 text-indigo-300" />
-                      </div>
+                  {/* Top row: Icon + Number badge */}
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 border ${
+                      isLight ? 'bg-blue-50/80 border-blue-200 text-blue-600' : 'bg-[#151923] border-[#252e40] text-blue-400'
+                    }`}>
+                      <Code2 className="w-4 h-4" />
                     </div>
 
-                    {/* Program number badge */}
-                    <span className="text-[10px] font-extrabold shrink-0 px-2.5 py-1 rounded-full font-mono text-slate-200 bg-white/5 border border-white/10">
+                    <span className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded-[4px] border ${
+                      isLight ? 'bg-slate-100 border-slate-300 text-slate-700' : 'bg-[#151923] border-[#252e40] text-slate-300'
+                    }`}>
                       #{prog.number}
                     </span>
                   </div>
 
-                  {/* Name */}
-                  <h2 className="font-extrabold mb-2 leading-snug text-base text-white group-hover:text-indigo-200 transition-colors">
-                    {prog.friendlyName}
-                  </h2>
+                  {/* Program Title & Description */}
+                  <div className="flex-1">
+                    <h2 className={`font-semibold mb-1.5 leading-snug text-sm md:text-base tracking-tight transition-colors ${
+                      isLight ? 'text-slate-900 group-hover:text-blue-600' : 'text-white group-hover:text-blue-400'
+                    }`}>
+                      {prog.friendlyName}
+                    </h2>
 
-                  {/* Description — fully visible */}
-                  <p className="text-xs font-medium leading-relaxed flex-1 text-slate-200">
-                    {prog.description}
-                  </p>
+                    <p className={`text-xs leading-relaxed transition-colors ${
+                      isLight ? 'text-slate-600' : 'text-slate-400'
+                    }`}>
+                      {prog.description}
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             ))}

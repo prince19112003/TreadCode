@@ -235,14 +235,23 @@ export const App: React.FC = () => {
     const savedTuning = localStorage.getItem('flowtrace_display_tuning');
     if (savedTuning) {
       try {
-        const { contrast, brightness, saturate } = JSON.parse(savedTuning);
+        const { contrast, brightness, saturate, sharpness } = JSON.parse(savedTuning);
         const c = contrast || 100;
         const b = brightness || 100;
         const s = saturate || 100;
-        if (c === 100 && b === 100 && s === 100) {
+        const sh = sharpness || 100;
+        if (c === 100 && b === 100 && s === 100 && sh === 100) {
           document.documentElement.style.filter = 'none';
         } else {
-          document.documentElement.style.filter = `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
+          let filterStr = `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
+          if (sh !== 100) {
+            if (sh < 100) {
+              filterStr += ` blur(${(100 - sh) * 0.015}px)`;
+            } else {
+              filterStr += ` drop-shadow(0 0 ${(sh - 100) * 0.008}px rgba(255,255,255,0.18))`;
+            }
+          }
+          document.documentElement.style.filter = filterStr;
         }
       } catch (e) {
         console.error(e);

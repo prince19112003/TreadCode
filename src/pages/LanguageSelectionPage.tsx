@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useContext, useCallback } from 'react';
+import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Lock, Download, RefreshCw, AlertCircle } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { useModuleStore, MODULE_SIZE_MAP } from '@shared/hooks/useModuleStore';
+import { useThemeStore } from '@shared/hooks/useThemeStore';
 import { LicenseContext } from '@app/App';
 import { LicenseModal } from '@shared/components/ui/LicenseModal';
 import { db } from '@shared/config/firebase';
@@ -25,11 +26,30 @@ function isVersionNewer(remote?: string, local?: string): boolean {
   return false;
 }
 
+type CategoryFilter = 'all' | 'languages' | 'dsa' | 'core';
+
+const CATEGORY_MAP: Record<string, CategoryFilter> = {
+  python: 'languages',
+  java: 'languages',
+  c: 'languages',
+  cpp: 'languages',
+  javascript: 'languages',
+  dsa: 'dsa',
+  ml: 'core',
+  networking: 'core',
+  sql: 'core',
+  oops: 'core',
+};
+
+const CATEGORIES: { id: CategoryFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'languages', label: 'Languages' },
+  { id: 'dsa', label: 'DSA' },
+  { id: 'core', label: 'Core CS' },
+];
+
 /* =========================================================
-   LANGUAGE DATA
-   ========================================================= */
-/* =========================================================
-   LANGUAGE DATA
+   MODULE DATA
    ========================================================= */
 const languages = [
   {
@@ -45,9 +65,27 @@ const languages = [
     accentGlow: 'rgba(59,130,246,0.20)',
     accentBorder: 'rgba(59,130,246,0.35)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
-        <path fill="#3776AB" d="M62.6 12C42.2 12 43.5 20.9 43.5 20.9l.1 9.2h19.5v2.8H23.5S12 31.6 12 52.3c0 20.7 10 20.1 10 20.1h6v-8.4c0-9.6 8.5-9.6 8.5-9.6h19.3c8.9 0 8.5-8.2 8.5-8.2V20.8S66.1 12 62.6 12zm-10 6.6c2 0 3.6 1.6 3.6 3.6s-1.6 3.6-3.6 3.6-3.6-1.6-3.6-3.6 1.6-3.6 3.6-3.6z"/>
-        <path fill="#FFD43B" d="M65.4 116c20.4 0 19.1-8.9 19.1-8.9l-.1-9.2H64.9V95.1h39.6s11.5 1.3 11.5-19.4c0-20.7-10-20.1-10-20.1h-6v8.4c0 9.6-8.5 9.6-8.5 9.6H52.2c-8.9 0-8.5 8.2-8.5 8.2v24.9s-1.8 8.8 21.7 8.8zm10-6.6c-2 0-3.6-1.6-3.6-3.6s1.6-3.6 3.6-3.6 3.6 1.6 3.6 3.6-1.6 3.6-3.6 3.6z"/>
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
+        <defs>
+          <linearGradient id="pyBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#387eb8" />
+            <stop offset="100%" stopColor="#296396" />
+          </linearGradient>
+          <linearGradient id="pyYellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffd43b" />
+            <stop offset="100%" stopColor="#f5b800" />
+          </linearGradient>
+        </defs>
+        {/* Top Blue Snake */}
+        <path
+          fill="url(#pyBlueGrad)"
+          d="M63.6 14c-20.5 0-19.2 8.9-19.2 8.9l.1 9.2h19.5v2.8H24.5S13 33.6 13 54.3c0 20.7 10 20.1 10 20.1h6v-8.4c0-9.6 8.5-9.6 8.5-9.6h19.3c8.9 0 8.5-8.2 8.5-8.2V22.8S67.1 14 63.6 14zm-10 6.6c2 0 3.6 1.6 3.6 3.6s-1.6 3.6-3.6 3.6-3.6-1.6-3.6-3.6 1.6-3.6 3.6-3.6z"
+        />
+        {/* Bottom Yellow Snake */}
+        <path
+          fill="url(#pyYellowGrad)"
+          d="M64.4 114c20.5 0 19.2-8.9 19.2-8.9l-.1-9.2H64V93.1h39.5s11.5 1.3 11.5-19.4c0-20.7-10-20.1-10-20.1h-6v8.4c0 9.6-8.5 9.6-8.5 9.6H51.2c-8.9 0-8.5 8.2-8.5 8.2v25.4s-1.8 8.8 21.7 8.8zm10-6.6c-2 0-3.6-1.6-3.6-3.6s1.6-3.6 3.6-3.6 3.6 1.6 3.6 3.6-1.6 3.6-3.6 3.6z"
+        />
       </svg>
     ),
   },
@@ -64,7 +102,7 @@ const languages = [
     accentGlow: 'rgba(249,115,22,0.20)',
     accentBorder: 'rgba(249,115,22,0.35)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
         <path fill="#5382A1" d="M47 99.4c0 0-7.3 2-2.3 2.7 6.1.9 16.9.7 27.6-.8 7.3-1.1 15-2.9 15-2.9s-4.3 1.5-9.7 2.1c-13.8 1.6-30.8 1-30.6-1.1"/>
         <path fill="#5382A1" d="M42.2 86.8c0 0-8.2 2.3-2.6 3.1 7 1 19.3.9 31.7-.9 8.3-1.2 17.1-3.3 17.1-3.3s-4.9 1.7-11.1 2.4c-15.7 1.8-35.1 1.1-35.1-1.3"/>
         <path fill="#E76F00" d="M68 53c6.8 7.4-1.8 13.9-1.8 13.9s17.3-8.8 8.8-17.7c-7.2-7.5-13.5-12.7.7-25.2C75.7 24 61.2 45.6 68 53z"/>
@@ -86,7 +124,7 @@ const languages = [
     accentGlow: 'rgba(56,189,248,0.20)',
     accentBorder: 'rgba(56,189,248,0.35)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
         <path fill="#283593" d="M117.5 35L64 4.1 10.5 35v61.8L64 127.9l53.5-30.9V35z"/>
         <path fill="#5C6BC0" d="M64 4.1v123.8l53.5-30.9V35L64 4.1z"/>
         <path fill="#FFFFFF" d="M65.7 40.5c-15.6 0-26.6 10.7-26.6 25.2 0 14.5 10.8 25.2 26.6 25.2 9.5 0 17.5-4.4 21.6-11.7l-9.9-5.7c-2.3 4.2-6.6 6.7-11.7 6.7-8.8 0-14.7-6.2-14.7-14.5 0-8.3 5.9-14.5 14.7-14.5 5.1 0 9.4 2.5 11.7 6.7l9.9-5.7c-4.1-7.3-12.1-11.7-21.6-11.7z"/>
@@ -106,7 +144,7 @@ const languages = [
     accentGlow: 'rgba(129,140,248,0.20)',
     accentBorder: 'rgba(129,140,248,0.35)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
         <path fill="#00599C" d="M117.5 35L64 4.1 10.5 35v61.8L64 127.9l53.5-30.9V35z"/>
         <path fill="#004482" d="M64 4.1v123.8l53.5-30.9V35L64 4.1z"/>
         <path fill="#FFFFFF" d="M53 43.5c-11.8 0-20.2 8.1-20.2 19.1 0 11 8.4 19.1 20.2 19.1 7.2 0 13.3-3.3 16.4-8.9l-7.5-4.3c-1.8 3.2-5 5.1-8.9 5.1-6.7 0-11.1-4.7-11.1-11 0-6.3 4.4-11 11.1-11 3.9 0 7.1 1.9 8.9 5.1l7.5-4.3c-3.1-5.6-9.2-8.9-16.4-8.9zm27.8 13.5v4.5h-4.5v3.6h4.5v4.5h3.6v-4.5h4.5v-3.6h-4.5v-4.5h-3.6zm18 0v4.5h-4.5v3.6h4.5v4.5h3.6v-4.5h4.5v-3.6h-4.5v-4.5h-3.6z"/>
@@ -126,50 +164,45 @@ const languages = [
     accentGlow: 'rgba(168,85,247,0.22)',
     accentBorder: 'rgba(168,85,247,0.35)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
         <defs>
-          <linearGradient id="dsaBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#c084fc" />
-            <stop offset="100%" stopColor="#7e22ce" />
+          <linearGradient id="dsaRootGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#d946ef" />
+            <stop offset="100%" stopColor="#8b5cf6" />
           </linearGradient>
-          <linearGradient id="dsaCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="dsaLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#38bdf8" />
             <stop offset="100%" stopColor="#0284c7" />
           </linearGradient>
-          <linearGradient id="dsaLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
+          <linearGradient id="dsaRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#059669" />
           </linearGradient>
-          <filter id="dsaGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
         </defs>
-
-        {/* Glow backdrop paths */}
-        <path d="M64 18 L32 54 M64 18 L96 54 M32 54 L18 90 M32 54 L48 90 M96 54 L80 90 M96 54 L110 90 M48 90 L80 90" stroke="url(#dsaLineGrad)" strokeWidth="4.5" strokeLinecap="round" />
+        {/* Connecting branches */}
+        <path d="M64 26 L34 60 M64 26 L94 60 M34 60 L18 96 M34 60 L50 96 M94 60 L78 96 M94 60 L110 96" stroke="#475569" strokeWidth="4" strokeLinecap="round" />
+        <path d="M64 26 L34 60" stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M64 26 L94 60" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M34 60 L18 96" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" />
+        <path d="M34 60 L50 96" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" />
+        <path d="M94 60 L78 96" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
+        <path d="M94 60 L110 96" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
         
-        {/* Additional Cross Mesh links */}
-        <path d="M32 54 L96 54" stroke="#a855f7" strokeWidth="2.5" strokeDasharray="4 4" opacity="0.7" />
-
-        {/* Glowing Outer Rings */}
-        <circle cx="64" cy="18" r="16" fill="none" stroke="#c084fc" strokeWidth="1.5" opacity="0.6" />
-        <circle cx="32" cy="54" r="13" fill="none" stroke="#38bdf8" strokeWidth="1.5" opacity="0.6" />
-        <circle cx="96" cy="54" r="13" fill="none" stroke="#38bdf8" strokeWidth="1.5" opacity="0.6" />
-
         {/* Root Node */}
-        <circle cx="64" cy="18" r="11" fill="url(#dsaBgGrad)" stroke="#ffffff" strokeWidth="2.5" filter="url(#dsaGlowFilter)" />
-        <circle cx="64" cy="18" r="4" fill="#ffffff" />
+        <circle cx="64" cy="26" r="14" fill="url(#dsaRootGrad)" stroke="#ffffff" strokeWidth="2.5" />
+        <circle cx="64" cy="26" r="5" fill="#ffffff" />
 
         {/* Level 1 Nodes */}
-        <circle cx="32" cy="54" r="9" fill="url(#dsaCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-        <circle cx="96" cy="54" r="9" fill="url(#dsaCyanGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="34" cy="60" r="11" fill="url(#dsaLeftGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="34" cy="60" r="4" fill="#ffffff" />
+        <circle cx="94" cy="60" r="11" fill="url(#dsaRightGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="94" cy="60" r="4" fill="#ffffff" />
 
-        {/* Level 2 Nodes */}
-        <circle cx="18" cy="90" r="7" fill="#e879f9" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="48" cy="90" r="7" fill="#818cf8" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="80" cy="90" r="7" fill="#818cf8" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="110" cy="90" r="7" fill="#e879f9" stroke="#ffffff" strokeWidth="1.5" />
+        {/* Leaf Nodes */}
+        <circle cx="18" cy="96" r="8" fill="#a855f7" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="50" cy="96" r="8" fill="#38bdf8" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="78" cy="96" r="8" fill="#38bdf8" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="110" cy="96" r="8" fill="#34d399" stroke="#ffffff" strokeWidth="1.5" />
       </svg>
     ),
   },
@@ -186,50 +219,48 @@ const languages = [
     accentGlow: 'rgba(6,182,212,0.22)',
     accentBorder: 'rgba(6,182,212,0.38)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
         <defs>
-          <linearGradient id="mlCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#22d3ee" />
+          <linearGradient id="mlInputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#06b6d4" />
             <stop offset="100%" stopColor="#0891b2" />
           </linearGradient>
-          <linearGradient id="mlPurpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="mlHiddenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#a855f7" />
             <stop offset="100%" stopColor="#6366f1" />
           </linearGradient>
-          <linearGradient id="mlSynapseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.7" />
+          <linearGradient id="mlOutputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ec4899" />
+            <stop offset="100%" stopColor="#f43f5e" />
           </linearGradient>
         </defs>
+        {/* Synapse Lines */}
+        <line x1="24" y1="36" x2="64" y2="24" stroke="#334155" strokeWidth="2.5" />
+        <line x1="24" y1="36" x2="64" y2="64" stroke="#06b6d4" strokeWidth="2" opacity="0.8" />
+        <line x1="24" y1="36" x2="64" y2="104" stroke="#334155" strokeWidth="1.5" />
+        <line x1="24" y1="92" x2="64" y2="24" stroke="#334155" strokeWidth="1.5" />
+        <line x1="24" y1="92" x2="64" y2="64" stroke="#06b6d4" strokeWidth="2" opacity="0.8" />
+        <line x1="24" y1="92" x2="64" y2="104" stroke="#06b6d4" strokeWidth="2" opacity="0.8" />
+        
+        <line x1="64" y1="24" x2="104" y2="44" stroke="#a855f7" strokeWidth="2" opacity="0.8" />
+        <line x1="64" y1="24" x2="104" y2="84" stroke="#334155" strokeWidth="1.5" />
+        <line x1="64" y1="64" x2="104" y2="44" stroke="#a855f7" strokeWidth="2.5" />
+        <line x1="64" y1="64" x2="104" y2="84" stroke="#a855f7" strokeWidth="2.5" />
+        <line x1="64" y1="104" x2="104" y2="44" stroke="#334155" strokeWidth="1.5" />
+        <line x1="64" y1="104" x2="104" y2="84" stroke="#a855f7" strokeWidth="2" opacity="0.8" />
 
-        {/* Neural Network Synapses */}
-        <line x1="28" y1="36" x2="64" y2="28" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
-        <line x1="28" y1="36" x2="64" y2="64" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
-        <line x1="28" y1="36" x2="64" y2="100" stroke="url(#mlSynapseGrad)" strokeWidth="2" opacity="0.4" />
-        <line x1="28" y1="92" x2="64" y2="28" stroke="url(#mlSynapseGrad)" strokeWidth="2" opacity="0.4" />
-        <line x1="28" y1="92" x2="64" y2="64" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
-        <line x1="28" y1="92" x2="64" y2="100" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        {/* Input Layer */}
+        <circle cx="24" cy="36" r="10" fill="url(#mlInputGrad)" stroke="#ffffff" strokeWidth="2.5" />
+        <circle cx="24" cy="92" r="10" fill="url(#mlInputGrad)" stroke="#ffffff" strokeWidth="2.5" />
 
-        <line x1="64" y1="28" x2="100" y2="48" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="100" y2="48" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="100" y2="80" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="100" x2="100" y2="80" stroke="url(#mlSynapseGrad)" strokeWidth="2.5" />
+        {/* Hidden Layer */}
+        <circle cx="64" cy="24" r="11" fill="url(#mlHiddenGrad)" stroke="#ffffff" strokeWidth="2.5" />
+        <circle cx="64" cy="64" r="12" fill="url(#mlHiddenGrad)" stroke="#38bdf8" strokeWidth="2.5" />
+        <circle cx="64" cy="104" r="11" fill="url(#mlHiddenGrad)" stroke="#ffffff" strokeWidth="2.5" />
 
-        {/* Input Layer Nodes */}
-        <circle cx="28" cy="36" r="8" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-        <circle cx="28" cy="92" r="8" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-
-        {/* Hidden Layer Nodes */}
-        <circle cx="64" cy="28" r="9" fill="url(#mlPurpleGrad)" stroke="#ffffff" strokeWidth="2" />
-        <circle cx="64" cy="64" r="10" fill="url(#mlPurpleGrad)" stroke="#22d3ee" strokeWidth="2" />
-        <circle cx="64" cy="100" r="9" fill="url(#mlPurpleGrad)" stroke="#ffffff" strokeWidth="2" />
-
-        {/* Output Layer Nodes */}
-        <circle cx="100" cy="48" r="8.5" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-        <circle cx="100" cy="80" r="8.5" fill="url(#mlCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-
-        {/* Central Core Pulse */}
-        <circle cx="64" cy="64" r="4" fill="#ffffff" />
+        {/* Output Layer */}
+        <circle cx="104" cy="44" r="10" fill="url(#mlOutputGrad)" stroke="#ffffff" strokeWidth="2.5" />
+        <circle cx="104" cy="84" r="10" fill="url(#mlOutputGrad)" stroke="#ffffff" strokeWidth="2.5" />
       </svg>
     ),
   },
@@ -246,54 +277,40 @@ const languages = [
     accentGlow: 'rgba(14,165,233,0.20)',
     accentBorder: 'rgba(14,165,233,0.38)',
     Icon: () => (
-      <svg viewBox="0 0 128 128" className="w-full h-full">
+      <svg viewBox="0 0 128 128" className="w-full h-full drop-shadow-md">
         <defs>
-          <linearGradient id="netCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#0284c7" />
+          <linearGradient id="cnRouterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#0369a1" />
           </linearGradient>
-          <linearGradient id="netLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.8" />
+          <linearGradient id="cnNodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0ea5e9" />
           </linearGradient>
         </defs>
+        {/* Ring backbone */}
+        <circle cx="64" cy="64" r="42" fill="none" stroke="#1e293b" strokeWidth="3" />
+        <circle cx="64" cy="64" r="42" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeDasharray="6 6" />
 
-        {/* Outer Connection Ring */}
-        <circle cx="64" cy="64" r="44" fill="none" stroke="#0ea5e9" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.35" />
+        {/* Bus connectors */}
+        <line x1="64" y1="22" x2="64" y2="64" stroke="#38bdf8" strokeWidth="2.5" />
+        <line x1="100" y1="44" x2="64" y2="64" stroke="#38bdf8" strokeWidth="2.5" />
+        <line x1="100" y1="84" x2="64" y2="64" stroke="#38bdf8" strokeWidth="2.5" />
+        <line x1="64" y1="106" x2="64" y2="64" stroke="#38bdf8" strokeWidth="2.5" />
+        <line x1="28" y1="84" x2="64" y2="64" stroke="#38bdf8" strokeWidth="2.5" />
+        <line x1="28" y1="44" x2="64" y2="64" stroke="#38bdf8" strokeWidth="2.5" />
 
-        {/* Network Bus & Mesh Lines */}
-        <line x1="64" y1="64" x2="64" y2="24" stroke="url(#netLineGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="102" y2="42" stroke="url(#netLineGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="102" y2="86" stroke="url(#netLineGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="64" y2="104" stroke="url(#netLineGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="26" y2="86" stroke="url(#netLineGrad)" strokeWidth="2.5" />
-        <line x1="64" y1="64" x2="26" y2="42" stroke="url(#netLineGrad)" strokeWidth="2.5" />
+        {/* Host / Switch Nodes */}
+        <circle cx="64" cy="22" r="7" fill="url(#cnNodeGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="100" cy="44" r="7" fill="url(#cnNodeGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="100" cy="84" r="7" fill="url(#cnNodeGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="64" cy="106" r="7" fill="url(#cnNodeGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="28" cy="84" r="7" fill="url(#cnNodeGrad)" stroke="#ffffff" strokeWidth="2" />
+        <circle cx="28" cy="44" r="7" fill="url(#cnNodeGrad)" stroke="#ffffff" strokeWidth="2" />
 
-        {/* Cross Interconnects */}
-        <line x1="26" y1="42" x2="64" y2="24" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
-        <line x1="64" y1="24" x2="102" y2="42" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
-        <line x1="102" y1="42" x2="102" y2="86" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
-        <line x1="102" y1="86" x2="64" y2="104" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
-        <line x1="64" y1="104" x2="26" y2="86" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
-        <line x1="26" y1="86" x2="26" y2="42" stroke="#38bdf8" strokeWidth="1.5" opacity="0.4" />
-
-        {/* Peripheral Client / Host Nodes */}
-        <circle cx="64" cy="24" r="7" fill="url(#netCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-        <circle cx="102" cy="42" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="102" cy="86" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="64" cy="104" r="7" fill="url(#netCyanGrad)" stroke="#ffffff" strokeWidth="2" />
-        <circle cx="26" cy="86" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="26" cy="42" r="6" fill="#0284c7" stroke="#ffffff" strokeWidth="1.5" />
-
-        {/* Data Packets in Flight */}
-        <rect x="62" y="40" width="4" height="6" rx="1.5" fill="#38bdf8" />
-        <rect x="80" y="50" width="6" height="4" rx="1.5" fill="#38bdf8" />
-        <rect x="42" y="72" width="6" height="4" rx="1.5" fill="#38bdf8" />
-
-        {/* Central Router Core */}
-        <circle cx="64" cy="64" r="14" fill="#0c101d" stroke="#0ea5e9" strokeWidth="2.5" />
-        <circle cx="64" cy="64" r="8" fill="url(#netCyanGrad)" />
-        <circle cx="64" cy="64" r="3" fill="#ffffff" />
+        {/* Central Gateway Router */}
+        <circle cx="64" cy="64" r="16" fill="url(#cnRouterGrad)" stroke="#ffffff" strokeWidth="3" />
+        <path d="M58 64h12 M64 58v12 M59 59l10 10 M59 69l10-10" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -366,9 +383,11 @@ const languages = [
 export const LanguageSelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const licenseContext = useContext(LicenseContext);
+  const { isLight } = useThemeStore();
   const [showLicensePrompt, setShowLicensePrompt] = useState(false);
   const { moduleStatus, downloadProgress, installedVersions, init, installModule } = useModuleStore();
 
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const [manualRemoteVersions, setManualRemoteVersions] = useState<Record<string, string>>({});
 
   const remoteModuleVersions: Record<string, string> = licenseContext?.settings?.moduleVersions || {};
@@ -440,29 +459,65 @@ export const LanguageSelectionPage: React.FC = () => {
     return false;
   };
 
+  const filteredLanguages = useMemo(() => {
+    if (selectedCategory === 'all') return languages;
+    return languages.filter(l => CATEGORY_MAP[l.id] === selectedCategory);
+  }, [selectedCategory]);
+
   return (
     <PageTransition className="flex flex-col flex-1 overflow-y-auto w-full relative">
       <div className="flex flex-col items-center pt-4 md:pt-6 pb-12 px-4 min-h-full relative z-10">
 
-        {/* Page Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-6 md:mb-8 max-w-2xl mx-auto"
-        >
-          <h1 className="text-3xl md:text-5xl font-black mb-3 tracking-tight text-white drop-shadow-sm">
-            Choose a Language
-          </h1>
-          
-          <p className="text-sm md:text-base text-slate-200 font-medium leading-normal whitespace-nowrap">
-            Step-by-step interactive code execution and visualization platform.
-          </p>
-        </motion.div>
+        {/* Top Bar: Title on left, Filters in right corner */}
+        <div className="w-full max-w-5xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div>
+            <h1 className={`text-xl md:text-2xl font-bold tracking-tight transition-colors ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              Curriculum Modules
+            </h1>
+            <p className={`text-xs mt-0.5 transition-colors ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+              Select a module to start step-by-step visual execution.
+            </p>
+          </div>
 
-        {/* Language Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 max-w-5xl w-full mx-auto pb-12">
-          {languages.map((lang, index) => {
+          {/* Right Corner Filter: Clean tabs with Micro-Animation and TreadCode Indigo Blue */}
+          <div className={`relative inline-flex items-center p-1 border rounded-xs shrink-0 gap-1 self-start sm:self-auto transition-colors ${
+            isLight ? 'bg-slate-200/90 border-slate-300' : 'bg-[#10141e] border-[#263145]'
+          }`}>
+            {CATEGORIES.map(cat => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`relative h-6.5 px-3 text-xs rounded-[4px] cursor-pointer flex items-center justify-center font-bold transition-colors duration-150 z-10 select-none ${
+                    isActive
+                      ? 'text-white'
+                      : isLight
+                        ? 'text-slate-700 hover:text-slate-950'
+                        : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeFilterBubble"
+                      className="absolute inset-0 rounded-[4px]"
+                      style={{
+                        background: '#2563eb',
+                        boxShadow: 'none',
+                      }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Module Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4.5 max-w-5xl w-full mx-auto pb-12">
+          {filteredLanguages.map((lang, index) => {
             const Icon = lang.Icon;
             const isLangEnabled = Boolean(lang.enabled || licenseContext?.settings?.enabledModules?.[lang.id]);
             const isPack = PACK_IDS.has(lang.id);
@@ -484,21 +539,19 @@ export const LanguageSelectionPage: React.FC = () => {
                 setShowLicensePrompt(true);
                 return;
               }
-              if (!isInstalled) {
-                if (!isDownloading) {
-                  installModule(lang.id);
-                }
-                return;
+              if (isInstalled) {
+                navigate(`/topics/${lang.id}`);
+              } else if (!isDownloading) {
+                installModule(lang.id);
               }
-              navigate(`/topics/${lang.id}`);
             };
 
             return (
               <motion.div
                 key={lang.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
+                transition={{ duration: 0.3, delay: index * 0.03, ease: 'easeOut' }}
               >
                 <div
                   role={isLangEnabled ? 'button' : 'region'}
@@ -516,181 +569,160 @@ export const LanguageSelectionPage: React.FC = () => {
                       handleCardClick();
                     }
                   }}
-                  className="relative flex flex-col overflow-hidden rounded-2xl transition-all duration-300 min-h-64 p-6 group select-none"
+                  className="relative flex flex-col justify-between overflow-hidden rounded-lg transition-all duration-200 min-h-60 p-5 group select-none"
                   style={{
                     background: !isLangEnabled
-                      ? 'rgba(12, 14, 22, 0.5)'
+                      ? (isLight ? '#e2e8f0' : '#07080c')
                       : !isInstalled
-                        ? 'rgba(13, 16, 24, 0.75)'
-                        : 'rgba(12, 14, 22, 0.85)',
+                        ? (isLight ? '#f8fafc' : '#080a0e')
+                        : (isLight ? '#ffffff' : '#0b0d13'),
                     border: `1px solid ${
                       !isLangEnabled
-                        ? 'rgba(255,255,255,0.05)'
+                        ? (isLight ? '#cbd5e1' : '#141720')
                         : !isInstalled
-                          ? 'rgba(255,255,255,0.07)'
-                          : 'rgba(255,255,255,0.12)'
+                          ? (isLight ? '#cbd5e1' : '#181c26')
+                          : (isLight ? '#cbd5e1' : '#1e2433')
                     }`,
-                    cursor: !isLangEnabled
-                      ? 'default'
-                      : 'pointer',
-                    opacity: !isLangEnabled ? 0.4 : 1,
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    boxShadow: isLight
+                      ? '0 1px 3px 0 rgba(15, 23, 42, 0.10), 0 4px 14px -2px rgba(15, 23, 42, 0.08)'
+                      : 'none',
+                    cursor: !isLangEnabled ? 'default' : 'pointer',
+                    opacity: !isLangEnabled ? 0.5 : !isInstalled ? 0.7 : 1,
                   }}
                   onMouseEnter={e => {
                     if (!isLangEnabled) return;
                     const el = e.currentTarget as HTMLElement;
-                    el.style.transform = 'translateY(-4px)';
-                    el.style.boxShadow = `0 12px 30px -10px ${lang.accentGlow}`;
-                    el.style.borderColor = lang.accentBorder;
+                    el.style.transform = 'translateY(-2px)';
+                    if (isInstalled) {
+                      el.style.backgroundColor = isLight ? '#ffffff' : '#11141d';
+                      el.style.borderColor = lang.accentColor || '#4f46e5';
+                      el.style.boxShadow = isLight
+                        ? '0 14px 28px -4px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.08)'
+                        : '0 10px 28px -4px rgba(0, 0, 0, 0.85)';
+                    } else {
+                      el.style.opacity = '0.9';
+                      el.style.borderColor = isLight ? '#94a3b8' : '#262e40';
+                    }
                   }}
                   onMouseLeave={e => {
                     if (!isLangEnabled) return;
                     const el = e.currentTarget as HTMLElement;
                     el.style.transform = 'translateY(0)';
-                    el.style.boxShadow = 'none';
-                    el.style.borderColor = !isInstalled
-                      ? 'rgba(255,255,255,0.07)'
-                      : 'rgba(255,255,255,0.12)';
+                    el.style.backgroundColor = !isInstalled ? (isLight ? '#f8fafc' : '#080a0e') : (isLight ? '#ffffff' : '#0b0d13');
+                    el.style.boxShadow = isLight
+                      ? '0 1px 3px 0 rgba(15, 23, 42, 0.10), 0 4px 14px -2px rgba(15, 23, 42, 0.08)'
+                      : 'none';
+                    el.style.borderColor = !isInstalled ? (isLight ? '#cbd5e1' : '#181c26') : (isLight ? '#cbd5e1' : '#1e2433');
+                    el.style.opacity = !isInstalled ? '0.7' : '1';
                   }}
                 >
-                  {/* Background Watermark Icon on right side of card */}
-                  <div
-                    className="absolute -right-6 top-1/2 -translate-y-1/2 w-48 h-48 pointer-events-none group-hover:scale-105 transition-all duration-500 flex items-center justify-center shrink-0"
-                    style={{
-                      opacity: !isInstalled ? 0.04 : 0.15,
-                      filter: !isInstalled ? 'grayscale(1)' : 'none',
-                    }}
-                  >
-                    <Icon />
-                  </div>
-
-                  {/* Top row: Icon + Action / Badge */}
-                  <div className="relative z-10 flex justify-between items-start mb-5">
-                    <div
-                      className="w-13 h-13 rounded-2xl p-2.5 flex items-center justify-center transition-transform group-hover:scale-105"
-                      style={{
-                        background: !isInstalled
-                          ? 'rgba(255,255,255,0.03)'
-                          : lang.accentGlow,
-                        border: `1px solid ${
-                          !isInstalled
-                            ? 'rgba(255,255,255,0.08)'
-                            : lang.accentBorder
-                        }`,
-                        filter: !isInstalled ? 'grayscale(1)' : 'none',
-                      }}
-                    >
-                      <Icon />
-                    </div>
-
-                    {/* Top Right Action / Badge */}
+                  {/* Top-Attached Status Tag / Badge (Solid, Non-glass, Anchored to Top Edge) */}
+                  <div className="absolute top-0 right-4 z-20">
                     {!isLangEnabled ? (
-                      <span
-                        className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"
-                        style={{ color: '#94a3b8', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      >
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-x border-b rounded-b-md shadow-xs ${
+                        isLight ? 'text-slate-600 bg-slate-200 border-slate-300' : 'text-slate-300 bg-[#1c2333] border-[#2d3852]'
+                      }`}>
                         <Lock className="w-2.5 h-2.5" />
                         Soon
                       </span>
                     ) : isLocked ? (
                       <span
-                        className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0"
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-b-md shadow-xs"
                         style={
                           lang.id === 'ml' || lang.id === 'networking'
-                            ? { color: '#c084fc', background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.35)' }
-                            : { color: '#f59e0b', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)' }
+                            ? (isLight
+                                ? { color: '#6b21a8', background: '#f3e8ff', borderLeft: '1px solid #d8b4fe', borderRight: '1px solid #d8b4fe', borderBottom: '1px solid #d8b4fe' }
+                                : { color: '#f3e8ff', background: '#3b1261', borderLeft: '1px solid #5b2194', borderRight: '1px solid #5b2194', borderBottom: '1px solid #5b2194' })
+                            : (isLight
+                                ? { color: '#9a3412', background: '#ffedd5', borderLeft: '1px solid #fed7aa', borderRight: '1px solid #fed7aa', borderBottom: '1px solid #fed7aa' }
+                                : { color: '#fef3c7', background: '#452205', borderLeft: '1px solid #783e08', borderRight: '1px solid #783e08', borderBottom: '1px solid #783e08' })
                         }
                       >
                         <Lock className="w-2.5 h-2.5" />
                         {lang.id === 'ml' || lang.id === 'networking' ? 'Enterprise' : 'Professional'}
                       </span>
                     ) : hasUpdate ? (
-                      /* On-card Direct Update Button (replaces AVAILABLE when update is detected) */
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           installModule(lang.id, remoteVer);
                         }}
-                        title={`New version v${remoteVer} available (Installed: v${installedVer}). Click to update now.`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 cursor-pointer shadow-sm hover:scale-105 active:scale-95 text-amber-300 bg-amber-500/20 border border-amber-500/45 hover:bg-amber-500/30 animate-pulse"
+                        title={`Update to v${remoteVer}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold tracking-wide transition-all cursor-pointer text-slate-950 bg-amber-400 hover:bg-amber-300 border-x border-b border-amber-300 rounded-b-md shadow-sm active:scale-95"
                       >
-                        <RefreshCw className="w-3 h-3 text-amber-400" />
+                        <RefreshCw className="w-3.5 h-3.5 text-slate-950" />
                         <span>Update</span>
-                        {sizeText && (
-                          <span className="text-[9px] font-mono text-amber-300/80">
-                            ({sizeText})
-                          </span>
-                        )}
+                        {sizeText && <span className="text-[10px] font-mono text-slate-900">({sizeText})</span>}
                       </button>
                     ) : isInstalled ? (
-                      /* Clean Available badge (automatically turns into Update button when update is detected online) */
-                      <span
-                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full shrink-0"
-                        style={{ color: '#4ade80', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)' }}
-                      >
+                      <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border-x border-b rounded-b-md shadow-xs ${
+                        isLight
+                          ? 'text-emerald-700 bg-emerald-50 border-emerald-300 font-extrabold'
+                          : 'text-emerald-200 bg-[#065f46] border-[#047857]'
+                      }`}>
                         Available
                       </span>
                     ) : isDownloading ? (
-                      /* Downloading state badge */
-                      <span
-                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1.5 shrink-0"
-                        style={{ color: '#38bdf8', background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.35)' }}
-                      >
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-x border-b rounded-b-md shadow-xs ${
+                        isLight
+                          ? 'text-sky-800 bg-sky-100 border-sky-300'
+                          : 'text-sky-200 bg-[#0a3854] border-[#0e5682]'
+                      }`}>
                         <RefreshCw className="w-2.5 h-2.5 animate-spin" />
                         {progress > 0 ? `${progress}%` : 'Starting'}
                       </span>
                     ) : isError ? (
-                      /* Retry button on error */
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           installModule(lang.id);
                         }}
-                        className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-all"
-                        style={{ color: '#f87171', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.35)' }}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-x border-b rounded-b-md cursor-pointer shadow-xs ${
+                          isLight
+                            ? 'text-rose-800 bg-rose-100 hover:bg-rose-200 border-rose-300'
+                            : 'text-rose-200 bg-[#4c131a] hover:bg-[#5c1820] border-[#781f2b]'
+                        }`}
                       >
                         <AlertCircle className="w-2.5 h-2.5" />
                         Retry
                       </button>
                     ) : (
-                      /* On-card Direct Install Button */
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           installModule(lang.id);
                         }}
                         title={`Download ${lang.name} module`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200 cursor-pointer shadow-sm hover:scale-105 active:scale-95 text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 hover:bg-indigo-500/25 hover:border-indigo-400"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-b-md shadow-sm border-x border-b border-blue-500 cursor-pointer transition-all active:scale-95"
                       >
-                        <Download className="w-3 h-3 text-indigo-400" />
+                        <Download className="w-3.5 h-3.5 text-white" />
                         <span>Download</span>
-                        {sizeText && (
-                          <span className="text-[9px] font-mono text-indigo-300/70">
-                            ({sizeText})
-                          </span>
-                        )}
+                        {sizeText && <span className="text-[10px] font-mono text-blue-200">({sizeText})</span>}
                       </button>
                     )}
                   </div>
 
+                  {/* Right Side Featured Logo: Prominent & Clean */}
+                  <div
+                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 pointer-events-none transition-transform duration-300 flex items-center justify-center shrink-0 group-hover:scale-105"
+                    style={{
+                      opacity: !isInstalled ? 0.40 : 1,
+                    }}
+                  >
+                    <Icon />
+                  </div>
+
                   {/* Language Info */}
-                  <div className="relative mt-auto">
-                    <h2
-                      className="text-2xl font-black mb-1 tracking-tight transition-colors"
-                      style={{
-                        color: !isInstalled ? '#64748b' : 'white',
-                      }}
-                    >
+                  <div className="relative z-10 pt-3 pr-32 mt-auto">
+                    <h2 className={`text-2xl font-bold mb-1 tracking-tight transition-colors ${
+                      isLight ? 'text-slate-950 group-hover:text-indigo-600' : 'text-white group-hover:text-blue-300'
+                    }`}>
                       {lang.name}
                     </h2>
 
-                    <p
-                      className="text-xs md:text-sm font-medium mb-3 line-clamp-1 transition-colors"
-                      style={{
-                        color: !isInstalled ? '#475569' : '#e2e8f0',
-                      }}
-                    >
+                    <p className={`text-xs font-medium mb-3 line-clamp-1 transition-colors ${
+                      isLight ? 'text-slate-600' : 'text-slate-300'
+                    }`}>
                       {lang.tagline}
                     </p>
 
@@ -704,9 +736,11 @@ export const LanguageSelectionPage: React.FC = () => {
                           </span>
                           <span>{progress}%</span>
                         </div>
-                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                        <div className={`h-1.5 w-full rounded overflow-hidden border ${
+                          isLight ? 'bg-slate-200 border-slate-300' : 'bg-slate-800 border-slate-700/60'
+                        }`}>
                           <motion.div
-                            className="h-full bg-linear-to-r from-indigo-500 via-sky-400 to-emerald-400 rounded-full"
+                            className="h-full bg-blue-500 rounded"
                             initial={{ width: '0%' }}
                             animate={{ width: `${Math.max(progress, 5)}%` }}
                             transition={{ duration: 0.2 }}
@@ -717,36 +751,28 @@ export const LanguageSelectionPage: React.FC = () => {
 
                     {/* On-card hint when not installed and idle */}
                     {!isInstalled && !isDownloading && !isError && lang.enabled && (
-                      <div className="mb-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
-                        <Download className="w-3 h-3 text-slate-500" />
+                      <div className={`mb-3 flex items-center gap-1.5 text-[11px] font-mono ${
+                        isLight ? 'text-slate-600' : 'text-slate-400'
+                      }`}>
+                        <Download className="w-3 h-3" />
                         <span>Click card or Download</span>
                       </div>
                     )}
+                  </div>
 
-                    {/* Meta */}
-                    <div
-                      className="text-xs font-mono border-t pt-3 flex items-center justify-between transition-colors"
-                      style={{
-                        borderColor: !isInstalled ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
-                        color: !isInstalled ? '#475569' : '#cbd5e1',
-                      }}
-                    >
-                      <span>
-                        By{' '}
-                        <strong
-                          style={{ color: !isInstalled ? '#64748b' : 'white' }}
-                          className="font-bold"
-                        >
-                          {lang.creator}
-                        </strong>
-                      </span>
-                      <span
-                        style={{ color: !isInstalled ? '#64748b' : 'white' }}
-                        className="font-bold"
-                      >
-                        {lang.year}
-                      </span>
-                    </div>
+                  {/* Meta Footer */}
+                  <div className={`relative z-10 text-xs font-mono border-t pt-2.5 mt-2 flex items-center justify-between transition-colors ${
+                    isLight ? 'border-slate-300/80 text-slate-600' : 'border-[#232f42] text-slate-400'
+                  }`}>
+                    <span>
+                      By{' '}
+                      <strong className={`font-bold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        {lang.creator}
+                      </strong>
+                    </span>
+                    <span className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                      {lang.year}
+                    </span>
                   </div>
                 </div>
               </motion.div>

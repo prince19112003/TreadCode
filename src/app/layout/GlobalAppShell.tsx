@@ -1,145 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Search, Settings, ChevronRight, Home, Presentation, ArrowUpCircle, Clock, ExternalLink, Megaphone, X, ArrowLeft } from 'lucide-react';
+import { Search, Settings, ChevronRight, Home, Clock, Sun, Moon } from 'lucide-react';
 import { useUpdateChecker, isNativeApp } from '@shared/hooks/useUpdateChecker';
+import { useThemeStore } from '@shared/hooks/useThemeStore';
 import { UpdateModal } from '@shared/components/ui/UpdateBanner';
 import { motion, AnimatePresence } from 'motion/react';
 import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 import { LicenseContext } from '../App';
+import { SmartBoardSideDock } from './SmartBoardSideDock';
 const SmartBoardModal = React.lazy(() => import('../../features/smartboard/SmartBoardModal').then(m => ({ default: m.SmartBoardModal })));
+import { fuzzySearchCatalog, type SearchProgram } from '@shared/data/searchCatalog';
+
+interface CrumbItem {
+  label: string;
+  path: string;
+}
 
 const GithubIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.193 22 16.44 22 12.017 22 6.484 17.522 2 12 2z"/>
+    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.193 22 16.44 22 12.017 22 6.484 17.522 2 12 2z" />
   </svg>
 );
-
-/* =========================================================
-   GLOBAL SEARCH DATA — all programs across all topics
-   ========================================================= */
-const allPrograms = [
-  // Variables
-  { id: 'single_variable', topicId: 'variables', topicName: 'Variables', name: 'Create a Single Variable', lang: 'python' },
-  { id: 'multiple_variables', topicId: 'variables', topicName: 'Variables', name: 'Create Multiple Variables', lang: 'python' },
-  { id: 'update_variable', topicId: 'variables', topicName: 'Variables', name: 'Update Variable Value', lang: 'python' },
-  { id: 'addition', topicId: 'variables', topicName: 'Variables', name: 'Addition Using Variables', lang: 'python' },
-  { id: 'subtraction', topicId: 'variables', topicName: 'Variables', name: 'Subtraction Using Variables', lang: 'python' },
-  { id: 'multiplication', topicId: 'variables', topicName: 'Variables', name: 'Multiplication Using Variables', lang: 'python' },
-  { id: 'division', topicId: 'variables', topicName: 'Variables', name: 'Division Using Variables', lang: 'python' },
-  { id: 'circle_area', topicId: 'variables', topicName: 'Variables', name: 'Circle Area', lang: 'python' },
-  { id: 'square_root', topicId: 'variables', topicName: 'Variables', name: 'Square Root', lang: 'python' },
-  { id: 'student_result', topicId: 'variables', topicName: 'Variables', name: 'Student Result Calculator', lang: 'python' },
-  { id: 'square_area', topicId: 'variables', topicName: 'Variables', name: 'Square Area', lang: 'python' },
-  { id: 'rectangle_area', topicId: 'variables', topicName: 'Variables', name: 'Rectangle Area', lang: 'python' },
-  { id: 'temp_conversion', topicId: 'variables', topicName: 'Variables', name: 'Temperature Conversion', lang: 'python' },
-  // If Statement
-  { id: 'positive_number', topicId: 'if_statement', topicName: 'If Statement', name: 'Positive Number Check', lang: 'python' },
-  { id: 'divisible_by_5', topicId: 'if_statement', topicName: 'If Statement', name: 'Divisible by 5', lang: 'python' },
-  { id: 'voting_eligibility', topicId: 'if_statement', topicName: 'If Statement', name: 'Voting Eligibility', lang: 'python' },
-  { id: 'pass_marks', topicId: 'if_statement', topicName: 'If Statement', name: 'Pass Marks Check', lang: 'python' },
-  { id: 'square_root_positive', topicId: 'if_statement', topicName: 'If Statement', name: 'Square Root of Positive Number', lang: 'python' },
-  // If Else
-  { id: 'even_odd', topicId: 'if_else', topicName: 'If Else', name: 'Even or Odd', lang: 'python' },
-  { id: 'greater_of_two', topicId: 'if_else', topicName: 'If Else', name: 'Greater of Two Numbers', lang: 'python' },
-  { id: 'vowel_consonant', topicId: 'if_else', topicName: 'If Else', name: 'Vowel or Consonant', lang: 'python' },
-  { id: 'profit_loss', topicId: 'if_else', topicName: 'If Else', name: 'Profit or Loss', lang: 'python' },
-  { id: 'divisible_by_7', topicId: 'if_else', topicName: 'If Else', name: 'Divisible by 7', lang: 'python' },
-  // If Elif Else
-  { id: 'largest_of_three', topicId: 'if_elif_else', topicName: 'If Elif Else', name: 'Largest of Three Numbers', lang: 'python' },
-  { id: 'grade_calculator', topicId: 'if_elif_else', topicName: 'If Elif Else', name: 'Grade Calculator', lang: 'python' },
-  { id: 'positive_negative_zero', topicId: 'if_elif_else', topicName: 'If Elif Else', name: 'Positive / Negative / Zero', lang: 'python' },
-  { id: 'electricity_bill', topicId: 'if_elif_else', topicName: 'If Elif Else', name: 'Electricity Bill Calculator', lang: 'python' },
-  { id: 'income_tax', topicId: 'if_elif_else', topicName: 'If Elif Else', name: 'Income Tax Slab', lang: 'python' },
-  // Match Case
-  { id: 'day_name', topicId: 'match_case', topicName: 'Match Case', name: 'Day Name', lang: 'python' },
-  { id: 'month_name', topicId: 'match_case', topicName: 'Match Case', name: 'Month Name', lang: 'python' },
-  { id: 'menu_calculator', topicId: 'match_case', topicName: 'Match Case', name: 'Menu Driven Calculator', lang: 'python' },
-  // For Loop
-  { id: 'print_1_to_10', topicId: 'for_loop', topicName: 'For Loop', name: 'Print Numbers 1 to 10', lang: 'python' },
-  { id: 'print_10_to_1', topicId: 'for_loop', topicName: 'For Loop', name: 'Print Numbers 10 to 1', lang: 'python' },
-  { id: 'sum_n_natural', topicId: 'for_loop', topicName: 'For Loop', name: 'Sum of First N Natural Numbers', lang: 'python' },
-  { id: 'factorial', topicId: 'for_loop', topicName: 'For Loop', name: 'Factorial of a Number', lang: 'python' },
-  { id: 'multiplication_table', topicId: 'for_loop', topicName: 'For Loop', name: 'Multiplication Table', lang: 'python' },
-  { id: 'reverse_multiplication_table', topicId: 'for_loop', topicName: 'For Loop', name: 'Reverse Multiplication Table', lang: 'python' },
-  // While Loop
-  { id: 'print_1_to_n', topicId: 'while_loop', topicName: 'While Loop', name: 'Print Numbers 1 to N', lang: 'python' },
-  { id: 'sum_of_digits', topicId: 'while_loop', topicName: 'While Loop', name: 'Sum of Digits', lang: 'python' },
-  { id: 'reverse_number', topicId: 'while_loop', topicName: 'While Loop', name: 'Reverse a Number', lang: 'python' },
-  { id: 'count_digits', topicId: 'while_loop', topicName: 'While Loop', name: 'Count Digits', lang: 'python' },
-  { id: 'palindrome_number', topicId: 'while_loop', topicName: 'While Loop', name: 'Palindrome Number', lang: 'python' },
-  { id: 'armstrong_number', topicId: 'while_loop', topicName: 'While Loop', name: 'Armstrong Number', lang: 'python' },
-  { id: 'perfect_number', topicId: 'while_loop', topicName: 'While Loop', name: 'Perfect Number Check', lang: 'python' },
-  { id: 'strong_number', topicId: 'while_loop', topicName: 'While Loop', name: 'Strong Number Check', lang: 'python' },
-  { id: 'decimal_to_binary', topicId: 'while_loop', topicName: 'While Loop', name: 'Decimal to Binary', lang: 'python' },
-  { id: 'binary_to_decimal', topicId: 'while_loop', topicName: 'While Loop', name: 'Binary to Decimal', lang: 'python' },
-  // Nested Loop
-  { id: 'square_star', topicId: 'nested_loop', topicName: 'Nested Loop', name: 'Square Star Pattern', lang: 'python' },
-  { id: 'right_triangle', topicId: 'nested_loop', topicName: 'Nested Loop', name: 'Right Triangle Pattern', lang: 'python' },
-  { id: 'inverted_triangle', topicId: 'nested_loop', topicName: 'Nested Loop', name: 'Inverted Triangle Pattern', lang: 'python' },
-  { id: 'number_triangle', topicId: 'nested_loop', topicName: 'Nested Loop', name: 'Number Triangle Pattern', lang: 'python' },
-  { id: 'floyds_triangle', topicId: 'nested_loop', topicName: 'Nested Loop', name: 'Floyds Triangle', lang: 'python' },
-  { id: 'full_pyramid', topicId: 'nested_loop', topicName: 'Nested Loop', name: 'Full Pyramid Star Pattern', lang: 'python' },
-  // Loop Control
-  { id: 'break_statement', topicId: 'loop_control', topicName: 'Loop Control', name: 'Break Statement', lang: 'python' },
-  { id: 'continue_statement', topicId: 'loop_control', topicName: 'Loop Control', name: 'Continue Statement', lang: 'python' },
-  { id: 'pass_statement', topicId: 'loop_control', topicName: 'Loop Control', name: 'Pass Statement', lang: 'python' },
-  { id: 'prime_number', topicId: 'loop_control', topicName: 'Loop Control', name: 'Prime Number Check', lang: 'python' },
-  // Functions
-  { id: 'func_no_args', topicId: 'functions', topicName: 'Functions', name: 'Function Without Arguments', lang: 'python' },
-  { id: 'func_with_args', topicId: 'functions', topicName: 'Functions', name: 'Function With Arguments', lang: 'python' },
-  { id: 'func_with_return', topicId: 'functions', topicName: 'Functions', name: 'Function With Return Value', lang: 'python' },
-  { id: 'add_using_func', topicId: 'functions', topicName: 'Functions', name: 'Addition Using Function', lang: 'python' },
-  { id: 'square_using_func', topicId: 'functions', topicName: 'Functions', name: 'Square of a Number Using Function', lang: 'python' },
-  { id: 'greatest_of_two', topicId: 'functions', topicName: 'Functions', name: 'Greatest of Two Numbers', lang: 'python' },
-  { id: 'circle_area_func', topicId: 'functions', topicName: 'Functions', name: 'Circle Area Using Function', lang: 'python' },
-  { id: 'simple_interest_func', topicId: 'functions', topicName: 'Functions', name: 'Simple Interest Using Function', lang: 'python' },
-  { id: 'factorial_func', topicId: 'functions', topicName: 'Functions', name: 'Factorial Using Function', lang: 'python' },
-  { id: 'even_odd_func', topicId: 'functions', topicName: 'Functions', name: 'Even or Odd Using Function', lang: 'python' },
-  { id: 'largest_of_three_func', topicId: 'functions', topicName: 'Functions', name: 'Largest of Three Numbers Using Function', lang: 'python' },
-  // Recursion
-  { id: 'recursive_print_n', topicId: 'recursion', topicName: 'Recursion', name: 'Print Numbers 1 to N (Recursive)', lang: 'python' },
-  { id: 'recursive_sum', topicId: 'recursion', topicName: 'Recursion', name: 'Sum of N Natural Numbers (Recursive)', lang: 'python' },
-  { id: 'recursive_factorial', topicId: 'recursion', topicName: 'Recursion', name: 'Factorial Using Recursion', lang: 'python' },
-  { id: 'recursive_fibonacci', topicId: 'recursion', topicName: 'Recursion', name: 'Fibonacci Using Recursion', lang: 'python' },
-  { id: 'recursive_power', topicId: 'recursion', topicName: 'Recursion', name: 'Power of a Number Using Recursion', lang: 'python' },
-  // Strings
-  { id: 'print_string', topicId: 'strings', topicName: 'Strings', name: 'Print a String', lang: 'python' },
-  { id: 'string_length', topicId: 'strings', topicName: 'Strings', name: 'Find String Length', lang: 'python' },
-  { id: 'string_upper', topicId: 'strings', topicName: 'Strings', name: 'Convert String to Uppercase', lang: 'python' },
-  { id: 'string_lower', topicId: 'strings', topicName: 'Strings', name: 'Convert String to Lowercase', lang: 'python' },
-  { id: 'reverse_string', topicId: 'strings', topicName: 'Strings', name: 'Reverse a String', lang: 'python' },
-  { id: 'string_palindrome', topicId: 'strings', topicName: 'Strings', name: 'Palindrome String Check', lang: 'python' },
-  { id: 'count_vowels_consonants', topicId: 'strings', topicName: 'Strings', name: 'Count Vowels and Consonants', lang: 'python' },
-  { id: 'count_chars_types', topicId: 'strings', topicName: 'Strings', name: 'Count Digits and Spaces', lang: 'python' },
-  { id: 'string_concat', topicId: 'strings', topicName: 'Strings', name: 'Concatenate Two Strings', lang: 'python' },
-  { id: 'compare_strings', topicId: 'strings', topicName: 'Strings', name: 'Compare Two Strings', lang: 'python' },
-  // Lists
-  { id: 'basic_list', topicId: 'lists', topicName: 'Lists', name: 'Basic List Operations', lang: 'python' },
-  { id: 'list_stats', topicId: 'lists', topicName: 'Lists', name: 'List Statistics', lang: 'python' },
-  { id: 'list_search', topicId: 'lists', topicName: 'Lists', name: 'Search Element in List', lang: 'python' },
-  { id: 'list_modify', topicId: 'lists', topicName: 'Lists', name: 'Insert and Delete Elements', lang: 'python' },
-  { id: 'list_sort_reverse', topicId: 'lists', topicName: 'Lists', name: 'Sort and Reverse List', lang: 'python' },
-  { id: 'student_marks', topicId: 'lists', topicName: 'Lists', name: 'Student Marks Management', lang: 'python' },
-  // Tuples
-  { id: 'create_tuple', topicId: 'tuples', topicName: 'Tuples', name: 'Create and Display Tuple', lang: 'python' },
-  { id: 'tuple_indexing', topicId: 'tuples', topicName: 'Tuples', name: 'Tuple Indexing and Slicing', lang: 'python' },
-  { id: 'tuple_operations', topicId: 'tuples', topicName: 'Tuples', name: 'Tuple Operations', lang: 'python' },
-  // Dictionaries
-  { id: 'create_dict', topicId: 'dictionaries', topicName: 'Dictionaries', name: 'Create and Access Dictionary', lang: 'python' },
-  { id: 'update_dict', topicId: 'dictionaries', topicName: 'Dictionaries', name: 'Update and Delete Dictionary', lang: 'python' },
-  { id: 'traverse_dict', topicId: 'dictionaries', topicName: 'Dictionaries', name: 'Dictionary Traversal', lang: 'python' },
-  // Searching & Sorting
-  { id: 'linear_search', topicId: 'searching_sorting', topicName: 'Searching & Sorting', name: 'Linear Search', lang: 'python' },
-  { id: 'binary_search', topicId: 'searching_sorting', topicName: 'Searching & Sorting', name: 'Binary Search', lang: 'python' },
-  { id: 'bubble_sort', topicId: 'searching_sorting', topicName: 'Searching & Sorting', name: 'Bubble Sort', lang: 'python' },
-  { id: 'selection_sort', topicId: 'searching_sorting', topicName: 'Searching & Sorting', name: 'Selection Sort', lang: 'python' },
-  { id: 'insertion_sort', topicId: 'searching_sorting', topicName: 'Searching & Sorting', name: 'Insertion Sort', lang: 'python' },
-];
-
-/* =========================================================
-   BREADCRUMB HELPER
-   ========================================================= */
-interface CrumbItem { label: string; path: string; }
 
 function useBreadcrumbs(): CrumbItem[] {
   const location = useLocation();
@@ -185,32 +66,46 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
 
-  const results = query.trim().length > 0
-    ? allPrograms.filter(p =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.topicName.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 10)
-    : [];
+  const hasQuery = query.trim().length > 0;
 
-  useEffect(() => { setFocused(0); }, [query]);
+  // Pure fuzzy search directly across all programs without clutter
+  const results = React.useMemo(() => {
+    return fuzzySearchCatalog(query);
+  }, [query]);
 
-  const handleSelect = useCallback((prog: typeof allPrograms[0]) => {
+  useEffect(() => {
+    setFocused(0);
+  }, [query]);
+
+  const handleSelect = useCallback((prog: SearchProgram) => {
     navigate(`/visualizer/${prog.lang}/${prog.topicId}/${prog.id}`);
     onClose();
     setQuery('');
   }, [navigate, onClose]);
 
   useEffect(() => {
-    if (!open) { setQuery(''); setFocused(0); }
+    if (!open) {
+      setQuery('');
+      setFocused(0);
+    }
   }, [open]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!open) return;
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowDown') setFocused(f => Math.min(f + 1, results.length - 1));
-      if (e.key === 'ArrowUp') setFocused(f => Math.max(f - 1, 0));
-      if (e.key === 'Enter' && results[focused]) handleSelect(results[focused]);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocused(f => Math.min(f + 1, Math.max(0, results.length - 1)));
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocused(f => Math.max(f - 1, 0));
+      }
+      if (e.key === 'Enter' && results[focused]) {
+        e.preventDefault();
+        handleSelect(results[focused]);
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -220,101 +115,123 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-1000 flex items-start justify-center pt-[14vh] px-4"
-      style={{ background: 'rgba(2, 4, 12, 0.75)', backdropFilter: 'blur(10px)' }}
+      className="fixed inset-0 z-1000 flex items-start justify-center pt-[14vh] px-4 bg-black/60 backdrop-blur-md select-none"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: -10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: -10 }}
-        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-xl rounded-2xl overflow-hidden shadow-[0_30px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl bg-[#0c0e17]/95 border border-white/10 relative"
+        initial={{ opacity: 0, scale: 0.98, y: -6 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.98, y: -6 }}
+        transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-2xl rounded-xs border border-white/10 bg-[#0c0e14]/85 backdrop-blur-xl text-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        {/* Subtle Top Gradient Accent */}
-        <div className="h-0.5 w-full bg-linear-to-r from-transparent via-indigo-500/50 to-transparent" />
-
-        {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
-          <Search className="w-4.5 h-4.5 shrink-0 text-indigo-400" />
+        {/* Apple Spotlight Glass Search Bar */}
+        <div className={`flex items-center gap-3.5 px-4 py-3 ${hasQuery ? 'border-b border-white/8' : ''}`}>
+          <Search className="w-4 h-4 shrink-0 text-white/40" />
           <input
             autoFocus
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search 100+ programs across Python, C, C++, Java & DSA..."
-            className="flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-slate-500"
+            placeholder="Search programs, algorithms, or topics..."
+            className="flex-1 bg-transparent outline-none text-[15px] font-normal tracking-tight text-white placeholder:text-white/35"
           />
-          <kbd className="text-[10px] font-mono font-black text-slate-400 px-2 py-0.5 rounded-md border border-white/10 bg-white/5">
+          {hasQuery && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-xs text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+          <kbd
+            onClick={onClose}
+            className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-xs bg-white/5 border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-colors cursor-pointer select-none"
+          >
             ESC
           </kbd>
         </div>
 
-        {/* Results List */}
-        <div className="max-h-84 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-          {query.trim() === '' ? (
-            <div className="py-8 px-4 text-center">
-              <Search className="w-7 h-7 mx-auto mb-2.5 opacity-25 text-indigo-400" />
-              <p className="text-xs font-bold text-slate-400 mb-3">Type any topic or program name to jump instantly</p>
-              
-              {/* Quick Suggestion Chips */}
-              <div className="flex flex-wrap justify-center gap-1.5 max-w-md mx-auto">
-                {['Python', 'C++', 'Java', 'DSA', 'Loops', 'Arrays', 'Recursion'].map(chip => (
-                  <button
-                    key={chip}
-                    onClick={() => setQuery(chip)}
-                    className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-400/40 text-[11px] font-bold text-slate-300 hover:text-white transition-all"
-                  >
-                    ⚡ {chip}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : results.length === 0 ? (
-            <div className="py-10 text-center text-slate-400">
-              <p className="text-xs font-semibold">No programs found for "<span className="text-white font-bold">{query}</span>"</p>
-            </div>
-          ) : (
-            <ul className="space-y-0.5">
-              {results.map((prog, i) => (
-                <li key={`${prog.topicId}-${prog.id}`}>
-                  <button
-                    onClick={() => handleSelect(prog)}
-                    onMouseEnter={() => setFocused(i)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all ${
-                      i === focused
-                        ? 'bg-indigo-500/20 text-white border border-indigo-400/40 shadow-sm'
-                        : 'text-slate-300 hover:bg-white/5 border border-transparent'
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-indigo-950/70 border border-indigo-400/30">
-                      <Code2 className="w-3.5 h-3.5 text-indigo-300" />
-                    </div>
-                    <span className="flex-1 text-xs font-extrabold text-white">{prog.name}</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md text-indigo-300 bg-indigo-950/60 border border-indigo-400/30 shrink-0">
-                      {prog.topicName}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* Results List: ONLY shown when user types (hasQuery) */}
+        {hasQuery && (
+          <>
+            <div className="max-h-95 overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
+              {results.length === 0 ? (
+                <div className="py-8 px-4 text-center">
+                  <p className="text-[13px] text-white/40 font-normal">
+                    No results found for &ldquo;{query}&rdquo;
+                  </p>
+                </div>
+              ) : (
+                results.map((prog, i) => {
+                  const isSelected = i === focused;
+                  return (
+                    <button
+                      key={`${prog.lang}-${prog.topicId}-${prog.id}`}
+                      type="button"
+                      onClick={() => handleSelect(prog)}
+                      onMouseEnter={() => setFocused(i)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xs text-left transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#007aff] text-white shadow-xs'
+                          : 'text-zinc-200 hover:bg-white/5'
+                      }`}
+                    >
+                      {/* Compact Language Badge */}
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-xs border shrink-0 ${
+                          isSelected
+                            ? 'bg-white/20 text-white border-white/30'
+                            : 'bg-white/5 text-zinc-300 border-white/10'
+                        }`}
+                      >
+                        {prog.langLabel}
+                      </span>
 
-        {/* Minimal Footer */}
-        <div className="px-4 py-2 bg-black/40 border-t border-white/5 flex items-center justify-between text-[10px] font-bold text-slate-400">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <kbd className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-200 font-bold">↑↓</kbd>
-              Navigate
-            </span>
-            <span className="flex items-center gap-1">
-              <kbd className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-200 font-bold">↵</kbd>
-              Open
-            </span>
-          </div>
-          <span className="text-slate-500 font-mono">TreadCode Search</span>
-        </div>
+                      {/* Clean Program Name */}
+                      <span className={`text-[13px] font-medium tracking-tight truncate flex-1 ${
+                        isSelected ? 'text-white' : 'text-zinc-100'
+                      }`}>
+                        {prog.name}
+                      </span>
+
+                      {/* Topic Category */}
+                      <span className={`text-[11px] truncate shrink-0 ${
+                        isSelected ? 'text-blue-100' : 'text-zinc-400'
+                      }`}>
+                        {prog.topicName}
+                      </span>
+
+                      {/* Return Key Symbol on Selected */}
+                      {isSelected && (
+                        <span className="text-xs font-mono shrink-0 ml-1 text-white">
+                          ↵
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Apple Spotlight Status Footer */}
+            {results.length > 0 && (
+              <div className="px-4 py-2 border-t border-white/6 bg-white/2 flex items-center justify-between text-[11px] text-zinc-400 select-none">
+                <div className="flex items-center gap-2">
+                  <span>Use <kbd className="font-mono font-medium text-zinc-300">↑↓</kbd> to navigate</span>
+                  <span>•</span>
+                  <span><kbd className="font-mono font-medium text-zinc-300">↵</kbd> to open</span>
+                  <span>•</span>
+                  <span><kbd className="font-mono font-medium text-zinc-300">esc</kbd> to close</span>
+                </div>
+                <span className="font-medium text-zinc-400">
+                  {results.length} {results.length === 1 ? 'result' : 'results'}
+                </span>
+              </div>
+            )}
+          </>
+        )}
       </motion.div>
     </div>
   );
@@ -333,6 +250,7 @@ export const GlobalAppShell: React.FC = () => {
   const licenseContext = React.useContext(LicenseContext);
   const { hasUpdate } = useUpdateChecker();
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
+  const { isLight, toggleTheme } = useThemeStore();
   const [dismissedAnnouncement, setDismissedAnnouncement] = useState<string | null>(() => {
     return localStorage.getItem('flowtrace_dismissed_announcement');
   });
@@ -348,12 +266,13 @@ export const GlobalAppShell: React.FC = () => {
   };
 
   const handleBack = useCallback(() => {
+    if (isHome) return;
     if (window.history.state && window.history.state.idx > 0) {
       navigate(-1);
     } else {
       navigate('/languages');
     }
-  }, [navigate]);
+  }, [isHome, navigate]);
 
   // If new announcement text arrives from Admin Panel, reset dismissal so user sees it
   useEffect(() => {
@@ -378,20 +297,20 @@ export const GlobalAppShell: React.FC = () => {
       try {
         const { db } = await import('@shared/config/firebase');
         const { ref, set } = await import('firebase/database');
-        
+
         let versionStr = '1.0.8';
         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
           try {
             const { getVersion } = await import('@tauri-apps/api/app');
             versionStr = await getVersion();
-          } catch (e) {}
+          } catch (e) { }
         }
 
         await set(ref(db, `installations/${hwid}/lastSeen`), new Date().toISOString());
         await set(ref(db, `installations/${hwid}/activeKey`), key);
         await set(ref(db, `installations/${hwid}/currentPath`), location.pathname);
         await set(ref(db, `installations/${hwid}/appVersion`), versionStr);
-      } catch (e) {}
+      } catch (e) { }
     }, 25000);
 
     return () => clearInterval(interval);
@@ -455,71 +374,42 @@ export const GlobalAppShell: React.FC = () => {
 
   return (
     <div
-      className="h-screen flex flex-col relative overflow-hidden"
-      style={{ background: '#0a0b0f', fontFamily: "'Inter', sans-serif" }}
+      className="h-screen flex flex-col relative overflow-hidden transition-colors duration-150"
+      style={{ background: isLight ? '#f1f5f9' : '#0a0b0f', fontFamily: "'Inter', sans-serif" }}
     >
-      {/* === TECHNICAL GRID BACKGROUND === */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      />
-
       {/* === HEADER (Clean Top Bar) === */}
       <header
         data-tauri-drag-region
-        className="h-11 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none bg-[#090a0f]/95 border-b border-slate-800/80 backdrop-blur-xl shadow-sm"
+        className={`h-13 sticky top-0 z-50 shrink-0 flex items-center justify-between px-3 md:px-5 select-none shadow-xs transition-colors duration-150 ${isLight
+            ? 'bg-white border-b border-slate-300 text-slate-900'
+            : 'bg-[#0b0d13] border-b border-slate-800 text-white'
+          }`}
       >
         {/* LEFT: Persistent Logo Icon + Morphing Brand / Back Navigation Button */}
-        <div className="flex items-center gap-1.5 shrink-0" data-tauri-drag-region>
+        <div className="flex items-center gap-2 shrink-0" data-tauri-drag-region>
           <button
             onClick={() => navigate('/languages')}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all cursor-pointer group shrink-0"
+            className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all cursor-pointer group shrink-0 ${isLight ? 'hover:bg-slate-100' : 'hover:bg-white/10'
+              }`}
             title={isHome ? "TreadCode Home" : "Home (Go to Languages)"}
           >
-            <div className="w-7 h-7 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <TreadCodeLogo size={26} />
+            <div className="w-8 h-8 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <TreadCodeLogo size={28} />
             </div>
           </button>
 
-          <AnimatePresence mode="wait" initial={false}>
-            {isHome ? (
-              <motion.button
-                key="brand-name"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-                onClick={() => navigate('/languages')}
-                className="flex items-center group py-1 px-1 rounded-lg hover:bg-white/5 transition-all select-none cursor-pointer"
-                title="TreadCode Home"
-              >
-                <span className="font-extrabold text-base tracking-tight select-none">
-                  <span className="text-white">Tread</span>
-                  <span className="text-indigo-400">Code</span>
-                </span>
-              </motion.button>
-            ) : (
-              <motion.button
-                key="brand-back"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-                onClick={handleBack}
-                className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 hover:border-indigo-400/60 text-indigo-200 hover:text-white transition-all shadow-xs select-none cursor-pointer group"
-                title="Go Back (Esc or Alt+←)"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-indigo-400 group-hover:-translate-x-1 transition-transform duration-200 ease-out" />
-                <span className="font-bold text-xs tracking-wide">Back</span>
-                <kbd className="hidden sm:inline-block text-[9px] font-mono px-1 py-0.2 rounded bg-indigo-950/60 border border-indigo-400/30 text-indigo-300 ml-0.5 opacity-80">
-                  Esc
-                </kbd>
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <button
+            onClick={() => navigate('/languages')}
+            className={`flex items-center group py-1 px-1.5 rounded-lg transition-all select-none cursor-pointer ${
+              isLight ? 'hover:bg-slate-100' : 'hover:bg-white/5'
+            }`}
+            title="TreadCode Home"
+          >
+            <span className="font-extrabold text-[17px] tracking-tight select-none">
+              <span className={isLight ? "text-slate-900" : "text-white"}>Tread</span>
+              <span className={isLight ? "text-blue-600" : "text-indigo-400"}>Code</span>
+            </span>
+          </button>
         </div>
 
         {/* CENTER: Breadcrumb (Always Perfectly Centered in Header) */}
@@ -528,18 +418,17 @@ export const GlobalAppShell: React.FC = () => {
             {breadcrumbs.map((crumb, i) => (
               <React.Fragment key={crumb.path}>
                 {i > 0 && (
-                  <ChevronRight className="w-3 h-3 shrink-0 text-slate-600" />
+                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-slate-400' : 'text-slate-600'}`} />
                 )}
                 <button
                   onClick={() => i < breadcrumbs.length - 1 ? navigate(crumb.path) : undefined}
-                  className={`text-xs font-medium transition-all px-1.5 py-0.5 rounded-md truncate max-w-28 ${
-                    i === breadcrumbs.length - 1
-                      ? 'text-white font-semibold'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`text-[13px] font-medium transition-all px-2 py-1 rounded-md truncate max-w-32 ${i === breadcrumbs.length - 1
+                      ? (isLight ? 'text-slate-900 font-bold' : 'text-white font-semibold')
+                      : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white')
+                    }`}
                   title={crumb.label}
                 >
-                  {i === 0 && <Home className="w-3 h-3 inline mr-1 -mt-0.5 opacity-70" />}
+                  {i === 0 && <Home className="w-3.5 h-3.5 inline mr-1 -mt-0.5 opacity-70" />}
                   <span className="truncate">{crumb.label}</span>
                 </button>
               </React.Fragment>
@@ -547,32 +436,38 @@ export const GlobalAppShell: React.FC = () => {
           </div>
         </nav>
 
-        {/* RIGHT: SmartBoard + Search + GitHub Glass + Settings */}
+        {/* RIGHT: SmartBoard + Search + GitHub Glass + Theme Toggle + Settings */}
         <div className="flex items-center gap-2 shrink-0">
           {!licenseContext?.settings?.disableSmartBoard && (
-          <button
-            onClick={() => setSmartBoardOpen(true)}
-            title="Open Interactive Smart Board (Ctrl+B)"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-200 bg-amber-500/10 border border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/20 hover:text-white transition-all shadow-sm group"
-          >
-            <Presentation className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-            <span className="hidden sm:inline">Board</span>
-            <kbd className="hidden sm:inline-block text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md bg-amber-950/60 border border-amber-400/30 text-amber-300">
-              ⌘B
-            </kbd>
-          </button>
+            <button
+              onClick={() => setSmartBoardOpen(true)}
+              title="Open Interactive Smart Board"
+              className={`h-9 flex items-center gap-2 px-3.5 rounded-md text-[13px] font-semibold transition-colors cursor-pointer select-none ${isLight
+                  ? 'bg-white hover:bg-slate-50 border border-slate-300 text-amber-700 shadow-xs'
+                  : 'bg-[#161922] hover:bg-[#202534] border border-[#2d3548] text-amber-300'
+                }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 shrink-0 ${isLight ? 'text-amber-600' : 'text-amber-400'}`}>
+                <rect x="3" y="3" width="18" height="12" rx="1" />
+                <path d="M7 7h10" />
+                <path d="M7 10h5" />
+                <path d="M5 21l3-6" />
+                <path d="M19 21l-3-6" />
+              </svg>
+              <span>Board</span>
+            </button>
           )}
 
           <button
             onClick={() => setSearchOpen(true)}
-            title="Search (Ctrl+K)"
-            className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 bg-white/5 border border-white/10 hover:border-indigo-400/50 hover:bg-white/10 hover:text-white transition-all shadow-sm group"
+            title="Search"
+            className={`h-9 flex items-center gap-2 px-3.5 rounded-md text-[13px] font-semibold transition-colors cursor-pointer select-none ${isLight
+                ? 'bg-transparent hover:bg-slate-100 border border-slate-300 text-slate-900'
+                : 'bg-transparent hover:bg-white/10 border border-white/20 text-white'
+              }`}
           >
-            <Search className="w-4 h-4 text-indigo-300 group-hover:scale-110 transition-transform" />
-            <span className="hidden sm:inline">Search</span>
-            <kbd className="hidden sm:inline-block text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md bg-indigo-950/60 border border-indigo-400/30 text-indigo-200">
-              ⌘K
-            </kbd>
+            <Search className={`w-4 h-4 shrink-0 ${isLight ? 'text-slate-800' : 'text-white'}`} />
+            <span>Search</span>
           </button>
 
           <style>{`
@@ -608,9 +503,12 @@ export const GlobalAppShell: React.FC = () => {
             <button
               onClick={() => navigate('/settings')}
               title="3-Day Desktop Trial Active (All 287 Courses & Domains Unlocked). Click to view plans."
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-300 bg-amber-500/15 border border-amber-500/35 hover:bg-amber-500/25 transition-all shadow-sm cursor-pointer"
+              className={`h-9 flex items-center gap-2 px-3 rounded-md text-[13px] font-mono font-medium transition-colors cursor-pointer ${isLight
+                  ? 'bg-amber-50 border border-amber-300 text-amber-800'
+                  : 'bg-[#181a20] border border-amber-500/40 text-amber-300'
+                }`}
             >
-              <Clock size={12} className="text-amber-400 shrink-0" />
+              <Clock size={14} className="text-amber-500 shrink-0" />
               <span>
                 3-Day Trial: {licenseContext.trialInfo.daysRemaining > 0
                   ? `${licenseContext.trialInfo.daysRemaining}d Left`
@@ -619,39 +517,20 @@ export const GlobalAppShell: React.FC = () => {
             </button>
           )}
 
-          {/* Persistent Glowing Update Ready button in header (Tauri-only, until user updates) */}
+          {/* Update Ready indicator — minimal, professional pinkish-orange */}
           {hasUpdate && (
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={() => setShowUpdateModal(true)}
-                title="New software update available! Click to update."
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold text-white bg-linear-to-r from-rose-600 via-indigo-600 to-purple-600 hover:from-rose-500 hover:to-indigo-500 transition-all shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse cursor-pointer"
-              >
-                <ArrowUpCircle size={13} />
-                <span>Update Ready</span>
-              </button>
-
-              <a
-                href="https://tread-code-smoky.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  const targetUrl = "https://tread-code-smoky.vercel.app/";
-                  try {
-                    const { open } = await import('@tauri-apps/plugin-shell');
-                    await open(targetUrl);
-                  } catch (err) {
-                    window.open(targetUrl, "_blank", "noopener,noreferrer");
-                  }
-                }}
-                title="Open Web Version on Vercel"
-                className="flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/40 hover:bg-indigo-900/80 hover:text-white transition-all cursor-pointer"
-              >
-                <span>Web App</span>
-                <ExternalLink size={11} />
-              </a>
-            </div>
+            <button
+              onClick={() => setShowUpdateModal(true)}
+              title="A new version of TreadCode is ready to install."
+              className={`h-9 flex items-center gap-2 px-3 rounded-md text-[13px] font-semibold transition-colors cursor-pointer border ${
+                isLight
+                  ? 'bg-[#fff5f3] border-[#fa5a3f]/30 text-[#c73820] hover:bg-[#fa5a3f]/10'
+                  : 'bg-[#181112] border-[#fa5a3f]/40 text-[#ff8a75] hover:border-[#fa5a3f]/70 hover:text-white'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-[#fa5a3f] shrink-0" />
+              <span>Update Ready</span>
+            </button>
           )}
 
           <a
@@ -669,56 +548,91 @@ export const GlobalAppShell: React.FC = () => {
               }
             }}
             title="GitHub Profile (prince19112003)"
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-200 hover:text-white bg-white/5 border border-white/10 hover:border-indigo-400/50 transition-all github-shine-btn shadow-sm"
+            className={`w-9.5 h-9.5 flex items-center justify-center rounded-xl transition-all github-shine-btn shadow-sm cursor-pointer ${isLight
+                ? 'text-slate-700 hover:text-slate-900 bg-slate-100 border border-slate-300 hover:bg-slate-200'
+                : 'text-slate-200 hover:text-white bg-white/5 border border-white/10 hover:border-indigo-400/50'
+              }`}
           >
-            <GithubIcon className="w-6 h-6" />
+            <GithubIcon className="w-5.5 h-5.5" />
           </a>
+
+          {/* THEME TOGGLE BUTTON */}
+          <button
+            onClick={toggleTheme}
+            title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
+            className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors cursor-pointer ${isLight
+                ? 'bg-white hover:bg-slate-50 border border-slate-300 text-blue-600 shadow-xs'
+                : 'bg-[#161922] hover:bg-[#202534] border border-[#2d3548] text-amber-400'
+              }`}
+          >
+            {isLight ? (
+              <Moon className="w-4.5 h-4.5" />
+            ) : (
+              <Sun className="w-4.5 h-4.5" />
+            )}
+          </button>
 
           <button
             onClick={() => navigate('/settings')}
             title="Settings"
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-200 hover:text-white bg-white/5 border border-white/10 hover:border-indigo-400/50 transition-all shadow-sm group relative"
+            className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors group relative cursor-pointer ${isLight
+                ? 'bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 shadow-xs'
+                : 'bg-[#161922] hover:bg-[#202534] border border-[#2d3548] text-slate-300 hover:text-white'
+              }`}
           >
-            <Settings className="w-4.5 h-4.5 transition-transform duration-500 ease-out group-hover:rotate-180 group-active:rotate-90 group-active:scale-90" />
+            <Settings className="w-4.5 h-4.5 transition-transform duration-300 ease-out group-hover:rotate-90" />
             {hasUpdate && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)] animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#fa5a3f]" />
             )}
           </button>
         </div>
       </header>
 
-      {/* === REAL-TIME BROADCAST MESSAGE BANNER (Controlled Live via Admin Panel) === */}
+      {/* === BROADCAST BANNER — minimal, professional, pinkish-orange accent bar === */}
       <AnimatePresence>
         {isAnnouncementVisible && (
           <motion.div
-            initial={{ height: 0, opacity: 0, y: -10 }}
-            animate={{ height: 'auto', opacity: 1, y: 0 }}
-            exit={{ height: 0, opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="z-40 shrink-0 overflow-hidden relative border-b border-amber-500/30 bg-linear-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(245,158,11,0.15)]"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className={`z-40 shrink-0 overflow-hidden border-b ${
+              isLight
+                ? 'bg-[#fff8f6] border-[#fa5a3f]/25'
+                : 'bg-[#140e0f] border-[#fa5a3f]/30'
+            }`}
           >
-            <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-5 h-5 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-300">
-                  <Megaphone size={12} className="animate-pulse" />
-                </div>
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="font-extrabold text-[10px] uppercase tracking-wider text-amber-400 font-mono bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 shrink-0">
-                    Announcement
+            {/* Left pinkish-orange minimal color bar */}
+            <div className="flex">
+              <div className="w-0.75 shrink-0 bg-[#fa5a3f]" />
+              <div className="flex-1 px-4 py-2.5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <span className={`text-[10px] font-bold uppercase tracking-widest font-mono shrink-0 px-2 py-0.5 rounded border ${
+                    isLight
+                      ? 'bg-[#fa5a3f]/10 text-[#d03c20] border-[#fa5a3f]/25'
+                      : 'bg-[#fa5a3f]/15 text-[#ff8773] border-[#fa5a3f]/30'
+                  }`}>
+                    Notice
                   </span>
-                  <p className="text-amber-100 font-medium truncate tracking-wide text-xs">
+                  <p className={`text-[12.5px] font-medium leading-snug ${
+                    isLight ? 'text-slate-800' : 'text-slate-100'
+                  }`}>
                     {rawAnnouncement}
                   </p>
                 </div>
-              </div>
 
-              <button
-                onClick={handleDismissAnnouncement}
-                title="Dismiss message"
-                className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 text-amber-300/70 hover:text-white hover:bg-amber-500/20 transition-all cursor-pointer"
-              >
-                <X size={12} />
-              </button>
+                <button
+                  onClick={handleDismissAnnouncement}
+                  title="Dismiss notice"
+                  className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded cursor-pointer transition-colors border ${
+                    isLight
+                      ? 'border-[#fa5a3f]/30 text-[#c73820] hover:bg-[#fa5a3f]/10'
+                      : 'border-[#fa5a3f]/35 text-[#ff8773] hover:bg-[#fa5a3f]/15 hover:text-white'
+                  }`}
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -737,6 +651,17 @@ export const GlobalAppShell: React.FC = () => {
       <React.Suspense fallback={null}>
         <SmartBoardModal isOpen={smartBoardOpen} onClose={() => setSmartBoardOpen(false)} />
       </React.Suspense>
+
+      {/* === SMARTBOARD SIDE DOCK (Auto-collapsible Smartboard toolbar) === */}
+      {!licenseContext?.settings?.disableSmartBoard && (
+        <SmartBoardSideDock
+          isHome={isHome}
+          isLight={isLight}
+          onOpenBoard={() => setSmartBoardOpen(true)}
+          onBack={handleBack}
+          onHome={() => navigate('/languages')}
+        />
+      )}
 
       {/* === MAIN CONTENT === */}
       <main className="relative z-0 flex-1 overflow-hidden flex flex-col">
