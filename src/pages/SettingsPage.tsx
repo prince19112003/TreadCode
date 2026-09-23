@@ -13,21 +13,45 @@ import { LicenseContext } from '../app/App';
 import { unlinkDeviceFromLicense } from '../shared/config/firebase';
 import { useThemeStore } from '@shared/hooks/useThemeStore';
 
-export const applyDisplayTuning = (contrast: number, brightness: number, saturate: number, sharpness: number = 100) => {
-  if (contrast === 100 && brightness === 100 && saturate === 100 && sharpness === 100) {
+export const applyDisplayTuning = (
+  contrast: number = 100,
+  brightness: number = 100,
+  saturate: number = 100,
+  sharpness: number = 100,
+  warmth: number = 0,
+  tint: number = 0
+) => {
+  if (
+    contrast === 100 &&
+    brightness === 100 &&
+    saturate === 100 &&
+    sharpness === 100 &&
+    warmth === 0 &&
+    tint === 0
+  ) {
     document.documentElement.style.filter = 'none';
   } else {
     let filterStr = `contrast(${contrast}%) brightness(${brightness}%) saturate(${saturate}%)`;
+    if (warmth > 0) {
+      filterStr += ` sepia(${warmth}%)`;
+    }
+    if (tint !== 0) {
+      filterStr += ` hue-rotate(${tint}deg)`;
+    }
     if (sharpness !== 100) {
       if (sharpness < 100) {
-        filterStr += ` blur(${(100 - sharpness) * 0.015}px)`;
+        filterStr += ` blur(${(100 - sharpness) * 0.012}px)`;
       } else {
-        filterStr += ` drop-shadow(0 0 ${(sharpness - 100) * 0.008}px rgba(255,255,255,0.18))`;
+        const edgeAmt = ((sharpness - 100) / 100) * 0.6;
+        filterStr += ` drop-shadow(0 0 ${edgeAmt}px rgba(0,0,0,0.5))`;
       }
     }
     document.documentElement.style.filter = filterStr;
   }
-  localStorage.setItem('flowtrace_display_tuning', JSON.stringify({ contrast, brightness, saturate, sharpness }));
+  localStorage.setItem(
+    'flowtrace_display_tuning',
+    JSON.stringify({ contrast, brightness, saturate, sharpness, warmth, tint })
+  );
 };
 
 type SettingTab = 'display' | 'voice' | 'licensing' | 'feedback' | 'about' | 'extensions' | 'plans';
@@ -73,7 +97,7 @@ export const SettingsPage: React.FC = () => {
     }
   }, [location.search]);
 
-  // Display Tuning States (Contrast, Brightness, Saturation, Sharpness)
+  // Display Tuning States (Contrast, Brightness, Saturation, Sharpness, Warmth, Tint)
   const [contrastVal, setContrastVal] = useState(() => {
     const saved = localStorage.getItem('flowtrace_display_tuning');
     if (saved) {
@@ -102,7 +126,23 @@ export const SettingsPage: React.FC = () => {
     }
     return 100;
   });
-  const [activePreset, setActivePreset] = useState<'default' | 'projector' | 'smartboard' | 'daylight'>('default');
+  const [warmthVal, setWarmthVal] = useState(() => {
+    const saved = localStorage.getItem('flowtrace_display_tuning');
+    if (saved) {
+      try { return JSON.parse(saved).warmth ?? 0; } catch (e) { console.error(e); }
+    }
+    return 0;
+  });
+  const [tintVal, setTintVal] = useState(() => {
+    const saved = localStorage.getItem('flowtrace_display_tuning');
+    if (saved) {
+      try { return JSON.parse(saved).tint ?? 0; } catch (e) { console.error(e); }
+    }
+    return 0;
+  });
+
+  type PresetId = 'default' | 'projector' | 'high_contrast' | 'daylight' | 'eye_comfort' | 'vivid' | 'custom';
+  const [activePreset, setActivePreset] = useState<PresetId>('default');
 
   // Activation & Modal states
   const [showChangeKeyInput, setShowChangeKeyInput] = useState(false);
@@ -133,25 +173,108 @@ export const SettingsPage: React.FC = () => {
     });
   };
 
-  // Load Display Tuning filter on mount
+  // Load Display Tuning filter on mount & state updates
   useEffect(() => {
-    applyDisplayTuning(contrastVal, brightnessVal, saturateVal, sharpnessVal);
-  }, [contrastVal, brightnessVal, saturateVal, sharpnessVal]);
+    applyDisplayTuning(contrastVal, brightnessVal, saturateVal, sharpnessVal, warmthVal, tintVal);
+  }, [contrastVal, brightnessVal, saturateVal, sharpnessVal, warmthVal, tintVal]);
 
   const handleTuneChange = (
     c: number,
     b: number,
     s: number,
     sh: number = 100,
-    preset: 'default' | 'projector' | 'smartboard' | 'daylight' = 'default'
+    w: number = 0,
+    t: number = 0,
+    preset: PresetId = 'custom'
   ) => {
     setContrastVal(c);
     setBrightnessVal(b);
     setSaturateVal(s);
     setSharpnessVal(sh);
+    setWarmthVal(w);
+    setTintVal(t);
     setActivePreset(preset);
-    applyDisplayTuning(c, b, s, sh);
+    applyDisplayTuning(c, b, s, sh, w, t);
   };
+
+  const colorPresets: {
+    id: PresetId;
+    name: string;
+    subtitle: string;
+    c: number;
+    b: number;
+    s: number;
+    sh: number;
+    w: number;
+    t: number;
+  }[] = [
+    {
+      id: 'default',
+      name: 'Standard',
+      subtitle: 'Natural Balance',
+      c: 100,
+      b: 100,
+      s: 100,
+      sh: 100,
+      w: 0,
+      t: 0,
+    },
+    {
+      id: 'projector',
+      name: 'Projector',
+      subtitle: 'Classroom Lumens',
+      c: 125,
+      b: 115,
+      s: 115,
+      sh: 115,
+      w: 5,
+      t: 0,
+    },
+    {
+      id: 'high_contrast',
+      name: 'High Contrast',
+      subtitle: 'Max Text Clarity',
+      c: 145,
+      b: 105,
+      s: 110,
+      sh: 125,
+      w: 0,
+      t: 0,
+    },
+    {
+      id: 'daylight',
+      name: 'Daylight',
+      subtitle: 'Bright Room & Glare',
+      c: 115,
+      b: 125,
+      s: 110,
+      sh: 110,
+      w: 0,
+      t: 0,
+    },
+    {
+      id: 'eye_comfort',
+      name: 'Eye Comfort',
+      subtitle: 'Blue Light Filter',
+      c: 95,
+      b: 92,
+      s: 90,
+      sh: 100,
+      w: 35,
+      t: 0,
+    },
+    {
+      id: 'vivid',
+      name: 'Vivid Studio',
+      subtitle: 'High Dynamic Color',
+      c: 120,
+      b: 105,
+      s: 135,
+      sh: 110,
+      w: 0,
+      t: 0,
+    },
+  ];
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -398,147 +521,188 @@ export const SettingsPage: React.FC = () => {
 
                   {/* Presets Grid */}
                   <div>
-                    <label className={`text-xs font-semibold uppercase tracking-wider mb-2.5 block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                      Color Presets
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        Color Presets
+                      </label>
+                      <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {activePreset === 'custom' ? 'Custom Tuned' : colorPresets.find(p => p.id === activePreset)?.name || 'Standard'}
+                      </span>
+                    </div>
 
-                      {/* Standard Dark */}
-                      <button
-                        type="button"
-                        onClick={() => handleTuneChange(100, 100, 100, 100, 'default')}
-                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'default'
-                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
-                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
-                          }`}
-                      >
-                        <div className="font-bold text-xs">Standard</div>
-                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>100% Native</div>
-                      </button>
-
-                      {/* Classroom Projector */}
-                      <button
-                        type="button"
-                        onClick={() => handleTuneChange(140, 120, 130, 110, 'projector')}
-                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'projector'
-                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
-                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
-                          }`}
-                      >
-                        <div className="font-bold text-xs">Projector</div>
-                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>130% Sat</div>
-                      </button>
-
-                      {/* High Contrast */}
-                      <button
-                        type="button"
-                        onClick={() => handleTuneChange(125, 110, 150, 120, 'smartboard')}
-                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'smartboard'
-                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
-                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
-                          }`}
-                      >
-                        <div className="font-bold text-xs">High Contrast</div>
-                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>150% Sat</div>
-                      </button>
-
-                      {/* Daylight Visibility */}
-                      <button
-                        type="button"
-                        onClick={() => handleTuneChange(160, 130, 140, 115, 'daylight')}
-                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${activePreset === 'daylight'
-                          ? isLight ? 'border-blue-600 bg-blue-50/80 text-blue-900 shadow-xs' : 'border-blue-500 bg-blue-950/40 text-white'
-                          : isLight ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700' : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
-                          }`}
-                      >
-                        <div className="font-bold text-xs">Daylight</div>
-                        <div className={`text-[11px] mt-0.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>140% Sat</div>
-                      </button>
-
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {colorPresets.map((preset) => {
+                        const isActive = activePreset === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => handleTuneChange(preset.c, preset.b, preset.s, preset.sh, preset.w, preset.t, preset.id)}
+                            className={`p-3 rounded-lg border text-left transition-all cursor-pointer relative ${
+                              isActive
+                                ? isLight
+                                  ? 'border-blue-600 bg-blue-50/80 text-blue-950 shadow-xs ring-1 ring-blue-600/30'
+                                  : 'border-blue-500 bg-blue-950/40 text-white ring-1 ring-blue-500/40'
+                                : isLight
+                                  ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                                  : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                            }`}
+                          >
+                            <div className="font-bold text-xs">{preset.name}</div>
+                            <div className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {preset.subtitle}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  {/* Sliders */}
-                  <div className="space-y-4 pt-4 border-t" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                  {/* Workable Calibration Sliders */}
+                  <div className="space-y-3.5 pt-4 border-t" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        Adjustments
+                      </label>
+                    </div>
 
-                    {/* 1. Contrast */}
-                    <div className="flex items-center justify-between gap-4">
-                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Screen Contrast</span>
-                      <div className="flex items-center gap-3">
+                    {/* 1. Screen Contrast */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 p-2 rounded-md hover:bg-slate-500/5 transition-colors">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Screen Contrast</div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Text-to-background edge distinction</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         <input
                           type="range"
                           min={80}
                           max={180}
                           step={5}
                           value={contrastVal}
-                          onChange={e => handleTuneChange(Number(e.target.value), brightnessVal, saturateVal, sharpnessVal, 'default')}
-                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                          onChange={e => handleTuneChange(Number(e.target.value), brightnessVal, saturateVal, sharpnessVal, warmthVal, tintVal, 'custom')}
+                          className="w-36 sm:w-44 accent-blue-600 cursor-pointer"
                         />
-                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{contrastVal}%</span>
+                        <span className={`text-xs font-mono w-12 text-right ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{contrastVal}%</span>
                       </div>
                     </div>
 
-                    {/* 2. Brightness */}
-                    <div className="flex items-center justify-between gap-4">
-                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Screen Brightness</span>
-                      <div className="flex items-center gap-3">
+                    {/* 2. Screen Brightness */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 p-2 rounded-md hover:bg-slate-500/5 transition-colors">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Screen Brightness</div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Overall lumen output for daylight classrooms</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         <input
                           type="range"
                           min={80}
                           max={150}
                           step={5}
                           value={brightnessVal}
-                          onChange={e => handleTuneChange(contrastVal, Number(e.target.value), saturateVal, sharpnessVal, 'default')}
-                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                          onChange={e => handleTuneChange(contrastVal, Number(e.target.value), saturateVal, sharpnessVal, warmthVal, tintVal, 'custom')}
+                          className="w-36 sm:w-44 accent-blue-600 cursor-pointer"
                         />
-                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{brightnessVal}%</span>
+                        <span className={`text-xs font-mono w-12 text-right ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{brightnessVal}%</span>
                       </div>
                     </div>
 
-                    {/* 3. Saturation */}
-                    <div className="flex items-center justify-between gap-4">
-                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Color Saturation</span>
-                      <div className="flex items-center gap-3">
+                    {/* 3. Color Saturation */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 p-2 rounded-md hover:bg-slate-500/5 transition-colors">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Color Saturation</div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Vibrancy of syntax highlights and diagram tokens</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         <input
                           type="range"
-                          min={80}
+                          min={50}
                           max={180}
                           step={5}
                           value={saturateVal}
-                          onChange={e => handleTuneChange(contrastVal, brightnessVal, Number(e.target.value), sharpnessVal, 'default')}
-                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                          onChange={e => handleTuneChange(contrastVal, brightnessVal, Number(e.target.value), sharpnessVal, warmthVal, tintVal, 'custom')}
+                          className="w-36 sm:w-44 accent-blue-600 cursor-pointer"
                         />
-                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{saturateVal}%</span>
+                        <span className={`text-xs font-mono w-12 text-right ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{saturateVal}%</span>
                       </div>
                     </div>
 
-                    {/* 4. Sharpness */}
-                    <div className="flex items-center justify-between gap-4">
-                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Screen Sharpness</span>
-                      <div className="flex items-center gap-3">
+                    {/* 4. Screen Sharpness */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 p-2 rounded-md hover:bg-slate-500/5 transition-colors">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Screen Sharpness</div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Font edge acuity for low-resolution 720p/1080p projectors</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         <input
                           type="range"
                           min={80}
-                          max={150}
+                          max={140}
                           step={5}
                           value={sharpnessVal}
-                          onChange={e => handleTuneChange(contrastVal, brightnessVal, saturateVal, Number(e.target.value), 'default')}
-                          className="w-40 sm:w-48 accent-blue-600 cursor-pointer"
+                          onChange={e => handleTuneChange(contrastVal, brightnessVal, saturateVal, Number(e.target.value), warmthVal, tintVal, 'custom')}
+                          className="w-36 sm:w-44 accent-blue-600 cursor-pointer"
                         />
-                        <span className={`text-xs font-mono w-10 text-right ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{sharpnessVal}%</span>
+                        <span className={`text-xs font-mono w-12 text-right ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{sharpnessVal}%</span>
                       </div>
                     </div>
 
-                    <div className="pt-2 flex justify-end">
+                    {/* 5. Eye Comfort / Warmth (Blue Light Filter) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 p-2 rounded-md hover:bg-slate-500/5 transition-colors">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Eye Comfort (Warmth)</div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Softens harsh blue light emission to reduce eye fatigue</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <input
+                          type="range"
+                          min={0}
+                          max={60}
+                          step={2}
+                          value={warmthVal}
+                          onChange={e => handleTuneChange(contrastVal, brightnessVal, saturateVal, sharpnessVal, Number(e.target.value), tintVal, 'custom')}
+                          className="w-36 sm:w-44 accent-amber-500 cursor-pointer"
+                        />
+                        <span className={`text-xs font-mono w-12 text-right ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{warmthVal}%</span>
+                      </div>
+                    </div>
+
+                    {/* 6. Color Tint (Lamp Correction) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 p-2 rounded-md hover:bg-slate-500/5 transition-colors">
+                      <div className="min-w-0">
+                        <div className={`text-xs font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Color Tint (Lamp Correction)</div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Neutralizes green or magenta discoloration from aging projector lamps</div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <input
+                          type="range"
+                          min={-30}
+                          max={30}
+                          step={2}
+                          value={tintVal}
+                          onChange={e => handleTuneChange(contrastVal, brightnessVal, saturateVal, sharpnessVal, warmthVal, Number(e.target.value), 'custom')}
+                          className="w-36 sm:w-44 accent-emerald-500 cursor-pointer"
+                        />
+                        <span className={`text-xs font-mono w-12 text-right ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                          {tintVal > 0 ? `+${tintVal}` : tintVal}°
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Footer / Reset Action */}
+                    <div className="pt-2 flex items-center justify-between border-t" style={{ borderColor: isLight ? '#f1f5f9' : '#141824' }}>
+                      <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Settings auto-save and persist across sessions.
+                      </div>
                       <button
                         type="button"
-                        onClick={() => handleTuneChange(100, 100, 100, 100, 'default')}
-                        className={`text-xs font-medium cursor-pointer px-3 py-1.5 rounded-md border transition-colors ${isLight
+                        onClick={() => handleTuneChange(100, 100, 100, 100, 0, 0, 'default')}
+                        className={`text-xs font-medium cursor-pointer px-3.5 py-1.5 rounded-md border transition-colors flex items-center gap-1.5 ${isLight
                           ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                           : 'bg-[#0f121a] hover:bg-[#151924] text-slate-300 border-slate-800'
                           }`}
                       >
-                        Reset
+                        <Codicon name="refresh" size={13} />
+                        <span>Reset to Defaults</span>
                       </button>
                     </div>
 
@@ -1120,26 +1284,12 @@ export const SettingsPage: React.FC = () => {
                           <Codicon name="refresh" size={13} className={isChecking ? "animate-spin text-[#fa5a3f]" : "text-[#fa5a3f]"} />
                           <span>{isChecking ? "Checking..." : "Check for Updates"}</span>
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setShowPreviewModal(true)}
-                          className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                            isLight
-                              ? 'bg-white hover:bg-[#fff5f3] border-[#fa5a3f]/30 text-[#c73820]'
-                              : 'bg-[#181112] hover:bg-[#201517] border-[#fa5a3f]/40 text-[#ff8a75]'
-                          }`}
-                          title="Preview the software update dialog"
-                        >
-                          <Codicon name="eye" size={13} />
-                          <span>Preview Dialog</span>
-                        </button>
                       </div>
                     </div>
 
-                    {/* 2 Update Options */}
+                    {/* Distribution & Store Options */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      {/* Option 1: Instant Direct Setup */}
+                      {/* Option 1: Direct Windows Setup */}
                       <div
                         className="p-4 rounded-lg border flex flex-col justify-between gap-3"
                         style={{
@@ -1148,11 +1298,16 @@ export const SettingsPage: React.FC = () => {
                         }}
                       >
                         <div>
-                          <span className={`text-xs font-semibold tracking-wide block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                            Windows Installer (.exe)
-                          </span>
-                          <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                            Offline installer setup package for Windows.
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-xs font-semibold tracking-wide block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                              Windows Installer (.exe)
+                            </span>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isLight ? 'bg-slate-200 text-slate-700' : 'bg-slate-800 text-slate-300'}`}>
+                              v{displayVersion}
+                            </span>
+                          </div>
+                          <p className={`text-xs mt-1.5 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                            Offline setup package for Windows 10 and 11 with automatic start menu integration.
                           </p>
                         </div>
                         <button
@@ -1179,7 +1334,7 @@ export const SettingsPage: React.FC = () => {
                         </button>
                       </div>
 
-                      {/* Option 2: Official Web Store Section */}
+                      {/* Option 2: Official Web Store */}
                       <div
                         className="p-4 rounded-lg border flex flex-col justify-between gap-3"
                         style={{
@@ -1188,11 +1343,16 @@ export const SettingsPage: React.FC = () => {
                         }}
                       >
                         <div>
-                          <span className={`text-xs font-semibold tracking-wide block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                            Web Catalogue & Changelog
-                          </span>
-                          <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                            View release notes and web installation portal.
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-xs font-semibold tracking-wide block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                              Web Store
+                            </span>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isLight ? 'bg-slate-200 text-slate-700' : 'bg-slate-800 text-slate-300'}`}>
+                              All Platforms
+                            </span>
+                          </div>
+                          <p className={`text-xs mt-1.5 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                            Android SmartBoard (.apk), Linux (.AppImage), and direct Plug &amp; Play (USB portable) packages are available on the official store.
                           </p>
                         </div>
                         <button
@@ -1211,7 +1371,7 @@ export const SettingsPage: React.FC = () => {
                           }`}
                         >
                           <Codicon name="globe" size={13} className={isLight ? 'text-[#fa5a3f]' : 'text-[#ff7e66]'} />
-                          <span>Open Catalogue Page</span>
+                          <span>Open Web Store</span>
                           <Codicon name="link-external" size={11} className={isLight ? 'text-slate-400' : 'text-slate-500'} />
                         </button>
                       </div>

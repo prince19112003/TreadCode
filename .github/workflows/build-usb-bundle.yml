@@ -1,0 +1,52 @@
+name: "Build Universal USB Portable Bundle"
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-usb-bundle:
+    name: "Build USB Portable Bundle (.zip)"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install zip utility
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Build frontend application
+        run: npm run build
+
+      - name: Package Universal USB Portable Bundle
+        run: node scripts/export_usb_bundle.js
+
+      - name: Upload USB Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreadCode-USB-Portable
+          path: release-usb/TreadCode-USB-Portable.zip
+          retention-days: 14
+
+      - name: Attach USB Bundle to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-usb/TreadCode-USB-Portable*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,5 @@
+[Autorun]
+Open=Launch-TreadCode.bat
+Action=Launch TreadCode (Zero Install)
+Icon=app.ico
+Label=TreadCode Portable

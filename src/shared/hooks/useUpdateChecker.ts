@@ -18,11 +18,17 @@ export interface UpdateStatus {
   apkUrl: string | null;
   /** macOS .dmg download URL from Firebase */
   macUrl: string | null;
+  /** Linux .AppImage download URL */
+  linuxUrl: string | null;
+  /** Universal USB Portable .zip download URL */
+  usbUrl: string | null;
 }
 
 // Current App Version built into this .exe (patched by npm run release <version>)
 const CURRENT_VERSION = '1.0.8';
 const DEFAULT_EXE_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+const DEFAULT_USB_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_USB_Portable.zip';
+const DEFAULT_LINUX_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_amd64.AppImage';
 
 // ── Native Desktop / Mobile context guard ─────────────────────────────────────
 // Only show update UI when running inside native desktop app (Tauri) or Android APK. Never in web browsers (Vercel).
@@ -53,6 +59,8 @@ export const useUpdateChecker = () => {
     downloadUrl: DEFAULT_EXE_URL,
     apkUrl: null,
     macUrl: null,
+    linuxUrl: DEFAULT_LINUX_URL,
+    usbUrl: DEFAULT_USB_URL,
   });
 
   const checkedRef = useRef(false);
@@ -89,6 +97,8 @@ export const useUpdateChecker = () => {
           downloadUrl: null,
           apkUrl: null,
           macUrl: null,
+          linuxUrl: null,
+          usbUrl: null,
         });
         return;
       }
@@ -119,6 +129,10 @@ export const useUpdateChecker = () => {
             platforms['android']?.url || platforms['android-aarch64']?.url || null;
           const macUrl: string | null =
             platforms['darwin-aarch64']?.url || platforms['darwin-x86_64']?.url || null;
+          const linuxUrl: string | null =
+            platforms['linux-x86_64']?.url || platforms['linux']?.url || DEFAULT_LINUX_URL;
+          const usbUrl: string | null =
+            platforms['usb-portable']?.url || platforms['usb']?.url || DEFAULT_USB_URL;
 
           setStatus({
             hasUpdate: true,
@@ -132,6 +146,8 @@ export const useUpdateChecker = () => {
             downloadUrl: winUrl || DEFAULT_EXE_URL,
             apkUrl,
             macUrl,
+            linuxUrl,
+            usbUrl,
           });
           updateFound = true;
           return;
@@ -201,6 +217,10 @@ export const useUpdateChecker = () => {
                       platforms['android']?.url || platforms['android-aarch64']?.url || null;
                     const macUrl: string | null =
                       platforms['darwin-aarch64']?.url || platforms['darwin-x86_64']?.url || null;
+                    const linuxUrl: string | null =
+                      platforms['linux-x86_64']?.url || platforms['linux']?.url || DEFAULT_LINUX_URL;
+                    const usbUrl: string | null =
+                      platforms['usb-portable']?.url || platforms['usb']?.url || DEFAULT_USB_URL;
 
                     setStatus((s) => ({
                       ...s,
@@ -210,6 +230,8 @@ export const useUpdateChecker = () => {
                       downloadUrl: winUrl || s.downloadUrl,
                       apkUrl: apkUrl || s.apkUrl,
                       macUrl: macUrl || s.macUrl,
+                      linuxUrl: linuxUrl || s.linuxUrl,
+                      usbUrl: usbUrl || s.usbUrl,
                     }));
                   } else {
                     setStatus((s) => ({

@@ -41,6 +41,20 @@
         "displayLanguageSelector": false
       }
     },
+    "linux": {
+      "deb": {
+        "depends": [
+          "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37"
+        ],
+        "section": "education",
+        "priority": "optional"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "category": "Education",
+    "shortDescription": "TreadCode Offline Programming Visualizer & SmartBoard",
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }

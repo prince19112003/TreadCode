@@ -129,15 +129,48 @@ export const useModuleStore = create<ModuleStoreState>((set, get) => ({
     if (get().isInitialized) return;
     try {
       const savedMeta = localStorage.getItem(META_KEY);
-      const installedVersions: Record<string, string> = savedMeta ? JSON.parse(savedMeta) : {};
-      const moduleStatus: Record<string, ModuleStatus> = {};
+      const parsedSaved: Record<string, string> = savedMeta ? JSON.parse(savedMeta) : {};
 
+      // Universal Pre-bundled: All core modules (C, C++, Java, DSA, ML, Networking)
+      // are active and ready out-of-the-box on every platform!
+      const defaultVersions: Record<string, string> = {};
       for (const mod of MODULE_CATALOG) {
-        moduleStatus[mod.id] = installedVersions[mod.id] ? 'installed' : 'not_installed';
+        defaultVersions[mod.id] = mod.version;
+      }
+
+      const installedVersions: Record<string, string> = {
+        ...defaultVersions,
+        ...parsedSaved,
+      };
+
+      const moduleStatus: Record<string, ModuleStatus> = {};
+      for (const mod of MODULE_CATALOG) {
+        // If explicitly uninstalled by user, honour that; otherwise default to installed!
+        moduleStatus[mod.id] = parsedSaved[mod.id] === 'uninstalled' ? 'not_installed' : 'installed';
       }
 
       set({ installedVersions, moduleStatus, isInitialized: true });
       await get().recalcStorage();
+
+      // Silent background pre-seed into IndexedDB for instant sub-millisecond execution
+      setTimeout(async () => {
+        for (const mod of MODULE_CATALOG) {
+          if (mod.isMarkerOnly || moduleStatus[mod.id] !== 'installed') continue;
+          try {
+            const existing = await idbGet(`pack_${mod.id}`);
+            if (!existing) {
+              const res = await fetch(`/visualizer/packs/${mod.id}.json`).catch(() => null);
+              if (res && res.ok) {
+                const data = await res.json();
+                if (data?.registry) {
+                  await idbSet(`pack_${mod.id}`, data);
+                }
+              }
+            }
+          } catch {}
+        }
+        await get().recalcStorage();
+      }, 500);
     } catch {
       set({ isInitialized: true });
     }
@@ -250,7 +283,7 @@ export const useModuleStore = create<ModuleStoreState>((set, get) => ({
   uninstallModule: async (moduleId: string) => {
     await idbDelete(`pack_${moduleId}`);
     const installedVersions = { ...get().installedVersions };
-    delete installedVersions[moduleId];
+    installedVersions[moduleId] = 'uninstalled';
     localStorage.setItem(META_KEY, JSON.stringify(installedVersions));
 
     set(s => ({
@@ -264,9 +297,29 @@ export const useModuleStore = create<ModuleStoreState>((set, get) => ({
 
   getPackRegistry: async (moduleId: string): Promise<Record<string, any> | null> => {
     try {
-      const packData = await idbGet(`pack_${moduleId}`);
-      if (!packData?.registry) return null;
-      return packData.registry;
+      // 1. Fast path: load from IndexedDB cache
+      let packData = await idbGet(`pack_${moduleId}`);
+      if (packData?.registry && Object.keys(packData.registry).length > 0) {
+        return packData.registry;
+      }
+
+      // 2. Offline fallback: read directly from local pre-bundled assets
+      try {
+        const localUrl = `/visualizer/packs/${moduleId}.json`;
+        const res = await fetch(localUrl);
+        if (res.ok) {
+          packData = await res.json();
+          if (packData?.registry) {
+            // Seed into IndexedDB in background so future reads are instantaneous
+            await idbSet(`pack_${moduleId}`, packData).catch(() => {});
+            return packData.registry;
+          }
+        }
+      } catch (e) {
+        console.warn(`[ModuleStore] Local bundled pack fetch failed for ${moduleId}:`, e);
+      }
+
+      return null;
     } catch {
       return null;
     }

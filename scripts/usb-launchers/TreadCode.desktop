@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=TreadCode (Zero Install)
+Comment=Interactive Code Visualizer & SmartBoard
+Exec=bash -c "cd \"$(dirname \"$0\")\" && ./Launch-TreadCode.sh"
+Icon=app.png
+Terminal=true
+Categories=Education;Development;

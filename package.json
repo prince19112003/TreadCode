@@ -13,7 +13,8 @@
     "prepare": "husky",
     "tauri": "tauri",
     "release": "node scripts/release.js",
-    "export-packs": "node scripts/export_packs.js"
+    "export-packs": "node scripts/export_packs.js",
+    "export-usb": "node scripts/export_usb_bundle.js"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

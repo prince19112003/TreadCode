@@ -235,20 +235,25 @@ export const App: React.FC = () => {
     const savedTuning = localStorage.getItem('flowtrace_display_tuning');
     if (savedTuning) {
       try {
-        const { contrast, brightness, saturate, sharpness } = JSON.parse(savedTuning);
-        const c = contrast || 100;
-        const b = brightness || 100;
-        const s = saturate || 100;
-        const sh = sharpness || 100;
-        if (c === 100 && b === 100 && s === 100 && sh === 100) {
+        const { contrast, brightness, saturate, sharpness, warmth, tint } = JSON.parse(savedTuning);
+        const c = contrast ?? 100;
+        const b = brightness ?? 100;
+        const s = saturate ?? 100;
+        const sh = sharpness ?? 100;
+        const w = warmth ?? 0;
+        const t = tint ?? 0;
+        if (c === 100 && b === 100 && s === 100 && sh === 100 && w === 0 && t === 0) {
           document.documentElement.style.filter = 'none';
         } else {
           let filterStr = `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
+          if (w > 0) filterStr += ` sepia(${w}%)`;
+          if (t !== 0) filterStr += ` hue-rotate(${t}deg)`;
           if (sh !== 100) {
             if (sh < 100) {
-              filterStr += ` blur(${(100 - sh) * 0.015}px)`;
+              filterStr += ` blur(${(100 - sh) * 0.012}px)`;
             } else {
-              filterStr += ` drop-shadow(0 0 ${(sh - 100) * 0.008}px rgba(255,255,255,0.18))`;
+              const edgeAmt = ((sh - 100) / 100) * 0.6;
+              filterStr += ` drop-shadow(0 0 ${edgeAmt}px rgba(0,0,0,0.5))`;
             }
           }
           document.documentElement.style.filter = filterStr;

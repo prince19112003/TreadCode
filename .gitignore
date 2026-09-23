@@ -59,8 +59,10 @@ scratch/
 
 # Distribution packs & large binary staging
 dist-packs/
+release-usb/
 public/releases/
 *.exe
 *.msi
 *.dmg
 *.apk
+*.zip

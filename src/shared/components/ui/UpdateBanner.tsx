@@ -17,6 +17,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
     downloadUrl: realDownloadUrl,
     apkUrl: realApkUrl,
     macUrl: realMacUrl,
+    linuxUrl: realLinuxUrl,
+    usbUrl: realUsbUrl,
     dismiss: realDismiss,
   } = useUpdateChecker();
 
@@ -33,6 +35,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
   const downloadUrl = realDownloadUrl || fallbackWinUrl;
   const apkUrl = realApkUrl;
   const macUrl = realMacUrl;
+  const linuxUrl = realLinuxUrl || 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_amd64.AppImage';
+  const usbUrl = realUsbUrl || 'https://tread-code-smoky.vercel.app/releases/TreadCode_USB_Portable.zip';
 
   const dismiss = () => {
     if (onClosePreview) onClosePreview();
@@ -43,9 +47,26 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
   const [progress, setProgress] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const isAndroid = typeof navigator !== 'undefined' && (
+    navigator.userAgent.toLowerCase().includes('android') ||
+    !!(window as any).Capacitor ||
+    !!(window as any).AndroidBridge
+  );
+  const isLinux = typeof navigator !== 'undefined' && (
+    navigator.platform.toLowerCase().includes('linux') &&
+    !navigator.userAgent.toLowerCase().includes('android')
+  );
   const isWindows = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('win');
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
-  const platformHint = isWindows ? 'Windows x64' : isMac ? 'macOS' : 'Windows x64';
+  const platformHint = isAndroid
+    ? 'Smart Board (Android)'
+    : isLinux
+      ? 'Linux (BOSS / Ubuntu / KITE)'
+      : isWindows
+        ? 'Windows x64'
+        : isMac
+          ? 'macOS'
+          : 'Windows x64';
 
   useEffect(() => {
     if (hasUpdate) {
@@ -93,13 +114,15 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
         });
         setPhase('done');
       } else {
-        await openUrl(downloadUrl);
+        const targetUrl = isAndroid ? (apkUrl || downloadUrl) : isLinux ? linuxUrl : downloadUrl;
+        await openUrl(targetUrl);
         setProgress(100);
         setPhase('opened');
       }
     } catch (e) {
       console.error('Update install error:', e);
-      await openUrl(downloadUrl);
+      const targetUrl = isAndroid ? (apkUrl || downloadUrl) : isLinux ? linuxUrl : downloadUrl;
+      await openUrl(targetUrl);
       setProgress(100);
       setPhase('opened');
     }
@@ -244,14 +267,32 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                     {/* Primary CTA — minimal, solid pinkish-orange button */}
                     <button
                       onClick={handleAutoUpdate}
-                      className="w-full py-2 px-4 rounded-md bg-[#fa5a3f] hover:bg-[#ea4f34] active:bg-[#d84429] text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mb-2.5 shadow-sm"
+                      className="w-full py-2 px-4 rounded-md bg-[#fa5a3f] hover:bg-[#ea4f34] active:bg-[#d84429] text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mb-2 shadow-sm"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" y1="15" x2="12" y2="3" />
                       </svg>
-                      Download & Install
+                      {isAndroid ? 'Update Smart Board (.apk)' : isLinux ? 'Download Linux (.AppImage)' : 'Download & Install'}
+                    </button>
+
+                    {/* USB Zero-Install Pen Drive Portable Option */}
+                    <button
+                      onClick={() => openUrl(usbUrl).then(() => setPhase('opened'))}
+                      className="w-full py-1.5 px-3 rounded-md border border-slate-800/90 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white text-[11px] font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer mb-2.5"
+                      title="Run directly from USB drive with zero installation and zero administrator privileges"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M6 19v2" />
+                        <path d="M10 19v2" />
+                        <path d="M14 19v2" />
+                        <path d="M18 19v2" />
+                        <rect x="4" y="3" width="16" height="16" rx="2" />
+                        <path d="M8 7h8" />
+                        <path d="M8 11h8" />
+                      </svg>
+                      <span>USB Portable (.zip) · Zero Install</span>
                     </button>
 
                     {/* Minimal Secondary Actions */}
@@ -260,15 +301,16 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
                         onClick={() => openUrl('https://fadewyng.pages.dev/items/treadcode')}
                         className="flex-1 py-1.5 px-2 rounded-md border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-[11px] font-medium transition-colors cursor-pointer text-center"
                       >
-                        Release Notes
+                        Web Store
                       </button>
 
-                      {apkUrl && (
+                      {apkUrl && !isAndroid && (
                         <button
                           onClick={handleOpenApk}
                           className="flex-1 py-1.5 px-2 rounded-md border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-[11px] font-medium transition-colors cursor-pointer text-center"
+                          title="Download APK for Classroom Smart Boards / TV"
                         >
-                          Android APK
+                          Smart Board (.apk)
                         </button>
                       )}
 
