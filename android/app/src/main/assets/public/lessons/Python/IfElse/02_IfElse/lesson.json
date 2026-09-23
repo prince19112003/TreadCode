@@ -1,0 +1,257 @@
+{
+  "metadata": {
+    "id": "02_IfElse",
+    "title": "If Else",
+    "description": "Learn about If Else in Python.",
+    "language": "Python",
+    "topic": "IfElse",
+    "difficulty": "BEGINNER",
+    "version": "1.0.0",
+    "totalSteps": 5
+  },
+  "code": {
+    "initialCode": "marks = 40\nif marks >= 50:\n    print(\"Pass\")\nelse:\n    print(\"Fail\")"
+  },
+  "parameters": [
+    {
+      "id": "var_marks",
+      "label": "Marks",
+      "type": "number",
+      "defaultValue": 40
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_02_IfElse_1",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000000,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 1,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": null,
+        "newLine": 1
+      }
+    },
+    {
+      "id": "evt_exp_02_IfElse_1",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000001,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 2,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_1",
+        "text": {
+          "en": "The computer executed line 1.",
+          "hi": "Computer ne line 1 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_02_IfElse_2",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000002,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 1,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 1,
+        "newLine": 2
+      }
+    },
+    {
+      "id": "evt_exp_02_IfElse_2",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000003,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 2,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_2",
+        "text": {
+          "en": "The computer executed line 2.",
+          "hi": "Computer ne line 2 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_02_IfElse_3",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000004,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 3,
+        "currentSubstep": 1,
+        "currentLine": 3,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 2,
+        "newLine": 3
+      }
+    },
+    {
+      "id": "evt_exp_02_IfElse_3",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000005,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 3,
+        "currentSubstep": 2,
+        "currentLine": 3,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_3",
+        "text": {
+          "en": "The computer executed line 3.",
+          "hi": "Computer ne line 3 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_02_IfElse_4",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000006,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 1,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 3,
+        "newLine": 4
+      }
+    },
+    {
+      "id": "evt_exp_02_IfElse_4",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000007,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 2,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_4",
+        "text": {
+          "en": "The computer executed line 4.",
+          "hi": "Computer ne line 4 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_02_IfElse_5",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000008,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 5,
+        "currentSubstep": 1,
+        "currentLine": 5,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 4,
+        "newLine": 5
+      }
+    },
+    {
+      "id": "evt_exp_02_IfElse_5",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000009,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 5,
+        "currentSubstep": 2,
+        "currentLine": 5,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_5",
+        "text": {
+          "en": "The computer executed line 5.",
+          "hi": "Computer ne line 5 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_end_02_IfElse",
+      "type": "STEP_FINISHED",
+      "category": "EXECUTION",
+      "timestamp": 1700000010,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_02_IfElse",
+        "lessonId": "02_IfElse",
+        "language": "Python",
+        "currentStep": 5,
+        "currentSubstep": 3,
+        "currentLine": 5,
+        "source": "Runtime"
+      },
+      "payload": {}
+    }
+  ]
+}

@@ -1,0 +1,259 @@
+{
+  "metadata": {
+    "id": "01_FactorialRecursion",
+    "title": "Factorial Recursion",
+    "description": "Learn about Factorial Recursion in Python.",
+    "language": "Python",
+    "topic": "Recursion",
+    "difficulty": "BEGINNER",
+    "version": "1.0.0",
+    "totalSteps": 5
+  },
+  "code": {
+    "initialCode": "def fact(n):\n    if n == 1: return 1\n    return n * fact(n-1)\nres = fact(3)\nprint(res)"
+  },
+  "parameters": [
+    {
+      "id": "var_n",
+      "label": "Number",
+      "type": "number",
+      "defaultValue": 3,
+      "min": 1,
+      "max": 5
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_01_FactorialRecursion_1",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000000,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 1,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": null,
+        "newLine": 1
+      }
+    },
+    {
+      "id": "evt_exp_01_FactorialRecursion_1",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000001,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 2,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_1",
+        "text": {
+          "en": "The computer executed line 1.",
+          "hi": "Computer ne line 1 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_FactorialRecursion_2",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000002,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 1,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 1,
+        "newLine": 2
+      }
+    },
+    {
+      "id": "evt_exp_01_FactorialRecursion_2",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000003,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 2,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_2",
+        "text": {
+          "en": "The computer executed line 2.",
+          "hi": "Computer ne line 2 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_FactorialRecursion_3",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000004,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 3,
+        "currentSubstep": 1,
+        "currentLine": 3,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 2,
+        "newLine": 3
+      }
+    },
+    {
+      "id": "evt_exp_01_FactorialRecursion_3",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000005,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 3,
+        "currentSubstep": 2,
+        "currentLine": 3,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_3",
+        "text": {
+          "en": "The computer executed line 3.",
+          "hi": "Computer ne line 3 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_FactorialRecursion_4",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000006,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 1,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 3,
+        "newLine": 4
+      }
+    },
+    {
+      "id": "evt_exp_01_FactorialRecursion_4",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000007,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 2,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_4",
+        "text": {
+          "en": "The computer executed line 4.",
+          "hi": "Computer ne line 4 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_FactorialRecursion_5",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000008,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 5,
+        "currentSubstep": 1,
+        "currentLine": 5,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 4,
+        "newLine": 5
+      }
+    },
+    {
+      "id": "evt_exp_01_FactorialRecursion_5",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000009,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 5,
+        "currentSubstep": 2,
+        "currentLine": 5,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_5",
+        "text": {
+          "en": "The computer executed line 5.",
+          "hi": "Computer ne line 5 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_end_01_FactorialRecursion",
+      "type": "STEP_FINISHED",
+      "category": "EXECUTION",
+      "timestamp": 1700000010,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_FactorialRecursion",
+        "lessonId": "01_FactorialRecursion",
+        "language": "Python",
+        "currentStep": 5,
+        "currentSubstep": 3,
+        "currentLine": 5,
+        "source": "Runtime"
+      },
+      "payload": {}
+    }
+  ]
+}

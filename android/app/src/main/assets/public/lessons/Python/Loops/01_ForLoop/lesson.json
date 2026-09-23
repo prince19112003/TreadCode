@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "id": "01_ForLoop",
+    "title": "For Loop",
+    "description": "Learn about For Loop in Python.",
+    "language": "Python",
+    "topic": "Loops",
+    "difficulty": "BEGINNER",
+    "version": "1.0.0",
+    "totalSteps": 2
+  },
+  "code": {
+    "initialCode": "for i in range(3):\n    print(i)"
+  },
+  "parameters": [],
+  "events": [
+    {
+      "id": "evt_01_ForLoop_1",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000000,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_ForLoop",
+        "lessonId": "01_ForLoop",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 1,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": null,
+        "newLine": 1
+      }
+    },
+    {
+      "id": "evt_exp_01_ForLoop_1",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000001,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_ForLoop",
+        "lessonId": "01_ForLoop",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 2,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_1",
+        "text": {
+          "en": "The computer executed line 1.",
+          "hi": "Computer ne line 1 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_ForLoop_2",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000002,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_ForLoop",
+        "lessonId": "01_ForLoop",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 1,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 1,
+        "newLine": 2
+      }
+    },
+    {
+      "id": "evt_exp_01_ForLoop_2",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000003,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_ForLoop",
+        "lessonId": "01_ForLoop",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 2,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_2",
+        "text": {
+          "en": "The computer executed line 2.",
+          "hi": "Computer ne line 2 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_end_01_ForLoop",
+      "type": "STEP_FINISHED",
+      "category": "EXECUTION",
+      "timestamp": 1700000004,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_ForLoop",
+        "lessonId": "01_ForLoop",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 3,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {}
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+	"appId": "com.treadcode.app",
+	"appName": "TreadCode",
+	"webDir": "dist",
+	"bundledWebRuntime": false,
+	"server": {
+		"androidScheme": "https",
+		"cleartext": true
+	},
+	"android": {
+		"allowMixedContent": true,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": false,
+		"backgroundColor": "#0d0f14"
+	}
+}

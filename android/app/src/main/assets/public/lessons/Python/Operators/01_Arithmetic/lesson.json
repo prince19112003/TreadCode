@@ -1,0 +1,207 @@
+{
+  "metadata": {
+    "id": "01_Arithmetic",
+    "title": "Arithmetic Operators",
+    "description": "Learn about Arithmetic Operators in Python.",
+    "language": "Python",
+    "topic": "Operators",
+    "difficulty": "BEGINNER",
+    "version": "1.0.0",
+    "totalSteps": 4
+  },
+  "code": {
+    "initialCode": "a = 10\nb = 3\nprint(a + b)\nprint(a * b)"
+  },
+  "parameters": [],
+  "events": [
+    {
+      "id": "evt_01_Arithmetic_1",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000000,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 1,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": null,
+        "newLine": 1
+      }
+    },
+    {
+      "id": "evt_exp_01_Arithmetic_1",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000001,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 1,
+        "currentSubstep": 2,
+        "currentLine": 1,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_1",
+        "text": {
+          "en": "The computer executed line 1.",
+          "hi": "Computer ne line 1 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_Arithmetic_2",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000002,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 1,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 1,
+        "newLine": 2
+      }
+    },
+    {
+      "id": "evt_exp_01_Arithmetic_2",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000003,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 2,
+        "currentSubstep": 2,
+        "currentLine": 2,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_2",
+        "text": {
+          "en": "The computer executed line 2.",
+          "hi": "Computer ne line 2 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_Arithmetic_3",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000004,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 3,
+        "currentSubstep": 1,
+        "currentLine": 3,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 2,
+        "newLine": 3
+      }
+    },
+    {
+      "id": "evt_exp_01_Arithmetic_3",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000005,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 3,
+        "currentSubstep": 2,
+        "currentLine": 3,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_3",
+        "text": {
+          "en": "The computer executed line 3.",
+          "hi": "Computer ne line 3 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_01_Arithmetic_4",
+      "type": "LINE_CHANGED",
+      "category": "EXECUTION",
+      "timestamp": 1700000006,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 1,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {
+        "previousLine": 3,
+        "newLine": 4
+      }
+    },
+    {
+      "id": "evt_exp_01_Arithmetic_4",
+      "type": "EXPLANATION_UPDATED",
+      "category": "UI",
+      "timestamp": 1700000007,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 2,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {
+        "textId": "exp_4",
+        "text": {
+          "en": "The computer executed line 4.",
+          "hi": "Computer ne line 4 execute ki."
+        }
+      }
+    },
+    {
+      "id": "evt_end_01_Arithmetic",
+      "type": "STEP_FINISHED",
+      "category": "EXECUTION",
+      "timestamp": 1700000008,
+      "priority": 1,
+      "metadata": {
+        "programId": "prog_01_Arithmetic",
+        "lessonId": "01_Arithmetic",
+        "language": "Python",
+        "currentStep": 4,
+        "currentSubstep": 3,
+        "currentLine": 4,
+        "source": "Runtime"
+      },
+      "payload": {}
+    }
+  ]
+}

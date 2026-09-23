@@ -32,20 +32,24 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build web application
         run: npm run build
 
-      - name: Sync web assets to Android
-        run: |
-          mkdir -p android/app/src/main/assets/public
-          cp -r dist/* android/app/src/main/assets/public/
+      - name: Sync Capacitor Android
+        run: npx cap sync android
 
       - name: Build Android APK via Gradle
         working-directory: android
         run: |
+          gradle wrapper --gradle-version 8.5 || true
           chmod +x gradlew || true
           ./gradlew assembleDebug --no-daemon || gradle assembleDebug
 
