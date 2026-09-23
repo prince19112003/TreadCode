@@ -54,6 +54,7 @@ jobs:
         run: |
           mkdir -p release-linux
           find src-tauri/target/release/bundle -type f \( -name "*.AppImage" -o -name "*.deb" \) -exec cp {} release-linux/ \; || true
+          find release-linux -name "*AppImage" -exec cp {} release-linux/TreadCode_1.0.8_amd64.AppImage \; || true
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
@@ -63,9 +64,9 @@ jobs:
           retention-days: 14
 
       - name: Attach Linux packages to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v1.0.8
           files: release-linux/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

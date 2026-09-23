@@ -52,7 +52,8 @@ jobs:
       - name: Rename and Prepare APK
         run: |
           mkdir -p release-apk
-          find android/app/build/outputs/apk -name "*.apk" -exec cp {} release-apk/TreadCode-SmartBoard.apk \; || true
+          find android/app/build/outputs/apk -name "*.apk" -exec cp {} release-apk/TreadCode_1.0.8.apk \; || true
+          cp release-apk/TreadCode_1.0.8.apk release-apk/TreadCode-SmartBoard.apk || true
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -62,9 +63,9 @@ jobs:
           retention-days: 14
 
       - name: Attach APK to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v1.0.8
           files: release-apk/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
