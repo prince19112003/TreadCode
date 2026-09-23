@@ -56,7 +56,35 @@ Instead of struggling with static textbook diagrams or pre-recorded videos, Trea
 
 TreadCode provides **two distinct update options** so users can always stay current:
 1. **Option 1: Instant Direct Setup (`.exe`)**: Download and run the latest Windows installer directly from within the desktop application.
-2. **Option 2: Official Web Store Section**: Visit TreadCode's dedicated web catalogue page ([treadcode on Web Store](https://tread-code-smoky.vercel.app/items/treadcode)) to check release notes, screenshots, and download setup files from your browser.
+2. **Option 2: Official Web Store Section**: Visit TreadCode's dedicated web catalogue page ([treadcode on Web Store](https://fadewyng.pages.dev/items/treadcode)) to check release notes, screenshots, and download setup files from your browser.
+
+---
+
+## 📦 Platform Distribution Formats & Storage Locations
+
+TreadCode provides pre-compiled, optimized binaries tailored for each classroom hardware ecosystem:
+
+| Target Platform | Package Format | Local Staging / Build Location | Build Command / Workflow | Production Hosting (Direct Download) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Windows 10 / 11 (64-bit)** | `.exe` (NSIS Setup) | `src-tauri/target/release/bundle/nsis/` | `npm run tauri build` | [Download Windows Setup](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_1.0.8_x64-setup.exe) |
+| **Android Smart Boards (IFP)** | `.apk` (Release) | `android/app/build/outputs/apk/release/` | `.github/workflows/build-android-apk.yml` | [Download Android APK](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_1.0.8.apk) |
+| **Linux Govt Schools (BOSS / KITE)** | `.AppImage` / `.deb` | `src-tauri/target/release/bundle/appimage/` | `.github/workflows/build-linux-release.yml` | [Download Linux AppImage](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_1.0.8_amd64.AppImage) |
+| **Universal USB Zero-Install** | `.zip` (Portable) | `release-usb/` & `public/releases/` | `npm run export-usb` | [Download USB Portable](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_USB_Portable.zip) |
+| **Offline Course Content Packs** | `.zip` (Curriculum) | `dist-packs/` | `npm run export-packs` | [Download Course Packs](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_Packs_Offline_v1.0.8.zip) |
+
+### 📁 USB Zero-Install Bundle Structure:
+The standalone portable package contains zero-dependency launchers and native OS icons:
+```text
+[TreadCode-USB-Portable]
+ ├── Launch-TreadCode.bat        <── Windows 1-Click launcher (PowerShell Micro-Listener)
+ ├── Launch-TreadCode.sh         <── Linux 1-Click launcher (KITE / BOSS / Ubuntu)
+ ├── Launch-TreadCode.command    <── macOS 1-Click launcher
+ ├── TreadCode.desktop           <── Linux desktop shortcut with icon
+ ├── autorun.inf                 <── Windows USB drive auto-label & icon
+ ├── app.ico / app.icns / app.png<── Native OS icons for all systems
+ ├── README-INSTRUCTIONS.txt     <── Plain-text educator guide
+ └── app/                        <── 100% self-contained offline application
+```
 
 ---
 

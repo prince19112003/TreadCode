@@ -129,14 +129,15 @@ To balance zero-internet classroom requirements with commercial license security
 
 ---
 
-## 📊 Platform Compatibility & Performance Matrix
+## 📊 Platform Compatibility, Storage Locations & Build Matrix
 
-| Platform | Output Format | Min Hardware Spec | RAM Budget | Offline Lease | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11 (64-bit)** | `.exe` / MSI | 64-bit CPU, 4 GB RAM | < 120 MB | 30 Days Cached | **Live / Complete** |
-| **Android Smart Boards (IFP)** | `.apk` | Quad-core ARM, 2 GB RAM | < 150 MB | 30 Days Cached | **Architecture & CI Ready** |
-| **Linux (BOSS / Ubuntu / KITE)** | `.AppImage` / `.deb` | 2 GB RAM, 64-bit CPU | < 95 MB | 30 Days Cached | **Architecture & CI Ready** |
-| **Universal USB & Legacy Labs** | Portable `.zip` | Any browser (Win 7+, Linux, Mac) | < 110 MB | 30 Days Cached | **Architecture, Launchers & CI Ready** |
+| Platform | Output Format | Local Staging / Build Path | Build Command / Pipeline | Production Download URL |
+| :--- | :--- | :--- | :--- | :--- |
+| **Windows 10 / 11 (64-bit)** | `.exe` (NSIS) | `src-tauri/target/release/bundle/nsis/` | `npm run tauri build` | [GitHub Release Windows Setup](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_1.0.8_x64-setup.exe) |
+| **Android Smart Boards (IFP)** | `.apk` | `android/app/build/outputs/apk/release/` | `.github/workflows/build-android-apk.yml` | [GitHub Release APK](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_1.0.8.apk) |
+| **Linux (BOSS / Ubuntu / KITE)** | `.AppImage` / `.deb` | `src-tauri/target/release/bundle/appimage/` | `.github/workflows/build-linux-release.yml` | [GitHub Release AppImage](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_1.0.8_amd64.AppImage) |
+| **Universal USB & Legacy Labs** | Portable `.zip` | `release-usb/` & `public/releases/` | `npm run export-usb` | [GitHub Release USB Portable](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_USB_Portable.zip) |
+| **Offline Course Content Packs** | `.zip` (Packs) | `dist-packs/` | `npm run export-packs` | [GitHub Release Packs](https://github.com/prince19112003/TreadCode/releases/download/v1.0.8/TreadCode_Packs_Offline_v1.0.8.zip) |
 
 ---
 
