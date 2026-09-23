@@ -26,9 +26,9 @@ export interface UpdateStatus {
 
 // Current App Version built into this .exe (patched by npm run release <version>)
 const CURRENT_VERSION = '1.0.8';
-const DEFAULT_EXE_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
-const DEFAULT_USB_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_USB_Portable.zip';
-const DEFAULT_LINUX_URL = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_amd64.AppImage';
+const DEFAULT_EXE_URL = `https://github.com/prince19112003/TreadCode/releases/download/v${CURRENT_VERSION}/TreadCode_${CURRENT_VERSION}_x64-setup.exe`;
+const DEFAULT_USB_URL = `https://github.com/prince19112003/TreadCode/releases/download/v${CURRENT_VERSION}/TreadCode_USB_Portable.zip`;
+const DEFAULT_LINUX_URL = `https://github.com/prince19112003/TreadCode/releases/download/v${CURRENT_VERSION}/TreadCode_${CURRENT_VERSION}_amd64.AppImage`;
 
 // ── Native Desktop / Mobile context guard ─────────────────────────────────────
 // Only show update UI when running inside native desktop app (Tauri) or Android APK. Never in web browsers (Vercel).

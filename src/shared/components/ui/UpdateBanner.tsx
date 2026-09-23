@@ -31,12 +31,12 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
   // Real changelog only — never dummy placeholder text
   const changelog = realChangelog && realChangelog.length > 0 ? realChangelog.filter(Boolean) : [];
 
-  const fallbackWinUrl = 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_x64-setup.exe';
+  const fallbackWinUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${latestVersion}/TreadCode_${latestVersion}_x64-setup.exe`;
   const downloadUrl = realDownloadUrl || fallbackWinUrl;
-  const apkUrl = realApkUrl;
+  const apkUrl = realApkUrl || `https://github.com/prince19112003/TreadCode/releases/download/v${latestVersion}/TreadCode_${latestVersion}.apk`;
   const macUrl = realMacUrl;
-  const linuxUrl = realLinuxUrl || 'https://tread-code-smoky.vercel.app/releases/TreadCode_latest_amd64.AppImage';
-  const usbUrl = realUsbUrl || 'https://tread-code-smoky.vercel.app/releases/TreadCode_USB_Portable.zip';
+  const linuxUrl = realLinuxUrl || `https://github.com/prince19112003/TreadCode/releases/download/v${latestVersion}/TreadCode_${latestVersion}_amd64.AppImage`;
+  const usbUrl = realUsbUrl || `https://github.com/prince19112003/TreadCode/releases/download/v${latestVersion}/TreadCode_USB_Portable.zip`;
 
   const dismiss = () => {
     if (onClosePreview) onClosePreview();

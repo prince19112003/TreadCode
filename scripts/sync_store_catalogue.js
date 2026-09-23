@@ -38,7 +38,7 @@ export function syncStoreCatalogue(customVersion) {
   const exeUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_${version}_x64-setup.exe`;
   const apkUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_${version}.apk`;
   const appimageUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_${version}_amd64.AppImage`;
-  const usbUrl = `https://tread-code-smoky.vercel.app/releases/TreadCode_USB_Portable.zip`;
+  const usbUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_USB_Portable.zip`;
   const packsUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_Packs_Offline_v${version}.zip`;
 
   // 1. Update version tags and semver
@@ -54,12 +54,8 @@ export function syncStoreCatalogue(customVersion) {
     `filename: 'TreadCode_${version}_x64-setup.exe'`
   );
   content = content.replace(
-    /display_name:\s*'TreadCode v[^']+\(Windows x64 Setup\)'/,
-    `display_name: 'TreadCode v${version} (Windows x64 Setup)'`
-  );
-  content = content.replace(
-    /download_url:\s*'https:\/\/github\.com\/prince19112003\/TreadCode\/releases\/download\/v[^\/]+\/TreadCode_[^']+_x64-setup\.exe'/,
-    `download_url: '${exeUrl}'`
+    /(id:\s*'file-tc-win-exe'[\s\S]*?)download_url:\s*'[^']+'/,
+    `$1download_url: '${exeUrl}'`
   );
 
   // 3. Update Android Smart Board APK filename and URL
@@ -68,8 +64,8 @@ export function syncStoreCatalogue(customVersion) {
     `filename: 'TreadCode_${version}.apk'`
   );
   content = content.replace(
-    /download_url:\s*'https:\/\/github\.com\/prince19112003\/TreadCode\/releases\/download\/v[^\/]+\/TreadCode_[^']+\.apk'/,
-    `download_url: '${apkUrl}'`
+    /(id:\s*'file-tc-android-apk'[\s\S]*?)download_url:\s*'[^']+'/,
+    `$1download_url: '${apkUrl}'`
   );
 
   // 4. Update Linux AppImage filename and URL
@@ -77,21 +73,29 @@ export function syncStoreCatalogue(customVersion) {
     /filename:\s*'TreadCode_[^']+_amd64\.AppImage'/,
     `filename: 'TreadCode_${version}_amd64.AppImage'`
   );
+  content = content.replace(
+    /(id:\s*'file-tc-linux-appimage'[\s\S]*?)download_url:\s*'[^']+'/,
+    `$1download_url: '${appimageUrl}'`
+  );
 
-  // 5. Update offline extension packs archive filename and URL
+  // 5. Update USB Portable filename and URL
+  content = content.replace(
+    /(id:\s*'file-tc-usb-portable'[\s\S]*?)download_url:\s*'[^']+'/,
+    `$1download_url: '${usbUrl}'`
+  );
+  content = content.replace(
+    /display_name:\s*'USB Portable'/,
+    "display_name: 'Zero Install (USB)'"
+  );
+
+  // 6. Update offline extension packs archive filename and URL
   content = content.replace(
     /filename:\s*'TreadCode_Packs_Offline_[^']+\.zip'/,
     `filename: 'TreadCode_Packs_Offline_v${version}.zip'`
   );
   content = content.replace(
-    /download_url:\s*'https:\/\/github\.com\/prince19112003\/TreadCode\/releases\/download\/v[^\/]+\/TreadCode_Packs_Offline_[^']+\.zip'/,
-    `download_url: '${packsUrl}'`
-  );
-
-  // 6. Ensure USB Portable displays as Zero Install (USB)
-  content = content.replace(
-    /display_name:\s*'USB Portable'/,
-    "display_name: 'Zero Install (USB)'"
+    /(id:\s*'file-tc-packs-bundle'[\s\S]*?)download_url:\s*'[^']+'/,
+    `$1download_url: '${packsUrl}'`
   );
 
   // 4. Ensure demo_url is present and github_repo is strictly null
