@@ -49,7 +49,7 @@ jobs:
       - name: Setup Android SDK
         run: |
           yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-35" || true
+          sdkmanager "platforms;android-36" "platforms;android-35" || true
 
       - name: Copy web assets to Android
         run: |
@@ -60,6 +60,7 @@ jobs:
       - name: Build Android APK via Gradle
         working-directory: android
         run: |
+          set -o pipefail
           ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee ../gradle_build.log
 
       - name: Rename and Prepare APK
