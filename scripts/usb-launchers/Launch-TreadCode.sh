@@ -54,6 +54,11 @@ echo " TreadCode is active! SmartBoard, Visualizers, and Offline Canvas ready."
 echo " To exit, press Ctrl+C or simply close this terminal window."
 echo "========================================================================"
 
+# Sync offline license if present in USB root
+if [ -f "license.json" ]; then
+  cp -f "license.json" "app/license.json" 2>/dev/null
+fi
+
 # Launch server from app/ directory
 cd app || exit 1
 

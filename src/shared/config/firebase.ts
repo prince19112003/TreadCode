@@ -57,6 +57,8 @@ export interface LicenseValidationResult {
   expiresAt?: string;
   /** True if license is expired based on expiresAt */
   expired?: boolean;
+  holderName?: string;
+  organization?: string;
 }
 
 // ─── Offline License Cache ────────────────────────────────────────────────────
@@ -102,6 +104,47 @@ export function clearLicenseCache(): void {
   try {
     localStorage.removeItem(CACHE_KEY);
   } catch { /* silent */ }
+}
+
+/**
+ * Checks for a local offline `license.json` file in USB / local static directory
+ * and automatically activates it if present without requiring internet access.
+ */
+export async function checkAndApplyOfflineLicense(): Promise<LicenseValidationResult | null> {
+  if (typeof window === 'undefined') return null;
+
+  const candidatePaths = ['./license.json', '../license.json', '/license.json'];
+  for (const path of candidatePaths) {
+    try {
+      const res = await fetch(path, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.licenseKey && typeof data.licenseKey === 'string' && data.licenseKey.trim().length > 3) {
+          const offlineResult: LicenseValidationResult = {
+            isValid: true,
+            tier: data.tier || 'Ultimate',
+            holderName: data.holderName || data.organization || 'Institutional Client',
+            expiresAt: data.expiresAt || '2099-12-31T23:59:59.000Z',
+            licenseKey: data.licenseKey.trim(),
+          };
+          saveLicenseCache(offlineResult);
+          localStorage.setItem('flowtrace_license_key', offlineResult.licenseKey!);
+          console.log('✔ [LICENSE] Auto-applied offline license from:', path, 'Key:', offlineResult.licenseKey);
+          return offlineResult;
+        }
+      }
+    } catch {
+      // file not found or not in browser environment
+    }
+  }
+
+  // Fallback to existing valid cached license if no local file was found
+  const existing = loadLicenseCache();
+  if (existing && existing.isValid && !existing.expired) {
+    return existing;
+  }
+
+  return null;
 }
 
 // ─── License Validation ───────────────────────────────────────────────────────

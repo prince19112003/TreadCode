@@ -13,6 +13,8 @@ echo ========================================================================
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$appDir = Join-Path (Get-Location) 'app';" ^
   "if (-not (Test-Path $appDir)) { Write-Host 'Error: app/ folder not found. Please do not move launcher outside the TreadCode folder.' -ForegroundColor Red; Read-Host 'Press Enter to exit'; exit 1 };" ^
+  "$rootLic = Join-Path (Get-Location) 'license.json';" ^
+  "if (Test-Path $rootLic) { Copy-Item -Force $rootLic (Join-Path $appDir 'license.json') };" ^
   "$port = 5183;" ^
   "while ($port -lt 5200) {" ^
   "  try {" ^

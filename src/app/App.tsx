@@ -10,6 +10,7 @@ import {
   fetchLicenseDetails,
   clearLicenseCache,
   loadLicenseCache,
+  checkAndApplyOfflineLicense,
   getStoredOrGeneratedHwid,
   resolveSystemHwid,
   subscribeToDeviceKeyRequests,
@@ -222,6 +223,16 @@ export const App: React.FC = () => {
   const [pendingIssuedKey, setPendingIssuedKey] = React.useState<KeyRequestItem | null>(null);
   const [dismissedNoticeKey, setDismissedNoticeKey] = React.useState<string | null>(() => typeof window !== 'undefined' ? localStorage.getItem('flowtrace_dismissed_notice_key') : null);
   const [trialInfo, setTrialInfo] = React.useState<DeviceTrialInfo | null>(null);
+
+  // Auto-activate if offline license.json is present in USB / root
+  React.useEffect(() => {
+    checkAndApplyOfflineLicense().then((offlineRes) => {
+      if (offlineRes && offlineRes.isValid) {
+        setActivated(true);
+        setLicenseDetails(offlineRes);
+      }
+    });
+  }, []);
 
   // Sync global settings from firebase database
   React.useEffect(() => {

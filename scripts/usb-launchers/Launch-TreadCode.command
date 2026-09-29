@@ -32,5 +32,10 @@ echo " TreadCode is active! SmartBoard & Visualizers loaded."
 echo " When done teaching, simply close this Terminal window."
 echo "========================================================================"
 
+# Sync offline license if present in USB root
+if [ -f "license.json" ]; then
+  cp -f "license.json" "app/license.json" 2>/dev/null
+fi
+
 cd app || exit 1
 python3 -m http.server "$PORT" --bind 127.0.0.1

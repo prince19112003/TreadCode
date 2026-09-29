@@ -55,7 +55,8 @@ async function exportUsbBundle() {
     'Launch-TreadCode.command',
     'TreadCode.desktop',
     'autorun.inf',
-    'README-INSTRUCTIONS.txt'
+    'README-INSTRUCTIONS.txt',
+    'license.json'
   ];
 
   for (const file of launcherFiles) {
@@ -73,6 +74,13 @@ async function exportUsbBundle() {
     } else {
       console.warn(`  ⚠️ Missing launcher file: ${file}`);
     }
+  }
+
+  // Also place license.json inside app/ directory so direct fetch('./license.json') finds it
+  const licSrc = path.join(launchersSrc, 'license.json');
+  if (fs.existsSync(licSrc)) {
+    fs.copyFileSync(licSrc, path.join(appTargetDir, 'license.json'));
+    console.log(`  ✔ Synced license.json into portable app/ directory.`);
   }
 
   // 5a. Copy Android APK for SmartBoard IFP screens

@@ -32,6 +32,17 @@ Works on ANY Classroom SmartBoard, TV, PC, or Computer Lab!
    -> Opens instantly in whatever browser is installed on the screen.
 
 ------------------------------------------------------------------------
+🔑 OFFLINE LICENSE SETUP (LICENSING AUTO FILE):
+------------------------------------------------------------------------
+- To customize or pre-activate TreadCode before handing over to a school or lab:
+   1. Open "license.json" in Notepad.
+   2. Edit "licenseKey" with your desired key (e.g. "TC-PRO-LIFETIME-ENTERPRISE-2026").
+   3. (Optional) Set "holderName" or "organization" for institutional branding.
+   4. Save the file.
+- When TreadCode starts, it detects "license.json" and activates instantly
+  with 0% internet connectivity or server check required.
+
+------------------------------------------------------------------------
 💡 IMPORTANT TIPS:
 ------------------------------------------------------------------------
 - Fullscreen Presentation: Press F11 on keyboard for full-screen mode.
