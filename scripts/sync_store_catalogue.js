@@ -102,7 +102,7 @@ export function syncStoreCatalogue(customVersion) {
         file_type: 'zip',
         platform: 'cross-platform',
         download_url: '${masterUrl}',
-        size_bytes: 125829120,
+        size_bytes: 136112809,
         checksum_sha256: null,
         download_count: 0,
         sort_order: 5,
@@ -121,7 +121,7 @@ export function syncStoreCatalogue(customVersion) {
       '$1sort_order: 6'
     );
   } else {
-    // Update existing master bundle URL and filename
+    // Update existing master bundle URL, filename, and exact size
     content = content.replace(
       /(id:\s*'file-tc-master-bundle'[\s\S]*?)filename:\s*'[^']+'/,
       `$1filename: 'TreadCode_Master_Package_v${version}.zip'`
@@ -129,6 +129,10 @@ export function syncStoreCatalogue(customVersion) {
     content = content.replace(
       /(id:\s*'file-tc-master-bundle'[\s\S]*?)download_url:\s*'[^']+'/,
       `$1download_url: '${masterUrl}'`
+    );
+    content = content.replace(
+      /(id:\s*'file-tc-master-bundle'[\s\S]*?)size_bytes:\s*\d+/,
+      `$1size_bytes: 136112809`
     );
   }
 
