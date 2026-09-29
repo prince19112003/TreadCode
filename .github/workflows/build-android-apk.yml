@@ -32,12 +32,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.5'
+          gradle-version: '8.11.1'
 
       - name: Generate Gradle Wrapper
         working-directory: android
         run: |
-          gradle wrapper --gradle-version 8.5
+          gradle wrapper --gradle-version 8.11.1
           chmod +x gradlew
 
       - name: Install dependencies
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Android APK via Gradle
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Rename and Prepare APK
         run: |
