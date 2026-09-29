@@ -45,6 +45,11 @@ async function exportUsbBundle() {
   // 5. Copy 1-click launchers & instructions into root of portable folder
   const launchersSrc = path.join(ROOT_DIR, 'scripts', 'usb-launchers');
   const launcherFiles = [
+    'START_HERE.html',
+    'OPEN_IN_BROWSER.html',
+    '1_CLICK_WINDOWS.bat',
+    '1_CLICK_LINUX.sh',
+    '1_CLICK_MAC.command',
     'Launch-TreadCode.bat',
     'Launch-TreadCode.sh',
     'Launch-TreadCode.command',
@@ -68,6 +73,21 @@ async function exportUsbBundle() {
     } else {
       console.warn(`  ⚠️ Missing launcher file: ${file}`);
     }
+  }
+
+  // 5a. Copy Android APK for SmartBoard IFP screens
+  const localApkPath = path.join(ROOT_DIR, 'release-apk', 'TreadCode_Android_SmartBoard.apk');
+  const fallbackApkPath = path.join(ROOT_DIR, 'release-apk', `TreadCode_${version}.apk`);
+  const destApkPath = path.join(portableAppFolder, 'TreadCode_Android_SmartBoard.apk');
+  
+  if (fs.existsSync(localApkPath)) {
+    fs.copyFileSync(localApkPath, destApkPath);
+    console.log(`  ✔ Copied Android APK: TreadCode_Android_SmartBoard.apk`);
+  } else if (fs.existsSync(fallbackApkPath)) {
+    fs.copyFileSync(fallbackApkPath, destApkPath);
+    console.log(`  ✔ Copied Android APK: TreadCode_Android_SmartBoard.apk`);
+  } else {
+    console.warn(`  ⚠️ Local APK not found in release-apk/ directory.`);
   }
 
   // 5b. Copy OS icons into root of portable folder for Windows, Mac, and Linux

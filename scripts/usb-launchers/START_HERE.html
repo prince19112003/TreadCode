@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TreadCode — Universal Classroom USB Edition</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #131b2e;
+      --card-border: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --accent: #8b5cf6;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 30px 20px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 35px;
+      padding-bottom: 25px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 35px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+    .card-top {
+      margin-bottom: 18px;
+    }
+    .card-icon {
+      font-size: 30px;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+    .card-title {
+      font-size: 19px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .file-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 10px;
+      background: #0f172a;
+      border: 1px dashed #334155;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #38bdf8;
+    }
+    .btn {
+      display: inline-block;
+      text-align: center;
+      padding: 10px 16px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: #60a5fa;
+    }
+    .btn-outline:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .info-box {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 30px;
+    }
+    .info-title {
+      color: #34d399;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-text {
+      color: #cbd5e1;
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+    .faq-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .faq-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .faq-item {
+      margin-bottom: 14px;
+    }
+    .faq-q {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 3px;
+    }
+    .faq-a {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 12px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="badge">🚀 100% Offline • Zero Installation • Plug & Play</div>
+      <h1>TreadCode Classroom USB Edition</h1>
+      <p class="subtitle">Code Visualizer, SmartBoard Drawing Canvas & Algorithm Tracing. Works offline on any SmartBoard, TV, PC, or Lab.</p>
+    </header>
+
+    <div class="info-box">
+      <div class="info-title">💡 How to Demo anywhere without Internet:</div>
+      <div class="info-text">
+        Plug this USB into the device. Check what operating system the screen has and click the matching launcher below.
+        No Node.js, Python, or administrator password needed.
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Windows Card -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon">🪟</div>
+          <div class="card-title">Windows OPS / PC</div>
+          <div class="card-desc">For SmartBoards with built-in Windows OPS slot, school laptops, or computer lab PCs (Win 7/8/10/11).</div>
+          <div class="file-badge">1_CLICK_WINDOWS.bat</div>
+        </div>
+        <div class="card-desc" style="font-size: 12px; margin-bottom: 12px; color: #38bdf8;">
+          👉 Double-click <b>1_CLICK_WINDOWS.bat</b> in this USB drive.
+        </div>
+      </div>
+
+      <!-- Android SmartBoard Card -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon">🤖</div>
+          <div class="card-title">Android SmartBoard / TV</div>
+          <div class="card-desc">For Interactive Flat Panels (ViewSonic, Maxhub, Promethean, Samsung, LG) running Android 8 to 15.</div>
+          <div class="file-badge">TreadCode_Android_SmartBoard.apk</div>
+        </div>
+        <div class="card-desc" style="font-size: 12px; margin-bottom: 12px; color: #34d399;">
+          👉 In Board's File Manager, tap <b>TreadCode_Android_SmartBoard.apk</b> to install in 10 sec.
+        </div>
+      </div>
+
+      <!-- Linux Card -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon">🐧</div>
+          <div class="card-title">Linux / BOSS OS</div>
+          <div class="card-desc">For Government School ICT labs (BOSS Linux, KITE GNU-Linux, Ubuntu, Debian, Mint).</div>
+          <div class="file-badge">1_CLICK_LINUX.sh</div>
+        </div>
+        <div class="card-desc" style="font-size: 12px; margin-bottom: 12px; color: #a78bfa;">
+          👉 Double-click or terminal run <b>./1_CLICK_LINUX.sh</b>.
+        </div>
+      </div>
+
+      <!-- Universal Web Card -->
+      <div class="card" style="border-color: rgba(59, 130, 246, 0.4);">
+        <div class="card-top">
+          <div class="card-icon">🌐</div>
+          <div class="card-title">Direct Web Mode (Any OS)</div>
+          <div class="card-desc">If you cannot run scripts or APKs, open the full offline web application directly right now in your browser.</div>
+          <div class="file-badge">app/index.html</div>
+        </div>
+        <a href="./app/index.html" class="btn">Launch Offline App Now ➔</a>
+      </div>
+    </div>
+
+    <section class="faq-section">
+      <div class="faq-title">❓ Quick Practical FAQ</div>
+      <div class="faq-item">
+        <div class="faq-q">Q: Will it work if the classroom has zero Wi-Fi or Internet?</div>
+        <div class="faq-a">Yes. Every single asset, algorithm engine, code parser, and icon is stored locally on this USB. It never calls any external server.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q: How do I enter full-screen SmartBoard presentation mode?</div>
+        <div class="faq-a">Press <b>F11</b> on your keyboard or tap the Fullscreen button on the top-right toolbar.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q: Where is my drawing or code saved?</div>
+        <div class="faq-a">Everything you draw or code is automatically saved in your browser's persistent offline storage. You can also export as PNG or JSON anytime.</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      TreadCode v1.0.8 Universal Edition • Developed for modern computer science classrooms & SmartBoards.
+    </footer>
+  </div>
+</body>
+</html>

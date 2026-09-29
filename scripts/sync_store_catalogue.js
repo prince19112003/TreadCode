@@ -106,6 +106,15 @@ export function syncStoreCatalogue(customVersion) {
     `$1size_bytes: 85254`
   );
 
+  content = content.replace(
+    /(id:\s*'file-tc-android-apk'[\s\S]*?)size_bytes:\s*\d+/,
+    `$1size_bytes: 8844798`
+  );
+  content = content.replace(
+    /(id:\s*'file-tc-linux-appimage'[\s\S]*?)size_bytes:\s*\d+/,
+    `$1size_bytes: 83038208`
+  );
+
   // Ensure all release download buttons are fully active
   content = content.replace(/\s+is_available:\s*false,/g, '');
 
