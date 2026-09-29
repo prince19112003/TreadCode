@@ -106,17 +106,8 @@ export function syncStoreCatalogue(customVersion) {
     `$1size_bytes: 85254`
   );
 
-  // Update availability flags
-  if (!content.includes('is_available: false')) {
-    content = content.replace(
-      /(id:\s*'file-tc-android-apk'[\s\S]*?created_at:\s*'[^']+',)/,
-      `$1\n        is_available: false,`
-    );
-    content = content.replace(
-      /(id:\s*'file-tc-linux-appimage'[\s\S]*?created_at:\s*'[^']+',)/,
-      `$1\n        is_available: false,`
-    );
-  }
+  // Ensure all release download buttons are fully active
+  content = content.replace(/\s+is_available:\s*false,/g, '');
 
   // 4. Ensure demo_url is present and github_repo is strictly null
   if (!content.includes("demo_url: 'https://tread-code-smoky.vercel.app'")) {
@@ -151,33 +142,24 @@ export function syncStoreCatalogue(customVersion) {
     
     // Fix download button with availability check and target="_blank"
     const oldBtnTarget = `<a\n                            href={file.download_url}\n                            download={file.filename}\n                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-blue-600 active:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer"\n                          >\n                            <Download className="w-3.5 h-3.5" />\n                            <span>Download</span>\n                          </a>`;
-    const newBtnTarget = `{file.is_available === false ? (
-                            <span
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 text-zinc-400 text-xs font-medium cursor-not-allowed select-none border border-zinc-200/60"
-                              title="Binary package in build pipeline for this platform"
-                            >
-                              Coming Soon
-                            </span>
-                          ) : (
-                            <a
-                              href={file.download_url}
-                              download={file.filename}
-                              target={file.download_url.startsWith('http') ? '_blank' : undefined}
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-blue-600 active:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              <span>Download</span>
-                            </a>
-                          )}`;
-    if (clientContent.includes('href={file.download_url}')) {
-      clientContent = clientContent.replace(
-        /<a\s+href={file\.download_url}[\s\S]*?<\/a>/,
-        newBtnTarget
-      );
-      fs.writeFileSync(itemDetailClientPath, clientContent, 'utf8');
-      console.log(`✔ [SYNC] ItemDetailClient updated with robust download button & Coming Soon state!`);
-    }
+    const tdReplacement = `<td className="px-5 py-3 text-right">
+                          <a
+                            href={file.download_url}
+                            download={file.filename}
+                            target={file.download_url.startsWith('http') ? '_blank' : undefined}
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-blue-600 active:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download</span>
+                          </a>
+                        </td>`;
+    clientContent = clientContent.replace(
+      /<td className="px-5 py-3 text-right">[\s\S]*?<\/td>/,
+      tdReplacement
+    );
+    fs.writeFileSync(itemDetailClientPath, clientContent, 'utf8');
+    console.log(`✔ [SYNC] ItemDetailClient download button cleaned and activated!`);
   }
 
   return true;

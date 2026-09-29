@@ -66,3 +66,6 @@ public/releases/
 *.dmg
 *.apk
 *.zip
+.gradle/
+android/.gradle/
+android/app/build/
