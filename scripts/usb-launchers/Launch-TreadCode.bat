@@ -26,8 +26,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "};" ^
   "if (-not $listener.IsListening) { Write-Host 'Failed to bind to local port. Please check your firewall.' -ForegroundColor Red; pause; exit 1 };" ^
   "Write-Host \" Engine Running at: http://127.0.0.1:$port/\" -ForegroundColor Green;" ^
-  "Write-Host ' Opening default web browser...' -ForegroundColor Cyan;" ^
-  "Start-Process \"http://127.0.0.1:$port/\";" ^
+  "$url = \"http://127.0.0.1:$port/\";" ^
+  "$e86 = (Join-Path ${env:ProgramFiles(x86)} 'Microsoft\Edge\Application\msedge.exe');" ^
+  "$e64 = (Join-Path ${env:ProgramFiles} 'Microsoft\Edge\Application\msedge.exe');" ^
+  "$c64 = (Join-Path ${env:ProgramFiles} 'Google\Chrome\Application\chrome.exe');" ^
+  "$c86 = (Join-Path ${env:ProgramFiles(x86)} 'Google\Chrome\Application\chrome.exe');" ^
+  "if (Test-Path $e86) { Start-Process $e86 -ArgumentList \"--start-fullscreen $url\"; }" ^
+  "elseif (Test-Path $e64) { Start-Process $e64 -ArgumentList \"--start-fullscreen $url\"; }" ^
+  "elseif (Test-Path $c64) { Start-Process $c64 -ArgumentList \"--start-fullscreen $url\"; }" ^
+  "elseif (Test-Path $c86) { Start-Process $c86 -ArgumentList \"--start-fullscreen $url\"; }" ^
+  "else { Start-Process $url; };" ^
   "Write-Host '';" ^
   "Write-Host '========================================================================' -ForegroundColor Gray;" ^
   "Write-Host ' TreadCode is ready! SmartBoard & Visualizers loaded.' -ForegroundColor White;" ^

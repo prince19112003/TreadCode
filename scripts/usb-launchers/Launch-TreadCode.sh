@@ -25,19 +25,19 @@ while ss -tuln | grep -q ":$PORT " || netstat -tuln 2>/dev/null | grep -q ":$POR
   PORT=$((PORT + 1))
 done
 
-# Browser open function
+# Browser open function with auto-fullscreen
 open_browser() {
   local url="$1"
-  if command -v xdg-open > /dev/null 2>&1; then
-    xdg-open "$url" > /dev/null 2>&1 &
-  elif command -v sensible-browser > /dev/null 2>&1; then
-    sensible-browser "$url" > /dev/null 2>&1 &
-  elif command -v x-www-browser > /dev/null 2>&1; then
-    x-www-browser "$url" > /dev/null 2>&1 &
-  elif command -v google-chrome > /dev/null 2>&1; then
-    google-chrome "$url" > /dev/null 2>&1 &
+  if command -v google-chrome > /dev/null 2>&1; then
+    google-chrome --start-fullscreen "$url" > /dev/null 2>&1 &
+  elif command -v chromium-browser > /dev/null 2>&1; then
+    chromium-browser --start-fullscreen "$url" > /dev/null 2>&1 &
+  elif command -v chromium > /dev/null 2>&1; then
+    chromium --start-fullscreen "$url" > /dev/null 2>&1 &
   elif command -v firefox > /dev/null 2>&1; then
-    firefox "$url" > /dev/null 2>&1 &
+    firefox --kiosk "$url" > /dev/null 2>&1 &
+  elif command -v xdg-open > /dev/null 2>&1; then
+    xdg-open "$url" > /dev/null 2>&1 &
   else
     echo "Please open your browser manually and navigate to: $url"
   fi

@@ -372,6 +372,31 @@ export const GlobalAppShell: React.FC = () => {
     };
   }, [navigate, handleBack, searchOpen, smartBoardOpen, location.pathname]);
 
+  // Auto-Fullscreen on First Touch/Click for Browser-Only Mode (Desktop/Tauri remains normal windowed)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isTauri = '__TAURI_INTERNALS__' in window || '__TAURI__' in window;
+    const isCapacitor = 'Capacitor' in window && (window as any).Capacitor?.isNativePlatform?.();
+
+    // Pure browser mode only
+    if (isTauri || isCapacitor) return;
+
+    const requestAutoFullscreen = () => {
+      if (!document.fullscreenElement && sessionStorage.getItem('treadcode_browser_fs') !== 'true') {
+        sessionStorage.setItem('treadcode_browser_fs', 'true');
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      }
+    };
+
+    window.addEventListener('click', requestAutoFullscreen, { once: true });
+    window.addEventListener('touchstart', requestAutoFullscreen, { once: true });
+
+    return () => {
+      window.removeEventListener('click', requestAutoFullscreen);
+      window.removeEventListener('touchstart', requestAutoFullscreen);
+    };
+  }, []);
+
   return (
     <div
       className="h-screen flex flex-col relative overflow-hidden transition-colors duration-150"
