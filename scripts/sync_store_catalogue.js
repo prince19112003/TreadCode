@@ -38,7 +38,7 @@ export function syncStoreCatalogue(customVersion) {
   const exeUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_${version}_x64-setup.exe`;
   const apkUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_${version}.apk`;
   const appimageUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode_${version}_amd64.AppImage`;
-  const usbUrl = `/releases/TreadCode_USB_Portable.zip`;
+  const usbUrl = `https://github.com/prince19112003/TreadCode/releases/download/v${version}/TreadCode-USB-Portable.zip`;
   const packsUrl = `/releases/TreadCode_Packs_Offline_v${version}.zip`;
 
   // 1. Update version tags and semver
@@ -113,6 +113,10 @@ export function syncStoreCatalogue(customVersion) {
   content = content.replace(
     /(id:\s*'file-tc-linux-appimage'[\s\S]*?)size_bytes:\s*\d+/,
     `$1size_bytes: 83038208`
+  );
+  content = content.replace(
+    /(id:\s*'file-tc-usb-portable'[\s\S]*?)size_bytes:\s*\d+/,
+    `$1size_bytes: 31112575`
   );
 
   // Ensure all release download buttons are fully active
