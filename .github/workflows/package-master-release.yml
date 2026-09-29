@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -26,134 +24,45 @@ jobs:
 
       - name: Download existing release assets
         run: |
-          mkdir -p downloaded_assets
+          mkdir -p downloaded_assets release-apk
           cd downloaded_assets
           BASE_URL="https://github.com/prince19112003/TreadCode/releases/download/v1.0.8"
           
-          echo "Downloading Windows setup installer..."
           curl -fSL -O "$BASE_URL/TreadCode_1.0.8_x64-setup.exe" || true
-          
-          echo "Downloading Android SmartBoard APK..."
           curl -fSL -O "$BASE_URL/TreadCode_1.0.8.apk" || true
-          
-          echo "Downloading Linux AppImage..."
           curl -fSL -O "$BASE_URL/TreadCode_1.0.8_amd64.AppImage" || true
-          
-          echo "Downloading Linux DEB..."
           curl -fSL -O "$BASE_URL/TreadCode_1.0.8_amd64.deb" || true
-          
-          echo "Downloading USB Portable bundle..."
           curl -fSL -O "$BASE_URL/TreadCode-USB-Portable.zip" || true
           
-          ls -lh
+          cp TreadCode_1.0.8.apk ../release-apk/TreadCode_Android_SmartBoard.apk 2>/dev/null || true
+          cd ..
+          ls -lh downloaded_assets/
 
-      - name: Assemble Master Distribution Package
+      - name: Install dependencies & build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Export USB Portable Bundle
+        run: |
+          node scripts/export_usb_bundle.js
+
+      - name: Export Master Distribution Package
+        run: |
+          node scripts/export_master_pack.js
+
+      - name: Copy downloaded Linux AppImage & DEB into Master Package
         run: |
           VERSION="1.0.8"
-          ROOT_DIR="staging/TreadCode_Master_Package_v${VERSION}"
-          mkdir -p "$ROOT_DIR/01_Standalone_Installers"
-          mkdir -p "$ROOT_DIR/02_Zero_Install_Portable_USB"
-
-          # 1. Copy Standalone Installers
-          cp downloaded_assets/TreadCode_1.0.8_x64-setup.exe "$ROOT_DIR/01_Standalone_Installers/" 2>/dev/null || true
-          cp downloaded_assets/TreadCode_1.0.8.apk "$ROOT_DIR/01_Standalone_Installers/" 2>/dev/null || true
-          cp downloaded_assets/TreadCode_1.0.8_amd64.AppImage "$ROOT_DIR/01_Standalone_Installers/" 2>/dev/null || true
-          cp downloaded_assets/TreadCode_1.0.8_amd64.deb "$ROOT_DIR/01_Standalone_Installers/" 2>/dev/null || true
-
-          cat << 'EOF' > "$ROOT_DIR/01_Standalone_Installers/README_INSTALLERS.txt"
-========================================================================
-TREADCODE STANDALONE INSTALLERS (v1.0.8)
-========================================================================
-
-Choose your operating system:
-
-1. WINDOWS (PC / Laptop / SmartBoard OPS slot):
-   - Run "TreadCode_1.0.8_x64-setup.exe"
-   - Standard Windows setup wizard with desktop shortcut.
-
-2. ANDROID (Interactive Flat Panels, SmartBoards, Tablets):
-   - Copy "TreadCode_1.0.8.apk" to the device.
-   - Tap in File Manager to install (Takes 10 seconds).
-   - Optimized for touch, pen stylus, and 4K displays.
-
-3. LINUX (Ubuntu, Debian, BOSS Linux, KITE GNU-Linux):
-   - Standalone: Run "TreadCode_1.0.8_amd64.AppImage" (chmod +x and launch).
-   - Debian / Ubuntu / BOSS package: Install "TreadCode_1.0.8_amd64.deb".
-========================================================================
-EOF
-
-          # 2. Extract USB Portable suite
-          if [ -f "downloaded_assets/TreadCode-USB-Portable.zip" ]; then
-            unzip -q "downloaded_assets/TreadCode-USB-Portable.zip" -d "$ROOT_DIR/02_Zero_Install_Portable_USB/"
-          else
-            echo "Building USB bundle from repository scripts..."
-            npm ci
-            npm run build
-            node scripts/export_usb_bundle.js
-            cp -r release-usb/staging/TreadCode-USB-Portable/* "$ROOT_DIR/02_Zero_Install_Portable_USB/"
-          fi
-
-          # 3. Add editable offline license template and instructions
-          cat << 'EOF' > "$ROOT_DIR/license.json"
-{
-  "_comment": "TreadCode Offline License Configuration. Edit 'licenseKey' below to set your offline key. Save and launch TreadCode to auto-activate without internet.",
-  "licenseKey": "TC-PRO-LIFETIME-ENTERPRISE-2026",
-  "tier": "Ultimate",
-  "holderName": "Institutional Partner",
-  "organization": "Educational Lab / Institution",
-  "expiresAt": "2099-12-31T23:59:59.000Z",
-  "offline": true
-}
-EOF
-
-          cat << 'EOF' > "$ROOT_DIR/README_FIRST.txt"
-========================================================================
-TREADCODE MASTER DISTRIBUTION PACKAGE (v1.0.8)
-========================================================================
-
-Complete all-in-one package for educational institutions, lab administrators,
-and multi-device deployments.
-
-PACKAGE CONTENTS:
-------------------------------------------------------------------------
-📁 01_Standalone_Installers/
-   Native setup installers for permanent installation on Windows,
-   Android SmartBoards, and Linux.
-
-📁 02_Zero_Install_Portable_USB/
-   Complete plug-and-play offline engine. Copy this entire folder to any
-   USB flash drive to run on any computer or SmartBoard with 0% installation
-   and zero administrator privileges required.
-
-📄 license.json
-   Editable offline license file. Open in Notepad, edit "licenseKey"
-   with your issued key, and save. TreadCode auto-activates on launch
-   without requiring internet connectivity or server verification.
-
-------------------------------------------------------------------------
-QUICK START:
-------------------------------------------------------------------------
-- To run immediately without installing:
-  Open folder "02_Zero_Install_Portable_USB" and double-click "1_CLICK_WINDOWS.bat"
-  (or "1_CLICK_LINUX.sh" on Linux).
-
-- To permanently install:
-  Open folder "01_Standalone_Installers" and run the setup for your OS.
-
-- To configure offline license:
-  Open "license.json", set your license key, and save. Both the portable
-  and installed editions will read it automatically.
-
-========================================================================
-Developed by Prince Thakur • TreadCode Universal Edition
-========================================================================
-EOF
-
-          # 4. Compress to ZIP archive
-          mkdir -p release-master
-          cd staging
-          zip -r "../release-master/TreadCode_Master_Package_v1.0.8.zip" "TreadCode_Master_Package_v${VERSION}"
-          cd ..
+          TARGET_DIR="release-master/staging/TreadCode_Master_Package_v${VERSION}/01_Standalone_Installers"
+          
+          cp downloaded_assets/TreadCode_1.0.8_x64-setup.exe "$TARGET_DIR/" 2>/dev/null || true
+          cp downloaded_assets/TreadCode_1.0.8_amd64.AppImage "$TARGET_DIR/" 2>/dev/null || true
+          cp downloaded_assets/TreadCode_1.0.8_amd64.deb "$TARGET_DIR/" 2>/dev/null || true
+          
+          cd release-master/staging
+          zip -r "../TreadCode_Master_Package_v${VERSION}.zip" "TreadCode_Master_Package_v${VERSION}"
+          cd ../..
           ls -lh release-master/
 
       - name: Upload Master Package Artifact
