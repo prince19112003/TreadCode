@@ -92,13 +92,13 @@ Choose your operating system:
   // 3. Root offline license template & main readme
   console.log('\n📁 [3/4] Adding Root Offline License & Instructions...');
   const licenseTemplate = {
-    _comment: "TreadCode Offline License Configuration. Edit 'licenseKey' below to set your offline key. Save and launch TreadCode to auto-activate without internet.",
-    licenseKey: "TC-PRO-LIFETIME-ENTERPRISE-2026",
-    tier: "Ultimate",
-    holderName: "Institutional Partner",
-    organization: "Educational Lab / Institution",
-    expiresAt: "2099-12-31T23:59:59.000Z",
-    offline: true
+    _instructions: "To activate TreadCode offline, enter your purchased license key below and save this file. You can also activate online inside TreadCode > Settings > License.",
+    licenseKey: "",
+    tier: "Community",
+    holderName: "Unregistered",
+    organization: "",
+    expiresAt: "",
+    offline: false
   };
   fs.writeFileSync(path.join(packFolder, 'license.json'), JSON.stringify(licenseTemplate, null, 2), 'utf8');
 

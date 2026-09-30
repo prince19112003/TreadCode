@@ -174,10 +174,15 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   // ─── Helper: get DPR-corrected context ──────────────────────────────────────
   const getScaledCtx = (canvas: HTMLCanvasElement | null) => {
     if (!canvas) return null;
-    // desynchronized: true — bypass browser compositor & V-Sync wait.
-    // OS pushes frames directly to screen buffer → pen input registers ~1-2 frames sooner.
-    const ctx = canvas.getContext('2d', { desynchronized: true });
-
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext('2d', { desynchronized: true });
+    } catch {}
+    if (!ctx) {
+      try {
+        ctx = canvas.getContext('2d');
+      } catch {}
+    }
     if (!ctx) return null;
     const dpr = window.devicePixelRatio || 1;
     // Always reset transform to identity first, then apply DPR scale
@@ -282,8 +287,10 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     [cvCommittedRef.current, cvLiveRef.current].forEach((cv) => {
       if (!cv) return;
       const r = cv.getBoundingClientRect();
-      cv.width = r.width * dpr;
-      cv.height = r.height * dpr;
+      const w = r.width > 0 ? r.width : (wrapRef.current?.clientWidth || window.innerWidth || 1280);
+      const h = r.height > 0 ? r.height : (wrapRef.current?.clientHeight || window.innerHeight || 800);
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
       // No ctx.scale() here — getScaledCtx() handles it via setTransform
     });
     drawCommitted();
@@ -354,11 +361,13 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   const getPos = (e: React.PointerEvent | PointerEvent): Point => {
     const cv = cvLiveRef.current!;
     const r = cv.getBoundingClientRect();
+    const origin = (typeof performance !== 'undefined' && typeof performance.timeOrigin === 'number') ? performance.timeOrigin : 0;
+    const ts = (origin && e.timeStamp) ? origin + e.timeStamp : Date.now();
     return {
       x: (e.clientX - r.left - zoomOffsetRef.current.x) / zoomRef.current,
       y: (e.clientY - r.top - zoomOffsetRef.current.y) / zoomRef.current,
       p: e.pressure > 0 ? e.pressure : 0.5,
-      t: e.timeStamp ? performance.timeOrigin + e.timeStamp : Date.now(),
+      t: ts,
     };
   };
 
@@ -378,9 +387,10 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       return;
     }
 
-    // Palm rejection
-    const isBroadTouch = e.pointerType === "touch" && Math.max(e.width ?? 0, e.height ?? 0) > 16;
-    const isPalmTouch = activePointersRef.current.size > 1 || isBroadTouch;
+    // Palm rejection: SmartBoards / IFP screens report 20-50px touch contact area for normal fingers and pens.
+    // Use > 85px so classroom touch input and pens are never mistakenly ignored.
+    const isBroadTouch = e.pointerType === "touch" && Math.max(e.width ?? 0, e.height ?? 0) > 85;
+    const isPalmTouch = activePointersRef.current.size > 2 || isBroadTouch;
     if (isPalmTouch) {
       isPalmRef.current = true;
       palmAnchor.current = { y: e.clientY, st: wrapRef.current?.scrollTop ?? 0 };
@@ -388,12 +398,12 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     }
 
     if (tool === "pan") {
-      e.currentTarget.setPointerCapture(e.pointerId);
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
       panAnchor.current = { x: e.clientX, y: e.clientY, sl: wrapRef.current?.scrollLeft ?? 0, st: wrapRef.current?.scrollTop ?? 0 };
       return;
     }
 
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
     drawing.current = true;
     if (pagesOpen) setPagesOpen(false);
     // Write directly to liveRef with current zoom & offset transformation
@@ -437,7 +447,15 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     }
     if (!drawing.current) return;
 
-    const events = e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent];
+    let events: (PointerEvent | React.PointerEvent)[] = [e.nativeEvent];
+    if (typeof e.nativeEvent.getCoalescedEvents === 'function') {
+      try {
+        const coalesced = e.nativeEvent.getCoalescedEvents();
+        if (coalesced && coalesced.length > 0) {
+          events = coalesced;
+        }
+      } catch {}
+    }
     const prev = liveRef.current;
     if (prev && ["pen", "highlighter", "laser", "eraser", "stroke_eraser"].includes(prev.tool)) {
       const newPts: Point[] = [];
@@ -474,10 +492,10 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     if (activePointersRef.current.size < 2) touchPinchRef.current = null;
 
     if (isPalmRef.current) { isPalmRef.current = false; palmAnchor.current = null; return; }
-    if (panAnchor.current) { panAnchor.current = null; e.currentTarget.releasePointerCapture(e.pointerId); return; }
+    if (panAnchor.current) { panAnchor.current = null; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} return; }
     if (!drawing.current) return;
     drawing.current = false;
-    e.currentTarget.releasePointerCapture(e.pointerId);
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
 
     const s = liveRef.current;
     if (s) {

@@ -2,6 +2,8 @@ name: "Build Android SmartBoard APK"
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -51,9 +53,11 @@ jobs:
           yes | sdkmanager --licenses || true
           sdkmanager "platforms;android-36" "platforms;android-35" || true
 
-      - name: Sync web assets to Capacitor Android
+      - name: Copy web assets to Android
         run: |
-          npx cap sync android
+          mkdir -p android/app/src/main/assets/public
+          cp -r dist/* android/app/src/main/assets/public/
+          cp capacitor.config.json android/app/src/main/assets/capacitor.config.json
 
       - name: Build Android APK via Gradle
         working-directory: android

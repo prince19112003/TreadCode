@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, get, set, runTransaction, onValue } from 'firebase/database';
+import { verifySecureOfflineLicense } from '../utils/licenseCrypto';
 
 // Firebase Web Config Setup targeting licensing database
 const firebaseConfig = {
@@ -119,17 +120,50 @@ export async function checkAndApplyOfflineLicense(): Promise<LicenseValidationRe
       const res = await fetch(path, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (data && data.licenseKey && typeof data.licenseKey === 'string' && data.licenseKey.trim().length > 3) {
+        
+        // If template or empty key, user runs in default Free Community mode
+        if (!data || !data.licenseKey || !data.licenseKey.trim()) {
+          continue;
+        }
+
+        // Verify cryptographic integrity (tamper-proof check)
+        const currentHwid = getStoredOrGeneratedHwid();
+        const verification = verifySecureOfflineLicense(data, currentHwid);
+
+        if (verification.tampered) {
+          console.warn('⚠️ [LICENSE SECURITY] Tampering detected in offline license file! File was altered without authorization:', verification.error);
+          clearLicenseCache();
+          return { isValid: false, blocked: true };
+        }
+
+        if (verification.expired) {
+          console.warn('⚠️ [LICENSE] Offline license has expired on:', verification.expiresAt);
+          clearLicenseCache();
+          return { isValid: false, expired: true, expiresAt: verification.expiresAt };
+        }
+
+        if (verification.hwidMismatch) {
+          console.warn('⚠️ [LICENSE] Offline license is locked to another hardware device:', verification.error);
+          clearLicenseCache();
+          return { isValid: false, blocked: true };
+        }
+
+        if (verification.isValid && verification.licenseKey) {
           const offlineResult: LicenseValidationResult = {
             isValid: true,
-            tier: data.tier || 'Ultimate',
-            holderName: data.holderName || data.organization || 'Institutional Client',
-            expiresAt: data.expiresAt || '2099-12-31T23:59:59.000Z',
-            licenseKey: data.licenseKey.trim(),
+            tier: verification.tier || 'Ultimate',
+            holderName: verification.holderName || 'Institutional Client',
+            organization: verification.organization || verification.holderName,
+            expiresAt: verification.expiresAt || '2099-12-31T23:59:59.000Z',
+            licenseKey: verification.licenseKey,
+            features: { offlineMode: true }
           };
           saveLicenseCache(offlineResult);
           localStorage.setItem('flowtrace_license_key', offlineResult.licenseKey!);
-          console.log('✔ [LICENSE] Auto-applied offline license from:', path, 'Key:', offlineResult.licenseKey);
+          if (offlineResult.tier) {
+            localStorage.setItem('flowtrace_license_tier', offlineResult.tier);
+          }
+          console.log('✔ [LICENSE] Verified offline cryptographic license from:', path, 'Key:', offlineResult.licenseKey, 'Tier:', offlineResult.tier);
           return offlineResult;
         }
       }

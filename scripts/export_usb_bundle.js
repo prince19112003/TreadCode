@@ -42,19 +42,13 @@ async function exportUsbBundle() {
   console.log('📁 Copying optimized web app to portable staging directory...');
   fs.cpSync(distDir, appTargetDir, { recursive: true });
 
-  // 5. Copy 1-click launchers & instructions into root of portable folder
+  // 5. Copy essential 1-click launchers & instructions into root of portable folder
   const launchersSrc = path.join(ROOT_DIR, 'scripts', 'usb-launchers');
   const launcherFiles = [
     'START_HERE.html',
-    'OPEN_IN_BROWSER.html',
     '1_CLICK_WINDOWS.bat',
     '1_CLICK_LINUX.sh',
     '1_CLICK_MAC.command',
-    'Launch-TreadCode.bat',
-    'Launch-TreadCode.sh',
-    'Launch-TreadCode.command',
-    'TreadCode.desktop',
-    'autorun.inf',
     'README-INSTRUCTIONS.txt',
     'license.json'
   ];
@@ -96,25 +90,6 @@ async function exportUsbBundle() {
     console.log(`  ✔ Copied Android APK: TreadCode_Android_SmartBoard.apk`);
   } else {
     console.warn(`  ⚠️ Local APK not found in release-apk/ directory.`);
-  }
-
-  // 5b. Copy OS icons into root of portable folder for Windows, Mac, and Linux
-  const iconsSrc = path.join(ROOT_DIR, 'src-tauri', 'icons');
-  const iconMappings = [
-    { src: 'icon.ico', dest: 'app.ico' },       // Windows icon
-    { src: 'icon.icns', dest: 'app.icns' },     // macOS icon
-    { src: 'icon.png', dest: 'app.png' },       // Linux PNG icon
-  ];
-
-  for (const { src, dest } of iconMappings) {
-    const srcFile = path.join(iconsSrc, src);
-    const destFile = path.join(portableAppFolder, dest);
-    if (fs.existsSync(srcFile)) {
-      fs.copyFileSync(srcFile, destFile);
-      console.log(`  ✔ Copied OS Icon: ${dest}`);
-    } else {
-      console.warn(`  ⚠️ Missing icon file: ${src}`);
-    }
   }
 
   // 6. Zip compression

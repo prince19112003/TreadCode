@@ -3,6 +3,8 @@ package com.treadcode.app;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -15,6 +17,21 @@ public class MainActivity extends BridgeActivity {
         
         // Hide system status bar & navigation bar for full-screen immersive Smart Board UI
         hideSystemUI();
+
+        // Configure WebView settings for Smart Board compatibility
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                WebView webView = getBridge().getWebView();
+                WebSettings settings = webView.getSettings();
+                settings.setDomStorageEnabled(true);
+                settings.setDatabaseEnabled(true);
+                settings.setAllowFileAccess(true);
+                settings.setAllowContentAccess(true);
+                settings.setAllowFileAccessFromFileURLs(true);
+                settings.setAllowUniversalAccessFromFileURLs(true);
+                WebView.setWebContentsDebuggingEnabled(true);
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override

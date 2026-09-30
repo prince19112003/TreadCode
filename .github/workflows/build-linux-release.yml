@@ -2,6 +2,8 @@ name: "Build Linux AppImage & DEB"
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:

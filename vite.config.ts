@@ -7,23 +7,19 @@ import { transform as lightningcssTransform } from 'lightningcss';
 
 import obfuscator from 'javascript-obfuscator';
 
-// Custom plugin to unwrap @layer and transpile oklch() for older Android WebViews (Chrome 70+)
+// Custom plugin to unwrap @layer and transpile oklch()/modern colors for older Android WebViews (Chrome 65+)
 function legacyCssCompatPlugin() {
   return {
     name: 'vite-plugin-legacy-css-compat',
     apply: 'build' as const,
     enforce: 'post' as const,
     async generateBundle(_: unknown, bundle: Record<string, unknown>) {
-      const unlayer = () => ({
+      const unlayer = (): any => ({
         postcssPlugin: 'unlayer',
         AtRule: {
-          layer(atRule: {
-            nodes?: unknown;
-            replaceWith: (nodes: unknown) => void;
-            remove: () => void;
-          }) {
+          layer(atRule: any) {
             if (atRule.nodes) {
-              atRule.replaceWith(atRule.nodes);
+              atRule.replaceWith(...atRule.nodes);
             } else {
               atRule.remove();
             }
@@ -34,7 +30,8 @@ function legacyCssCompatPlugin() {
       for (const fileName of Object.keys(bundle)) {
         if (fileName.endsWith('.css')) {
           const chunk = bundle[fileName] as
-            { type?: string; source?: string | Uint8Array } | undefined;
+            | { type?: string; source?: string | Uint8Array }
+            | undefined;
           if (chunk && chunk.type === 'asset' && typeof chunk.source === 'string') {
             try {
               const unlayered = await postcss([unlayer()]).process(chunk.source, {
@@ -43,12 +40,12 @@ function legacyCssCompatPlugin() {
               const lowered = lightningcssTransform({
                 filename: fileName,
                 code: Buffer.from(unlayered.css),
-                targets: { chrome: 70 << 16 },
+                targets: { chrome: 65 << 16 },
                 minify: true,
               });
               chunk.source = lowered.code.toString();
               console.log(
-                `[legacyCssCompat] Lowered ${fileName} for Chrome 70+ (stripped @layer, transpiled oklch -> RGB/HEX)`
+                `[legacyCssCompat] Lowered ${fileName} for Chrome 65+ (unwrapped @layer, lowered modern colors)`
               );
             } catch (err) {
               console.warn(`[legacyCssCompat] Error transforming ${fileName}:`, err);
@@ -56,6 +53,19 @@ function legacyCssCompatPlugin() {
           }
         }
       }
+    },
+  };
+}
+
+// Plugin to strip crossorigin attribute from stylesheet links so Android WebView doesn't CORS-block them
+function stripCssCrossOriginPlugin() {
+  return {
+    name: 'vite-plugin-strip-css-crossorigin',
+    transformIndexHtml(html: string) {
+      return html
+        .replace(/<link rel="stylesheet" crossorigin ([^>]*)>/g, '<link rel="stylesheet" $1>')
+        .replace(/<link rel="stylesheet" crossorigin="[^"]*" ([^>]*)>/g, '<link rel="stylesheet" $1>')
+        .replace(/<link rel="stylesheet" crossorigin>/g, '<link rel="stylesheet">');
     },
   };
 }
@@ -68,15 +78,20 @@ export default defineConfig({
     tailwindcss(),
     legacyCssCompatPlugin(),
     legacy({
-      targets: ['chrome >= 70', 'android >= 8', 'firefox >= 68', 'edge >= 79', 'safari >= 13'],
+      targets: ['chrome >= 65', 'android >= 8', 'firefox >= 68', 'edge >= 79', 'safari >= 13'],
       additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
       renderModernChunks: true,
     }),
+    stripCssCrossOriginPlugin(),
     {
       name: 'vite-plugin-javascript-obfuscator',
       apply: 'build',
       enforce: 'post',
-      renderChunk(code) {
+      renderChunk(code, chunk) {
+        // Do not obfuscate polyfills or SystemJS loader chunks to prevent legacy initialization errors
+        if (chunk.fileName.includes('polyfills') || chunk.fileName.includes('runtime')) {
+          return null;
+        }
         const obfuscated = obfuscator.obfuscate(code, {
           compact: true,
           controlFlowFlattening: false,
@@ -88,7 +103,7 @@ export default defineConfig({
           numbersToExpressions: false,
           renameGlobals: false,
           selfDefending: false,
-          simplify: true,
+          simplify: false,
           splitStrings: false,
           stringArray: true,
           stringArrayCallsTransform: true,
@@ -127,10 +142,7 @@ export default defineConfig({
             return 'chunk-audio';
           }
           // React Router — navigation
-          if (
-            id.includes('node_modules/react-router') ||
-            id.includes('node_modules/react-router-dom')
-          ) {
+          if (id.includes('node_modules/react-router') || id.includes('node_modules/react-router-dom')) {
             return 'chunk-router';
           }
           // Lucide Icons — icon library

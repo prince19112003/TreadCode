@@ -1,55 +1,57 @@
 ========================================================================
-             TREADCODE — UNIVERSAL CLASSROOM USB EDITION
+TreadCode v1.0.8 - Quick Start & Instructions
 ========================================================================
 
-100% Offline • Zero Installation • Zero Admin Rights Required
-Works on ANY Classroom SmartBoard, TV, PC, or Computer Lab!
-
+1. HOW TO RUN
 ------------------------------------------------------------------------
-🚀 HOW TO RUN (KISI BHI BOARD PAR KAISE CHALAYEIN):
+Windows (PC / Laptop / SmartBoard OPS slot):
+  -> Double-click "1_CLICK_WINDOWS.bat"
+
+Linux (Ubuntu, Debian, BOSS Linux, KITE GNU-Linux):
+  -> Run "./1_CLICK_LINUX.sh" (in terminal or double-click)
+
+macOS (MacBook / iMac):
+  -> Double-click "1_CLICK_MAC.command"
+
+Android (SmartBoards, Interactive Flat Panels, Tablets):
+  -> Tap "TreadCode_Android_SmartBoard.apk" in your File Manager to install.
+
+Web Overview:
+  -> Double-click "START_HERE.html" in your browser.
+
+
+2. LICENSE & ACTIVATION
 ------------------------------------------------------------------------
+By default, TreadCode runs in Free Community mode with Python unlocked.
+To unlock all programming languages (C, C++, Java, DSA, Web, SmartBoard):
 
-1. WINDOWS (SmartBoard OPS / Laptop / Computer Lab PC):
-   -> Double-click "1_CLICK_WINDOWS.bat"
-   -> Application will automatically launch in your browser in 2 seconds.
-   -> Close the black console window when you are done teaching.
+Option A - Offline Activation (No internet required):
+  1. Your administrator will provide you with an authorized "license.json" file.
+  2. Simply replace the default "license.json" in this folder with your provided file.
+  3. Launch TreadCode. It will verify the cryptographic certificate and activate automatically.
 
-2. ANDROID (Interactive Flat Panel / SmartBoard / Android TV):
-   -> Open the SmartBoard's built-in "File Manager" / "Files" app.
-   -> Tap on "TreadCode_Android_SmartBoard.apk".
-   -> Click "Install" and tap "Open" (Takes 10 seconds).
-   -> Fully touch-optimized with pen pressure, drawing & code tracing.
+Option B - Online Activation:
+  1. Open TreadCode.
+  2. Go to Settings -> License & Device.
+  3. Click "Activate License" and enter your key.
 
-3. LINUX (BOSS Linux, KITE GNU-Linux, Ubuntu, Debian, School Labs):
-   -> Double-click or terminal run "./1_CLICK_LINUX.sh".
-   -> Automatically starts local zero-install engine and opens browser.
 
-4. MACOS (MacBook Air / Pro):
-   -> Double-click "1_CLICK_MAC.command".
-
-5. UNIVERSAL BROWSER MODE (Har Device / Unknown System):
-   -> Double-click "START_HERE.html" or "OPEN_IN_BROWSER.html".
-   -> Opens instantly in whatever browser is installed on the screen.
-
+3. HOW TO PURCHASE A LICENSE
 ------------------------------------------------------------------------
-🔑 OFFLINE LICENSE SETUP (LICENSING AUTO FILE):
-------------------------------------------------------------------------
-- To customize or pre-activate TreadCode before handing over to a school or lab:
-   1. Open "license.json" in Notepad.
-   2. Edit "licenseKey" with your desired key (e.g. "TC-PRO-LIFETIME-ENTERPRISE-2026").
-   3. (Optional) Set "holderName" or "organization" for institutional branding.
-   4. Save the file.
-- When TreadCode starts, it detects "license.json" and activates instantly
-  with 0% internet connectivity or server check required.
+To purchase an offline or institutional license key for your school, lab,
+coaching institute, or personal use:
 
+- Website: https://treadcode.com
+- Support / Sales: Contact your administrator or sales representative
+- Custom Branding: School / College name can be embedded into the license.
+
+
+4. HELPFUL SHORTCUTS
 ------------------------------------------------------------------------
-💡 IMPORTANT TIPS:
-------------------------------------------------------------------------
-- Fullscreen Presentation: Press F11 on keyboard for full-screen mode.
-- Offline Storage: Your diagrams, flowcharts, and drawings are automatically
-  saved offline on the device.
-- No Dependencies: You do NOT need Node.js, Python, npm, or Rust installed.
+- Fullscreen: Press F11 anytime in the browser for full-screen mode.
+- Offline Data: All diagrams, visual stages, and notes are saved locally.
+- Zero Admin: Runs completely without administrator or root privileges.
 
 ========================================================================
-TreadCode v1.0.8 Universal Edition
+TreadCode v1.0.8
 ========================================================================
