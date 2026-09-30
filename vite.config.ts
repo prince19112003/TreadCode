@@ -1,14 +1,77 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import legacy from '@vitejs/plugin-legacy';
+import postcss from 'postcss';
+import { transform as lightningcssTransform } from 'lightningcss';
 
 import obfuscator from 'javascript-obfuscator';
 
+// Custom plugin to unwrap @layer and transpile oklch() for older Android WebViews (Chrome 70+)
+function legacyCssCompatPlugin() {
+  return {
+    name: 'vite-plugin-legacy-css-compat',
+    apply: 'build' as const,
+    enforce: 'post' as const,
+    async generateBundle(_: unknown, bundle: Record<string, unknown>) {
+      const unlayer = () => ({
+        postcssPlugin: 'unlayer',
+        AtRule: {
+          layer(atRule: {
+            nodes?: unknown;
+            replaceWith: (nodes: unknown) => void;
+            remove: () => void;
+          }) {
+            if (atRule.nodes) {
+              atRule.replaceWith(atRule.nodes);
+            } else {
+              atRule.remove();
+            }
+          },
+        },
+      });
+
+      for (const fileName of Object.keys(bundle)) {
+        if (fileName.endsWith('.css')) {
+          const chunk = bundle[fileName] as
+            { type?: string; source?: string | Uint8Array } | undefined;
+          if (chunk && chunk.type === 'asset' && typeof chunk.source === 'string') {
+            try {
+              const unlayered = await postcss([unlayer()]).process(chunk.source, {
+                from: undefined,
+              });
+              const lowered = lightningcssTransform({
+                filename: fileName,
+                code: Buffer.from(unlayered.css),
+                targets: { chrome: 70 << 16 },
+                minify: true,
+              });
+              chunk.source = lowered.code.toString();
+              console.log(
+                `[legacyCssCompat] Lowered ${fileName} for Chrome 70+ (stripped @layer, transpiled oklch -> RGB/HEX)`
+              );
+            } catch (err) {
+              console.warn(`[legacyCssCompat] Error transforming ${fileName}:`, err);
+            }
+          }
+        }
+      }
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [
     react(),
     tailwindcss(),
+    legacyCssCompatPlugin(),
+    legacy({
+      targets: ['chrome >= 70', 'android >= 8', 'firefox >= 68', 'edge >= 79', 'safari >= 13'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
+      renderModernChunks: true,
+    }),
     {
       name: 'vite-plugin-javascript-obfuscator',
       apply: 'build',
@@ -31,6 +94,7 @@ export default defineConfig({
           stringArrayCallsTransform: true,
           stringArrayThreshold: 0.5,
           unicodeEscapeSequence: false,
+          target: 'browser',
         });
         return {
           code: obfuscated.getObfuscatedCode(),
@@ -63,7 +127,10 @@ export default defineConfig({
             return 'chunk-audio';
           }
           // React Router — navigation
-          if (id.includes('node_modules/react-router') || id.includes('node_modules/react-router-dom')) {
+          if (
+            id.includes('node_modules/react-router') ||
+            id.includes('node_modules/react-router-dom')
+          ) {
             return 'chunk-router';
           }
           // Lucide Icons — icon library

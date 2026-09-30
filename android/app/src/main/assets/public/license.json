@@ -1,0 +1,9 @@
+{
+  "_comment": "TreadCode Offline License Configuration. Edit 'licenseKey' below to set your offline key. Save and launch TreadCode to auto-activate without internet.",
+  "licenseKey": "TC-PRO-LIFETIME-ENTERPRISE-2026",
+  "tier": "Ultimate",
+  "holderName": "Institutional Partner",
+  "organization": "Educational Lab / Institution",
+  "expiresAt": "2099-12-31T23:59:59.000Z",
+  "offline": true
+}
