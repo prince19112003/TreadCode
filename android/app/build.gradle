@@ -5,7 +5,7 @@ android {
     compileSdk 36
     defaultConfig {
         applicationId "com.treadcode.app"
-        minSdk 24
+        minSdk 26
         targetSdk 35
         versionCode 10008
         versionName "1.0.8"
