@@ -37,9 +37,10 @@ export const StageControls: React.FC = () => {
       if (container && content) {
         const containerHeight = container.clientHeight;
         const unscaledHeight = content.getBoundingClientRect().height / zoom;
-        // Leave a little padding
-        const targetZoom = Math.min(1, (containerHeight - 80) / unscaledHeight);
-        setZoom(Math.max(0.1, targetZoom));
+        // Leave a little padding, clamp minimum zoom to 0.58 to prevent rasterization degradation
+        const MIN_ZOOM = 0.58;
+        const targetZoom = Math.min(1, Math.max(MIN_ZOOM, (containerHeight - 80) / unscaledHeight));
+        setZoom(Number(targetZoom.toFixed(2)));
       }
     } else {
       setZoom(1);
@@ -146,7 +147,7 @@ export const StageControls: React.FC = () => {
         {/* Zoom Controls */}
         <div className="flex md:flex-col flex-row items-center gap-1 md:gap-2 bg-black/20 p-1 rounded-full border border-indigo-500/10 shrink-0">
           <button 
-            onClick={() => setZoom(z => Math.min(z + 0.15, 2.5))} 
+            onClick={() => setZoom(z => Math.min(Number((z + 0.12).toFixed(2)), 2.2))} 
             className="p-1 hover:bg-indigo-500/30 rounded-full text-indigo-300 transition-colors"
             title="Zoom In"
           >
@@ -160,7 +161,7 @@ export const StageControls: React.FC = () => {
              <Maximize size={11} />
           </button>
           <button 
-            onClick={() => setZoom(z => Math.max(z - 0.15, 0.3))} 
+            onClick={() => setZoom(z => Math.max(Number((z - 0.12).toFixed(2)), 0.58))} 
             className="p-1 hover:bg-indigo-500/30 rounded-full text-indigo-300 transition-colors"
             title="Zoom Out"
           >

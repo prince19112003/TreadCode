@@ -87,8 +87,8 @@ export const PageDrawer = React.memo<PageDrawerProps>(({
             animate={{ opacity: 0.2, scale: 0.15, x: -310, y: -190, borderRadius: "10px" }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-6 z-50 pointer-events-none border-2 border-indigo-400/60 bg-linear-to-br from-indigo-950/80 to-slate-950/90 shadow-[0_0_100px_rgba(99,102,241,0.35)] backdrop-blur-md flex items-center justify-center overflow-hidden"
-          >
+            className="absolute inset-6 z-50 pointer-events-none border-2 border-indigo-400/60 bg-linear-to-br from-indigo-950 to-slate-950 shadow-2xl flex items-center justify-center overflow-hidden"
+            >
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/20 border border-indigo-400/40">
               <Plus size={16} className="text-indigo-400 animate-pulse" />
               <span className="text-xs font-semibold text-indigo-200 tracking-wider">Adding New Page...</span>

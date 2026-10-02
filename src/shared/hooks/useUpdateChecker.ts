@@ -108,7 +108,9 @@ export const useUpdateChecker = () => {
 
     // 2. Direct Fallback to Firebase RTDB (Zero Failure Guaranteed!)
     try {
-      const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json');
+      const res = await fetch('https://flowtrace-licensing-default-rtdb.firebaseio.com/tauri_updater.json', {
+        signal: AbortSignal.timeout(2500),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data && data.version && data.version !== CURRENT_VERSION) {

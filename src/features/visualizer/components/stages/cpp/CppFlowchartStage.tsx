@@ -135,7 +135,7 @@ const getPointersAndRange = (memSnapshot: Record<string, any>) => {
 export const CppFlowchartStage: React.FC = () => {
   const { lesson, currentStepIndex, zoom, setZoom, isFullScreen, toggleFullScreen, editableValues } = useLesson();
   const bottomRef = useRef<HTMLDivElement>(null);
-  const containerRef = usePinchZoom(setZoom, 0.2, 2.5);
+  const containerRef = usePinchZoom(setZoom, 0.58, 2.2);
 
   if (!lesson) return null;
 
@@ -777,7 +777,7 @@ export const CppFlowchartStage: React.FC = () => {
         <div
           id="flowchart-content"
           className="relative p-12 flex flex-col items-center gap-10 min-w-max min-h-max transition-transform duration-300 origin-top"
-          style={{ transform: `scale(${zoom})` }}
+          style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', willChange: 'transform' }}
         >
           {/* Pen Layer Target */}
           <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />

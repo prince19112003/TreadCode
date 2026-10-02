@@ -144,6 +144,38 @@ export const SettingsPage: React.FC = () => {
   type PresetId = 'default' | 'projector' | 'high_contrast' | 'daylight' | 'eye_comfort' | 'vivid' | 'custom';
   const [activePreset, setActivePreset] = useState<PresetId>('default');
 
+  // Font Selection State (Inter, JetBrains Mono, System Native)
+  const [selectedFont, setSelectedFont] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('treadcode_app_font') || 'inter';
+    }
+    return 'inter';
+  });
+
+  const handleFontChange = (fontKey: string) => {
+    setSelectedFont(fontKey);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('treadcode_app_font', fontKey);
+      document.documentElement.setAttribute('data-app-font', fontKey);
+    }
+  };
+
+  // SmartBoard & Low-Resource Eco Motion State
+  const [isEcoMotion, setIsEcoMotion] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.getAttribute('data-eco-motion') === 'true' || localStorage.getItem('smartboard_eco_motion') === 'true';
+    }
+    return false;
+  });
+
+  const handleEcoMotionToggle = (enabled: boolean) => {
+    setIsEcoMotion(enabled);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('smartboard_eco_motion', String(enabled));
+      document.documentElement.setAttribute('data-eco-motion', String(enabled));
+    }
+  };
+
   // Activation & Modal states
   const [showChangeKeyInput, setShowChangeKeyInput] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -519,8 +551,159 @@ export const SettingsPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Presets Grid */}
+                  {/* App Typography & Smartboard Font */}
                   <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        Application Typography & Font (Smartboard Optimized)
+                      </label>
+                      <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {selectedFont === 'jetbrains' ? 'JetBrains Mono' : selectedFont === 'system' ? 'System Native' : 'Inter (Default)'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {[
+                        {
+                          id: 'inter',
+                          name: 'Inter (Modern UI)',
+                          subtitle: 'Default crisp UI font for screens',
+                          preview: 'AaBb 123 (Default)',
+                          fontFamily: "'Inter', sans-serif",
+                        },
+                        {
+                          id: 'jetbrains',
+                          name: 'JetBrains Mono',
+                          subtitle: 'Fixed-width developer font',
+                          preview: 'code_0x42();',
+                          fontFamily: "'JetBrains Mono', monospace",
+                        },
+                        {
+                          id: 'system',
+                          name: 'System Native',
+                          subtitle: 'Zero-RAM instant OS font',
+                          preview: 'System UI Font',
+                          fontFamily: 'system-ui, sans-serif',
+                        },
+                      ].map((f) => {
+                        const isFontActive = selectedFont === f.id;
+                        return (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => handleFontChange(f.id)}
+                            className={`p-3 rounded-lg border text-left transition-all cursor-pointer relative ${
+                              isFontActive
+                                ? isLight
+                                  ? 'border-blue-600 bg-blue-50/80 text-blue-950 shadow-xs ring-1 ring-blue-600/30'
+                                  : 'border-blue-500 bg-blue-950/40 text-white ring-1 ring-blue-500/40'
+                                : isLight
+                                  ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                                  : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="font-bold text-xs" style={{ fontFamily: f.fontFamily }}>{f.name}</div>
+                              {isFontActive && (
+                                <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                              )}
+                            </div>
+                            <div className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {f.subtitle}
+                            </div>
+                            <div
+                              className={`mt-2 text-[10px] font-mono px-2 py-0.5 rounded border inline-block ${
+                                isLight ? 'bg-white border-slate-200 text-slate-600' : 'bg-black/30 border-white/10 text-slate-400'
+                              }`}
+                              style={{ fontFamily: f.fontFamily }}
+                            >
+                              {f.preview}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Motion & Hardware Profile (1GB RAM & SmartBoard Optimized) */}
+                  <div className="pt-4 border-t" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div>
+                        <label className={`text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                          Motion & Hardware Profile
+                        </label>
+                        <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Optimizes animation engine and GPU compositing for 1GB–2GB RAM SmartBoards
+                        </p>
+                      </div>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                        isEcoMotion
+                          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-bold'
+                          : isLight ? 'border-slate-300 text-slate-600' : 'border-white/10 text-slate-400'
+                      }`}>
+                        {isEcoMotion ? '⚡ Eco Mode Active' : '🌊 Fluid Motion'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleEcoMotionToggle(true)}
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer relative ${
+                          isEcoMotion
+                            ? isLight
+                              ? 'border-emerald-600 bg-emerald-50/80 text-emerald-950 shadow-xs ring-1 ring-emerald-600/30'
+                              : 'border-emerald-500 bg-emerald-950/40 text-white ring-1 ring-emerald-500/40'
+                            : isLight
+                              ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                              : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="font-bold text-xs flex items-center gap-1.5">
+                            <span>⚡ Eco Mode</span>
+                            <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">1GB RAM / SmartBoard</span>
+                          </div>
+                          {isEcoMotion && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                          )}
+                        </div>
+                        <div className={`text-[11px] mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Disables heavy spring physics, caps transitions to instant 120ms fades, avoids thermal throttling on weak chips.
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleEcoMotionToggle(false)}
+                        className={`p-3 rounded-lg border text-left transition-all cursor-pointer relative ${
+                          !isEcoMotion
+                            ? isLight
+                              ? 'border-blue-600 bg-blue-50/80 text-blue-950 shadow-xs ring-1 ring-blue-600/30'
+                              : 'border-blue-500 bg-blue-950/40 text-white ring-1 ring-blue-500/40'
+                            : isLight
+                              ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                              : 'border-slate-800 bg-[#0f121a] hover:bg-[#151924] text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="font-bold text-xs flex items-center gap-1.5">
+                            <span>🌊 Fluid Motion</span>
+                            <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-mono">Standard</span>
+                          </div>
+                          {!isEcoMotion && (
+                            <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                          )}
+                        </div>
+                        <div className={`text-[11px] mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Full physics animations with smooth springs and scale transitions for modern desktop & laptop hardware.
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Presets Grid */}
+                  <div className="pt-4 border-t" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
                     <div className="flex items-center justify-between mb-2.5">
                       <label className={`text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                         Color Presets
@@ -1465,7 +1648,7 @@ export const SettingsPage: React.FC = () => {
 
       {/* Modern, Minimal Professional Privacy Policy & Terms of Service Modal */}
       {policyDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}

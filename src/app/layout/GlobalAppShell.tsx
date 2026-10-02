@@ -115,7 +115,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-1000 flex items-start justify-center pt-[14vh] px-4 bg-black/60 backdrop-blur-md select-none"
+      className="fixed inset-0 z-1000 flex items-start justify-center pt-[14vh] px-4 bg-black/80 select-none"
       onClick={onClose}
     >
       <motion.div
@@ -123,7 +123,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ open, onClose }) => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.98, y: -6 }}
         transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-2xl rounded-xs border border-white/10 bg-[#0c0e14]/85 backdrop-blur-xl text-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
+        className="w-full max-w-2xl rounded-xs border border-white/10 bg-[#0e121d] text-white shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Apple Spotlight Glass Search Bar */}
@@ -389,7 +389,7 @@ export const GlobalAppShell: React.FC = () => {
     };
 
     window.addEventListener('click', requestAutoFullscreen, { once: true });
-    window.addEventListener('touchstart', requestAutoFullscreen, { once: true });
+    window.addEventListener('touchstart', requestAutoFullscreen, { once: true, passive: true });
 
     return () => {
       window.removeEventListener('click', requestAutoFullscreen);

@@ -8,7 +8,87 @@
  * embedded Android WebViews (SmartBoards) without requiring Web Crypto.
  */
 
-const TC_SECRET_KEY = 'TC_MASTER_SIGNING_OFFLINE_SECRET_2026_@PRINCE#TREADCODE$';
+// Obfuscated key derivation prevents simple binary or bundle plaintext extraction
+function resolveMasterSecret(): string {
+  const chunks = [
+    String.fromCharCode(84, 67, 95, 77, 65, 83, 84, 69, 82), // TC_MASTER
+    String.fromCharCode(95, 83, 73, 71, 78, 73, 78, 71),     // _SIGNING
+    String.fromCharCode(95, 79, 70, 70, 76, 73, 78, 69),     // _OFFLINE
+    String.fromCharCode(95, 83, 69, 67, 82, 69, 84),         // _SECRET
+    String.fromCharCode(95, 50, 48, 50, 54, 95, 64),         // _2026_@
+    String.fromCharCode(80, 82, 73, 78, 67, 69, 35),         // PRINCE#
+    String.fromCharCode(84, 82, 69, 65, 68, 67, 79, 68, 69, 36) // TREADCODE$
+  ];
+  return chunks.join('');
+}
+const TC_SECRET_KEY = resolveMasterSecret();
+
+// ─── Monotonic Anti-Clock-Rollback Tracking ──────────────────────────────────
+const MONOTONIC_STORAGE_KEY = '_tc_last_epoch_tick';
+const OFFLINE_CERT_STORAGE_KEY = 'flowtrace_offline_certificate';
+
+export interface ClockTamperResult {
+  tampered: boolean;
+  lastSeen?: string;
+  current?: string;
+}
+
+export function checkMonotonicClockTamper(): ClockTamperResult {
+  if (typeof window === 'undefined') return { tampered: false };
+  try {
+    const raw = localStorage.getItem(MONOTONIC_STORAGE_KEY);
+    const now = Date.now();
+    if (raw) {
+      const lastTick = parseInt(raw, 10);
+      // Tolerance of 120s for legitimate micro NTP adjustments
+      if (!isNaN(lastTick) && now < lastTick - 120000) {
+        return {
+          tampered: true,
+          lastSeen: new Date(lastTick).toLocaleString(),
+          current: new Date(now).toLocaleString()
+        };
+      }
+      if (!isNaN(lastTick) && now > lastTick) {
+        localStorage.setItem(MONOTONIC_STORAGE_KEY, String(now));
+      }
+    } else {
+      localStorage.setItem(MONOTONIC_STORAGE_KEY, String(now));
+    }
+    return { tampered: false };
+  } catch {
+    return { tampered: false };
+  }
+}
+
+export function saveOfflineLicenseCertificate(cert: any): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const str = typeof cert === 'string' ? cert : JSON.stringify(cert);
+    localStorage.setItem(OFFLINE_CERT_STORAGE_KEY, str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function loadOfflineLicenseCertificate(): any | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(OFFLINE_CERT_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function clearOfflineLicenseCertificate(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(OFFLINE_CERT_STORAGE_KEY);
+  } catch { /* silent */ }
+}
+
 
 // ─── Pure JavaScript SHA-256 Implementation ──────────────────────────────────
 function sha256(str: string): string {
@@ -208,6 +288,7 @@ export interface LicenseVerificationResult {
   isTemplate?: boolean;
   tampered?: boolean;
   expired?: boolean;
+  clockTampered?: boolean;
   hwidMismatch?: boolean;
   licenseKey?: string;
   tier?: string;
@@ -271,21 +352,44 @@ export function verifySecureOfflineLicense(
   licenseData: any,
   currentHwid?: string
 ): LicenseVerificationResult {
-  if (!licenseData || typeof licenseData !== 'object') {
-    return { isValid: false, error: 'Empty or invalid JSON file' };
+  let parsedData = licenseData;
+
+  // Handle direct string/base64 input (e.g. pasted directly from admin panel)
+  if (typeof parsedData === 'string') {
+    const trimmed = parsedData.trim();
+    if (trimmed.startsWith('{')) {
+      try {
+        parsedData = JSON.parse(trimmed);
+      } catch {
+        return { isValid: false, error: 'Malformed JSON certificate string.' };
+      }
+    } else {
+      try {
+        const decoded = base64Decode(trimmed);
+        if (decoded.startsWith('{')) {
+          parsedData = JSON.parse(decoded);
+        }
+      } catch {
+        // Not a base64 encoded JSON
+      }
+    }
+  }
+
+  if (!parsedData || typeof parsedData !== 'object') {
+    return { isValid: false, error: 'Empty or invalid certificate payload.' };
   }
 
   // Check if unactivated template
-  if (!licenseData.licenseKey || !licenseData.licenseKey.trim()) {
+  if (!parsedData.licenseKey || !parsedData.licenseKey.trim()) {
     return { isValid: false, isTemplate: true, error: 'Unactivated template file' };
   }
 
-  const rawKey = String(licenseData.licenseKey).trim().toUpperCase();
-  const rawTier = String(licenseData.tier || '').trim();
-  const rawExpiry = String(licenseData.expiresAt || '').trim();
+  const rawKey = String(parsedData.licenseKey).trim().toUpperCase();
+  const rawTier = String(parsedData.tier || '').trim();
+  const rawExpiry = String(parsedData.expiresAt || '').trim();
 
   // If no security block, file is either an unverified legacy or tampered
-  if (!licenseData.security || !licenseData.security.payloadToken || !licenseData.security.integritySignature) {
+  if (!parsedData.security || !parsedData.security.payloadToken || !parsedData.security.integritySignature) {
     return {
       isValid: false,
       tampered: true,
@@ -293,7 +397,7 @@ export function verifySecureOfflineLicense(
     };
   }
 
-  const { payloadToken, integritySignature } = licenseData.security;
+  const { payloadToken, integritySignature } = parsedData.security;
 
   // 1. Verify cryptographic signature over payload and key parameters
   const expectedSig = hmacSha256(TC_SECRET_KEY, `${payloadToken}::${rawKey}::${rawTier}::${rawExpiry}`);
@@ -328,7 +432,17 @@ export function verifySecureOfflineLicense(
     };
   }
 
-  // 4. Expiry Date Check against local system clock
+  // 4. Anti-Rollback Clock & Expiry Date Check against local system clock
+  const clockCheck = checkMonotonicClockTamper();
+  if (clockCheck.tampered) {
+    return {
+      isValid: false,
+      tampered: true,
+      clockTampered: true,
+      error: `CLOCK TAMPERING DETECTED: Device clock was rolled back (${clockCheck.current}) before previous recorded execution (${clockCheck.lastSeen}). Please restore correct device date and time.`
+    };
+  }
+
   if (payload.exp && payload.exp !== 'lifetime' && !payload.exp.startsWith('2099')) {
     const expDate = new Date(payload.exp);
     if (!isNaN(expDate.getTime()) && new Date() > expDate) {

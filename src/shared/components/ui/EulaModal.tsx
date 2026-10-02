@@ -52,7 +52,7 @@ export const EulaModal: React.FC = () => {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs select-none">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 select-none">
           <motion.div
             initial={{ opacity: 0, scale: 0.98, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

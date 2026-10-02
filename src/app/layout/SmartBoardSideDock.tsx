@@ -47,7 +47,7 @@ export const SmartBoardSideDock: React.FC<SmartBoardSideDockProps> = ({
     };
 
     document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('touchstart', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {

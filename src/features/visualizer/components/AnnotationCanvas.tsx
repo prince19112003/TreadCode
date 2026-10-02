@@ -82,13 +82,22 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const isDrawing = useRef(false);
   const currentStroke = useRef<Point[]>([]);
 
-  // Get DPR-scaled 2D context with hardware desynchronized mode
+  // Smartboard 1GB RAM Optimization: Clamp DPR to 1.0 and buffer to max 1080p to prevent 250MB+ VRAM OOM crash on 4K boards
+  const MAX_CANVAS_WIDTH = 1920;
+  const MAX_CANVAS_HEIGHT = 1080;
+  const getEffectiveDpr = useCallback(() => Math.min(window.devicePixelRatio || 1, 1.0), []);
+
+  // Get scaled 2D context with hardware desynchronized mode
   const getScaledCtx = (canvas: HTMLCanvasElement | null) => {
     if (!canvas) return null;
     const ctx = canvas.getContext('2d', { desynchronized: true });
     if (!ctx) return null;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rect = canvas.getBoundingClientRect();
+    const cssW = rect.width > 0 ? rect.width : (canvas.clientWidth || 1);
+    const cssH = rect.height > 0 ? rect.height : (canvas.clientHeight || 1);
+    const scaleX = canvas.width / cssW;
+    const scaleY = canvas.height / cssH;
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
     return ctx;
   };
 
@@ -143,8 +152,10 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const canvas = committedCanvasRef.current;
     const ctx = getScaledCtx(canvas);
     if (!canvas || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    const rect = canvas.getBoundingClientRect();
+    const cssW = rect.width > 0 ? rect.width : (canvas.clientWidth || 1);
+    const cssH = rect.height > 0 ? rect.height : (canvas.clientHeight || 1);
+    ctx.clearRect(0, 0, cssW, cssH);
 
     for (const stroke of strokesRef.current) {
       drawStrokePath(ctx, stroke);
@@ -156,8 +167,10 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const canvas = liveCanvasRef.current;
     const ctx = getScaledCtx(canvas);
     if (!canvas || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    const rect = canvas.getBoundingClientRect();
+    const cssW = rect.width > 0 ? rect.width : (canvas.clientWidth || 1);
+    const cssH = rect.height > 0 ? rect.height : (canvas.clientHeight || 1);
+    ctx.clearRect(0, 0, cssW, cssH);
 
     if (isDrawing.current && mode === 'pen' && currentStroke.current.length > 0) {
       drawStrokePath(ctx, {
@@ -174,11 +187,9 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const canvas = liveCanvasRef.current || committedCanvasRef.current;
     if (!canvas) return { x: e.clientX, y: e.clientY };
     const rect = canvas.getBoundingClientRect();
-    const scaleX = rect.width > 0 ? (canvas.clientWidth || canvas.width / (window.devicePixelRatio || 1)) / rect.width : 1;
-    const scaleY = rect.height > 0 ? (canvas.clientHeight || canvas.height / (window.devicePixelRatio || 1)) / rect.height : 1;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     };
   };
 
@@ -266,32 +277,37 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const canvas = liveCanvasRef.current;
     const ctx = getScaledCtx(canvas);
     if (canvas && ctx) {
-      const dpr = window.devicePixelRatio || 1;
-      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      const rect = canvas.getBoundingClientRect();
+      const cssW = rect.width > 0 ? rect.width : (canvas.clientWidth || 1);
+      const cssH = rect.height > 0 ? rect.height : (canvas.clientHeight || 1);
+      ctx.clearRect(0, 0, cssW, cssH);
     }
   };
 
-  // Resize canvas observer to fit parent container with HD resolution scaling
+  // Resize canvas observer to fit parent container with HD resolution scaling clamped to 1080p max
   useEffect(() => {
     const c1 = committedCanvasRef.current;
     const c2 = liveCanvasRef.current;
     if (!c1 || !c2) return;
     const parent = c1.parentElement || c1;
     const ro = new ResizeObserver(() => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = parent.clientWidth || window.innerWidth;
-      const h = parent.clientHeight || window.innerHeight;
+      const dpr = getEffectiveDpr();
+      const rawW = parent.clientWidth || window.innerWidth;
+      const rawH = parent.clientHeight || window.innerHeight;
+      const scale = Math.min(1, MAX_CANVAS_WIDTH / rawW, MAX_CANVAS_HEIGHT / rawH);
+      const bufW = Math.round(rawW * scale * dpr);
+      const bufH = Math.round(rawH * scale * dpr);
       [c1, c2].forEach(c => {
-        c.width = w * dpr;
-        c.height = h * dpr;
-        c.style.width = `${w}px`;
-        c.style.height = `${h}px`;
+        c.width = bufW;
+        c.height = bufH;
+        c.style.width = `${rawW}px`;
+        c.style.height = `${rawH}px`;
       });
       redrawCommitted();
     });
     ro.observe(parent);
     return () => ro.disconnect();
-  }, [redrawCommitted]);
+  }, [redrawCommitted, getEffectiveDpr]);
 
   useEffect(() => {
     redrawCommitted();

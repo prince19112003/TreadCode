@@ -117,6 +117,13 @@ export const VisualizerWorkspace = React.memo(() => {
     </button>
   );
 
+  const canvasGridStyle: React.CSSProperties = {
+    backgroundImage: isPureBlack
+      ? 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px)'
+      : 'radial-gradient(circle, rgba(99, 102, 241, 0.07) 1px, transparent 1px)',
+    backgroundSize: '24px 24px',
+  };
+
   /* ── Code Panel FullScreen ──────────────────────────────────────────────── */
   if (isCodeFullScreen) {
     return (
@@ -139,7 +146,7 @@ export const VisualizerWorkspace = React.memo(() => {
     return (
       <div className={`flex h-screen w-screen overflow-hidden text-slate-200 relative p-1.5 gap-1.5 ${isPureBlack ? 'bg-black' : 'bg-[#050510]'}`}>
         <StageControls />
-        <div className="flex-1 h-full relative overflow-hidden flex flex-col">
+        <div className="flex-1 h-full relative overflow-hidden flex flex-col" style={canvasGridStyle}>
           {fullScreenToggleButton}
           {pureBlackToggleButton}
           <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
@@ -178,9 +185,12 @@ export const VisualizerWorkspace = React.memo(() => {
 
           {/* ── Right Column: Visual Stage (Mobile: flex-1, PC: 62%) ── */}
           <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative h-[50%] md:h-full">
-            <div className={`relative overflow-hidden flex flex-col rounded-lg border border-slate-800/50 transition-all duration-300 ${
-              isPureBlack ? 'bg-black' : 'bg-[#050510]'
-            } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
+            <div 
+              className={`relative overflow-hidden flex flex-col rounded-lg border border-slate-800/50 transition-all duration-300 ${
+                isPureBlack ? 'bg-black' : 'bg-[#050510]'
+              } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}
+              style={canvasGridStyle}
+            >
               {fullScreenToggleButton}
               {pureBlackToggleButton}
               <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
@@ -226,9 +236,12 @@ export const VisualizerWorkspace = React.memo(() => {
 
         {/* Right: Visualization Stage */}
         <div className="flex-1 flex flex-col gap-1.5 overflow-hidden relative h-[50%] md:h-full">
-          <div className={`relative overflow-hidden flex flex-col transition-all duration-300 rounded-lg border border-slate-800/50 ${
-            isPureBlack ? 'bg-black' : 'bg-[#050510]'
-          } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}>
+          <div 
+            className={`relative overflow-hidden flex flex-col transition-all duration-300 rounded-lg border border-slate-800/50 ${
+              isPureBlack ? 'bg-black' : 'bg-[#050510]'
+            } ${isConsoleCollapsed ? 'flex-1' : 'h-[70%]'}`}
+            style={canvasGridStyle}
+          >
             {pureBlackToggleButton}
             <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-500"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
               {(isFlowchartTopic && lesson?.language === 'python') ? <PythonFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'java') ? <JavaFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'c') ? <CFlowchartStage /> : (isFlowchartTopic && lesson?.language === 'cpp') ? <CppFlowchartStage /> : <DsaAlgoStage />}

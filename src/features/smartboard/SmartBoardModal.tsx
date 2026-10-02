@@ -84,6 +84,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   const dragRef = useRef<{ action: string; sx: number; sy: number; ib: typeof bounds } | null>(null);
   const holdTimerRef = useRef<number | null>(null);
   const touchPinchRef = useRef<{ dist: number; zoom: number } | null>(null);
+  const pinchRafRef = useRef<number | null>(null);
   const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
 
   // Live stroke as pure mutable ref — zero React state during drawing = iPad-level latency
@@ -171,7 +172,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, undo, redo, onClose]);
 
-  // ─── Helper: get DPR-corrected context ──────────────────────────────────────
+  // ─── Helper: get DPR-corrected context with 1080p buffer scaling ───────────
   const getScaledCtx = (canvas: HTMLCanvasElement | null) => {
     if (!canvas) return null;
     let ctx: CanvasRenderingContext2D | null = null;
@@ -184,9 +185,12 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       } catch {}
     }
     if (!ctx) return null;
-    const dpr = window.devicePixelRatio || 1;
-    // Always reset transform to identity first, then apply DPR scale
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const r = canvas.getBoundingClientRect();
+    const cssW = r.width > 0 ? r.width : (canvas.clientWidth || 1);
+    const cssH = r.height > 0 ? r.height : (canvas.clientHeight || 1);
+    const scaleX = canvas.width / cssW;
+    const scaleY = canvas.height / cssH;
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
     return ctx;
   };
 
@@ -195,9 +199,9 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     const cv = cvCommittedRef.current;
     const ctx = getScaledCtx(cv);
     if (!cv || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    const W = cv.width / dpr;
-    const H = cv.height / dpr;
+    const r = cv.getBoundingClientRect();
+    const W = r.width > 0 ? r.width : (cv.clientWidth || 1);
+    const H = r.height > 0 ? r.height : (cv.clientHeight || 1);
 
     ctx.clearRect(0, 0, W, H);
     ctx.save();
@@ -233,9 +237,9 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     const cv = cvLiveRef.current;
     const ctx = getScaledCtx(cv);
     if (!cv || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    const W = cv.width / dpr;
-    const H = cv.height / dpr;
+    const r = cv.getBoundingClientRect();
+    const W = r.width > 0 ? r.width : (cv.clientWidth || 1);
+    const H = r.height > 0 ? r.height : (cv.clientHeight || 1);
 
     ctx.clearRect(0, 0, W, H);
 
@@ -281,16 +285,19 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
     return () => clearInterval(interval);
   }, [isOpen, strokes, setStrokes]);
 
-  // ─── Canvas Resize ────────────────────────────────────────────────────────────
+  // ─── Canvas Resize (Capped to max 1080p buffer for 1GB SmartBoard boards) ───
   const resizeCanvas = useCallback(() => {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.0);
+    const MAX_SMARTBOARD_W = 1920;
+    const MAX_SMARTBOARD_H = 1080;
     [cvCommittedRef.current, cvLiveRef.current].forEach((cv) => {
       if (!cv) return;
       const r = cv.getBoundingClientRect();
       const w = r.width > 0 ? r.width : (wrapRef.current?.clientWidth || window.innerWidth || 1280);
       const h = r.height > 0 ? r.height : (wrapRef.current?.clientHeight || window.innerHeight || 800);
-      cv.width = Math.round(w * dpr);
-      cv.height = Math.round(h * dpr);
+      const scale = Math.min(1, MAX_SMARTBOARD_W / w, MAX_SMARTBOARD_H / h);
+      cv.width = Math.round(w * scale * dpr);
+      cv.height = Math.round(h * scale * dpr);
       // No ctx.scale() here — getScaledCtx() handles it via setTransform
     });
     drawCommitted();
@@ -413,7 +420,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   const handlePointerMove = (e: React.PointerEvent) => {
     activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-    // Pinch zoom
+    // Pinch zoom (throttled to 60fps via requestAnimationFrame for IR touch frames)
     if (activePointersRef.current.size === 2 && touchPinchRef.current && cvLiveRef.current) {
       const pts = Array.from(activePointersRef.current.values());
       const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
@@ -425,12 +432,17 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
         const newZoom = Math.min(4, Math.max(0.3, touchPinchRef.current.zoom * factor));
         const oldZoom = zoomRef.current;
         if (oldZoom > 0 && Math.abs(newZoom - oldZoom) > 0.001) {
-          const ratio = newZoom / oldZoom;
-          setZoom(newZoom);
-          setZoomOffset((old) => ({
-            x: midX - (midX - old.x) * ratio,
-            y: midY - (midY - old.y) * ratio,
-          }));
+          if (!pinchRafRef.current) {
+            pinchRafRef.current = requestAnimationFrame(() => {
+              pinchRafRef.current = null;
+              const ratio = newZoom / oldZoom;
+              setZoom(newZoom);
+              setZoomOffset((old) => ({
+                x: midX - (midX - old.x) * ratio,
+                y: midY - (midY - old.y) * ratio,
+              }));
+            });
+          }
         }
       }
       return;
@@ -489,7 +501,13 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
   const handlePointerUp = (e: React.PointerEvent) => {
     clearHoldTimer();
     activePointersRef.current.delete(e.pointerId);
-    if (activePointersRef.current.size < 2) touchPinchRef.current = null;
+    if (activePointersRef.current.size < 2) {
+      touchPinchRef.current = null;
+      if (pinchRafRef.current) {
+        cancelAnimationFrame(pinchRafRef.current);
+        pinchRafRef.current = null;
+      }
+    }
 
     if (isPalmRef.current) { isPalmRef.current = false; palmAnchor.current = null; return; }
     if (panAnchor.current) { panAnchor.current = null; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} return; }
@@ -685,7 +703,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
         transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-        className={`fixed z-9999 flex flex-col select-none shadow-[0_24px_80px_rgba(0,0,0,0.9)] ${isFullscreen ? "inset-0 rounded-none" : "rounded-2xl border border-white/7"} overflow-hidden`}
+        className={`fixed z-9999 flex flex-col select-none shadow-2xl ${isFullscreen ? "inset-0 rounded-none" : "rounded-2xl border border-white/7"} overflow-hidden`}
         style={
           isFullscreen
             ? { background: BG_FILL[boardBg] }
@@ -781,7 +799,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       <AnimatePresence>
         {isExportOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-10000 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            className="fixed inset-0 z-10000 flex items-center justify-center bg-black/85 p-4">
             <motion.div initial={{ scale: 0.94, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 10 }}
               className="w-full max-w-md bg-[#0a0f1e] border border-white/12 rounded-2xl shadow-2xl p-5 flex flex-col gap-4 select-none">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
@@ -861,7 +879,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       <AnimatePresence>
         {showSessionPrompt && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-10000 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            className="fixed inset-0 z-10000 flex items-center justify-center bg-black/85 p-4">
             <motion.div initial={{ scale: 0.94, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 10 }}
               className="w-full max-w-sm bg-[#0a0f1e] border border-indigo-500/30 rounded-2xl shadow-2xl p-5 flex flex-col gap-4 select-none">
               <div className="flex items-center gap-3">
@@ -886,7 +904,7 @@ export const SmartBoardModal: React.FC<SmartBoardModalProps> = ({ isOpen, onClos
       <AnimatePresence>
         {showCloseConfirm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-10000 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            className="fixed inset-0 z-10000 flex items-center justify-center bg-black/85 p-4">
             <motion.div initial={{ scale: 0.94, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 10 }}
               className="w-full max-w-sm bg-[#0a0f1e] border border-amber-500/30 rounded-2xl shadow-2xl p-5 flex flex-col gap-4 select-none">
               <div className="flex items-center gap-3">

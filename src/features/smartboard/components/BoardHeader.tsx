@@ -109,7 +109,7 @@ export const BoardHeader = React.memo<BoardHeaderProps>(({
                   onClick={() => setMenuOpen(!menuOpen)}
                   className={`h-7 px-2 flex items-center justify-center gap-1 rounded-xl border text-[11px] font-semibold transition-all active:scale-95 ${
                     menuOpen
-                      ? "bg-indigo-600 text-white border-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.5)]"
+                      ? "bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/30"
                       : "bg-white/6 hover:bg-white/10 text-white/80 border-white/10"
                   }`}
                   title="Toggle Tools & Options Menu"
@@ -223,7 +223,7 @@ export const BoardHeader = React.memo<BoardHeaderProps>(({
                         key={s}
                         onClick={() => setSize(s)}
                         className={`w-5.5 h-5.5 rounded-lg flex items-center justify-center text-[10px] font-mono font-medium transition-all ${
-                          size === s ? "bg-indigo-600 text-white font-bold shadow-[0_0_10px_rgba(99,102,241,0.5)] scale-105" : "text-white/40 hover:text-white/80"
+                          size === s ? "bg-indigo-600 text-white font-bold shadow-xs shadow-indigo-500/40 scale-105" : "text-white/40 hover:text-white/80"
                         }`}
                       >
                         {s}

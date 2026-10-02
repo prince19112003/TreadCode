@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, MotionConfig } from 'motion/react';
 import { GlobalAppShell } from './layout/GlobalAppShell';
 import { LoadingSpinner } from '@shared/components/ui/LoadingSpinner';
 import { EulaModal } from '@shared/components/ui/EulaModal';
@@ -223,6 +223,24 @@ export const App: React.FC = () => {
   const [pendingIssuedKey, setPendingIssuedKey] = React.useState<KeyRequestItem | null>(null);
   const [dismissedNoticeKey, setDismissedNoticeKey] = React.useState<string | null>(() => typeof window !== 'undefined' ? localStorage.getItem('flowtrace_dismissed_notice_key') : null);
   const [trialInfo, setTrialInfo] = React.useState<DeviceTrialInfo | null>(null);
+
+  // SmartBoard & Low-Resource Eco Motion profile state
+  const [isEcoMotion, setIsEcoMotion] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.getAttribute('data-eco-motion') === 'true';
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const observer = new MutationObserver(() => {
+      const isEco = document.documentElement.getAttribute('data-eco-motion') === 'true';
+      setIsEcoMotion(isEco);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-eco-motion'] });
+    return () => observer.disconnect();
+  }, []);
 
   // Auto-activate if offline license.json is present in USB / root
   React.useEffect(() => {
@@ -471,40 +489,42 @@ export const App: React.FC = () => {
         deactivateLicense,
       }}
     >
-      <BrowserRouter>
-        {/* EULA agreement modal — runs once on first launch */}
-        {!showSplash && <EulaModal />}
+      <MotionConfig reducedMotion={isEcoMotion ? 'always' : 'user'}>
+        <BrowserRouter>
+          {/* EULA agreement modal — runs once on first launch */}
+          {!showSplash && <EulaModal />}
 
-        {/* Real-time In-App Key Ready Alert (Shown until user activates this license) */}
-        {!showSplash && pendingIssuedKey && dismissedNoticeKey !== pendingIssuedKey.assignedKey && (
-          <KeyIssuedNotificationModal
-            request={pendingIssuedKey}
-            onActivate={async (k) => {
-              const success = await handleActivate(k);
-              if (success) {
+          {/* Real-time In-App Key Ready Alert (Shown until user activates this license) */}
+          {!showSplash && pendingIssuedKey && dismissedNoticeKey !== pendingIssuedKey.assignedKey && (
+            <KeyIssuedNotificationModal
+              request={pendingIssuedKey}
+              onActivate={async (k) => {
+                const success = await handleActivate(k);
+                if (success) {
+                  setPendingIssuedKey(null);
+                }
+                return success;
+              }}
+              onDismiss={() => {
+                if (pendingIssuedKey?.assignedKey) {
+                  setDismissedNoticeKey(pendingIssuedKey.assignedKey);
+                  localStorage.setItem('flowtrace_dismissed_notice_key', pendingIssuedKey.assignedKey);
+                }
                 setPendingIssuedKey(null);
-              }
-              return success;
-            }}
-            onDismiss={() => {
-              if (pendingIssuedKey?.assignedKey) {
-                setDismissedNoticeKey(pendingIssuedKey.assignedKey);
-                localStorage.setItem('flowtrace_dismissed_notice_key', pendingIssuedKey.assignedKey);
-              }
-              setPendingIssuedKey(null);
-            }}
-          />
-        )}
+              }}
+            />
+          )}
 
-        {/* Floating Chatbot-Style Bug / Feedback Widget (Shown after splash screen) */}
-        {!showSplash && !settings.disableFeedbackWidget && <FloatingFeedbackWidget />}
+          {/* Floating Chatbot-Style Bug / Feedback Widget (Shown after splash screen) */}
+          {!showSplash && !settings.disableFeedbackWidget && <FloatingFeedbackWidget />}
 
-        {showSplash ? (
-          <SplashPage onComplete={() => setShowSplash(false)} />
-        ) : (
-          <AnimatedRoutes />
-        )}
-      </BrowserRouter>
+          {showSplash ? (
+            <SplashPage onComplete={() => setShowSplash(false)} />
+          ) : (
+            <AnimatedRoutes />
+          )}
+        </BrowserRouter>
+      </MotionConfig>
     </LicenseContext.Provider>
   );
 };

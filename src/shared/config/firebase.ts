@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, get, set, runTransaction, onValue } from 'firebase/database';
-import { verifySecureOfflineLicense } from '../utils/licenseCrypto';
+import { 
+  verifySecureOfflineLicense, 
+  saveOfflineLicenseCertificate, 
+  loadOfflineLicenseCertificate 
+} from '../utils/licenseCrypto';
 
 // Firebase Web Config Setup targeting licensing database
 const firebaseConfig = {
@@ -15,6 +19,20 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
+
+/**
+ * Smartboard 1GB RAM & Offline Resilience Helper:
+ * Limits async network requests to 2500ms so offline smartboards
+ * instantly fail over to local offline cache without blocking UI.
+ */
+export const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = 2500): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Firebase network offline timeout')), timeoutMs)
+    ),
+  ]);
+};
 
 export interface CustomBranding {
   institutionName?: string;
@@ -60,6 +78,7 @@ export interface LicenseValidationResult {
   expired?: boolean;
   holderName?: string;
   organization?: string;
+  error?: string;
 }
 
 // ─── Offline License Cache ────────────────────────────────────────────────────
@@ -114,6 +133,36 @@ export function clearLicenseCache(): void {
 export async function checkAndApplyOfflineLicense(): Promise<LicenseValidationResult | null> {
   if (typeof window === 'undefined') return null;
 
+  const currentHwid = getStoredOrGeneratedHwid();
+
+  // 1. Check if an offline certificate was previously pasted/saved in local storage
+  const storedCert = loadOfflineLicenseCertificate();
+  if (storedCert) {
+    const verification = verifySecureOfflineLicense(storedCert, currentHwid);
+    if (verification.isValid && verification.licenseKey) {
+      const offlineResult: LicenseValidationResult = {
+        isValid: true,
+        tier: verification.tier || 'Ultimate',
+        holderName: verification.holderName || 'Institutional Client',
+        organization: verification.organization || verification.holderName,
+        expiresAt: verification.expiresAt || '2099-12-31T23:59:59.000Z',
+        licenseKey: verification.licenseKey,
+        features: { offlineMode: true }
+      };
+      saveLicenseCache(offlineResult);
+      localStorage.setItem('flowtrace_license_key', verification.licenseKey);
+      if (offlineResult.tier) {
+        localStorage.setItem('flowtrace_license_tier', offlineResult.tier);
+      }
+      return offlineResult;
+    } else if (verification.tampered || verification.clockTampered) {
+      console.warn('⚠️ [LICENSE SECURITY] Stored offline certificate tampered or clock rolled back:', verification.error);
+      clearLicenseCache();
+      return { isValid: false, blocked: true };
+    }
+  }
+
+  // 2. Check candidate local file paths (USB / static server distribution)
   const candidatePaths = ['./license.json', '../license.json', '/license.json'];
   for (const path of candidatePaths) {
     try {
@@ -236,13 +285,50 @@ export async function fetchLicenseDetails(
   registerIfMissing: boolean = false
 ): Promise<LicenseValidationResult> {
   if (!licenseKey || !licenseKey.trim()) return { isValid: false };
-  const cleanKey = licenseKey.trim().toUpperCase();
+  const rawInput = licenseKey.trim();
   const safeHwid = (hwid && hwid.trim() && hwid !== 'N/A') ? hwid.trim() : getStoredOrGeneratedHwid();
+
+  // ─── Direct Offline JSON Certificate Handler ──────────────────────────────
+  // If the user pasted an exported JSON certificate or raw security token from Admin Panel
+  if (rawInput.startsWith('{') || rawInput.includes('"payloadToken"') || rawInput.includes('integritySignature')) {
+    const verification = verifySecureOfflineLicense(rawInput, safeHwid);
+    if (verification.isValid && verification.licenseKey) {
+      saveOfflineLicenseCertificate(rawInput);
+      const offlineResult: LicenseValidationResult = {
+        isValid: true,
+        tier: verification.tier || 'Ultimate',
+        holderName: verification.holderName || 'Institutional Client',
+        organization: verification.organization || verification.holderName,
+        expiresAt: verification.expiresAt || '2099-12-31T23:59:59.000Z',
+        licenseKey: verification.licenseKey,
+        features: { offlineMode: true }
+      };
+      saveLicenseCache(offlineResult);
+      localStorage.setItem('flowtrace_license_key', verification.licenseKey);
+      if (offlineResult.tier) {
+        localStorage.setItem('flowtrace_license_tier', offlineResult.tier);
+      }
+      console.log('✔ [LICENSE] Verified & stored direct offline cryptographic certificate. Key:', offlineResult.licenseKey);
+      return offlineResult;
+    } else {
+      console.warn('⚠️ [LICENSE] Offline certificate validation failed:', verification.error);
+      return {
+        isValid: false,
+        blocked: verification.tampered || verification.clockTampered,
+        expired: verification.expired,
+        expiresAt: verification.expiresAt,
+        licenseKey: verification.licenseKey,
+        error: verification.error,
+      };
+    }
+  }
+
+  const cleanKey = rawInput.toUpperCase();
 
   // Check global HWID blacklist first
   try {
     const blacklistRef = ref(db, `blacklisted_hwids/${safeHwid}`);
-    const blacklistSnap = await get(blacklistRef);
+    const blacklistSnap = await withTimeout(get(blacklistRef), 2500);
     if (blacklistSnap.exists() && blacklistSnap.val()) {
       clearLicenseCache();
       return { isValid: false, blocked: true };
@@ -265,12 +351,12 @@ export async function fetchLicenseDetails(
       }
     }).catch(() => {});
   } catch (e) {
-    console.error(e);
+    console.warn('Blacklist/telemetry check skipped or timed out offline:', e);
   }
 
   const licenseRef = ref(db, `licenses/${cleanKey}`);
   try {
-    const snapshot = await get(licenseRef);
+    const snapshot = await withTimeout(get(licenseRef), 2500);
     if (!snapshot.exists()) return { isValid: false };
     
     const licenseData = snapshot.val();

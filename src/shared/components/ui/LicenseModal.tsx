@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { KeyRound, CreditCard, ArrowRight, Lock, CheckCircle2, AlertCircle, Laptop, LogOut } from 'lucide-react';
+import { KeyRound, CreditCard, ArrowRight, Lock, CheckCircle2, AlertCircle, Laptop, LogOut, FileText, Upload } from 'lucide-react';
 import { fetchLicenseDetails, unlinkDeviceFromLicense } from '../../config/firebase';
 
 interface LicenseModalProps {
@@ -21,11 +21,16 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
   const [limitDevices, setLimitDevices] = useState<Record<string, { activatedAt?: string }>>({});
   const [maxDevicesCount, setMaxDevicesCount] = useState(1);
   const [unlinkingHwid, setUnlinkingHwid] = useState<string | null>(null);
+  const [isJsonPasteMode, setIsJsonPasteMode] = useState(false);
+  const [jsonText, setJsonText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (!isJsonPasteMode) {
+      inputRef.current?.focus();
+    }
+  }, [isJsonPasteMode]);
 
   const handleKeyChange = (val: string) => {
     if (animPhase === 'revolving' || animPhase === 'merged') return;
@@ -35,9 +40,8 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
     if (animPhase === 'rejected') setAnimPhase('idle');
   };
 
-  const handleTriggerActivation = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!key.trim() || key.length < 6 || loading) return;
+  const executeActivation = async (candidateKeyOrJson: string) => {
+    if (!candidateKeyOrJson.trim() || loading) return;
 
     setLoading(true);
     setError(null);
@@ -45,7 +49,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
 
     try {
       const [success] = await Promise.all([
-        onActivate(key.trim()),
+        onActivate(candidateKeyOrJson.trim()),
         new Promise((resolve) => setTimeout(resolve, 1100)),
       ]);
 
@@ -55,8 +59,8 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
           if (onClose) onClose();
         }, 1000);
       } else {
-        // Check if device limit was reached
-        const checkDetails = await fetchLicenseDetails(key.trim());
+        // Check if device limit was reached or details
+        const checkDetails = await fetchLicenseDetails(candidateKeyOrJson.trim());
         if (checkDetails.limitReached && checkDetails.devices && Object.keys(checkDetails.devices).length > 0) {
           setAnimPhase('idle');
           setLoading(false);
@@ -67,26 +71,60 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
         }
 
         setAnimPhase('rejected');
-        setError(checkDetails.blocked ? 'This license key has been blocked.' : 'Invalid activation key or license expired.');
+        setError(checkDetails.error || (checkDetails.blocked ? 'License blocked, tampered, or clock rolled back.' : 'Invalid activation key or license expired.'));
         setTimeout(() => {
           setAnimPhase('idle');
           setLoading(false);
-        }, 1400);
+        }, 2200);
       }
     } catch {
       setAnimPhase('rejected');
-      setError('Connection error. Please check your network.');
+      setError('Verification error. Please check license data.');
       setTimeout(() => {
         setAnimPhase('idle');
         setLoading(false);
-      }, 1400);
+      }, 2200);
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData('text');
+    if (!text) return;
+    const trimmed = text.trim();
+    if (trimmed.startsWith('{') || trimmed.includes('"payloadToken"') || trimmed.includes('integritySignature')) {
+      e.preventDefault();
+      await executeActivation(trimmed);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const content = event.target?.result;
+      if (typeof content === 'string') {
+        await executeActivation(content);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleTriggerActivation = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (isJsonPasteMode) {
+      if (!jsonText.trim()) return;
+      await executeActivation(jsonText.trim());
+    } else {
+      if (!key.trim() || key.length < 6) return;
+      await executeActivation(key.trim());
     }
   };
 
   const chars = Array.from({ length: 6 }).map((_, i) => key[i] || '');
 
   return (
-    <div className="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md select-none">
+    <div className="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/85 select-none">
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -190,7 +228,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
             </p>
 
             {/* Form Container */}
-            <form onSubmit={handleTriggerActivation} className="space-y-6">
+            <form onSubmit={handleTriggerActivation} onPaste={handlePaste} className="space-y-5">
               <input
                 ref={inputRef}
                 type="text"
@@ -202,11 +240,39 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
                 aria-label="License Key Input"
               />
 
-              {/* Interactive 6-Key Revolving & Merging Area */}
-              <div
-                onClick={() => inputRef.current?.focus()}
-                className="relative min-h-17.5 flex items-center justify-center cursor-text"
-              >
+              {/* JSON Direct Paste Mode (Offline Certificate from Admin Panel) */}
+              {isJsonPasteMode && animPhase === 'idle' ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={jsonText}
+                    onChange={(e) => setJsonText(e.target.value)}
+                    placeholder="Paste offline JSON certificate payload copied from Admin Panel..."
+                    rows={4}
+                    className="w-full p-3 bg-zinc-900/90 border border-zinc-700 rounded-xl text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-hidden focus:border-zinc-400 resize-none shadow-inner"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={loading || !jsonText.trim()}
+                      className="flex-1 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-black text-xs font-mono font-bold transition-all disabled:opacity-40 cursor-pointer shadow-sm"
+                    >
+                      Verify & Activate Offline
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setIsJsonPasteMode(false); setJsonText(''); }}
+                      className="px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 text-xs font-mono cursor-pointer"
+                    >
+                      Back
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Interactive 6-Key Revolving & Merging Area */
+                <div
+                  onClick={() => inputRef.current?.focus()}
+                  className="relative min-h-17.5 flex items-center justify-center cursor-text"
+                >
                 {/* 1. Normal Row of Slots (Idle state) */}
                 {animPhase === 'idle' && (
                   <div className="flex items-center justify-center gap-2">
@@ -290,7 +356,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
                     transition={{ duration: 0.35, ease: 'easeOut' }}
                     className="relative flex flex-col items-center justify-center py-1"
                   >
-                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-700/90 flex items-center justify-center text-zinc-200 shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-700/90 flex items-center justify-center text-zinc-200 shadow-xl">
                       <KeyRound size={24} className="stroke-[1.8] text-zinc-200" />
                     </div>
                   </motion.div>
@@ -314,6 +380,37 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ onActivate, onClose 
                   </motion.div>
                 )}
               </div>
+              )}
+
+              {/* Offline Actions: Paste JSON / Upload license.json */}
+              {!isJsonPasteMode && animPhase === 'idle' && (
+                <div className="flex items-center justify-center gap-3 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsJsonPasteMode(true)}
+                    className="text-[11px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <FileText size={12} />
+                    <span>Paste Offline JSON</span>
+                  </button>
+                  <span className="text-zinc-700">•</span>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-[11px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Upload size={12} />
+                    <span>Upload license.json</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+              )}
 
               {/* Error Message */}
               <AnimatePresence>

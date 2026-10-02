@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
@@ -68,15 +67,15 @@
   --color-info:       #06b6d4;
   --color-info-bg:    rgba(6, 182, 212, 0.1);
 
-  /* --- Shadows --- */
-  --shadow-sm:    0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:    0 4px 12px rgba(0,0,0,0.5);
-  --shadow-lg:    0 8px 32px rgba(0,0,0,0.6);
-  --shadow-xl:    0 20px 48px rgba(0,0,0,0.7);
-  --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-focus: 0 0 0 3px rgba(99, 102, 241, 0.35);
-  --shadow-card-hover: 0 0 0 1px rgba(99,102,241,0.3), 0 8px 32px rgba(0,0,0,0.5);
-  --shadow-glow-accent: 0 0 24px rgba(99,102,241,0.2);
+  /* --- Shadows (Optimized for 1GB RAM & Weak GPU SmartBoards) --- */
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.35);
+  --shadow-md:    0 2px 6px rgba(0,0,0,0.4);
+  --shadow-lg:    0 4px 12px rgba(0,0,0,0.45);
+  --shadow-xl:    0 8px 18px rgba(0,0,0,0.5);
+  --shadow-inner: inset 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-focus: 0 0 0 2px rgba(99, 102, 241, 0.4);
+  --shadow-card-hover: 0 0 0 1px rgba(99,102,241,0.35), 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-glow-accent: 0 0 8px rgba(99,102,241,0.25);
 
   /* --- Radius --- */
   --radius-sm:  8px;
@@ -85,9 +84,37 @@
   --radius-xl:  20px;
   --radius-2xl: 24px;
 
-  /* --- Fonts --- */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* --- Fonts (Local & System Fallbacks for 100% Offline Classroom) --- */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+}
+
+/* Dynamic Font Selectors */
+:root[data-app-font="jetbrains"] {
+  --font-sans: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+}
+:root[data-app-font="system"] {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+:root[data-app-font="inter"] {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Eco / Low-Power Motion Profile (Suppresses CPU animation thrashing on 1GB SmartBoards) */
+:root[data-eco-motion="true"] *,
+:root[data-eco-motion="true"] *::before,
+:root[data-eco-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.12s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Retain loading spinners in eco mode for clear user feedback */
+:root[data-eco-motion="true"] .animate-spin,
+:root[data-eco-motion="true"] [data-spin="true"] {
+  animation-duration: 1s !important;
+  animation-iteration-count: infinite !important;
 }
 
 /* ============================================================
@@ -125,17 +152,15 @@
     background: rgba(255,255,255,0.18);
   }
 
-  /* ---- Glassmorphism Card Base ---- */
+  /* ---- Solid High-Contrast Card Base (1GB RAM & Zero-GPU Safe) ---- */
   .glass-card {
-    background: rgba(15, 17, 23, 0.65);
+    background: #111422;
     border: 1px solid var(--color-border-muted);
     border-radius: var(--radius-lg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
   }
   .glass-card:hover {
-    background: rgba(28, 31, 46, 0.85);
+    background: #181c2e;
     border-color: rgba(99, 102, 241, 0.35);
     box-shadow: var(--shadow-card-hover);
     transform: translateY(-2px);

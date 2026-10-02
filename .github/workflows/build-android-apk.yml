@@ -63,14 +63,17 @@ jobs:
         working-directory: android
         run: |
           set -o pipefail
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee ../gradle_build.log
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_build.log
 
       - name: Rename and Prepare APK
         run: |
           mkdir -p release-apk
           echo "=== Searching for APK ==="
           find android/ -name "*.apk" || true
-          APK_FILE=$(find android/ -name "*.apk" | head -n 1)
+          APK_FILE=$(find android/ -name "*release*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find android/ -name "*.apk" | head -n 1)
+          fi
           if [ -z "$APK_FILE" ]; then
             echo "ERROR: No APK found! Printing build log tail:"
             cat gradle_build.log | tail -n 150

@@ -5,8 +5,6 @@ import legacy from '@vitejs/plugin-legacy';
 import postcss from 'postcss';
 import { transform as lightningcssTransform } from 'lightningcss';
 
-import obfuscator from 'javascript-obfuscator';
-
 // Custom plugin to unwrap @layer and transpile oklch()/modern colors for older Android WebViews (Chrome 65+)
 function legacyCssCompatPlugin() {
   return {
@@ -83,52 +81,20 @@ export default defineConfig({
       renderModernChunks: true,
     }),
     stripCssCrossOriginPlugin(),
-    {
-      name: 'vite-plugin-javascript-obfuscator',
-      apply: 'build',
-      enforce: 'post',
-      renderChunk(code, chunk) {
-        // Do not obfuscate polyfills or SystemJS loader chunks to prevent legacy initialization errors
-        if (chunk.fileName.includes('polyfills') || chunk.fileName.includes('runtime')) {
-          return null;
-        }
-        const obfuscated = obfuscator.obfuscate(code, {
-          compact: true,
-          controlFlowFlattening: false,
-          deadCodeInjection: false,
-          debugProtection: false,
-          disableConsoleOutput: false,
-          identifierNamesGenerator: 'hexadecimal',
-          log: false,
-          numbersToExpressions: false,
-          renameGlobals: false,
-          selfDefending: false,
-          simplify: false,
-          splitStrings: false,
-          stringArray: true,
-          stringArrayCallsTransform: true,
-          stringArrayThreshold: 0.5,
-          unicodeEscapeSequence: false,
-          target: 'browser',
-        });
-        return {
-          code: obfuscated.getObfuscatedCode(),
-          map: null,
-        };
-      },
-    },
   ],
   resolve: {
     tsconfigPaths: true,
+    alias: {
+      react: 'preact/compat',
+      'react-dom/test-utils': 'preact/test-utils',
+      'react-dom': 'preact/compat',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+    },
   },
   build: {
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Pixi.js — heavy 2D renderer, load separately
-          if (id.includes('node_modules/pixi.js') || id.includes('node_modules/@pixi')) {
-            return 'chunk-pixi';
-          }
           // Firebase — large SDK, lazy-loaded after auth
           if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
             return 'chunk-firebase';
@@ -136,10 +102,6 @@ export default defineConfig({
           // Motion / Framer Motion — animation engine
           if (id.includes('node_modules/motion') || id.includes('node_modules/framer-motion')) {
             return 'chunk-motion';
-          }
-          // Howler — audio engine for voice narration
-          if (id.includes('node_modules/howler')) {
-            return 'chunk-audio';
           }
           // React Router — navigation
           if (id.includes('node_modules/react-router') || id.includes('node_modules/react-router-dom')) {

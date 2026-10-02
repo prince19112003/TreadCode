@@ -169,12 +169,17 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
       isComplete: false,
       customSteps: null,
       hasEdited: false,
+      zoom: 1,
     });
     get().updateActiveSteps();
   },
 
   setZoom: (updater) => {
-    set((state) => ({ zoom: typeof updater === 'function' ? updater(state.zoom) : updater }));
+    set((state) => {
+      const rawNext = typeof updater === 'function' ? updater(state.zoom) : updater;
+      const clamped = Math.min(2.2, Math.max(0.58, Number(rawNext.toFixed(2))));
+      return { zoom: clamped };
+    });
   },
   
   setHasEdited: (hasEdited) => set({ hasEdited }),

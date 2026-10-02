@@ -196,7 +196,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ forceShow, onClosePrev
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={phase === 'idle' ? handleDismiss : undefined}
-            className="fixed inset-0 z-9998 bg-black/60 cursor-pointer backdrop-blur-[1px]"
+            className="fixed inset-0 z-9998 bg-black/75 cursor-pointer"
           />
 
           <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 pointer-events-none select-none">

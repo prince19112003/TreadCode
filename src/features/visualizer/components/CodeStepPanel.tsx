@@ -247,7 +247,7 @@ export const CodeStepPanel = React.memo(() => {
   const isCodeFullScreen = useLessonStore(s => s.isCodeFullScreen);
   const toggleCodeFullScreen = useLessonStore(s => s.toggleCodeFullScreen);
   const [zoomLevel, setZoomLevel] = useState(0.8);
-  const containerRef = usePinchZoom(setZoomLevel, 0.4, 2.5);
+  const containerRef = usePinchZoom(setZoomLevel, 0.5, 2.2);
   // ─── ALL HOOKS MUST COME BEFORE ANY EARLY RETURN ───────────────────────────
   // editableVariables derived here (not after early return) to keep hook order stable
   const editableVariables = React.useMemo(
@@ -342,7 +342,7 @@ export const CodeStepPanel = React.memo(() => {
           </button>
           <div className="w-px bg-indigo-500/20 h-4" />
           <button
-            onClick={() => setZoomLevel(z => Math.min(z + 0.2, 2.5))}
+            onClick={() => setZoomLevel(z => Math.min(z + 0.2, 2.2))}
             className="p-1 text-indigo-400/50 hover:text-white hover:bg-indigo-500/20 rounded transition-colors"
             title="Zoom In"
           >

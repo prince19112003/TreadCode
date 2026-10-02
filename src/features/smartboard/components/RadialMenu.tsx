@@ -87,10 +87,10 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
                           setTool(item.tool);
                         }
                       }}
-                      className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-all shadow-md backdrop-blur-2xl border ${
+                      className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-all shadow-md border ${
                         isSelected
                           ? "bg-indigo-600 border-indigo-400 text-white shadow-indigo-500/40 ring-2 ring-indigo-400/60 scale-110 z-20"
-                          : "bg-[#0a0f1e]/90 border-white/10 text-white/60 hover:text-white hover:bg-slate-800 z-10"
+                          : "bg-[#0a0f1e] border-white/10 text-white/60 hover:text-white hover:bg-slate-800 z-10"
                       }`}
                       title={item.title}
                     >
@@ -103,7 +103,7 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
                         initial={{ opacity: 0, y: 10, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                        className="absolute top-10 -left-12 z-50 flex items-center gap-1 p-1 rounded-xl bg-[#0a0f1e]/95 border border-indigo-500/30 shadow-2xl backdrop-blur-2xl min-w-35"
+                        className="absolute top-10 -left-12 z-50 flex items-center gap-1 p-1 rounded-xl bg-[#0a0f1e] border border-indigo-500/30 shadow-xl min-w-35"
                       >
                         <button
                           onClick={(e) => {
@@ -149,9 +149,9 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
         {/* Central hub button */}
         <button
           onClick={() => setIsToolMenuOpen(!isToolMenuOpen)}
-          className={`w-11 h-11 rounded-full flex items-center justify-center text-white transition-all duration-200 shadow-[0_8px_30px_rgba(0,0,0,0.85)] border backdrop-blur-2xl active:scale-90 z-30 ${
+          className={`w-11 h-11 rounded-full flex items-center justify-center text-white transition-all duration-200 shadow-lg border active:scale-90 z-30 ${
             isToolMenuOpen
-              ? "bg-slate-900/90 border-slate-700 text-rose-400 hover:bg-slate-800 hover:text-rose-300"
+              ? "bg-slate-900 border-slate-700 text-rose-400 hover:bg-slate-800 hover:text-rose-300"
               : "bg-indigo-600 border-indigo-400 text-white hover:bg-indigo-500 shadow-indigo-500/30"
           }`}
           title={isToolMenuOpen ? "Close Radial Menu" : "Open Radial Menu"}

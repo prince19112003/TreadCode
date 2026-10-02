@@ -106,7 +106,7 @@ export const FloatingFeedbackWidget: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.9 }}
             transition={{ duration: 0.3 }}
-            className="mb-2 px-3 py-1.5 rounded-2xl bg-indigo-950/90 border border-indigo-500/40 backdrop-blur-md shadow-[0_10px_25px_rgba(0,0,0,0.5)] flex items-center gap-2 cursor-pointer group"
+            className="mb-2 px-3 py-1.5 rounded-2xl bg-[#121630] border border-indigo-500/40 shadow-lg flex items-center gap-2 cursor-pointer group"
             onClick={() => setIsOpen(true)}
           >
             <Bot size={14} className="text-indigo-400 animate-bounce" />
@@ -127,7 +127,7 @@ export const FloatingFeedbackWidget: React.FC = () => {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.94 }}
             onClick={() => setIsOpen(true)}
-            className={`group relative flex items-center justify-center p-3.5 rounded-full bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-[0_0_25px_rgba(99,102,241,0.5)] border border-indigo-400/40 hover:shadow-[0_0_35px_rgba(99,102,241,0.7)] transition-all duration-300 ${isVisualizerPage ? 'opacity-60 hover:opacity-100 shadow-none' : ''}`}
+            className={`group relative flex items-center justify-center p-3.5 rounded-full bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/40 hover:shadow-xl hover:shadow-indigo-500/35 transition-all duration-300 ${isVisualizerPage ? 'opacity-60 hover:opacity-100 shadow-none' : ''}`}
             title="Report Bug / Talk to Robot Assistant"
           >
             <Bot size={24} className="group-hover:rotate-12 transition-transform duration-300 text-indigo-200" />
@@ -146,7 +146,7 @@ export const FloatingFeedbackWidget: React.FC = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-88 sm:w-96 rounded-2xl bg-[#090d1f]/95 border border-indigo-500/30 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+            className="w-88 sm:w-96 rounded-2xl bg-[#0b0f24] border border-indigo-500/40 shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Minimal Modal Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-indigo-950/20">
