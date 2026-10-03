@@ -9,6 +9,8 @@ import { TreadCodeLogo } from '@shared/components/ui/MindTraceLogo';
 import { LicenseContext } from '../App';
 import { SmartBoardSideDock } from './SmartBoardSideDock';
 const SmartBoardModal = React.lazy(() => import('../../features/smartboard/SmartBoardModal').then(m => ({ default: m.SmartBoardModal })));
+const CustomCodeSandboxModal = React.lazy(() => import('../../features/execution-engine').then(m => ({ default: m.CustomCodeSandboxModal })));
+const PerformanceHUD = React.lazy(() => import('../../features/execution-engine').then(m => ({ default: m.PerformanceHUD })));
 import { fuzzySearchCatalog, type SearchProgram } from '@shared/data/searchCatalog';
 
 interface CrumbItem {
@@ -247,7 +249,29 @@ export const GlobalAppShell: React.FC = () => {
   const breadcrumbs = useBreadcrumbs();
   const [searchOpen, setSearchOpen] = useState(false);
   const [smartBoardOpen, setSmartBoardOpen] = useState(false);
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
   const licenseContext = React.useContext(LicenseContext);
+  const isSimulatorAllowed = !licenseContext?.settings?.disableCodeSandbox;
+  const isSimulatorEnabled = isSimulatorAllowed && (typeof window !== 'undefined' && localStorage.getItem('treadcode_experimental_sandbox') === 'true');
+  const isPerfHudAllowed = !licenseContext?.settings?.disablePerformanceHud;
+  const [perfHudOpen, setPerfHudOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('flowtrace_perf_hud_active') === 'true';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleSync = () => {
+      const active = localStorage.getItem('flowtrace_perf_hud_active') === 'true';
+      setPerfHudOpen(active);
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('flowtrace-perf-hud-toggle', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('flowtrace-perf-hud-toggle', handleSync);
+    };
+  }, []);
   const { hasUpdate } = useUpdateChecker();
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
   const { isLight, toggleTheme } = useThemeStore();
@@ -677,12 +701,34 @@ export const GlobalAppShell: React.FC = () => {
         <SmartBoardModal isOpen={smartBoardOpen} onClose={() => setSmartBoardOpen(false)} />
       </React.Suspense>
 
+      {isSimulatorEnabled && simulatorOpen && (
+        <React.Suspense fallback={null}>
+          <CustomCodeSandboxModal isOpen={simulatorOpen} onClose={() => setSimulatorOpen(false)} isLight={isLight} />
+        </React.Suspense>
+      )}
+
+      {isPerfHudAllowed && perfHudOpen && (
+        <React.Suspense fallback={null}>
+          <PerformanceHUD
+            isOpen={perfHudOpen}
+            onClose={() => {
+              setPerfHudOpen(false);
+              localStorage.setItem('flowtrace_perf_hud_active', 'false');
+              window.dispatchEvent(new Event('flowtrace-perf-hud-toggle'));
+            }}
+            isLight={isLight}
+          />
+        </React.Suspense>
+      )}
+
       {/* === SMARTBOARD SIDE DOCK (Auto-collapsible Smartboard toolbar) === */}
       {!licenseContext?.settings?.disableSmartBoard && (
         <SmartBoardSideDock
           isHome={isHome}
           isLight={isLight}
           onOpenBoard={() => setSmartBoardOpen(true)}
+          onOpenSimulator={() => setSimulatorOpen(true)}
+          isSimulatorEnabled={isSimulatorEnabled}
           onBack={handleBack}
           onHome={() => navigate('/languages')}
         />

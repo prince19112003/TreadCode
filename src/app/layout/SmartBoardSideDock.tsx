@@ -5,6 +5,8 @@ export interface SmartBoardSideDockProps {
   isHome: boolean;
   isLight: boolean;
   onOpenBoard: () => void;
+  onOpenSimulator?: () => void;
+  isSimulatorEnabled?: boolean;
   onBack: () => void;
   onHome: () => void;
 }
@@ -13,6 +15,8 @@ export const SmartBoardSideDock: React.FC<SmartBoardSideDockProps> = ({
   isHome,
   isLight,
   onOpenBoard,
+  onOpenSimulator,
+  isSimulatorEnabled,
   onBack,
   onHome,
 }) => {
@@ -131,7 +135,39 @@ export const SmartBoardSideDock: React.FC<SmartBoardSideDockProps> = ({
             </span>
           </button>
 
-          {/* 2. Back Button (Middle 1/3) — Large 36px icon */}
+          {/* Simulator Button (Gated Beta: only when enabled in Settings) */}
+          {isSimulatorEnabled && onOpenSimulator && (
+            <button
+              type="button"
+              onClick={onOpenSimulator}
+              title="Open Custom Code Simulator"
+              className={`flex-1 w-full flex flex-col items-center justify-center transition-colors cursor-pointer group active:scale-[0.98] ${
+                isLight
+                  ? 'hover:bg-blue-50 text-blue-900'
+                  : 'hover:bg-blue-500/10 text-blue-300'
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`w-9 h-9 transition-transform group-hover:scale-105 ${
+                  isLight ? 'text-blue-600' : 'text-blue-400'
+                }`}
+              >
+                <polyline points="4 17 10 11 4 5" />
+                <line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
+              <span className="text-xs font-semibold mt-2 tracking-tight">
+                Simulator
+              </span>
+            </button>
+          )}
+
+          {/* 2. Back Button — Large 36px icon */}
           {/* When on Home: completely non-workable, non-clickable, and faded without background box */}
           <button
             type="button"

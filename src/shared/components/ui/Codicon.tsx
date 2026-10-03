@@ -21,6 +21,7 @@ import {
   X,
   Check,
   HelpCircle,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'arrow-left': ArrowLeft,
   'refresh': RefreshCw,
   'vm': Monitor,
+  'zap': Zap,
   'unmute': Volume2,
   'key': Key,
   'chevron-up': ChevronUp,
