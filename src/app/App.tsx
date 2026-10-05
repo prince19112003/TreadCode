@@ -26,6 +26,8 @@ const TopicSelectionPage = lazy(() => import('@pages/TopicSelectionPage').then(m
 const ProgramSelectionPage = lazy(() => import('@pages/ProgramSelectionPage').then(m => ({ default: m.ProgramSelectionPage })));
 const VisualizerPage = lazy(() => import('@pages/VisualizerPage').then(m => ({ default: m.VisualizerPage })));
 const SettingsPage = lazy(() => import('@pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const SimulationHubPage = lazy(() => import('@features/simulation-3d').then(m => ({ default: m.SimulationHubPage })));
+const SolarSystemPage = lazy(() => import('@features/simulation-3d').then(m => ({ default: m.SolarSystemPage })));
 const NotFoundPage = lazy(() => import('@pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 export const LicenseContext = React.createContext<{
@@ -135,6 +137,15 @@ const AnimatedRoutes: React.FC = () => {
         {/* Redirect root to languages */}
         <Route path="/" element={<Navigate to="/languages" replace />} />
 
+        {/* Fullscreen sandboxed routes — outside GlobalAppShell (no navbar/header) */}
+        <Route path="/simulation-3d/solar-system" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#000005' }} />}>
+              <SolarSystemPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
         {/* Protected layout routes */}
         <Route element={<GlobalAppShell />}>
           <Route path="/languages" element={
@@ -181,6 +192,15 @@ const AnimatedRoutes: React.FC = () => {
             <Suspense fallback={<LoadingSpinner />}>
               <SettingsPage />
             </Suspense>
+          } />
+
+          {/* Sandboxed 3D Simulation Engine */}
+          <Route path="/simulation-3d" element={
+            <ProtectedRoute>
+              <Suspense fallback={<LoadingSpinner />}>
+                <SimulationHubPage />
+              </Suspense>
+            </ProtectedRoute>
           } />
 
           {/* 404 Catch-all */}

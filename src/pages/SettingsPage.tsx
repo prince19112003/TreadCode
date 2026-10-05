@@ -226,6 +226,25 @@ export const SettingsPage: React.FC = () => {
     });
   };
 
+  // 3D Simulation Engine Toggle (Sandboxed)
+  const [isSim3DActive, setIsSim3DActive] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('flowtrace_sim3d_active') === 'true';
+    }
+    return false;
+  });
+
+  const handleToggleSim3D = () => {
+    setIsSim3DActive((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('flowtrace_sim3d_active', String(next));
+        window.dispatchEvent(new Event('flowtrace-sim3d-toggle'));
+      }
+      return next;
+    });
+  };
+
   // Activation & Modal states
   const [showChangeKeyInput, setShowChangeKeyInput] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -1032,6 +1051,36 @@ export const SettingsPage: React.FC = () => {
                         }`}
                       >
                         {isPerfHudBlockedByAdmin ? 'Disabled' : isPerfHudActive ? 'Active' : 'Disabled'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3D Simulation Engine Toggle */}
+                  <div className="pt-4 border-t" style={{ borderColor: isLight ? '#e2e8f0' : '#1e2433' }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                          <span>3D Simulation Engine</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-semibold">
+                            Sandboxed
+                          </span>
+                        </div>
+                        <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Enable experimental 3D visual modules on home screen with zero background load
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleSim3D}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition-colors cursor-pointer ${
+                          isSim3DActive
+                            ? 'border-blue-600 bg-blue-600 text-white shadow-xs'
+                            : isLight
+                              ? 'border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              : 'border-slate-800 bg-[#0f121a] text-slate-400 hover:bg-[#151924]'
+                        }`}
+                      >
+                        {isSim3DActive ? 'Active' : 'Disabled'}
                       </button>
                     </div>
                   </div>

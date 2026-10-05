@@ -9,6 +9,7 @@
  *  5. Natural start/end taper — ink touch/lift feel
  */
 
+import { getStroke } from "perfect-freehand";
 import type { Point, Stroke } from "../types";
 
 // ─── Douglas-Peucker Stroke Compression ───────────────────────────────────────
@@ -262,6 +263,48 @@ function drawNaturalPenStroke(
   }
 }
 
+// ─── Perfect-Freehand Polygon Stroke ──────────────────────────────────────────
+export function renderFreehandStroke(
+  ctx: CanvasRenderingContext2D,
+  pts: Point[],
+  color: string,
+  baseSize: number,
+  velocityMode: boolean = false
+) {
+  if (pts.length === 0) return;
+  if (pts.length === 1) {
+    ctx.beginPath();
+    ctx.arc(pts[0].x, pts[0].y, baseSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    return;
+  }
+
+  const outline = getStroke(
+    pts.map((p) => [p.x, p.y, p.p ?? 0.5]),
+    {
+      size: baseSize,
+      thinning: velocityMode ? 0.4 : 0,
+      smoothing: 0.1,
+      streamline: 0,
+      simulatePressure: false,
+      last: true,
+    }
+  );
+
+  if (outline.length === 0) return;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(outline[0][0], outline[0][1]);
+  for (let i = 1; i < outline.length; i++) {
+    const p0 = outline[i - 1];
+    const p1 = outline[i];
+    ctx.quadraticCurveTo(p0[0], p0[1], (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
 // ─── Main Draw Stroke ─────────────────────────────────────────────────────────
 // Dispatches to per-tool renderer. Returns true if laser strokes are active.
 export function drawStroke(
@@ -321,15 +364,7 @@ export function drawStroke(
     }
 
     case "pen": {
-      if (velocityMode && pts.length > 3) {
-        // Variable width polygon needs smoothing for smooth normals
-        const smoothed = !isLive ? chaikinSmooth(pts, 1) : pts;
-        const widths = computeVelocityWidths(smoothed, s.size);
-        drawVariableWidthStroke(ctx, smoothed, widths, s.color);
-      } else {
-        // Standard natural ink: single bezier path, no seams, subtle pressure taper
-        drawNaturalPenStroke(ctx, pts, s.color, s.size, isLive);
-      }
+      renderFreehandStroke(ctx, pts, s.color, s.size, velocityMode);
       break;
     }
 

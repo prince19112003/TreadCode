@@ -72,11 +72,7 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
                     className="absolute"
                     style={{ transform: `translate(${x}px, ${y}px)` }}
                   >
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.2 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.2 }}
-                      transition={{ duration: 0.22, ease: [0.34, 1.56, 0.64, 1] }}
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (item.tool === "eraser") {
@@ -87,7 +83,7 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
                           setTool(item.tool);
                         }
                       }}
-                      className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-all shadow-md border ${
+                      className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-colors active:scale-95 shadow-md border ${
                         isSelected
                           ? "bg-indigo-600 border-indigo-400 text-white shadow-indigo-500/40 ring-2 ring-indigo-400/60 scale-110 z-20"
                           : "bg-[#0a0f1e] border-white/10 text-white/60 hover:text-white hover:bg-slate-800 z-10"
@@ -95,14 +91,11 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
                       title={item.title}
                     >
                       {item.icon}
-                    </motion.button>
+                    </button>
 
                     {/* Eraser sub-menu */}
                     {item.tool === "eraser" && eraserSubmenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                      <div
                         className="absolute top-10 -left-12 z-50 flex items-center gap-1 p-1 rounded-xl bg-[#0a0f1e] border border-indigo-500/30 shadow-xl min-w-35"
                       >
                         <button
@@ -137,7 +130,7 @@ export const RadialMenu = React.memo<RadialMenuProps>(({
                           <SquareCheck size={12} />
                           <span>Selection</span>
                         </button>
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 );

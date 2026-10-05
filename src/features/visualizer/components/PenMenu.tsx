@@ -1,18 +1,25 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { Pen, Eraser, Undo2, Redo2, Trash2, Sliders, Scissors, MoreHorizontal } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Pen, Eraser, Undo2, Redo2, Trash2, Sliders, Scissors, MoreHorizontal, X } from 'lucide-react';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import type { Stroke } from './AnnotationCanvas';
 
 const SIX_COLORS = [
   { hex: '#ffffff', label: 'White' },
-  { hex: '#34d399', label: 'Emerald' },
-  { hex: '#fb7185', label: 'Rose' },
-  { hex: '#22d3ee', label: 'Cyan' },
-  { hex: '#facc15', label: 'Amber' },
-  { hex: '#c084fc', label: 'Purple' },
+  { hex: '#10b981', label: 'Emerald' },
+  { hex: '#f43f5e', label: 'Rose' },
+  { hex: '#06b6d4', label: 'Cyan' },
+  { hex: '#f59e0b', label: 'Amber' },
+  { hex: '#a855f7', label: 'Purple' },
 ];
+
+// Radial Arc Angles: Spans a clean 160° arc pointing inwards from the screen edge
+const RADIAL_ANGLES_LEFT = [-80, -48, -16, 16, 48, 80];
+const RADIAL_ANGLES_RIGHT = [100, 132, 164, 196, 228, 260];
+
+const RADIUS_INNER = 52;
+const RADIUS_OUTER = 98;
 
 export const PenMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,13 +59,11 @@ export const PenMenu: React.FC = () => {
 
   const handleFabClick = () => {
     if (!isPenActive) {
-      // 1. Click pen button: Pen mode activates, menu opens, button turns active color
       setIsPenActive(true);
       setMode('pen');
       setIsOpen(true);
       setActiveSubMenu('none');
     } else {
-      // 2. Click again: Switches back to Palm mode, closes menu, button returns to normal color
       setIsPenActive(false);
       setMode('palm');
       setIsOpen(false);
@@ -67,7 +72,6 @@ export const PenMenu: React.FC = () => {
   };
 
   const handleStrokeStart = () => {
-    // When faculty writes outside on the canvas, automatically hide the menu
     setIsOpen(false);
     setActiveSubMenu('none');
   };
@@ -106,140 +110,88 @@ export const PenMenu: React.FC = () => {
     setPos({ x: targetX + slideOffset, y: targetY });
   };
 
-  // Generate SVG Pie-Slice Sector Wedge path
-  const getPieSlicePath = (rIn: number, rOut: number, startDeg: number, endDeg: number, isLeft: boolean) => {
-    const cx = 24;
-    const cy = 24;
-
-    const rad1 = (startDeg * Math.PI) / 180;
-    const rad2 = (endDeg * Math.PI) / 180;
-
-    const xOut1 = cx + rOut * Math.cos(rad1);
-    const yOut1 = cy + rOut * Math.sin(rad1);
-    const xIn1 = cx + rIn * Math.cos(rad1);
-    const yIn1 = cy + rIn * Math.sin(rad1);
-
-    const xOut2 = cx + rOut * Math.cos(rad2);
-    const yOut2 = cy + rOut * Math.sin(rad2);
-    const xIn2 = cx + rIn * Math.cos(rad2);
-    const yIn2 = cy + rIn * Math.sin(rad2);
-
-    if (isLeft) {
-      return `M ${xIn1} ${yIn1} L ${xOut1} ${yOut1} A ${rOut} ${rOut} 0 0 1 ${xOut2} ${yOut2} L ${xIn2} ${yIn2} A ${rIn} ${rIn} 0 0 0 ${xIn1} ${yIn1} Z`;
-    } else {
-      return `M ${xIn1} ${yIn1} L ${xOut1} ${yOut1} A ${rOut} ${rOut} 0 0 0 ${xOut2} ${yOut2} L ${xIn2} ${yIn2} A ${rIn} ${rIn} 0 0 1 ${xIn1} ${yIn1} Z`;
-    }
-  };
-
-  // 6 Sectors for Inner 6 Color Pens Layer (Radius 28px - 74px)
-  const innerSectors = isLeftEdge
-    ? [
-        { start: -90, end: -60, center: -75 },
-        { start: -60, end: -30, center: -45 },
-        { start: -30, end: 0, center: -15 },
-        { start: 0, end: 30, center: 15 },
-        { start: 30, end: 60, center: 45 },
-        { start: 60, end: 90, center: 75 },
-      ]
-    : [
-        { start: 270, end: 240, center: 255 },
-        { start: 240, end: 210, center: 225 },
-        { start: 210, end: 180, center: 195 },
-        { start: 180, end: 150, center: 165 },
-        { start: 150, end: 120, center: 135 },
-        { start: 120, end: 90, center: 105 },
-      ];
-
-  // 6 Sectors for Outer Action & Tools Layer (Radius 76px - 128px)
-  const outerSectors = isLeftEdge
-    ? [
-        { start: -90, end: -60, center: -75 },
-        { start: -60, end: -30, center: -45 },
-        { start: -30, end: 0, center: -15 },
-        { start: 0, end: 30, center: 15 },
-        { start: 30, end: 60, center: 45 },
-        { start: 60, end: 90, center: 75 },
-      ]
-    : [
-        { start: 270, end: 240, center: 255 },
-        { start: 240, end: 210, center: 225 },
-        { start: 210, end: 180, center: 195 },
-        { start: 180, end: 150, center: 165 },
-        { start: 150, end: 120, center: 135 },
-        { start: 120, end: 90, center: 105 },
-      ];
-
-  // Inner Ring: 6 Color Pens
-  const innerRingItems = SIX_COLORS.map(c => ({
-    id: `color-${c.hex}`,
-    hex: c.hex,
-    icon: <Pen className="w-4 h-4" style={{ color: c.hex }} />,
-    action: () => {
-      setColor(c.hex);
-      setMode('pen');
-      setIsPenActive(true);
-      setActiveSubMenu('none');
-      setIsOpen(false);
-    },
-    active: mode === 'pen' && color === c.hex,
-  }));
-
+  const angles = isLeftEdge ? RADIAL_ANGLES_LEFT : RADIAL_ANGLES_RIGHT;
   const canUndo = strokesRef.current.length > 0;
   const canRedo = undoneRef.current.length > 0;
 
   // Outer Ring: 6 Action Tools
   const outerRingItems = [
-    { id: 'undo', icon: <Undo2 className={`w-4 h-4 ${canUndo ? 'text-white font-extrabold' : 'text-slate-600'}`} />, action: handleUndo, active: false, activeFill: '', activeStroke: '' },
-    { id: 'redo', icon: <Redo2 className={`w-4 h-4 ${canRedo ? 'text-emerald-300 font-extrabold' : 'text-slate-600'}`} />, action: handleRedo, active: canRedo, activeFill: 'rgba(16, 185, 129, 0.4)', activeStroke: 'rgba(52, 211, 153, 0.8)' },
     {
       id: 'eraser',
-      icon: (
-        <Eraser className={`w-4 h-4 transition-all ${mode === 'eraser' ? 'text-rose-300 scale-110 font-bold' : 'text-slate-300'}`} />
-      ),
+      title: mode === 'eraser' ? 'Eraser Active (Click to switch to Pen)' : 'Eraser Tool',
+      icon: <Eraser size={16} />,
       action: () => {
         setMode(m => (m === 'eraser' ? 'pen' : 'eraser'));
         setIsPenActive(true);
         setActiveSubMenu('none');
-        setIsOpen(false);
       },
       active: mode === 'eraser',
-      activeFill: 'rgba(225, 29, 72, 0.45)',
-      activeStroke: 'rgba(251, 113, 133, 0.9)',
+      activeClass: 'bg-rose-600 border-rose-500 text-white',
+      disabled: false,
     },
     {
       id: 'thickness',
+      title: `Stroke Width: ${strokeWidth}px`,
       icon: (
         <div className="flex flex-col items-center justify-center gap-0.5">
           <div
-            className="rounded-full bg-cyan-400 transition-all"
+            className="rounded-full bg-cyan-400"
             style={{
-              width: strokeWidth === 2 ? 4 : strokeWidth === 5 ? 7 : 10,
-              height: strokeWidth === 2 ? 4 : strokeWidth === 5 ? 7 : 10,
+              width: strokeWidth === 2 ? 4 : strokeWidth === 4 ? 6 : strokeWidth === 7 ? 8 : 10,
+              height: strokeWidth === 2 ? 4 : strokeWidth === 4 ? 6 : strokeWidth === 7 ? 8 : 10,
             }}
           />
-          <span className="text-[9px] font-mono text-cyan-300 font-bold">{strokeWidth}px</span>
+          <span className="text-[8px] font-mono font-bold leading-none">{strokeWidth}px</span>
         </div>
       ),
-      action: () => setActiveSubMenu(m => m === 'thickness' ? 'none' : 'thickness'),
+      action: () => setActiveSubMenu(m => (m === 'thickness' ? 'none' : 'thickness')),
       active: activeSubMenu === 'thickness',
-      activeFill: 'rgba(6, 182, 212, 0.4)',
-      activeStroke: 'rgba(56, 189, 248, 0.8)',
+      activeClass: 'bg-cyan-950 border-cyan-400 text-cyan-300',
+      disabled: false,
     },
     {
       id: 'style',
-      icon: dashStyle === 'dotted' ? (
-        <MoreHorizontal className="w-4 h-4 text-amber-400" />
-      ) : dashStyle === 'dashed' ? (
-        <Scissors className="w-4 h-4 text-indigo-300" />
-      ) : (
-        <Sliders className="w-4 h-4 text-slate-200" />
-      ),
-      action: () => setActiveSubMenu(m => m === 'style' ? 'none' : 'style'),
+      title: `Line Style: ${dashStyle}`,
+      icon:
+        dashStyle === 'dotted' ? (
+          <MoreHorizontal size={16} className="text-amber-400" />
+        ) : dashStyle === 'dashed' ? (
+          <Scissors size={16} className="text-indigo-300" />
+        ) : (
+          <Sliders size={16} className="text-slate-200" />
+        ),
+      action: () => setActiveSubMenu(m => (m === 'style' ? 'none' : 'style')),
       active: activeSubMenu === 'style' || dashStyle !== 'solid',
-      activeFill: 'rgba(129, 140, 248, 0.4)',
-      activeStroke: 'rgba(165, 180, 252, 0.8)',
+      activeClass: 'bg-indigo-950 border-indigo-400 text-indigo-300',
+      disabled: false,
     },
-    { id: 'clear', icon: <Trash2 className="w-4 h-4 text-rose-400" />, action: handleClear, active: false, activeFill: '', activeStroke: '' },
+    {
+      id: 'undo',
+      title: 'Undo (Ctrl+Z)',
+      icon: <Undo2 size={16} />,
+      action: handleUndo,
+      active: false,
+      activeClass: '',
+      disabled: !canUndo,
+    },
+    {
+      id: 'redo',
+      title: 'Redo (Ctrl+Y)',
+      icon: <Redo2 size={16} />,
+      action: handleRedo,
+      active: canRedo,
+      activeClass: 'text-emerald-400 border-emerald-500',
+      disabled: !canRedo,
+    },
+    {
+      id: 'clear',
+      title: 'Clear Canvas',
+      icon: <Trash2 size={16} className="text-rose-400" />,
+      action: handleClear,
+      active: false,
+      activeClass: '',
+      disabled: strokesRef.current.length === 0,
+    },
   ];
 
   const canvasNode = (
@@ -269,209 +221,181 @@ export const PenMenu: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Semicircular Radial Pie-Slice Command Dial Menu */}
+      {/* Floating Radial Format Command Menu */}
       <motion.div
         drag
         dragMomentum={false}
         onDragEnd={handleDragEnd}
         animate={{ x: pos.x, y: pos.y }}
-        transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-        className="fixed z-9999 w-12 h-12 select-none cursor-grab active:cursor-grabbing"
+        transition={{ duration: 0 }}
+        className="fixed z-9999 w-11 h-11 select-none cursor-grab active:cursor-grabbing"
         style={{ left: 0, top: 0 }}
       >
-        <div className="relative w-full h-full">
-          <AnimatePresence>
-            {isOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-                className="absolute inset-0 pointer-events-none"
-              >
-                {/* SVG Radial Pie Slices Background Container */}
-                <svg
-                  className="absolute overflow-visible pointer-events-none z-10"
-                  style={{
-                    width: 320,
-                    height: 320,
-                    left: -136,
-                    top: -136,
-                  }}
-                  viewBox="-136 -136 320 320"
+        <div className="relative w-11 h-11">
+          {/* Radial Items Container */}
+          {isOpen && (
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Inner Radial Arc: 6 Color Swatches */}
+              {angles.map((deg, idx) => {
+                const c = SIX_COLORS[idx];
+                const rad = (deg * Math.PI) / 180;
+                const x = Math.round(RADIUS_INNER * Math.cos(rad));
+                const y = Math.round(RADIUS_INNER * Math.sin(rad));
+                const isSelected = mode === 'pen' && color === c.hex;
+
+                return (
+                  <button
+                    key={c.hex}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setColor(c.hex);
+                      setMode('pen');
+                      setIsPenActive(true);
+                      setActiveSubMenu('none');
+                    }}
+                    style={{
+                      transform: `translate(${x}px, ${y}px)`,
+                      left: 22,
+                      top: 22,
+                    }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center pointer-events-auto transition-transform active:scale-95 border bg-[#0f172a] z-20 ${
+                      isSelected
+                        ? 'border-white ring-2 ring-white/40 scale-110'
+                        : 'border-slate-700 hover:border-slate-500'
+                    }`}
+                    title={`${c.label} Pen`}
+                  >
+                    <span
+                      className="w-4.5 h-4.5 rounded-full"
+                      style={{ backgroundColor: c.hex }}
+                    />
+                  </button>
+                );
+              })}
+
+              {/* Outer Radial Arc: 6 Action Tools */}
+              {angles.map((deg, idx) => {
+                const item = outerRingItems[idx];
+                const rad = (deg * Math.PI) / 180;
+                const x = Math.round(RADIUS_OUTER * Math.cos(rad));
+                const y = Math.round(RADIUS_OUTER * Math.sin(rad));
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      item.action();
+                    }}
+                    disabled={item.disabled}
+                    style={{
+                      transform: `translate(${x}px, ${y}px)`,
+                      left: 22,
+                      top: 22,
+                    }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 w-8.5 h-8.5 rounded-full flex items-center justify-center pointer-events-auto transition-transform active:scale-95 border z-20 ${
+                      item.disabled
+                        ? 'bg-[#0b0f19] border-slate-800 text-slate-600 opacity-40 cursor-not-allowed'
+                        : item.active
+                        ? item.activeClass
+                        : 'bg-[#0f172a] border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800'
+                    }`}
+                    title={item.title}
+                  >
+                    {item.icon}
+                  </button>
+                );
+              })}
+
+              {/* Thickness Sub-Menu */}
+              {activeSubMenu === 'thickness' && (
+                <div
+                  className={`absolute ${isLeftEdge ? 'left-32' : '-left-56'} -top-12 p-1.5 bg-[#0f172a] border border-slate-700 rounded-lg flex items-center gap-1.5 z-50 pointer-events-auto`}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Inner Semicircular Layer Pie Wedges (Radius 28px - 74px) -> 6 Color Pens */}
-                  {innerSectors.map((sec, idx) => {
-                    const item = innerRingItems[idx];
-                    const isActive = item?.active;
-
-                    return (
-                      <path
-                        key={`inner-wedge-${idx}`}
-                        d={getPieSlicePath(28, 74, sec.start, sec.end, isLeftEdge)}
-                        fill={isActive ? 'rgba(51, 65, 85, 0.95)' : 'rgba(17, 24, 44, 0.95)'}
-                        stroke={isActive ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.15)'}
-                        strokeWidth={isActive ? '2' : '1.5'}
-                        className="transition-colors duration-150 pointer-events-auto cursor-pointer hover:fill-slate-800"
-                        onClick={(e) => { e.stopPropagation(); item.action(); }}
-                      />
-                    );
-                  })}
-
-                  {/* Outer Semicircular Layer Pie Wedges (Radius 76px - 128px) -> 6 Action & Tool Slots */}
-                  {outerSectors.map((sec, idx) => {
-                    const item = outerRingItems[idx];
-                    const isActive = item?.active;
-                    const activeFill = item?.activeFill || 'rgba(99, 102, 241, 0.4)';
-                    const activeStroke = item?.activeStroke || 'rgba(255, 255, 255, 0.35)';
-
-                    return (
-                      <path
-                        key={`outer-wedge-${idx}`}
-                        d={getPieSlicePath(76, 128, sec.start, sec.end, isLeftEdge)}
-                        fill={isActive ? activeFill : 'rgba(12, 16, 32, 0.95)'}
-                        stroke={isActive ? activeStroke : 'rgba(255, 255, 255, 0.15)'}
-                        strokeWidth={isActive ? '2' : '1.5'}
-                        className="transition-colors duration-150 pointer-events-auto cursor-pointer hover:fill-slate-800"
-                        onClick={(e) => { e.stopPropagation(); item.action(); }}
-                      />
-                    );
-                  })}
-                </svg>
-
-                {/* Inner Semicircular Layer Icons -> 6 Color Pens (Radius = 51px) */}
-                {innerSectors.map((sec, idx) => {
-                  const item = innerRingItems[idx];
-                  const radius = 51;
-                  const rad = (sec.center * Math.PI) / 180;
-                  const x = radius * Math.cos(rad);
-                  const y = radius * Math.sin(rad);
-
-                  return (
-                    <motion.button
-                      key={item.id}
-                      initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                      animate={{ opacity: 1, x, y, scale: 1 }}
-                      exit={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                      transition={{ delay: idx * 0.02, type: 'spring', stiffness: 450, damping: 26 }}
-                      onClick={(e) => { e.stopPropagation(); item.action(); }}
-                      className="absolute top-1 left-1 w-10 h-10 flex items-center justify-center pointer-events-auto z-20"
+                  {[
+                    { val: 2, label: '2px' },
+                    { val: 4, label: '4px' },
+                    { val: 7, label: '7px' },
+                    { val: 10, label: '10px' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      onClick={() => { setStrokeWidth(opt.val); setActiveSubMenu('none'); }}
+                      className={`flex flex-col items-center gap-1 px-2 py-1 rounded text-[10px] font-mono font-medium transition-colors ${
+                        strokeWidth === opt.val
+                          ? 'bg-cyan-950 border border-cyan-500 text-cyan-200'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+                      }`}
                     >
-                      {item.icon}
-                    </motion.button>
-                  );
-                })}
+                      <span
+                        className="rounded-full bg-cyan-400"
+                        style={{ width: opt.val, height: opt.val }}
+                      />
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-                {/* Outer Semicircular Layer Icons -> 6 Action Tools (Radius = 102px) */}
-                {outerSectors.map((sec, idx) => {
-                  const item = outerRingItems[idx];
-                  const radius = 102;
-                  const rad = (sec.center * Math.PI) / 180;
-                  const x = radius * Math.cos(rad);
-                  const y = radius * Math.sin(rad);
-
-                  return (
-                    <motion.button
-                      key={item.id}
-                      initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                      animate={{ opacity: 1, x, y, scale: 1 }}
-                      exit={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                      transition={{ delay: 0.05 + idx * 0.02, type: 'spring', stiffness: 450, damping: 26 }}
-                      onClick={(e) => { e.stopPropagation(); item.action(); }}
-                      className="absolute top-1 left-1 w-10 h-10 flex items-center justify-center pointer-events-auto z-20"
+              {/* Line Style Sub-Menu */}
+              {activeSubMenu === 'style' && (
+                <div
+                  className={`absolute ${isLeftEdge ? 'left-32' : '-left-60'} -top-12 p-1.5 bg-[#0f172a] border border-slate-700 rounded-lg flex items-center gap-1.5 z-50 pointer-events-auto`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {[
+                    { type: 'solid', label: 'Solid —' },
+                    { type: 'dashed', label: 'Dashed --' },
+                    { type: 'dotted', label: 'Dotted ···' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.type}
+                      onClick={() => { setDashStyle(opt.type as any); setActiveSubMenu('none'); }}
+                      className={`px-2.5 py-1.5 rounded text-[11px] font-mono font-medium transition-colors ${
+                        dashStyle === opt.type
+                          ? 'bg-indigo-950 border border-indigo-500 text-indigo-200'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+                      }`}
                     >
-                      {item.icon}
-                    </motion.button>
-                  );
-                })}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                {/* Interactive Horizontal Pop-up Sub-Menu for 3 Thickness Options */}
-                {activeSubMenu === 'thickness' && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 8 }}
-                    className={`absolute ${isLeftEdge ? 'left-36' : '-left-48'} -top-12 px-3 py-2 bg-slate-900/95 border border-cyan-500/40 rounded-2xl flex items-center gap-2.5 backdrop-blur-xl shadow-2xl z-50 pointer-events-auto`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {[
-                      { val: 2, label: 'Thin (2px)', dotSize: 5 },
-                      { val: 5, label: 'Medium (5px)', dotSize: 8 },
-                      { val: 9, label: 'Thick (9px)', dotSize: 12 },
-                    ].map((opt) => (
-                      <button
-                        key={opt.val}
-                        onClick={() => { setStrokeWidth(opt.val); setActiveSubMenu('none'); }}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold transition-all ${
-                          strokeWidth === opt.val
-                            ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/60 shadow-sm'
-                            : 'text-slate-300 hover:bg-slate-800'
-                        }`}
-                      >
-                        <div className="rounded-full bg-cyan-400" style={{ width: opt.dotSize, height: opt.dotSize }} />
-                        <span>{opt.val}px</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-
-                {/* Interactive Horizontal Pop-up Sub-Menu for 3 Line Style Options */}
-                {activeSubMenu === 'style' && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 8 }}
-                    className={`absolute ${isLeftEdge ? 'left-36' : '-left-56'} -top-12 px-3 py-2 bg-slate-900/95 border border-indigo-500/40 rounded-2xl flex items-center gap-2 backdrop-blur-xl shadow-2xl z-50 pointer-events-auto`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {[
-                      { type: 'solid', label: 'Solid —' },
-                      { type: 'dashed', label: 'Dashed --' },
-                      { type: 'dotted', label: 'Dotted ···' },
-                    ].map((opt) => (
-                      <button
-                        key={opt.type}
-                        onClick={() => { setDashStyle(opt.type as any); setActiveSubMenu('none'); }}
-                        className={`px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold transition-all ${
-                          dashStyle === opt.type
-                            ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-400/60 shadow-sm'
-                            : 'text-slate-300 hover:bg-slate-800'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Center FAB Toggle Button */}
-          <motion.button
+          {/* Central Hub Button */}
+          <button
             onClick={(e) => { e.stopPropagation(); handleFabClick(); }}
-            whileTap={{ scale: 0.95 }}
-            className={`absolute inset-0 rounded-full flex items-center justify-center shadow-lg transition-colors z-30 cursor-pointer ${
-              isPenActive
+            className={`w-11 h-11 rounded-full flex items-center justify-center pointer-events-auto transition-colors active:scale-95 border z-30 cursor-pointer ${
+              isOpen
+                ? 'bg-[#0f172a] border-slate-600 text-slate-300 hover:text-white hover:bg-slate-800'
+                : isPenActive
                 ? mode === 'eraser'
-                  ? 'bg-rose-600 text-white border border-rose-400'
-                  : 'bg-blue-600 text-white border border-blue-400'
-                : 'bg-slate-900/95 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/80 shadow-md'
+                  ? 'bg-rose-600 border-rose-500 text-white'
+                  : 'bg-indigo-600 border-indigo-500 text-white'
+                : 'bg-[#0f172a] border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
             title={
-              !isPenActive
-                ? 'Tap to open Pen Menu and start drawing'
+              isOpen
+                ? 'Close Menu'
+                : !isPenActive
+                ? 'Open Pen Menu & Draw'
                 : mode === 'eraser'
-                ? 'Eraser Active (Tap to switch to Palm Mode)'
-                : 'Pen Active (Tap to switch to Palm Mode)'
+                ? 'Eraser Mode (Tap to close)'
+                : 'Pen Mode (Tap to close)'
             }
           >
-            {isPenActive && mode === 'eraser' ? (
-              <Eraser className="w-5.5 h-5.5 pointer-events-none text-white" />
+            {isOpen ? (
+              <X size={18} />
+            ) : mode === 'eraser' ? (
+              <Eraser size={18} />
             ) : (
-              <Pen className={`w-5.5 h-5.5 pointer-events-none ${isPenActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+              <Pen size={18} />
             )}
-          </motion.button>
+          </button>
         </div>
       </motion.div>
     </>

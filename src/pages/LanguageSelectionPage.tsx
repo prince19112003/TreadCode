@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Lock, Download, RefreshCw, AlertCircle } from 'lucide-react';
+import { Lock, Download, RefreshCw, AlertCircle, Orbit } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { useModuleStore, MODULE_SIZE_MAP } from '@shared/hooks/useModuleStore';
 import { useThemeStore } from '@shared/hooks/useThemeStore';
@@ -389,6 +389,26 @@ export const LanguageSelectionPage: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const [manualRemoteVersions, setManualRemoteVersions] = useState<Record<string, string>>({});
+
+  // Sandboxed 3D Simulation Engine feature flag
+  const [isSim3DActive, setIsSim3DActive] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('flowtrace_sim3d_active') === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleSim3DToggle = () => {
+      setIsSim3DActive(localStorage.getItem('flowtrace_sim3d_active') === 'true');
+    };
+    window.addEventListener('flowtrace-sim3d-toggle', handleSim3DToggle);
+    window.addEventListener('storage', handleSim3DToggle);
+    return () => {
+      window.removeEventListener('flowtrace-sim3d-toggle', handleSim3DToggle);
+      window.removeEventListener('storage', handleSim3DToggle);
+    };
+  }, []);
 
   const remoteModuleVersions: Record<string, string> = licenseContext?.settings?.moduleVersions || {};
 
@@ -778,6 +798,101 @@ export const LanguageSelectionPage: React.FC = () => {
               </motion.div>
             );
           })}
+
+          {/* Sandboxed 3D Simulation Module Card (Rendered only when enabled in Settings, zero standby overhead) */}
+          {isSim3DActive && (selectedCategory === 'all' || selectedCategory === 'core') && (
+            <motion.div
+              key="simulation-3d"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: filteredLanguages.length * 0.03, ease: 'easeOut' }}
+            >
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="3D Simulation — Interactive visual sandbox"
+                onClick={() => navigate('/simulation-3d')}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    navigate('/simulation-3d');
+                  }
+                }}
+                className="relative flex flex-col justify-between overflow-hidden rounded-lg transition-all duration-200 min-h-60 p-5 group select-none cursor-pointer"
+                style={{
+                  background: isLight ? '#ffffff' : '#0b0d13',
+                  border: `1px solid ${isLight ? '#cbd5e1' : '#1e2433'}`,
+                  boxShadow: isLight
+                    ? '0 1px 3px 0 rgba(15, 23, 42, 0.10), 0 4px 14px -2px rgba(15, 23, 42, 0.08)'
+                    : 'none',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = 'translateY(-2px)';
+                  el.style.backgroundColor = isLight ? '#ffffff' : '#11141d';
+                  el.style.borderColor = '#38bdf8';
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = 'translateY(0)';
+                  el.style.backgroundColor = isLight ? '#ffffff' : '#0b0d13';
+                  el.style.borderColor = isLight ? '#cbd5e1' : '#1e2433';
+                }}
+              >
+                {/* Top Badge */}
+                <div className="absolute top-0 right-4 z-20">
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-x border-b rounded-b-md ${
+                    isLight
+                      ? 'text-sky-800 bg-sky-50 border-sky-300'
+                      : 'text-sky-300 bg-[#092238] border-[#0e3b61]'
+                  }`}>
+                    <Orbit className="w-2.5 h-2.5" />
+                    Sandboxed
+                  </span>
+                </div>
+
+                {/* Right Side Vector Graphic */}
+                <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 pointer-events-none transition-transform duration-300 flex items-center justify-center shrink-0 group-hover:scale-105 opacity-85 group-hover:opacity-100">
+                  <svg viewBox="0 0 128 128" className="w-full h-full">
+                    <ellipse cx="64" cy="64" rx="52" ry="24" stroke="#38bdf8" strokeWidth="2.5" fill="none" strokeDasharray="6 3" transform="rotate(-25 64 64)" opacity="0.6" />
+                    <ellipse cx="64" cy="64" rx="52" ry="24" stroke="#818cf8" strokeWidth="2.5" fill="none" transform="rotate(35 64 64)" opacity="0.4" />
+                    <circle cx="64" cy="64" r="16" fill="#0284c7" />
+                    <circle cx="28" cy="48" r="4.5" fill="#38bdf8" />
+                    <circle cx="100" cy="80" r="5" fill="#f59e0b" />
+                  </svg>
+                </div>
+
+                {/* Card Info */}
+                <div className="relative z-10 pt-3 pr-32 mt-auto">
+                  <h2 className={`text-2xl font-bold mb-1 tracking-tight transition-colors ${
+                    isLight ? 'text-slate-950 group-hover:text-blue-600' : 'text-white group-hover:text-sky-300'
+                  }`}>
+                    3D Simulation
+                  </h2>
+
+                  <p className={`text-xs font-medium mb-3 line-clamp-1 transition-colors ${
+                    isLight ? 'text-slate-600' : 'text-slate-300'
+                  }`}>
+                    Interactive physical models & celestial orbits.
+                  </p>
+                </div>
+
+                {/* Meta Footer */}
+                <div className={`relative z-10 text-xs font-mono border-t pt-2.5 mt-2 flex items-center justify-between transition-colors ${
+                  isLight ? 'border-slate-300/80 text-slate-600' : 'border-[#232f42] text-slate-400'
+                }`}>
+                  <span>
+                    Module{' '}
+                    <strong className={`font-bold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                      Isolated
+                    </strong>
+                  </span>
+                  <span className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                    0 MB Standby
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 

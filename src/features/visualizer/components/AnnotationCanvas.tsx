@@ -1,6 +1,12 @@
 import React, { useRef, useEffect, useCallback } from 'react';
+import { getStroke } from 'perfect-freehand';
 
-export interface Point { x: number; y: number }
+export interface Point {
+  x: number;
+  y: number;
+  p?: number;
+  t?: number;
+}
 
 export interface Stroke {
   points: Point[];
@@ -104,6 +110,44 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const drawStrokePath = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
     if (stroke.points.length === 0) return;
     const w = stroke.strokeWidth || 4;
+    const style = stroke.dashStyle || (stroke.isDashed ? 'dashed' : 'solid');
+
+    // Solid Pen Mode: Render with perfect-freehand for variable width, pressure, and zero clipping
+    if (style === 'solid') {
+      const pts = stroke.points;
+      if (pts.length === 1) {
+        ctx.beginPath();
+        ctx.arc(pts[0].x, pts[0].y, w / 2, 0, Math.PI * 2);
+        ctx.fillStyle = stroke.color;
+        ctx.fill();
+        return;
+      }
+
+      const inputPoints = pts.map(p => [p.x, p.y, p.p ?? 0.5]);
+      const outline = getStroke(inputPoints, {
+        size: w,
+        thinning: 0,
+        smoothing: 0.1,
+        streamline: 0,
+        simulatePressure: false,
+        last: true,
+      });
+
+      if (outline.length === 0) return;
+      ctx.fillStyle = stroke.color;
+      ctx.beginPath();
+      ctx.moveTo(outline[0][0], outline[0][1]);
+      for (let i = 1; i < outline.length; i++) {
+        const p0 = outline[i - 1];
+        const p1 = outline[i];
+        ctx.quadraticCurveTo(p0[0], p0[1], (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2);
+      }
+      ctx.closePath();
+      ctx.fill();
+      return;
+    }
+
+    // Dashed / Dotted lines: Native canvas line dashes
     ctx.lineWidth = w;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -112,7 +156,6 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     ctx.shadowColor = 'transparent';
     ctx.imageSmoothingEnabled = false;
 
-    const style = stroke.dashStyle || (stroke.isDashed ? 'dashed' : 'solid');
     if (style === 'dashed') {
       ctx.lineCap = 'butt';
       ctx.setLineDash([w * 3.5, w * 2]);
@@ -183,14 +226,22 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   }, [color, strokeWidth, dashStyle, mode, drawStrokePath]);
 
-  const getPos = (e: React.PointerEvent): Point => {
+  // Extract pointer coordinates including sub-frame hardware coalesced events (120Hz/240Hz stylus support)
+  const getPointsFromEvent = (e: React.PointerEvent): Point[] => {
     const canvas = liveCanvasRef.current || committedCanvasRef.current;
-    if (!canvas) return { x: e.clientX, y: e.clientY };
+    if (!canvas) return [{ x: e.clientX, y: e.clientY, p: e.pressure, t: e.timeStamp }];
     const rect = canvas.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
+    const native = e.nativeEvent;
+    const coalesced = (native && typeof native.getCoalescedEvents === 'function')
+      ? native.getCoalescedEvents()
+      : [native];
+
+    return coalesced.map(ev => ({
+      x: ev.clientX - rect.left,
+      y: ev.clientY - rect.top,
+      p: ev.pressure !== undefined && ev.pressure > 0 ? ev.pressure : 0.5,
+      t: ev.timeStamp || Date.now(),
+    }));
   };
 
   const distToSegment = (pt: Point, p1: Point, p2: Point) => {
@@ -228,31 +279,32 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     if (!isActive || mode === 'palm' || !e.isPrimary) return;
     if (onStrokeStart) onStrokeStart();
     isDrawing.current = true;
-    const pt = getPos(e);
+    const pts = getPointsFromEvent(e);
     liveCanvasRef.current?.setPointerCapture(e.pointerId);
 
     if (mode === 'eraser') {
-      eraseAt(pt);
+      if (pts.length > 0) eraseAt(pts[0]);
     } else {
-      currentStroke.current = [pt];
+      currentStroke.current = pts;
       redrawLive();
     }
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (!isActive || !isDrawing.current || mode === 'palm' || !e.isPrimary) return;
-    const pt = getPos(e);
+    const pts = getPointsFromEvent(e);
 
     if (mode === 'eraser') {
-      eraseAt(pt);
+      for (const pt of pts) eraseAt(pt);
       return;
     }
 
-    const last = currentStroke.current[currentStroke.current.length - 1];
-    // Micro-jitter threshold filter (0.5px) — eliminates redundant dense duplicate points
-    if (last && Math.hypot(pt.x - last.x, pt.y - last.y) < 0.6) return;
-
-    currentStroke.current.push(pt);
+    for (const pt of pts) {
+      const last = currentStroke.current[currentStroke.current.length - 1];
+      // Micro-jitter threshold filter (0.5px) — eliminates redundant dense duplicate points
+      if (last && Math.hypot(pt.x - last.x, pt.y - last.y) < 0.6) continue;
+      currentStroke.current.push(pt);
+    }
     redrawLive();
   };
 
