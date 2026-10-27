@@ -73,6 +73,27 @@ export const HashMapOperationalPanel: React.FC = () => {
     };
   };
 
+  // Dispatch initial state on mount or lesson switch
+  useEffect(() => {
+    const initEntries: [string, string][] = [
+      ['id', '101'],
+      ['name', 'Alice'],
+      ['age', '24'],
+    ];
+    setEntries(initEntries);
+    const step = buildStep(
+      initEntries,
+      '',
+      '',
+      'INIT',
+      `HashMap initialized with ${CAPACITY} Buckets and sample entries [id: 101, name: Alice, age: 24].`,
+      `HashMap ${CAPACITY} Buckets aur sample entries ke saath initialize hui.`
+    );
+    setCustomSteps([step]);
+    setIsPlaying(false);
+    setTimeout(() => goToStep(0), 30);
+  }, [lesson?.id]);
+
   const handlePut = () => {
     const k = keyInput.trim();
     const v = valInput.trim();

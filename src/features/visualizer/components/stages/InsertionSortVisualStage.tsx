@@ -33,14 +33,17 @@ export const InsertionSortVisualStage: React.FC = () => {
   const currentStepIndex = useLessonStore(s => s.currentStepIndex);
   const zoom = useLessonStore(s => s.zoom);
 
-  // Extract active snapshot
-  const mem = (currentStep?.memorySnapshot as any) || {};
+  // Extract active snapshot reliably
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+  const mem = (step?.memorySnapshot as any) || {};
   const currentPassNum = typeof mem.pass === 'number' ? mem.pass : 1;
   const currentArr: number[] = ensureArray(mem.arr);
   const currentKey: number | null = typeof mem.key === 'number' ? mem.key : null;
   const currentSortedCount: number = typeof mem.sortedCount === 'number' ? mem.sortedCount : (typeof mem.i === 'number' ? mem.i : 1);
 
-  const ev = (currentStep?.animationEvent as any) || {};
+  const ev = (step?.animationEvent as any) || {};
   let currentComparing: [number, number] | null = null;
 
   if (ev.type === 'COMPARE_INDICES' && typeof ev.indexA === 'number' && typeof ev.indexB === 'number') {
@@ -108,10 +111,14 @@ export const InsertionSortVisualStage: React.FC = () => {
 
   React.useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      if (currentStepIndex === 0) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [currentStepIndex, passRows.length]);
 

@@ -18,14 +18,14 @@ export const MatchBlock: React.FC<MatchBlockProps> = ({ variableName, value, isA
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-        className={`flex items-center justify-center px-8 rounded-2xl border-2 transition-colors duration-300 ${borderBgClass}`}
+        className={`flex items-center justify-center px-8 rounded-none border-2 transition-colors duration-300 ${borderBgClass}`}
         style={{ height: '5.25rem', minWidth: '16rem' }}
       >
         <div className="flex items-center gap-3 font-mono">
           <span className="text-slate-300 font-bold text-xl uppercase tracking-wider">
             MATCH
           </span>
-          <div className="flex flex-col items-center justify-center px-3 py-1 bg-fuchsia-500/20 rounded-lg border border-fuchsia-500/30">
+          <div className="flex flex-col items-center justify-center px-3 py-1 bg-fuchsia-500/20 rounded-none border border-fuchsia-500/30">
             <span className="font-bold text-fuchsia-300 text-lg">{variableName}</span>
             <span className="text-xs text-fuchsia-400/80 font-black tracking-wider">
               {value}

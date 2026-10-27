@@ -14,7 +14,16 @@ try {
   let ecoMotion = localStorage.getItem('smartboard_eco_motion');
   if (ecoMotion === null) {
     const mem = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
-    if (typeof mem === 'number' && mem <= 2) {
+    const cores = navigator.hardwareConcurrency;
+    const isTouch = (typeof navigator.maxTouchPoints === 'number' && navigator.maxTouchPoints > 0) || 'ontouchstart' in window;
+    const isAndroid = typeof navigator.userAgent === 'string' && /Android/i.test(navigator.userAgent);
+    const isLargeScreen = typeof window !== 'undefined' && (window.innerWidth >= 1024 || window.innerHeight >= 720);
+
+    const isLowTierBoard =
+      (typeof mem === 'number' && mem <= 2) ||
+      (isAndroid && isTouch && isLargeScreen && (typeof cores === 'number' ? cores <= 4 : true));
+
+    if (isLowTierBoard) {
       ecoMotion = 'true';
       localStorage.setItem('smartboard_eco_motion', 'true');
     } else {

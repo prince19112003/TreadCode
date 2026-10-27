@@ -1,10 +1,11 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BookOpen, Layers, ArrowLeft } from 'lucide-react';
+import { BookOpen, Layers, ArrowLeft, Database } from 'lucide-react';
 import { PageTransition } from '@shared/components/ui/PageTransition';
 import { motion } from 'motion/react';
 import { useModuleStore } from '@shared/hooks/useModuleStore';
 import { useThemeStore } from '@shared/hooks/useThemeStore';
+import { MlDatasetBanner } from '../features/ml/components/MlDatasetBanner';
 
 /* =========================================================
    STANDARD LANGUAGE TOPIC DATA
@@ -29,19 +30,22 @@ const pythonTopics = [
 ];
 
 const cTopics = [
-  { id: 'variables', number: '01', name: 'Variables', subtitle: 'Data Types & Memory', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#38bdf8' },
-  { id: 'operators', number: '02', name: 'Operators', subtitle: 'Arithmetic & Expressions', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#10b981' },
+  { id: 'variables', number: '01', name: 'Variables', subtitle: 'Data Types & Memory', programsCount: 5, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#38bdf8' },
+  { id: 'operators', number: '02', name: 'Operators', subtitle: 'Arithmetic & Expressions', programsCount: 5, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#10b981' },
   { id: 'user_input', number: '03', name: 'User Input', subtitle: 'scanf Function Reading', programsCount: 3, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#14b8a6' },
   { id: 'type_casting', number: '04', name: 'Type Casting', subtitle: 'Implicit & Explicit Casting', programsCount: 3, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#eab308' },
   { id: 'if_else', number: '05', name: 'If Else', subtitle: 'Two-Path Decisions', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#6366f1' },
   { id: 'if_elif_else', number: '06', name: 'If Else If', subtitle: 'Multi-Condition Ladder', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#4f46e5' },
-  { id: 'switch_case', number: '07', name: 'Switch Case', subtitle: 'Option & Menu Selection', programsCount: 4, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#ec4899' },
-  { id: 'for_loop', number: '08', name: 'For Loop', subtitle: 'Counted Iteration', programsCount: 4, difficulty: 'Intermediate' as const, category: 'loops', accentColor: '#06b6d4' },
-  { id: 'while_loop', number: '09', name: 'While Loop', subtitle: 'Conditional Repetition', programsCount: 4, difficulty: 'Intermediate' as const, category: 'loops', accentColor: '#0891b2' },
+  { id: 'switch_case', number: '07', name: 'Switch Case', subtitle: 'Option & Menu Selection', programsCount: 5, difficulty: 'Beginner' as const, category: 'basics', accentColor: '#ec4899' },
+  { id: 'for_loop', number: '08', name: 'For Loop', subtitle: 'Counted Iteration', programsCount: 5, difficulty: 'Intermediate' as const, category: 'loops', accentColor: '#06b6d4' },
+  { id: 'while_loop', number: '09', name: 'While Loop', subtitle: 'Conditional Repetition', programsCount: 6, difficulty: 'Intermediate' as const, category: 'loops', accentColor: '#0891b2' },
   { id: 'do_while_loop', number: '10', name: 'Do-While Loop', subtitle: 'Exit-Controlled Repetition', programsCount: 2, difficulty: 'Intermediate' as const, category: 'loops', accentColor: '#0284c7' },
-  { id: 'strings', number: '11', name: 'Strings', subtitle: 'Character Arrays & strlen', programsCount: 3, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#8b5cf6' },
-  { id: 'functions', number: '12', name: 'Functions', subtitle: 'Functions & Scope', programsCount: 3, difficulty: 'Intermediate' as const, category: 'functions', accentColor: '#a855f7' },
-  { id: 'arrays_1d', number: '13', name: '1D Arrays', subtitle: 'Indexed Contiguous Memory', programsCount: 3, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#f59e0b' },
+  { id: 'strings', number: '11', name: 'Strings', subtitle: 'Character Arrays & strlen', programsCount: 6, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#8b5cf6' },
+  { id: 'functions', number: '12', name: 'Functions', subtitle: 'Functions & Scope', programsCount: 6, difficulty: 'Intermediate' as const, category: 'functions', accentColor: '#a855f7' },
+  { id: 'arrays_1d', number: '13', name: '1D Arrays', subtitle: 'Indexed Contiguous Memory', programsCount: 6, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#f59e0b' },
+  { id: 'arrays_2d', number: '14', name: '2D Arrays', subtitle: 'Row-Column Matrix Grids', programsCount: 6, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#d97706' },
+  { id: 'recursion', number: '15', name: 'Recursion', subtitle: 'Base Cases & Recursive Call Stack', programsCount: 4, difficulty: 'Advanced' as const, category: 'functions', accentColor: '#ec4899' },
+  { id: 'structures', number: '16', name: 'Structures (struct)', subtitle: 'Heterogeneous Data Grouping', programsCount: 2, difficulty: 'Intermediate' as const, category: 'data', accentColor: '#0ea5e9' },
 ];
 
 const cppTopics = [
@@ -83,55 +87,88 @@ const javaTopics = [
    DSA TOPIC DATA — New structure with icons, complexity, tags
    ========================================================= */
 const dsaTopics = [
-  { id: 'linear_search', number: '01', name: 'Linear Search', subtitle: 'Sequential search from index 0 to N-1 for target match', complexity: 'O(N)', programsCount: 1, difficulty: 'Beginner' as const, category: 'Algorithm', accentColor: '#38bdf8' },
-  { id: 'binary_search', number: '02', name: 'Binary Search', subtitle: 'Divide & conquer: halve search space using low, mid, high', complexity: 'O(log N)', programsCount: 2, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#06b6d4' },
-  { id: 'bubble_sort', number: '03', name: 'Bubble Sort', subtitle: 'Bubble adjacent elements to sort array', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#a855f7' },
-  { id: 'selection_sort', number: '04', name: 'Selection Sort', subtitle: 'Select minimum element to swap repeatedly', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#8b5cf6' },
-  { id: 'insertion_sort', number: '05', name: 'Insertion Sort', subtitle: 'Insert elements sequentially into sorted sublist', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#6366f1' },
-  { id: 'merge_sort', number: '06', name: 'Merge Sort', subtitle: 'Divide and conquer recursive array merge', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#ec4899' },
-  { id: 'heap_sort', number: '07', name: 'Heap Sort', subtitle: 'Build max heap and swap root repeatedly', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#f97316' },
-  { id: 'hashset', number: '08', name: 'HashSet (Unique Keys)', subtitle: 'h(key) = key % 7 Hash Buckets. Unique elements only', complexity: 'O(1) Avg', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#10b981' },
-  { id: 'hashmap', number: '09', name: 'HashMap (Key-Value Map)', subtitle: 'h(key) = Hash Buckets. Key-Value mapping', complexity: 'O(1) Avg', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#6366f1' },
-  { id: 'stack', number: '10', name: 'Stack (LIFO)', subtitle: 'Push, Pop, Peek, Search & Traverse', complexity: 'O(1)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#ec4899' },
-  { id: 'queue', number: '11', name: 'Queue (FIFO)', subtitle: 'Enqueue, Dequeue & Front/Rear Pointers', complexity: 'O(1)', programsCount: 2, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#06b6d4' },
-  { id: 'singly_linked_list', number: '12', name: 'Singly Linked List', subtitle: 'Node → Data | Next Pointer Chain', complexity: 'O(N)', programsCount: 2, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#8b5cf6' },
-  { id: 'doubly_linked_list', number: '13', name: 'Doubly Linked List', subtitle: 'Prev ↔ Data ↔ Next Bidirectional Links', complexity: 'O(N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#6366f1' },
-  { id: 'binary_tree', number: '14', name: 'Binary Search Tree (BST)', subtitle: 'Insert, Delete, Search & Traversals (Inorder, Preorder, Postorder)', complexity: 'O(log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
-  { id: 'graph_basics', number: '15', name: 'Graph Fundamentals', subtitle: 'Vertices, Edges & Adjacency Matrix', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#eab308' },
-  { id: 'graph_bfs', number: '16', name: 'Graph BFS Traversal', subtitle: 'Breadth-First Queue-based Level-Order Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
-  { id: 'graph_dfs', number: '17', name: 'Graph DFS Traversal', subtitle: 'Depth-First Stack-based Backtracking Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#8b5cf6' },
-  { id: 'graph_dijkstra', number: '18', name: "Dijkstra's Algorithm", subtitle: 'Single-Source Shortest Path in Weighted Graph', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#38bdf8' },
-  { id: 'graph_kruskal', number: '19', name: "Kruskal's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Disjoint Set Union', complexity: 'O(E log E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#f59e0b' },
-  { id: 'graph_prims', number: '20', name: "Prim's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Priority Queue', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
-  { id: 'graph_astar', number: '21', name: 'A* Search Algorithm', subtitle: 'Heuristic Optimal Pathfinding f(n) = g(n) + h(n)', complexity: 'O(E log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#ec4899' },
+  // ── ARRAY OPERATIONS & MEMORY ───────────────────────────
+  { id: 'dsa_array_declare', number: '01', name: 'Array Memory: 1D & 2D', subtitle: 'Row-Major & Column-Major Order 2D to 1D mapping', complexity: 'O(1)', programsCount: 1, difficulty: 'Beginner' as const, category: 'Array', accentColor: '#38bdf8' },
+  { id: 'dsa_array_max_min', number: '02', name: 'Find Max & Min Elements', subtitle: 'Single-pass extreme values detection in 8-element 1D & 2D array', complexity: 'O(N)', programsCount: 1, difficulty: 'Beginner' as const, category: 'Array', accentColor: '#38bdf8' },
+  { id: 'dsa_array_reverse', number: '03', name: 'In-Place Array Reversal', subtitle: 'Two-pointer inward scanning & element swapping', complexity: 'O(N)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Array', accentColor: '#38bdf8' },
+  { id: 'dsa_array_count', number: '04', name: 'Count Occurrences (Frequency)', subtitle: 'Frequency scan for target value in array', complexity: 'O(N)', programsCount: 1, difficulty: 'Beginner' as const, category: 'Array', accentColor: '#38bdf8' },
+
+  // ── SEARCHING ALGORITHMS ───────────────────────────────
+  { id: 'linear_search', number: '05', name: 'Linear Search', subtitle: 'Sequential search from index 0 to N-1 for target match', complexity: 'O(N)', programsCount: 1, difficulty: 'Beginner' as const, category: 'Algorithm', accentColor: '#06b6d4' },
+  { id: 'binary_search', number: '06', name: 'Binary Search', subtitle: 'Divide & conquer: halve search space using low, mid, high', complexity: 'O(log N)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#06b6d4' },
+
+  // ── SORTING ALGORITHMS ─────────────────────────────────
+  { id: 'bubble_sort', number: '07', name: 'Bubble Sort', subtitle: 'Bubble adjacent elements to sort array', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#a855f7' },
+  { id: 'selection_sort', number: '08', name: 'Selection Sort', subtitle: 'Select minimum element to swap repeatedly', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#8b5cf6' },
+  { id: 'insertion_sort', number: '09', name: 'Insertion Sort', subtitle: 'Insert elements sequentially into sorted sublist', complexity: 'O(N²)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Algorithm', accentColor: '#6366f1' },
+  { id: 'merge_sort', number: '10', name: 'Merge Sort', subtitle: 'Divide and conquer recursive array merge', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#ec4899' },
+  { id: 'quick_sort', number: '11', name: 'Quick Sort (Pivot & Partition)', subtitle: 'Lomuto partition scheme & recursive sub-arrays', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#a855f7' },
+  { id: 'heap_sort', number: '12', name: 'Heap Sort', subtitle: 'Build max heap and swap root repeatedly', complexity: 'O(N log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Algorithm', accentColor: '#f97316' },
+
+  // ── LINEAR DATA STRUCTURES ─────────────────────────────
+  { id: 'stack', number: '13', name: 'Stack (LIFO)', subtitle: 'Push, Pop, Peek, Search & Top pointer', complexity: 'O(1)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#ec4899' },
+  { id: 'dsa_queue_enq_deq', number: '14', name: 'Queue (FIFO)', subtitle: 'Enqueue, Dequeue, Peek & Front/Rear pointers', complexity: 'O(1)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#06b6d4' },
+  { id: 'dsa_sll_traverse', number: '15', name: 'Singly Linked List', subtitle: 'Head pointer, dynamic node chain & traversal', complexity: 'O(N)', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#8b5cf6' },
+  { id: 'doubly_linked_list', number: '16', name: 'Doubly Linked List', subtitle: 'Prev ↔ Data ↔ Next bidirectional links', complexity: 'O(N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#6366f1' },
+
+  // ── NON-LINEAR: TREES & HASH TABLES ───────────────────
+  { id: 'binary_tree', number: '17', name: 'Binary Search Tree (BST)', subtitle: 'Insert, Delete, Search & Traversals (In/Pre/Post/Level)', complexity: 'O(log N)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Data Struct', accentColor: '#a78bfa' },
+  { id: 'hashset', number: '18', name: 'HashSet (Unique Keys)', subtitle: 'h(key) = key % 7 Hash Buckets. Unique elements only', complexity: 'O(1) Avg', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#10b981' },
+  { id: 'hashmap', number: '19', name: 'HashMap (Key-Value Map)', subtitle: 'h(key) = Hash Buckets. Key-Value mapping', complexity: 'O(1) Avg', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Data Struct', accentColor: '#6366f1' },
+
+  // ── GRAPH ALGORITHMS ──────────────────────────────────
+  { id: 'graph_basics', number: '20', name: 'Graph Fundamentals', subtitle: 'Vertices, Edges & Adjacency Matrix representation', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#eab308' },
+  { id: 'graph_bfs', number: '21', name: 'Graph BFS Traversal', subtitle: 'Breadth-First Queue-based Level-Order Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
+  { id: 'graph_dfs', number: '22', name: 'Graph DFS Traversal', subtitle: 'Depth-First Stack-based Backtracking Path Scan', complexity: 'O(V+E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#8b5cf6' },
+  { id: 'graph_dijkstra', number: '23', name: "Dijkstra's Algorithm", subtitle: 'Single-Source Shortest Path in Weighted Graph', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#38bdf8' },
+  { id: 'graph_kruskal', number: '24', name: "Kruskal's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Disjoint Set Union', complexity: 'O(E log E)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#f59e0b' },
+  { id: 'graph_prims', number: '25', name: "Prim's Algorithm", subtitle: 'Minimum Spanning Tree (MST) via Priority Queue', complexity: 'O((V+E) log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#10b981' },
+  { id: 'graph_astar', number: '26', name: 'A* Search Algorithm', subtitle: 'Heuristic Optimal Pathfinding f(n) = g(n) + h(n)', complexity: 'O(E log V)', programsCount: 1, difficulty: 'Advanced' as const, category: 'Graph', accentColor: '#ec4899' },
 ];
 
 /* =========================================================
-   MACHINE LEARNING TOPIC DATA — Sequenced Learning Path
+   MACHINE LEARNING TOPIC DATA — Sequenced Learning Path (24 Topics)
    ========================================================= */
 const mlTopics = [
-  // ── SUPERVISED LEARNING: REGRESSION ───────────────────
-  { id: 'linear_regression', number: '01', name: 'Linear Regression', subtitle: 'Best-Fit Line, Slope (m), Intercept & MSE Residuals', programsCount: 1, difficulty: 'Beginner' as const, category: 'Supervised', modelType: 'Regression', accentColor: '#06b6d4' },
-  { id: 'polynomial_regression', number: '02', name: 'Polynomial Regression', subtitle: 'Non-linear Data Curves, Polynomial Degree & Curve Fitting', programsCount: 1, difficulty: 'Beginner' as const, category: 'Supervised', modelType: 'Regression', accentColor: '#0ea5e9' },
-  
-  // ── SUPERVISED LEARNING: CLASSIFICATION ───────────────
-  { id: 'logistic_regression', number: '03', name: 'Logistic Regression', subtitle: 'Binary Classes, Sigmoid S-Curve & Probability Threshold', programsCount: 1, difficulty: 'Beginner' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#3b82f6' },
-  { id: 'knn_classification', number: '04', name: 'K-Nearest Neighbors (KNN)', subtitle: 'Distance-Based Voting, Radius Search & Decision Boundaries', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#8b5cf6' },
-  { id: 'decision_tree', number: '05', name: 'Decision Tree Classifier', subtitle: 'Orthogonal Axis Splits, Information Gain & Space Partitioning', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#10b981' },
-  { id: 'svm', number: '06', name: 'Support Vector Machine (SVM)', subtitle: 'Maximum Margin Hyperplane, Margins & Support Vectors', programsCount: 1, difficulty: 'Advanced' as const, category: 'Supervised', modelType: 'Classification', accentColor: '#ec4899' },
-  
-  // ── UNSUPERVISED LEARNING ─────────────────────────────
-  { id: 'kmeans_clustering', number: '07', name: 'K-Means Clustering', subtitle: 'Centroid Shift, Point Assignment & Cluster Convergence', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Unsupervised', modelType: 'Clustering', accentColor: '#f59e0b' },
-  
-  // ── OPTIMIZATION & MODEL EVALUATION ───────────────────
-  { id: 'gradient_descent', number: '08', name: 'Gradient Descent', subtitle: 'Convex Loss Curve, Step Size & Learning Rate (α) Tuning', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Optimization', modelType: 'Optimization', accentColor: '#f97316' },
-  { id: 'overfitting_underfitting', number: '09', name: 'Overfitting vs Underfitting', subtitle: 'Bias-Variance Tradeoff, Noise Fitting & Sweet Spot', programsCount: 1, difficulty: 'Beginner' as const, category: 'Evaluation', modelType: 'Evaluation', accentColor: '#a855f7' },
-  
-  // ── REINFORCEMENT LEARNING ────────────────────────────
-  { id: 'q_learning_grid', number: '10', name: 'Grid World (Q-Learning)', subtitle: 'Agent Environment, Penalties, Rewards & Policy Convergence', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Reinforcement', modelType: 'Reinforcement', accentColor: '#14b8a6' },
-  
-  // ── NEURAL NETWORKS FOUNDATION ────────────────────────
-  { id: 'single_perceptron', number: '11', name: 'Single Perceptron', subtitle: 'Artificial Neuron, Synaptic Weights, Bias & Step Activation', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Neural Nets', modelType: 'Neural Nets', accentColor: '#6366f1' },
+  // ── BATCH 1: REGRESSION FOUNDATIONS ───────────────────
+  { id: 'linear_regression', number: '01', name: 'Linear Regression', subtitle: 'Best-Fit Line, Slope (m), Intercept (c) & MSE Residuals', programsCount: 1, difficulty: 'Beginner' as const, category: 'Regression', modelType: 'Regression', accentColor: '#06b6d4' },
+  { id: 'gradient_descent', number: '02', name: 'Gradient Descent', subtitle: 'Convex Loss Bowl, Learning Rate (α) & Weight Updates', programsCount: 1, difficulty: 'Beginner' as const, category: 'Optimization', modelType: 'Optimization', accentColor: '#f97316' },
+  { id: 'polynomial_regression', number: '03', name: 'Polynomial Regression', subtitle: 'Non-linear Data Curves, Degree Fitting & Overfitting', programsCount: 1, difficulty: 'Beginner' as const, category: 'Regression', modelType: 'Regression', accentColor: '#0ea5e9' },
+
+  // ── BATCH 2: CLASSIC CLASSIFIERS ─────────────────────
+  { id: 'logistic_regression', number: '04', name: 'Logistic Regression', subtitle: 'Binary Classes, Sigmoid Curve & Decision Boundary', programsCount: 1, difficulty: 'Beginner' as const, category: 'Classification', modelType: 'Classification', accentColor: '#3b82f6' },
+  { id: 'knn_classification', number: '05', name: 'K-Nearest Neighbors (KNN)', subtitle: 'Euclidean Distance, k-Radius Voting & Boundaries', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Classification', modelType: 'Classification', accentColor: '#8b5cf6' },
+  { id: 'decision_tree', number: '06', name: 'Decision Tree Classifier', subtitle: 'Orthogonal Axis Splits & Gini Impurity Reduction', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Classification', modelType: 'Classification', accentColor: '#10b981' },
+
+  // ── BATCH 3: PROBABILISTIC & MARGIN MODELS ────────────
+  { id: 'naive_bayes', number: '07', name: 'Naive Bayes Classifier', subtitle: 'Gaussian Bell Curves & Posterior Probability Calculus', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Classification', modelType: 'Classification', accentColor: '#eab308' },
+  { id: 'svm', number: '08', name: 'Support Vector Machine (Linear)', subtitle: 'Maximum Margin Hyperplane & Support Vectors', programsCount: 1, difficulty: 'Advanced' as const, category: 'Classification', modelType: 'Classification', accentColor: '#ec4899' },
+  { id: 'svm_kernel', number: '09', name: 'Kernel SVM (Non-linear)', subtitle: 'Higher-Dimensional Projection & RBF Kernel Boundaries', programsCount: 1, difficulty: 'Advanced' as const, category: 'Classification', modelType: 'Classification', accentColor: '#a855f7' },
+
+  // ── BATCH 4: ENSEMBLE METHODS ─────────────────────────
+  { id: 'random_forest', number: '10', name: 'Random Forest', subtitle: 'Bagging Ensemble, Multi-Tree Voting & Variance Reduction', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Ensemble', modelType: 'Ensemble', accentColor: '#14b8a6' },
+  { id: 'adaboost', number: '11', name: 'AdaBoost (Adaptive Boosting)', subtitle: 'Sequential Weak Learners & Error Sample Weighting', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Ensemble', modelType: 'Ensemble', accentColor: '#06b6d4' },
+  { id: 'gradient_boosting', number: '12', name: 'Gradient Boosted Trees (GBDT)', subtitle: 'Sequential Pseudo-Residual Fitting & Gradient Descent', programsCount: 1, difficulty: 'Advanced' as const, category: 'Ensemble', modelType: 'Ensemble', accentColor: '#f97316' },
+
+  // ── BATCH 5: UNSUPERVISED & DIMENSIONALITY ────────────
+  { id: 'kmeans_clustering', number: '13', name: 'K-Means Clustering', subtitle: 'Voronoi Assignment, Centroid Shift & Convergence', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Clustering', modelType: 'Clustering', accentColor: '#f59e0b' },
+  { id: 'dbscan', number: '14', name: 'DBSCAN Density Clustering', subtitle: 'Core Points, Border Points & Noise Outlier Filtering', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Clustering', modelType: 'Clustering', accentColor: '#10b981' },
+  { id: 'pca', number: '15', name: 'Principal Component Analysis (PCA)', subtitle: 'Covariance Eigenvectors & 1D Variance Projection', programsCount: 1, difficulty: 'Advanced' as const, category: 'Dimensionality', modelType: 'Dimensionality', accentColor: '#38bdf8' },
+
+  // ── BATCH 6: EVALUATION & REGULARIZATION ──────────────
+  { id: 'confusion_matrix_metrics', number: '16', name: 'Evaluation Metrics & ROC-AUC', subtitle: 'TP/FP/TN/FN Matrix, Precision, Recall & ROC Sweep', programsCount: 1, difficulty: 'Beginner' as const, category: 'Evaluation', modelType: 'Evaluation', accentColor: '#6366f1' },
+  { id: 'bias_variance_regularization', number: '17', name: 'L1/L2 Regularization (Lasso/Ridge)', subtitle: 'Loss Contours vs Diamond/Circle Constraint Penalties', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Regularization', modelType: 'Regularization', accentColor: '#8b5cf6' },
+  { id: 'feature_scaling', number: '18', name: 'Feature Scaling & Normalization', subtitle: 'StandardScaler vs MinMax & Optimization Speed Impact', programsCount: 1, difficulty: 'Beginner' as const, category: 'Preprocessing', modelType: 'Preprocessing', accentColor: '#0ea5e9' },
+
+  // ── BATCH 7: NEURAL NETWORKS FOUNDATIONS ──────────────
+  { id: 'single_perceptron', number: '19', name: 'Single Perceptron', subtitle: 'Synaptic Weights, Bias & Logic Gate Separation', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Neural Nets', modelType: 'Neural Nets', accentColor: '#a855f7' },
+  { id: 'mlp_backpropagation', number: '20', name: 'Multi-Layer Perceptron (Backprop)', subtitle: 'Forward Activation Flow, Chain Rule & XOR Solution', programsCount: 1, difficulty: 'Advanced' as const, category: 'Neural Nets', modelType: 'Neural Nets', accentColor: '#ec4899' },
+  { id: 'activation_functions', number: '21', name: 'Activation Functions & Gradients', subtitle: 'Sigmoid, Tanh, ReLU & Vanishing Gradient Simulation', programsCount: 1, difficulty: 'Intermediate' as const, category: 'Neural Nets', modelType: 'Neural Nets', accentColor: '#f97316' },
+
+  // ── BATCH 8: ADVANCED ARCHITECTURES & RL ──────────────
+  { id: 'cnn_convolution', number: '22', name: 'CNN 2D Convolution & Pooling', subtitle: 'Sliding Kernel Filter, Feature Maps & Max Pooling', programsCount: 1, difficulty: 'Advanced' as const, category: 'Deep Learning', modelType: 'Deep Learning', accentColor: '#06b6d4' },
+  { id: 'q_learning_grid', number: '23', name: 'Reinforcement Learning (Q-Learning)', subtitle: 'GridWorld Agent, Bellman Updates & Policy Convergence', programsCount: 1, difficulty: 'Advanced' as const, category: 'Reinforcement', modelType: 'Reinforcement', accentColor: '#10b981' },
+  { id: 'hierarchical_clustering', number: '24', name: 'Hierarchical Clustering', subtitle: 'Agglomerative Pairwise Merging & Tree Dendrogram Cut', programsCount: 1, difficulty: 'Advanced' as const, category: 'Clustering', modelType: 'Clustering', accentColor: '#eab308' },
 ];
 
 /* =========================================================
@@ -236,6 +273,7 @@ export const TopicSelectionPage: React.FC = () => {
   const { languageId } = useParams();
   const { moduleStatus, isInitialized, init } = useModuleStore();
   const { isLight } = useThemeStore();
+  const [showDatasetInspector, setShowDatasetInspector] = useState<boolean>(false);
 
   useEffect(() => {
     init();
@@ -275,29 +313,63 @@ export const TopicSelectionPage: React.FC = () => {
     } else if (isNetworking) {
       navigate(`/visualizer/networking/${topicId}/net_${topicId}`);
     } else if (isDsa) {
-      let programId = `dsa_${topicId}`;
-      if (topicId === 'linear_search') programId = 'dsa_linear_search';
-      else if (topicId === 'binary_search') programId = 'dsa_binary_search';
-      else if (topicId === 'stack') programId = 'dsa_stack_push_pop';
-      else if (topicId === 'queue') programId = 'dsa_queue_enq_deq';
-      else if (topicId === 'singly_linked_list') programId = 'dsa_sll_traverse';
-      else if (topicId === 'doubly_linked_list') programId = 'dsa_dll_traverse';
-      else if (topicId === 'binary_tree') programId = 'dsa_binary_tree';
-      else if (topicId === 'graph_basics') programId = 'dsa_graph_basics';
-      else if (topicId === 'graph_bfs') programId = 'dsa_graph_bfs';
-      else if (topicId === 'graph_dfs') programId = 'dsa_graph_dfs';
-      else if (topicId === 'graph_dijkstra') programId = 'dsa_graph_dijkstra';
-      else if (topicId === 'graph_kruskal') programId = 'dsa_graph_kruskal';
-      else if (topicId === 'graph_prims') programId = 'dsa_graph_prims';
-      else if (topicId === 'graph_astar') programId = 'dsa_graph_astar';
-      else if (topicId === 'bubble_sort') programId = 'dsa_bubble_sort';
-      else if (topicId === 'selection_sort') programId = 'dsa_selection_sort';
-      else if (topicId === 'insertion_sort') programId = 'dsa_insertion_sort';
-      else if (topicId === 'merge_sort') programId = 'dsa_merge_sort';
-      else if (topicId === 'heap_sort') programId = 'dsa_heap_sort';
-      else if (topicId === 'hashset') programId = 'dsa_hashset';
-      else if (topicId === 'hashmap') programId = 'dsa_hashmap';
-      navigate(`/visualizer/${languageId}/${topicId}/${programId}`);
+      let programId = topicId.startsWith('dsa_') ? topicId : `dsa_${topicId}`;
+      let cleanTopicId = topicId;
+
+      if (topicId.startsWith('dsa_array_')) {
+        cleanTopicId = 'array_operations';
+        programId = topicId;
+      } else if (topicId === 'dsa_queue_enq_deq') {
+        cleanTopicId = 'queue';
+        programId = topicId;
+      } else if (topicId === 'dsa_sll_traverse') {
+        cleanTopicId = 'singly_linked_list';
+        programId = topicId;
+      } else if (topicId === 'linear_search') {
+        cleanTopicId = 'linear_search';
+        programId = 'dsa_linear_search';
+      } else if (topicId === 'binary_search') {
+        cleanTopicId = 'binary_search';
+        programId = 'dsa_binary_search';
+      } else if (topicId === 'stack') {
+        cleanTopicId = 'stack';
+        programId = 'dsa_stack_push_pop';
+      } else if (topicId === 'doubly_linked_list') {
+        cleanTopicId = 'doubly_linked_list';
+        programId = 'dsa_dll_traverse';
+      } else if (topicId === 'binary_tree') {
+        cleanTopicId = 'binary_tree';
+        programId = 'dsa_binary_tree';
+      } else if (topicId === 'bubble_sort') {
+        cleanTopicId = 'bubble_sort';
+        programId = 'dsa_bubble_sort';
+      } else if (topicId === 'selection_sort') {
+        cleanTopicId = 'selection_sort';
+        programId = 'dsa_selection_sort';
+      } else if (topicId === 'insertion_sort') {
+        cleanTopicId = 'insertion_sort';
+        programId = 'dsa_insertion_sort';
+      } else if (topicId === 'merge_sort') {
+        cleanTopicId = 'merge_sort';
+        programId = 'dsa_merge_sort';
+      } else if (topicId === 'quick_sort') {
+        cleanTopicId = 'quick_sort';
+        programId = 'dsa_quick_sort';
+      } else if (topicId === 'heap_sort') {
+        cleanTopicId = 'heap_sort';
+        programId = 'dsa_heap_sort';
+      } else if (topicId === 'hashset') {
+        cleanTopicId = 'hashset';
+        programId = 'dsa_hashset';
+      } else if (topicId === 'hashmap') {
+        cleanTopicId = 'hashmap';
+        programId = 'dsa_hashmap';
+      } else if (topicId.startsWith('graph_')) {
+        cleanTopicId = topicId;
+        programId = `dsa_${topicId}`;
+      }
+
+      navigate(`/visualizer/${languageId}/${cleanTopicId}/${programId}`);
     } else {
       navigate(`/topics/${languageId}/programs/${topicId}`);
     }
@@ -362,7 +434,37 @@ export const TopicSelectionPage: React.FC = () => {
               <span>{stat.label}</span>
             </div>
           ))}
+          {isMl && (
+            <button
+              onClick={() => {
+                setShowDatasetInspector(prev => !prev);
+                if (!showDatasetInspector) {
+                  setTimeout(() => {
+                    const el = document.getElementById('ml-dataset-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 50);
+                }
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium cursor-pointer transition-all border ${
+                showDatasetInspector
+                  ? 'bg-slate-800 border-slate-600 text-white'
+                  : isLight
+                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  : 'bg-[#0f131c] border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5 text-slate-400" />
+              <span>{showDatasetInspector ? 'Close Benchmark Datasets' : 'View Benchmark Datasets (2 Reference Sets)'}</span>
+            </button>
+          )}
         </motion.div>
+
+        {/* Universal ML Dataset Inspector Banner */}
+        {isMl && showDatasetInspector && (
+          <div id="ml-dataset-section" className="mb-6">
+            <MlDatasetBanner onClose={() => setShowDatasetInspector(false)} />
+          </div>
+        )}
 
         {/* Topic Grid: 4 Cards per row on desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 pb-12">

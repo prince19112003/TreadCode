@@ -3,200 +3,226 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLesson } from '../../../../lessons/LessonContext';
 import { ArrowRight } from 'lucide-react';
 
-const getListFromStep = (step: any): { list: (string | number)[]; capacity: number } => {
-  if (!step) return { list: [], capacity: 6 };
+const getListFromStep = (step: any): { list: (string | number)[]; capacity: number; activeIdx: number; isFound: boolean } => {
+  if (!step) return { list: [10, 20, 30], capacity: 6, activeIdx: -1, isFound: false };
   const mem = step.memorySnapshot;
   const cap = typeof mem?.capacity === 'number' ? mem.capacity : 6;
-  if (Array.isArray(mem?.list)) return { list: mem.list, capacity: cap };
+  const activeIdx = typeof mem?.activeIdx === 'number' ? mem.activeIdx : -1;
+  const isFound = Boolean(mem?.isFound);
+
+  if (Array.isArray(mem?.list)) return { list: mem.list, capacity: cap, activeIdx, isFound };
   if (typeof mem?.list === 'string') {
-    try { return { list: JSON.parse(mem.list), capacity: cap }; } catch { return { list: [], capacity: cap }; }
+    try {
+      const parsed = JSON.parse(mem.list);
+      if (Array.isArray(parsed)) return { list: parsed, capacity: cap, activeIdx, isFound };
+    } catch {
+      const parts = mem.list.replace(/→NULL|NULL/g, '').split('→').map((s: string) => s.trim()).filter(Boolean);
+      if (parts.length > 0) return { list: parts, capacity: cap, activeIdx, isFound };
+    }
   }
   const ev = step.animationEvent;
-  if (ev?.listState) return { list: ev.listState, capacity: cap };
-  return { list: [], capacity: cap };
+  if (ev?.listState) return { list: ev.listState, capacity: cap, activeIdx, isFound };
+  return { list: [10, 20, 30], capacity: cap, activeIdx, isFound };
 };
 
-// Simulated memory address helper
-const getSimulatedAddress = (index: number) => `0x${(0x1040 + index * 4).toString(16).toUpperCase()}`;
-
 export const SllVisualStage: React.FC = () => {
-  const { currentStep, zoom } = useLesson();
+  const { currentStep, activeSteps, currentStepIndex, zoom } = useLesson();
 
-  const { list: listItems, capacity: CAPACITY } = getListFromStep(currentStep);
-  const ev = currentStep?.animationEvent as any;
-  
-  const isTraverseStep = ev?.type === 'SET_POINTERS' && typeof ev?.pointers?.curr === 'number';
-  const isReverseEvent = ev?.type === 'SLL_REVERSE' || currentStep?.explanationEnglish?.includes('REVERSE');
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
 
-  const activeHighlight: number | undefined =
-    ev?.type === 'COMPARE_INDICES' ? ev.indexA :
-    isTraverseStep ? ev.pointers.curr :
-    (typeof currentStep?.memorySnapshot?.i === 'number' ? currentStep.memorySnapshot.i : undefined);
+  const { list: listItems, capacity: CAPACITY, activeIdx, isFound } = getListFromStep(step);
 
   const isEmpty = listItems.length === 0;
-  const isFull = listItems.length >= CAPACITY;
-  const isUnderflow = (ev?.type === 'SLL_DELETE' && isEmpty) || (currentStep?.explanationEnglish?.includes('Underflow'));
 
   return (
-    <div className="flex-1 w-full h-full bg-transparent flex items-center justify-center overflow-hidden relative px-6 py-6 select-none">
-
-      {/* ── Center: Singly Linked List Node Chain ── */}
+    <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-y-auto p-4 custom-scrollbar select-none font-mono text-neutral-200">
       <div
-        className="w-full h-full flex flex-col items-center justify-center relative transition-transform duration-200 ease-out"
-        style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+        className="relative w-full max-w-5xl flex flex-col items-center justify-start gap-6 py-3 transition-transform duration-150 ease-out"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
       >
         <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
-        <div className="flex flex-col items-center gap-6">
 
-          {/* Alert Banners */}
-          <AnimatePresence>
-            {isFull && (
-              <div className="px-3.5 py-1 bg-rose-950/80 border border-rose-500/60 text-rose-300 text-xs font-mono font-bold rounded-md shrink-0 shadow-lg">
-                ⚠ SLL CAPACITY REACHED ({listItems.length}/{CAPACITY})
-              </div>
-            )}
-            {isUnderflow && (
-              <div className="px-3.5 py-1 bg-amber-950/80 border border-amber-500/60 text-amber-300 text-xs font-mono font-bold rounded-md shrink-0 shadow-lg">
-                ⚠ UNDERFLOW: LINKED LIST IS EMPTY
-              </div>
-            )}
-            {isReverseEvent && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="font-mono font-black text-xs text-indigo-400 flex items-center gap-1.5 shrink-0 tracking-wider"
-              >
-                <span>🔄 SINGLY LINKED LIST REVERSED IN-PLACE</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* ── Top Status Bar ── */}
+        <div className="flex flex-col items-center gap-2 w-full max-w-3xl">
+          <div className="flex flex-wrap items-center justify-between w-full px-3 py-1.5 bg-[#080b13] border border-neutral-800 text-xs shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                SINGLY LINKED LIST
+              </span>
+              <span className="text-[9.5px] text-neutral-500">
+                (Dynamic Linear Chain)
+              </span>
+            </div>
 
-          {/* Head Pointer Indicator Badge */}
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-mono font-extrabold text-xs shadow-[0_0_12px_rgba(52,211,153,0.2)]">
-              HEAD POINTER
-            </span>
-            <span className="text-emerald-400 font-mono text-sm font-black">➔</span>
+            <div className="flex items-center gap-2 text-[10.5px]">
+              <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-700 text-neutral-300 font-bold">
+                NODES: {listItems.length} / {CAPACITY}
+              </span>
+              <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-700 text-emerald-300 font-bold">
+                HEAD: {listItems.length > 0 ? `Node(${listItems[0]})` : 'NULL'}
+              </span>
+            </div>
           </div>
 
-          {/* Node Chain */}
+          {/* Action Callout Banner */}
+          <div className="px-4 py-1.5 text-xs font-bold border border-neutral-700 bg-[#090d18] text-center w-full">
+            <span>
+              {step?.explanationEnglish || (isEmpty ? 'List is empty: HEAD points to NULL' : `Singly linked list with ${listItems.length} nodes chained`)}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Visual Node Chain (Textbook Representation) ── */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto max-w-full p-2 py-4">
+          {/* Head Indicator Badge */}
+          <div className="flex flex-col items-center justify-center gap-1 shrink-0">
+            <span className="text-[8px] font-black px-1.5 py-0.5 bg-emerald-400 text-neutral-950 uppercase tracking-wider">
+              HEAD
+            </span>
+            <div className="text-emerald-400 font-bold text-sm">
+              <ArrowRight size={18} />
+            </div>
+          </div>
+
           {isEmpty ? (
-            <div className="w-32 h-16 rounded-xl border-2 border-dashed border-slate-800/90 flex items-center justify-center bg-slate-950/70 text-slate-500 font-mono font-bold text-xs shadow-inner">
-              HEAD ➔ NULL
+            <div className="px-6 py-4 border-2 border-dashed border-neutral-700 bg-[#060810] text-neutral-500 font-bold text-xs flex items-center justify-center">
+              NULL (Empty List)
             </div>
           ) : (
-            <div className="flex flex-wrap items-center justify-center gap-3.5 max-w-6xl">
+            <div className="flex items-center gap-2 flex-nowrap">
               {listItems.map((val, idx) => {
                 const isHead = idx === 0;
                 const isTail = idx === listItems.length - 1;
-                const isTraverseTarget = isTraverseStep && idx === activeHighlight;
-                const isSearch = ev?.type === 'COMPARE_INDICES' && idx === (ev as any).indexA;
-                const isFound = isSearch && (ev as any).result === 'found';
-                const nextAddr = isTail ? 'NULL' : getSimulatedAddress(idx + 1);
+                const isActive = idx === activeIdx;
+                const isMatched = isActive && isFound;
+
+                let borderStyle = 'border-neutral-700';
+                let dataBg = 'bg-[#0b101d]';
+                let dataText = 'text-white';
+                let ring = '';
+
+                if (isMatched) {
+                  borderStyle = 'border-emerald-400';
+                  dataBg = 'bg-[#062419]';
+                  dataText = 'text-emerald-300 font-black';
+                  ring = 'ring-2 ring-emerald-400 z-10';
+                } else if (isActive) {
+                  borderStyle = 'border-amber-400';
+                  dataBg = 'bg-[#291705]';
+                  dataText = 'text-amber-200 font-black';
+                  ring = 'ring-2 ring-amber-400 z-10';
+                } else if (isHead) {
+                  borderStyle = 'border-emerald-500/80';
+                }
 
                 return (
-                  <React.Fragment key={idx}>
-                    {/* Node Card Component */}
-                    <div className="flex flex-col items-center gap-1">
-                      
-                      {/* Top Pointer Badge */}
+                  <React.Fragment key={`sll-node-${idx}`}>
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      {/* Pointer Tag Above Node */}
                       <div className="h-6 flex items-center justify-center">
                         <AnimatePresence mode="wait">
-                          {isFound && (
-                            <motion.span initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 3 }} className="px-2.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-mono font-black text-[10px] shadow-[0_0_10px_rgba(52,211,153,0.8)]">
+                          {isMatched ? (
+                            <motion.span
+                              initial={{ opacity: 0, y: 3 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 3 }}
+                              className="text-[8px] font-black px-1.5 py-0.2 bg-emerald-400 text-neutral-950 uppercase tracking-wider"
+                            >
                               ✓ MATCH
                             </motion.span>
-                          )}
-                          {!isFound && isTraverseTarget && (
-                            <motion.span initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 3 }} className="px-2.5 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-[10px] shadow-[0_0_10px_rgba(34,211,238,0.8)]">
-                              🔍 VISIT
+                          ) : isActive ? (
+                            <motion.span
+                              initial={{ opacity: 0, y: 3 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 3 }}
+                              className="text-[8px] font-black px-1.5 py-0.2 bg-amber-400 text-neutral-950 uppercase tracking-wider"
+                            >
+                              CURRENT
                             </motion.span>
-                          )}
-                          {!isFound && !isTraverseTarget && isSearch && (
-                            <motion.span initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 3 }} className="px-2.5 py-0.5 rounded bg-amber-400 text-slate-950 font-mono font-black text-[10px] shadow-[0_0_10px_rgba(251,191,36,0.8)]">
-                              SCAN
-                            </motion.span>
-                          )}
-                          {!isFound && !isTraverseTarget && !isSearch && isHead && isTail && (
-                            <motion.span initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 3 }} className="px-2.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-mono font-black text-[10px] shadow-sm">
-                              H & T
-                            </motion.span>
-                          )}
-                          {!isFound && !isTraverseTarget && !isSearch && isHead && !isTail && (
-                            <motion.span initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 3 }} className="px-2.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-mono font-black text-[10px] shadow-sm">
+                          ) : isHead && isTail ? (
+                            <span className="text-[7.5px] font-bold px-1.5 py-0.2 bg-neutral-800 text-emerald-300 border border-neutral-700">
+                              HEAD &amp; TAIL
+                            </span>
+                          ) : isHead ? (
+                            <span className="text-[7.5px] font-bold px-1.5 py-0.2 bg-neutral-800 text-emerald-300 border border-neutral-700">
                               HEAD
-                            </motion.span>
-                          )}
-                          {!isFound && !isTraverseTarget && !isSearch && !isHead && isTail && (
-                            <motion.span initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 3 }} className="px-2.5 py-0.5 rounded bg-teal-400 text-slate-950 font-mono font-black text-[10px] shadow-sm">
+                            </span>
+                          ) : isTail ? (
+                            <span className="text-[7.5px] font-bold px-1.5 py-0.2 bg-neutral-800 text-cyan-300 border border-neutral-700">
                               TAIL
-                            </motion.span>
-                          )}
+                            </span>
+                          ) : null}
                         </AnimatePresence>
                       </div>
 
-                      {/* Memory Address Simulator Tag */}
-                      <span className="text-[10px] font-mono text-emerald-400/90 font-extrabold">{getSimulatedAddress(idx)}</span>
-
-                      {/* Node Box */}
+                      {/* Node Box (Two Compartments: Data & Next) */}
                       <motion.div
                         layout
-                        initial={{ scale: 0.85, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.85, opacity: 0 }}
-                        transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-                        className={`flex rounded-xl overflow-hidden border shadow-xl transition-all ${
-                          isFound
-                            ? 'border-emerald-400 ring-2 ring-emerald-400/50 shadow-[0_0_20px_rgba(52,211,153,0.4)]'
-                            : isTraverseTarget || isSearch
-                            ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-[0_0_20px_rgba(251,191,36,0.4)]'
-                            : isHead
-                            ? 'border-emerald-400/80 shadow-[0_0_15px_rgba(52,211,153,0.2)]'
-                            : 'border-slate-700/80'
-                        }`}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.15 }}
+                        className={`flex items-stretch border-2 bg-[#060810] shadow-md rounded-none ${borderStyle} ${ring}`}
                       >
-                        {/* Data Part */}
-                        <div className="px-4 py-3 flex flex-col items-center justify-center min-w-16 bg-white text-slate-950 border-r border-slate-300">
-                          <span className="text-[9px] font-mono font-black text-slate-500 uppercase tracking-widest">data</span>
-                          <span className="font-mono font-black text-2xl text-slate-950 mt-0.5">{val}</span>
+                        {/* Data Compartment */}
+                        <div className={`px-4 py-2.5 flex flex-col items-center justify-center border-r border-neutral-700 min-w-16 ${dataBg}`}>
+                          <span className="text-[8px] text-neutral-500 uppercase font-semibold">DATA</span>
+                          <span className={`text-xl font-black ${dataText}`}>{val}</span>
                         </div>
 
-                        {/* Next Pointer Part */}
-                        <div className="px-3.5 py-3 flex flex-col items-center justify-center bg-[#070b14] text-emerald-400 min-w-14">
-                          <span className="text-[9px] font-mono text-slate-400 font-extrabold uppercase tracking-wider">next</span>
-                          <div className="mt-1 w-3.5 h-3.5 rounded-full bg-emerald-400 flex items-center justify-center shadow-[0_0_12px_rgba(52,211,153,0.9)]">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-950" />
-                          </div>
-                          <span className="text-[9px] font-mono text-emerald-300 font-black mt-1 tracking-tight">{nextAddr}</span>
+                        {/* Next Pointer Compartment */}
+                        <div className="px-3 py-2.5 flex flex-col items-center justify-center bg-[#060912] min-w-12">
+                          <span className="text-[8px] text-neutral-500 uppercase font-semibold">NEXT</span>
+                          <div className="w-2.5 h-2.5 bg-emerald-400 my-1 inline-block" />
+                          <span className="text-[7.5px] text-neutral-400">
+                            {isTail ? 'NULL' : 'ptr'}
+                          </span>
                         </div>
                       </motion.div>
 
-                      {/* Index Label */}
-                      <span className="text-xs font-mono font-extrabold text-slate-400 mt-0.5">[{idx}]</span>
+                      {/* Index Label Below Node */}
+                      <span className="text-[9px] text-neutral-500 font-semibold mt-0.5">
+                        [{idx}]
+                      </span>
                     </div>
 
-                    {/* Arrow Pointer */}
-                    <div className="flex items-center text-emerald-400 pt-3 drop-shadow-[0_0_10px_rgba(52,211,153,0.7)]">
-                      <ArrowRight size={24} strokeWidth={2.5} />
+                    {/* Arrow to Next Node */}
+                    <div className="flex items-center text-emerald-400 shrink-0 px-0.5">
+                      <ArrowRight size={20} strokeWidth={2.5} />
                     </div>
                   </React.Fragment>
                 );
               })}
 
-              {/* End NULL Badge */}
-              <div className="flex flex-col items-center gap-1 pt-6">
-                <span className="text-[10px] font-mono text-slate-500 font-bold">0x0000</span>
-                <div className="px-4 py-3 rounded-xl bg-slate-950 border border-emerald-500/40 text-emerald-400 font-mono font-black text-xs shadow-[0_0_12px_rgba(52,211,153,0.3)] tracking-wider">
+              {/* Terminal NULL Box */}
+              <div className="flex flex-col items-center justify-center gap-1 shrink-0 pt-6">
+                <div className="px-3 py-2 border-2 border-dashed border-neutral-700 bg-[#060810] text-rose-400 font-bold text-xs">
                   NULL
                 </div>
+                <span className="text-[8px] text-neutral-600 font-semibold">Terminator</span>
               </div>
             </div>
           )}
+        </div>
 
+        {/* ── Textbook Invariant Card (Clean, Sharp) ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-2xl text-[10px]">
+          <div className="p-2 border border-neutral-800 bg-[#080b14] flex flex-col gap-0.5">
+            <span className="font-bold text-emerald-400 uppercase text-[9px]">Node Linking Mechanism</span>
+            <span className="text-neutral-400 text-[9.5px]">
+              Every node stores a <span className="text-white font-bold">Data</span> value and a <span className="text-emerald-300 font-bold">Next</span> reference pointing to the memory location of the succeeding node.
+            </span>
+          </div>
+
+          <div className="p-2 border border-neutral-800 bg-[#080b14] flex flex-col gap-0.5">
+            <span className="font-bold text-cyan-400 uppercase text-[9px]">Linear Traversal</span>
+            <span className="text-neutral-400 text-[9.5px]">
+              Access begins strictly at <span className="text-white font-bold">HEAD</span> and follows each pointer until encountering <span className="text-rose-400 font-bold">NULL</span>.
+            </span>
+          </div>
         </div>
       </div>
-
     </div>
   );
 };

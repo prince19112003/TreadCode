@@ -58,10 +58,11 @@ async function exportAll() {
   });
 
   const modules = [
-    { id: 'c', name: 'C Programming', path: './src/lessons/c/registry.ts', regKey: 'cRegistry' },
-    { id: 'cpp', name: 'C++ Programming', path: './src/lessons/cpp/registry.ts', regKey: 'cppRegistry' },
-    { id: 'java', name: 'Java Programming', path: './src/lessons/java/registry.ts', regKey: 'javaRegistry' },
-    { id: 'dsa', name: 'Data Structures & Algorithms', path: './src/lessons/dsa/registry.ts', regKey: 'dsaRegistry' },
+    { id: 'c', name: 'C Programming', path: './src/lessons/c/registry.ts', regKey: 'cRegistry', version: '1.0.1' },
+    { id: 'cpp', name: 'C++ Programming', path: './src/lessons/cpp/registry.ts', regKey: 'cppRegistry', version: '1.0.0' },
+    { id: 'java', name: 'Java Programming', path: './src/lessons/java/registry.ts', regKey: 'javaRegistry', version: '1.0.0' },
+    { id: 'dsa', name: 'Data Structures & Algorithms', path: './src/lessons/dsa/registry.ts', regKey: 'dsaRegistry', version: '1.0.0' },
+    { id: 'ml', name: 'Machine Learning', path: './src/lessons/ml/registry.ts', regKey: 'mlRegistry', version: '1.0.0' },
   ];
 
   const manifest = {};
@@ -97,7 +98,7 @@ async function exportAll() {
       const packData = {
         id: mod.id,
         name: mod.name,
-        version: '1.0.0',
+        version: mod.version || '1.0.0',
         exportedAt: new Date().toISOString(),
         topicsCount: Object.keys(serializedRegistry).length,
         programsCount: totalPrograms,

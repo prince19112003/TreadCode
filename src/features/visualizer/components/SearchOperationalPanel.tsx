@@ -236,9 +236,24 @@ export const SearchOperationalPanel: React.FC = () => {
       : generateLinearSearchSteps(arr, targetNum);
 
     setCustomSteps(steps);
-    setIsPlaying(true);
+    setIsPlaying(false);
     setTimeout(() => goToStep(0), 20);
   }, [arraySize, targetValue, isBinary, generateBinarySearchSteps, generateLinearSearchSteps, setCustomSteps, setIsPlaying, goToStep]);
+
+  const handleStartSearch = () => {
+    const arr = arraySize === 10 ? [...ARRAY_10] : [...ARRAY_20];
+    const targetNum = targetValue.trim() !== '' ? Number(targetValue) : (arraySize === 10 ? 78 : 81);
+
+    const steps = isBinary
+      ? generateBinarySearchSteps(arr, targetNum)
+      : generateLinearSearchSteps(arr, targetNum);
+
+    setCustomSteps(steps);
+    goToStep(0);
+    setIsPlaying(true);
+  };
+
+  const presets = arraySize === 10 ? ['34', '78', '99', '45'] : ['18', '70', '120', '50'];
 
   return (
     <div className="h-full flex flex-col bg-[#080a14] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
@@ -286,8 +301,8 @@ export const SearchOperationalPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Target Input */}
-        <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-slate-950/80 border border-slate-800/80">
+        {/* Search Target Input & Presets */}
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-950/80 border border-slate-800/80">
           <span className="text-xs font-mono text-slate-300 font-semibold flex items-center gap-1.5">
             <Search size={13} className="text-amber-400" /> Target Value to Search:
           </span>
@@ -304,6 +319,30 @@ export const SearchOperationalPanel: React.FC = () => {
               placeholder="Enter target number..."
               className="flex-1 bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 font-mono text-sm text-amber-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-400/80 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
+            <button
+              onClick={handleStartSearch}
+              className="px-3.5 py-2 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-mono text-xs font-bold rounded-lg border border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+            >
+              Search
+            </button>
+          </div>
+
+          {/* Quick Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <span className="text-[10px] font-mono text-slate-500 uppercase">Presets:</span>
+            {presets.map(p => (
+              <button
+                key={p}
+                onClick={() => setTargetValue(p)}
+                className={`text-[10px] font-mono px-2 py-0.5 rounded border transition-all ${
+                  targetValue === p
+                    ? 'bg-amber-400/20 border-amber-400 text-amber-300 font-bold'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
         </div>
 

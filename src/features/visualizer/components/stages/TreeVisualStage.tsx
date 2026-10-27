@@ -46,11 +46,11 @@ export const TreeVisualStage: React.FC = () => {
   // Combination of path or traversal sequence for highlighting visited nodes
   const activeSequence = traversalSeq.length > 0 ? traversalSeq : visitedPath;
 
-  // Auto-scroll on step change
+  // Keep tree at top on initial load
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
+        top: 0,
         behavior: 'smooth',
       });
     }

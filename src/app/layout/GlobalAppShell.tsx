@@ -39,11 +39,11 @@ function useBreadcrumbs(): CrumbItem[] {
       crumbs.push({ label: topic, path: `/topics/${parts[1]}/programs/${parts[3]}` });
     }
   } else if (parts[0] === 'visualizer' && parts[1] && parts[2] && parts[3]) {
-    const isDsa = parts[1] === 'dsa';
-    const lang = isDsa ? 'DSA' : parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    const isDirectTrack = parts[1] === 'dsa' || parts[1] === 'ml' || parts[1] === 'networking';
+    const lang = parts[1] === 'dsa' ? 'DSA' : parts[1] === 'ml' ? 'ML' : parts[1] === 'cpp' ? 'C++' : parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
     crumbs.push({ label: lang, path: `/topics/${parts[1]}` });
     const topic = parts[2].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    if (isDsa) {
+    if (isDirectTrack) {
       crumbs.push({ label: topic, path: location.pathname });
     } else {
       crumbs.push({ label: topic, path: `/topics/${parts[1]}/programs/${parts[2]}` });

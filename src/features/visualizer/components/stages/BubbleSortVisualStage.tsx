@@ -33,14 +33,17 @@ export const BubbleSortVisualStage: React.FC = () => {
   const currentStepIndex = useLessonStore(s => s.currentStepIndex);
   const zoom = useLessonStore(s => s.zoom);
 
-  // Extract active snapshot
-  const mem = (currentStep?.memorySnapshot as any) || {};
+  // Extract active snapshot reliably
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+  const mem = (step?.memorySnapshot as any) || {};
   const currentPassNum = typeof mem.pass === 'number' ? mem.pass : 1;
   const currentArr: number[] = ensureArray(mem.arr);
   const sortedIndices: number[] = Array.isArray(mem.sortedIndices) ? mem.sortedIndices : [];
   const swapsCount: number = typeof mem.swapsCount === 'number' ? mem.swapsCount : 0;
 
-  const ev = (currentStep?.animationEvent as any) || {};
+  const ev = (step?.animationEvent as any) || {};
   let currentComparing: [number, number] | null = null;
   let currentSwapping: [number, number] | null = null;
 
@@ -114,10 +117,14 @@ export const BubbleSortVisualStage: React.FC = () => {
 
   React.useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      if (currentStepIndex === 0) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [currentStepIndex, passRows.length]);
 

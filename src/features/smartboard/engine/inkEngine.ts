@@ -104,7 +104,7 @@ export function smoothPath(ctx: CanvasRenderingContext2D, pts: Point[]) {
 // ─── Velocity-Based Width Array ───────────────────────────────────────────────
 // Speed 0 → widest (slow, deliberate stroke)
 // Speed > threshold → thinnest (fast swipe)
-function computeVelocityWidths(pts: Point[], baseSize: number): number[] {
+export function computeVelocityWidths(pts: Point[], baseSize: number): number[] {
   const widths: number[] = new Array(pts.length).fill(baseSize);
   const MAX_SPEED = 0.75; // px/ms — above this line goes thinnest
 
@@ -143,7 +143,7 @@ function computeVelocityWidths(pts: Point[], baseSize: number): number[] {
 
 // ─── Variable-Width Polygon Stroke ────────────────────────────────────────────
 // Draws as a filled outline polygon — enables calligraphic width variation
-function drawVariableWidthStroke(
+export function drawVariableWidthStroke(
   ctx: CanvasRenderingContext2D,
   pts: Point[],
   widths: number[],
@@ -215,7 +215,7 @@ function drawVariableWidthStroke(
 
 // ─── Natural Pen Stroke (non-velocity mode) ───────────────────────────────────
 // Single continuous bezier path — no per-segment beginPath, zero seam artifacts
-function drawNaturalPenStroke(
+export function drawNaturalPenStroke(
   ctx: CanvasRenderingContext2D,
   pts: Point[],
   color: string,
@@ -314,7 +314,7 @@ export function drawStroke(
   _zoom: number,
   _bgFill: string,
   velocityMode: boolean,
-  isLive: boolean = false
+  _isLive: boolean = false
 ): boolean {
   if (!s.points.length) return false;
 

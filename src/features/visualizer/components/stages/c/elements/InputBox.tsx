@@ -11,8 +11,8 @@ export const InputBox: React.FC<InputBoxProps> = ({ prompt, isActive }) => {
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`flex flex-col items-center justify-center gap-1 px-4 rounded-xl border-2 transition-colors duration-300 ${
-        isActive ? 'border-purple-400 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'border-purple-500/50 bg-purple-500/5'
+      className={`flex flex-col items-center justify-center gap-1 px-4 rounded-none border-2 transition-colors duration-300 ${
+        isActive ? 'border-purple-400 bg-purple-500/10' : 'border-purple-500/50 bg-purple-500/5'
       }`}
       style={{ height: '4rem', minWidth: 'fit-content' }}
     >

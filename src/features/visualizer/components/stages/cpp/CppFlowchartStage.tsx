@@ -140,9 +140,9 @@ export const CppFlowchartStage: React.FC = () => {
   if (!lesson) return null;
 
   // Derive active steps: use generateSteps (dynamic) or fallback to static executionSteps
-  const activeSteps = lesson.generateSteps
+  const activeSteps = (lesson.generateSteps
     ? lesson.generateSteps(editableValues)
-    : lesson.executionSteps;
+    : lesson.executionSteps) ?? [];
 
   // Global rule: step 0 = empty canvas (program not yet started).
   // currentStepIndex 1 shows step 0 of activeSteps, index 2 shows steps 0-1, etc.
@@ -1660,7 +1660,7 @@ export const CppFlowchartStage: React.FC = () => {
                         (() => {
                           const { variant, items } = parseDataStructure(step.memorySnapshot[ev.arrayName]);
                           const itemsArr = Array.isArray(items) ? items : [];
-                          const itemVal = itemsArr[ev.index];
+                          const itemVal = typeof ev.index === 'number' ? itemsArr[ev.index] : undefined;
                           return (
                             <div className="flex flex-col items-center gap-3">
                               <DataStructureBox 

@@ -984,7 +984,7 @@ export const javaSwitchVowel: LessonProgram = {
     { lineNum: 10, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
   editableVariables: {
-    ch: { default: 'e', type: 'text', label: 'ch (char)' }
+    ch: { default: 'e', type: 'text', label: 'ch (char)', quoteChar: "'" }
   },
   generateSteps: (vars): ExecutionStep[] => {
     const rawCh = String(vars.ch ?? 'e').replace(/['"]/g, '');
@@ -1064,7 +1064,7 @@ export const javaSwitchCalc: LessonProgram = {
   editableVariables: {
     a: { default: 20, min: 1, max: 100, label: 'a (int)' },
     b: { default: 5, min: 1, max: 100, label: 'b (int)' },
-    op: { default: '*', type: 'text', label: 'op (char)' }
+    op: { default: '*', type: 'text', label: 'op (char)', quoteChar: "'" }
   },
   generateSteps: (vars): ExecutionStep[] => {
     const aVal = Number(vars.a ?? 20);
@@ -1240,7 +1240,7 @@ export const javaSwitchGrade: LessonProgram = {
     { lineNum: 11, tokens: [{ type: 'punctuation', value: '}' }] },
   ],
   editableVariables: {
-    g: { default: 'A', type: 'text', label: 'g (char)' }
+    g: { default: 'A', type: 'text', label: 'g (char)', quoteChar: "'" }
   },
   generateSteps: (vars): ExecutionStep[] => {
     const rawG = String(vars.g ?? 'A').replace(/['"]/g, '');

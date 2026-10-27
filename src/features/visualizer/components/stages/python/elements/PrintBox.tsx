@@ -46,7 +46,7 @@ export const PrintBox: React.FC<PrintBoxProps> = ({ variableName, value, isActiv
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`flex items-center justify-center ${px} py-2 rounded-xl border-2 transition-colors duration-300 ${colorClasses} w-fit max-w-md text-center`}
+        className={`flex items-center justify-center ${px} py-2 rounded-none border-2 transition-colors duration-300 ${colorClasses} w-fit max-w-md text-center`}
         style={{ minHeight, minWidth }}
       >
         <span className={`font-mono font-bold ${textSize} text-white whitespace-pre-wrap leading-tight`}>

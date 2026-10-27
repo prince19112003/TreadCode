@@ -80,7 +80,7 @@ export const OutputConsole: React.FC<OutputConsoleProps> = ({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (currentStepIndex === 0 || !activeSteps || activeSteps.length === 0) {
+    if (!activeSteps || activeSteps.length === 0) {
       setOutputLines([]);
       prevStepRef.current = -1;
       return;
@@ -90,17 +90,27 @@ export const OutputConsole: React.FC<OutputConsoleProps> = ({
     if (currentStepNum === prevStepRef.current) return;
     prevStepRef.current = currentStepNum;
 
-    // Find the latest step that has consoleOutput defined up to the current index
-    const visibleSteps = activeSteps.slice(0, currentStepIndex);
+    // Include the active step: slice(0, currentStepIndex + 1)
+    const visibleSteps = activeSteps.slice(0, currentStepIndex + 1);
     const lastStepWithOutput = [...visibleSteps].reverse().find(
-      s => s.consoleOutput !== undefined && s.consoleOutput !== null
+      s => s.consoleOutput !== undefined && s.consoleOutput !== null && String(s.consoleOutput).trim() !== ''
     );
 
     if (lastStepWithOutput && lastStepWithOutput.consoleOutput) {
       const lines = lastStepWithOutput.consoleOutput.split('\n');
       setOutputLines(lines);
     } else {
-      setOutputLines([]);
+      // Fallback: collect any PRINT_VALUE outputs emitted up to this step
+      const printedLines: string[] = [];
+      for (const s of visibleSteps) {
+        if (s.animationEvent && 'outputValue' in s.animationEvent && s.animationEvent.outputValue !== undefined) {
+          const val = String((s.animationEvent as { outputValue: unknown }).outputValue).trim();
+          if (val !== '') {
+            printedLines.push(String((s.animationEvent as { outputValue: unknown }).outputValue));
+          }
+        }
+      }
+      setOutputLines(printedLines);
     }
   }, [currentStep, currentStepIndex, activeSteps]);
 

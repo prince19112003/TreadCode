@@ -29,8 +29,10 @@ const EditableVariableToken = React.memo<{
   max?: number;
   type?: 'number' | 'text';
   noQuotes?: boolean;
+  quoteChar?: string;
   onCommit: (val: any) => void;
-}>(({ value, defaultValue, min, max, type = 'number', noQuotes = false, onCommit }) => {
+}>(({ value, defaultValue, min, max, type = 'number', noQuotes = false, quoteChar, onCommit }) => {
+  const quote = quoteChar ?? '"';
   const [draft, setDraft] = useState(String(value).replace(/['"]/g, '')); // Strip quotes for editing
   const [justApplied, setJustApplied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,10 +46,10 @@ const EditableVariableToken = React.memo<{
 
   const commit = () => {
     if (type === 'text') {
-      const finalVal = draft.trim() === '' ? String(defaultValue) : draft.trim();
+      const finalVal = draft.trim() === '' ? String(defaultValue).replace(/['"]/g, '') : draft.trim();
       setDraft(finalVal);
       // Re-add quotes if it's a string token type (unless noQuotes is true)
-      onCommit(noQuotes ? finalVal : `"${finalVal}"`);
+      onCommit(noQuotes ? finalVal : `${quote}${finalVal}${quote}`);
     } else {
       const parsed = parseFloat(draft);
       if (draft.trim() === '' || isNaN(parsed)) {
@@ -69,32 +71,32 @@ const EditableVariableToken = React.memo<{
 
   return (
     <span className="relative inline-flex items-center mx-1 gap-1">
-      {type === 'text' && !noQuotes && <span className="text-amber-400 font-bold font-mono">"</span>}
+      {type === 'text' && !noQuotes && <span className="text-amber-400 font-bold font-mono">{quote}</span>}
       <input
         ref={inputRef}
         type={type === 'text' ? 'text' : 'number'}
         value={draft}
-        placeholder={String(defaultValue)}
-        maxLength={type === 'text' ? 20 : undefined}
+        placeholder={String(defaultValue).replace(/['"]/g, '')}
+        maxLength={type === 'text' ? 80 : undefined}
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => {
           if (e.key === 'Enter') { commit(); inputRef.current?.blur(); }
           if (e.key === 'Escape') { setDraft(cleanVal); inputRef.current?.blur(); }
         }}
-        className={`font-mono bg-slate-950 font-bold outline-none border border-slate-700 hover:border-orange-500/50 focus:border-orange-500 rounded px-1.5 py-0.5 transition-all text-center shadow-md focus:shadow-[0_0_8px_rgba(249,115,22,0.15)] cursor-text ${
+        className={`font-mono bg-slate-950 font-bold outline-none border border-slate-700 hover:border-orange-500/50 focus:border-orange-500 rounded px-2.5 py-0.5 transition-all text-center shadow-md focus:shadow-[0_0_8px_rgba(249,115,22,0.15)] cursor-text ${
           type === 'text' ? 'text-amber-400 border-amber-500/30 focus:border-amber-400' : 'text-orange-400'
         }`}
         style={{
-          width: `${Math.max(type === 'text' ? 4 : 5, (draft || String(defaultValue)).length + 2.5)}ch`,
-          minWidth: type === 'text' ? '4.5rem' : '4.5rem',
+          width: `${Math.max(type === 'text' ? 6 : 2, (draft || String(defaultValue)).length + 3.5)}ch`,
+          minWidth: type === 'text' ? '4.5rem' : '2.5rem',
           fontFeatureSettings: '"liga" 0',
           MozAppearance: 'textfield',
           fontSize: '0.9em',
         }}
         title="Click to edit value"
       />
-      {type === 'text' && !noQuotes && <span className="text-amber-400 font-bold font-mono">"</span>}
+      {type === 'text' && !noQuotes && <span className="text-amber-400 font-bold font-mono">{quote}</span>}
       
       {/* Show dynamic Apply button or Applied notification next to editable value block */}
       <AnimatePresence mode="wait">
@@ -144,7 +146,7 @@ const CodeLineRow = React.memo<{
   isActive: boolean;
   zoomLevel: number;
   editableValues: Record<string, any>;
-  editableVariables: Record<string, { default: any; min?: number; max?: number; type?: 'number' | 'text'; noQuotes?: boolean }>;
+  editableVariables: Record<string, { default: any; min?: number; max?: number; type?: 'number' | 'text'; noQuotes?: boolean; quoteChar?: string }>;
   setEditableValue: (name: string, val: any) => void;
   /** Map of "lineNum -> tokenIndex -> variableName" for the editable variables */
   editableTokenMapping: Record<number, Record<number, string>>;
@@ -153,8 +155,9 @@ const CodeLineRow = React.memo<{
 
   React.useEffect(() => {
     if (isActive && rowRef.current) {
+      const isEco = typeof document !== 'undefined' && document.documentElement.getAttribute('data-eco-motion') === 'true';
       rowRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: isEco ? 'auto' : 'smooth',
         block: 'nearest',
       });
     }
@@ -208,6 +211,7 @@ const CodeLineRow = React.memo<{
                 max={def.max}
                 type={def.type}
                 noQuotes={def.noQuotes}
+                quoteChar={def.quoteChar}
                 onCommit={val => setEditableValue(varName, val)}
               />
             );
@@ -298,10 +302,16 @@ export const CodeStepPanel = React.memo(() => {
           const nextToken = line.tokens[varIdx + 1];
           const isIndexed = nextToken && nextToken.type === 'punctuation' && nextToken.value === '[';
 
-          const hasAssignment = line.tokens.some(t => t.type === 'operator' && t.value === '=');
-          const valTokenIdx = line.tokens.findIndex(t => t.type === 'number' || t.type === 'string' || t.type === 'parameter');
+          const eqIdx = line.tokens.findIndex(t => t.type === 'operator' && t.value === '=');
+          const hasAssignment = eqIdx !== -1;
+          const valTokenIdx = eqIdx !== -1
+            ? line.tokens.findIndex((t, i) => i > eqIdx && (t.type === 'number' || t.type === 'string' || t.type === 'parameter'))
+            : -1;
 
-          if (varToken && hasAssignment && valTokenIdx !== -1 && !isIndexed && editableVariables[varToken.value]) {
+          const isAlreadyMapped = Object.values(mapping).some(row => Object.values(row).includes(varToken.value));
+          const isSelfReassignment = eqIdx !== -1 && line.tokens.slice(eqIdx + 1).some(t => t.type === 'variable' && t.value === varToken.value);
+
+          if (!isAlreadyMapped && !isSelfReassignment && varToken && hasAssignment && valTokenIdx !== -1 && !isIndexed && editableVariables[varToken.value]) {
             if (!mapping[line.lineNum]) mapping[line.lineNum] = {};
             mapping[line.lineNum][valTokenIdx] = varToken.value;
           }
@@ -366,7 +376,7 @@ export const CodeStepPanel = React.memo(() => {
       </div>
 
       {/* Under Development Polite Banner for all In-Progress Languages */}
-      {lesson?.language !== 'python' && lesson?.language !== 'dsa' && (
+      {lesson?.language !== 'python' && lesson?.language !== 'dsa' && lesson?.language !== 'c' && (
         <div className="mx-3 mt-2 px-3 py-2 rounded-lg bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between text-xs text-indigo-200 shadow-sm shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-indigo-400">ℹ️</span>

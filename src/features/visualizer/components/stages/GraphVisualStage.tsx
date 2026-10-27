@@ -159,11 +159,11 @@ export const GraphVisualStage = React.memo(() => {
         y: activePosMap[id] ? activePosMap[id].y : 100,
       }));
 
-  // Auto-scroll on step change
+  // Keep graph canvas visible at top on initial load
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
+        top: 0,
         behavior: 'smooth',
       });
     }

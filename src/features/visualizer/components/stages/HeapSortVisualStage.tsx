@@ -42,8 +42,11 @@ export const HeapSortVisualStage: React.FC = () => {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Extract snapshot
-  const mem = (currentStep?.memorySnapshot as any) || {};
+  // Extract snapshot reliably
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+  const mem = (step?.memorySnapshot as any) || {};
   const currentArr = ensureArray(mem.arr);
   const phase = typeof mem.phase === 'string' ? mem.phase : 'INIT';
   const heapSize = typeof mem.heapSize === 'number' ? mem.heapSize : currentArr.length;
@@ -54,13 +57,17 @@ export const HeapSortVisualStage: React.FC = () => {
 
   const maxSteps = activeSteps ? activeSteps.length : 1;
 
-  // Auto-scroll to bottom as steps update
+  // Auto-scroll to bottom as steps update (only when past step 0)
   useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      if (currentStepIndex === 0) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [currentStepIndex]);
 

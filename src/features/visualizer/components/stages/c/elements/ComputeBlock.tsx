@@ -68,11 +68,21 @@ const cleanValueAndType = (raw: any) => {
   let varType: string | undefined = undefined;
   
   if (str.includes('[const]')) varType = 'const';
-  else if (str.includes('[4B]')) varType = 'float';
-  else if (str.includes('[8B]')) varType = 'double';
-  else if (str.includes('[1B]')) varType = 'bool';
+  else if (str.toLowerCase().includes('float')) varType = 'float';
+  else if (str.toLowerCase().includes('double')) varType = 'double';
+  else if (str.toLowerCase().includes('bool')) varType = 'bool';
+  else if (str.toLowerCase().includes('char')) varType = 'char';
+  else if (str.toLowerCase().includes('int')) varType = 'int';
+  else if (str.includes('[4B]')) {
+    const numPart = str.replace(/\s*\[.*?\]/g, '').trim();
+    varType = numPart.includes('.') ? 'float' : 'int';
+  } else if (str.includes('[8B]')) {
+    varType = 'double';
+  } else if (str.includes('[1B]')) {
+    varType = 'char';
+  }
 
-  const cleanedVal = str.replace(/\s*\[(4B|8B|1B|const|short|long)\]/gi, '').trim();
+  const cleanedVal = str.replace(/\s*\[(4B|8B|1B|const|short|long|int|float|double|char|bool)\]/gi, '').trim();
 
   return { value: cleanedVal, varType };
 };
@@ -264,9 +274,9 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
     <div className="flex items-center gap-3 relative">
       {/* 1. Left side: The inputs being calculated */}
       {isStringCalc ? (
-        <div className="flex flex-col items-center p-3 bg-slate-950/60 border border-slate-800/80 rounded-2xl gap-3 min-w-60 shadow-lg backdrop-blur-xs relative overflow-hidden">
+        <div className="flex flex-col items-center p-3 bg-slate-950 border border-slate-800 rounded-none gap-3 min-w-60 relative overflow-hidden">
           {/* Function badge */}
-          <div className="text-[9px] font-black tracking-widest text-indigo-400 font-mono uppercase bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+          <div className="text-[9px] font-black tracking-widest text-indigo-400 font-mono uppercase bg-indigo-500/10 px-2 py-0.5 rounded-none border border-indigo-500/20">
             {operator === 'len()' ? 'len() function' : operator === 'upper()' ? '.upper() function' : '.lower() function'}
           </div>
 
@@ -284,16 +294,16 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
               return (
                 <div 
                   key={i}
-                  className={`relative min-w-8 h-8 px-2 flex items-center justify-center border font-mono rounded-lg font-bold text-sm transition-all duration-300 ${
+                  className={`relative min-w-8 h-8 px-2 flex items-center justify-center border font-mono rounded-none font-bold text-sm transition-all duration-300 ${
                     calcState === 'inputs'
                       ? 'border-slate-800 bg-slate-900/50 text-slate-400'
                       : i === activeCountIdx 
-                        ? 'border-amber-400 bg-amber-500/20 text-white scale-110 shadow-[0_0_12px_rgba(245,158,11,0.6)] ring-1 ring-amber-400/40' 
+                        ? 'border-2 border-amber-400 bg-amber-500/20 text-white scale-110' 
                         : isConverted
-                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300 shadow-sm scale-105'
+                          ? 'border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 scale-105'
                           : i < activeCountIdx 
-                            ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-200 shadow-sm' 
-                            : 'border-slate-800 bg-slate-900/50 text-slate-500'
+                            ? 'border border-indigo-500/50 bg-indigo-500/10 text-indigo-200' 
+                            : 'border-slate-800 bg-slate-900/50 text-slate-400'
                   }`}
                 >
                   {displayVal}
@@ -334,11 +344,30 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
           return (
             <>
               {inputs.map((inp, i) => {
-                const match = String(inp).match(/^([a-zA-Z_]\w*)\s*\((.*)\)$/);
+                const match = String(inp).match(/^([a-zA-Z_][\w.]*)\s*\((.*)\)$/);
                 const varName = match ? match[1] : inp;
                 const inlineVal = match ? match[2] : undefined;
 
-                const rawVal = inlineVal ?? prevMemorySnapshot[varName] ?? memorySnapshot[varName] ?? prevMemorySnapshot[inp] ?? memorySnapshot[inp] ?? inp;
+                let rawVal = inlineVal ?? prevMemorySnapshot[varName] ?? memorySnapshot[varName] ?? prevMemorySnapshot[inp] ?? memorySnapshot[inp];
+                if (rawVal === undefined && varName.includes('.')) {
+                  const [parent, prop] = varName.split('.');
+                  const parentVal = memorySnapshot[parent] ?? prevMemorySnapshot[parent];
+                  if (parentVal !== undefined && parentVal !== null) {
+                    if (typeof parentVal === 'object') {
+                      rawVal = (parentVal as any)[prop];
+                    } else if (typeof parentVal === 'string') {
+                      try {
+                        const parsed = JSON.parse(parentVal);
+                        if (parsed && typeof parsed === 'object') rawVal = parsed[prop];
+                      } catch {
+                        const m = parentVal.match(new RegExp(`\\b${prop}\\s*:\\s*([^,}]+)`));
+                        if (m) rawVal = m[1].trim();
+                      }
+                    }
+                  }
+                }
+                if (rawVal === undefined) rawVal = inp;
+
                 const { value: cleanVal, varType } = cleanValueAndType(rawVal);
                 return (
                   <React.Fragment key={i}>
@@ -399,7 +428,7 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
               animate={{ opacity: 1, scale: 1.2, y: -30, x: -10 }}
               exit={{ opacity: 0, scale: 0.5, y: 0, x: 20 }}
               transition={{ duration: 0.5, type: 'spring' }}
-              className="absolute z-10 font-mono font-black text-2xl text-yellow-300 drop-shadow-[0_0_10px_rgba(253,224,71,0.8)]"
+              className="absolute z-10 font-mono font-black text-2xl text-yellow-300"
             >
               {result}
             </motion.div>

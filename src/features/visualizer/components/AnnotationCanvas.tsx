@@ -93,10 +93,10 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const MAX_CANVAS_HEIGHT = 1080;
   const getEffectiveDpr = useCallback(() => Math.min(window.devicePixelRatio || 1, 1.0), []);
 
-  // Get scaled 2D context with hardware desynchronized mode
+  // Get scaled 2D context with alpha transparency enabled
   const getScaledCtx = (canvas: HTMLCanvasElement | null) => {
     if (!canvas) return null;
-    const ctx = canvas.getContext('2d', { desynchronized: true });
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return null;
     const rect = canvas.getBoundingClientRect();
     const cssW = rect.width > 0 ? rect.width : (canvas.clientWidth || 1);
@@ -365,18 +365,22 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     redrawCommitted();
   }, [revision, redrawCommitted]);
 
+  if (!isActive && (!strokesRef.current || strokesRef.current.length === 0)) {
+    return null;
+  }
+
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 60 }}>
       {/* Bottom Layer: All committed static strokes (Zero redraw during live drawing) */}
       <canvas
         ref={committedCanvasRef}
-        className="block absolute inset-0 w-full h-full pointer-events-none"
+        className="block absolute inset-0 w-full h-full pointer-events-none bg-transparent"
         style={{ zIndex: 1 }}
       />
       {/* Top Layer: Live active stroke only — receives pointer input */}
       <canvas
         ref={liveCanvasRef}
-        className="block absolute inset-0 w-full h-full pointer-events-auto"
+        className="block absolute inset-0 w-full h-full pointer-events-auto bg-transparent"
         style={{
           cursor: 'default',
           pointerEvents: (isActive && mode !== 'palm') ? 'all' : 'none',

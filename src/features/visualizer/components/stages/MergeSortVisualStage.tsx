@@ -38,8 +38,11 @@ export const MergeSortVisualStage: React.FC = () => {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Extract snapshot
-  const mem = (currentStep?.memorySnapshot as any) || {};
+  // Extract snapshot reliably
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+  const mem = (step?.memorySnapshot as any) || {};
   const currentArr = ensureArray(mem.arr);
 
   // Extract initial array from step 0
@@ -164,13 +167,17 @@ export const MergeSortVisualStage: React.FC = () => {
   const activeLevelIdx = Math.min(allLevels.length - 1, currentStepIndex);
   const visibleLevels = allLevels.slice(0, activeLevelIdx + 1);
 
-  // Auto-scroll to bottom as tree grows
+  // Auto-scroll to bottom as tree grows (only when past step 0)
   useEffect(() => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      if (currentStepIndex === 0) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [currentStepIndex, visibleLevels.length]);
 

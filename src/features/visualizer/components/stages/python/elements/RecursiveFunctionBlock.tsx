@@ -34,7 +34,7 @@ export const RecursiveFunctionBlock: React.FC<RecursiveFunctionBlockProps> = ({
 
   if (rawCalls.length === 0) {
     return (
-      <div className="w-80 h-40 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none">
+      <div className="w-80 h-40 border-2 border-dashed border-slate-800 rounded-none flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none">
         <svg className="w-6 h-6 opacity-30 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -117,19 +117,19 @@ export const RecursiveFunctionBlock: React.FC<RecursiveFunctionBlockProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className={`relative rounded-2xl flex flex-col gap-3 transition-all duration-300 border ${theme.border} p-4 pt-10 shadow-lg`}
+        className={`relative rounded-none flex flex-col gap-3 transition-all duration-300 border ${theme.border} p-4 pt-10`}
         style={{
           minWidth: `${Math.max(260, 360 - depth * 28)}px`,
         }}
       >
         {/* Frame Name & Badge Header */}
-        <div className="absolute -top-3 left-4 px-3 py-0.5 font-mono font-bold text-[10px] tracking-wider bg-slate-950 border border-slate-800 rounded-md text-slate-300 shadow-sm flex items-center gap-2 z-10">
+        <div className="absolute -top-3 left-4 px-3 py-0.5 font-mono font-bold text-[10px] tracking-wider bg-slate-950 border border-slate-800 rounded-none text-slate-300 flex items-center gap-2 z-10">
           <span className={`${theme.text} font-black`}>Level {depth + 1}:</span>
           <span className="text-white font-bold">{frame.funcName}({frame.argText})</span>
         </div>
 
-        <div className={`absolute top-2.5 right-4 px-2 py-0.5 rounded-md text-[8px] font-bold tracking-widest border bg-slate-950/80 z-10 ${
-          isInnermost ? 'text-emerald-400 border-emerald-500/30 animate-pulse' : 'text-slate-400 border-slate-800'
+        <div className={`absolute top-2.5 right-4 px-2 py-0.5 rounded-none text-[8px] font-bold tracking-widest border bg-slate-950/80 z-10 ${
+          isInnermost ? 'text-emerald-400 border-emerald-500/30' : 'text-slate-400 border-slate-800'
         }`}>
           {isInnermost ? 'ACTIVE FRAME' : 'WAITING FOR CHILD'}
         </div>
@@ -167,7 +167,7 @@ export const RecursiveFunctionBlock: React.FC<RecursiveFunctionBlockProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="mt-2 p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/50 flex flex-col items-center gap-1 shadow-md"
+                className="mt-2 p-3 rounded-none bg-indigo-950/40 border border-indigo-500/50 flex flex-col items-center gap-1"
               >
                 <span className="text-[10px] font-mono font-black text-indigo-300 uppercase tracking-wider">
                   CALCULATING RETURN VALUE
@@ -181,7 +181,7 @@ export const RecursiveFunctionBlock: React.FC<RecursiveFunctionBlockProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="mt-2 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex flex-col items-center gap-1 shadow-md shadow-emerald-950/40"
+                className="mt-2 p-3 rounded-none bg-emerald-950/40 border border-emerald-500/50 flex flex-col items-center gap-1"
               >
                 <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-wider">
                   BASE CASE MET
@@ -195,7 +195,7 @@ export const RecursiveFunctionBlock: React.FC<RecursiveFunctionBlockProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="mt-2 p-3 rounded-xl bg-teal-950/40 border border-teal-500/50 flex flex-col items-center gap-1 shadow-md"
+                className="mt-2 p-3 rounded-none bg-teal-950/40 border border-teal-500/50 flex flex-col items-center gap-1"
               >
                 <span className="text-[10px] font-mono font-black text-teal-400 uppercase tracking-wider">
                   RETURNED RESULT

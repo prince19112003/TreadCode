@@ -9,7 +9,13 @@ const getListFromStep = (step: any): { list: (string | number)[]; capacity: numb
   const cap = typeof mem?.capacity === 'number' ? mem.capacity : 6;
   if (Array.isArray(mem?.list)) return { list: mem.list, capacity: cap };
   if (typeof mem?.list === 'string') {
-    try { return { list: JSON.parse(mem.list), capacity: cap }; } catch { return { list: [], capacity: cap }; }
+    try {
+      const parsed = JSON.parse(mem.list);
+      if (Array.isArray(parsed)) return { list: parsed, capacity: cap };
+    } catch {
+      const parts = mem.list.replace(/⇄|↔|→|NULL/g, ',').split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (parts.length > 0) return { list: parts, capacity: cap };
+    }
   }
   const ev = step.animationEvent;
   if (ev?.listState) return { list: ev.listState, capacity: cap };
@@ -20,29 +26,33 @@ const getListFromStep = (step: any): { list: (string | number)[]; capacity: numb
 const getSimulatedAddress = (index: number) => `0x${(0x2040 + index * 8).toString(16).toUpperCase()}`;
 
 export const DllVisualStage: React.FC = () => {
-  const { currentStep, zoom } = useLesson();
+  const { currentStep, activeSteps, currentStepIndex, zoom } = useLesson();
 
-  const { list: listItems, capacity: CAPACITY } = getListFromStep(currentStep);
-  const ev = currentStep?.animationEvent as any;
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+
+  const { list: listItems, capacity: CAPACITY } = getListFromStep(step);
+  const ev = step?.animationEvent as any;
   
   const isTraverseStep = ev?.type === 'SET_POINTERS' && typeof ev?.pointers?.curr === 'number';
 
   const activeHighlight: number | undefined =
     ev?.type === 'COMPARE_INDICES' ? ev.indexA :
     isTraverseStep ? ev.pointers.curr :
-    (typeof currentStep?.memorySnapshot?.i === 'number' ? currentStep.memorySnapshot.i : undefined);
+    (typeof step?.memorySnapshot?.i === 'number' ? step.memorySnapshot.i : undefined);
 
   const isEmpty = listItems.length === 0;
   const isFull = listItems.length >= CAPACITY;
-  const isUnderflow = (ev?.type === 'DLL_DELETE' && isEmpty) || (currentStep?.explanationEnglish?.includes('Underflow'));
+  const isUnderflow = (ev?.type === 'DLL_DELETE' && isEmpty) || (step?.explanationEnglish?.includes('Underflow'));
 
   return (
-    <div className="flex-1 w-full h-full bg-transparent flex items-center justify-center overflow-hidden relative px-6 py-6 select-none">
+    <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-y-auto p-4 custom-scrollbar select-none">
 
       {/* ── Center: Doubly Linked List Node Chain ── */}
       <div
-        className="w-full h-full flex flex-col items-center justify-center relative transition-transform duration-200 ease-out"
-        style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+        className="relative w-full max-w-6xl flex flex-col items-center justify-start gap-6 py-3 transition-transform duration-150 ease-out"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
       >
         <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
         <div className="flex flex-col items-center gap-6">

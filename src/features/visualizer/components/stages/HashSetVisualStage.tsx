@@ -7,19 +7,38 @@ const CAPACITY = 8; // 8 buckets for a clean 2x4 grid layout
 
 export const HashSetVisualStage: React.FC = () => {
   const currentStep = useLessonStore(s => s.currentStep);
+  const activeSteps = useLessonStore(s => s.activeSteps);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
   const zoom = useLessonStore(s => s.zoom);
 
-  const mem = (currentStep?.memorySnapshot as any) || {};
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+
+  const mem = (step?.memorySnapshot as any) || {};
   const activeVal: string = mem.activeVal ? String(mem.activeVal) : '';
   const action: 'ADD' | 'REMOVE' | 'CONTAINS' | 'INIT' | 'CLEAR' = mem.action || 'INIT';
 
   // Compute target bucket index modulo 8
   const hashIdx = activeVal ? Math.abs(parseInt(activeVal, 10) || 0) % CAPACITY : -1;
 
-  // Real bucket map from step (defaults to empty buckets)
-  const bucketData: Record<number, string[]> = mem.bucketMap || {
-    0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [],
-  };
+  // Real bucket map from step (defaults to auto-derived from elements)
+  const rawBucketMap = mem.bucketMap;
+  let bucketData: Record<number, string[]>;
+  if (rawBucketMap && Object.keys(rawBucketMap).length > 0) {
+    bucketData = rawBucketMap;
+  } else {
+    bucketData = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
+    const elementsList: string[] = Array.isArray(mem.elements) && mem.elements.length > 0
+      ? mem.elements
+      : ['10', '25', '42'];
+    elementsList.forEach(item => {
+      const idx = Math.abs(parseInt(item, 10) || 0) % CAPACITY;
+      if (!bucketData[idx].includes(item)) {
+        bucketData[idx].push(item);
+      }
+    });
+  }
 
   // State flags
   const isDuplicate = action === 'ADD' && activeVal && (bucketData[hashIdx]?.filter(x => x === activeVal).length > 1);

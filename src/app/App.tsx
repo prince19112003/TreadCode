@@ -81,6 +81,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   // - professional (developer): all coding languages & DSA unlocked (ML & Networking require Enterprise)
   // - enterprise (ultimate, custom): ALL courses unlocked
   const isModuleLockedForTier = (moduleKey: string) => {
+    // 0. Development environment bypass for testing visualizer features
+    if (import.meta.env.DEV) return false;
+
     // 1. Dynamic override from Admin Settings if configured (check both new & legacy tier keys)
     const tierAccess = context.settings?.tierAccess?.[activeTier] 
       || (activeTier === 'professional' ? context.settings?.tierAccess?.['developer'] : undefined)
@@ -221,7 +224,7 @@ import { db } from '../shared/config/firebase';
 import { ref, onValue } from 'firebase/database';
 
 export const App: React.FC = () => {
-  const [showSplash, setShowSplash] = React.useState(true);
+  const [showSplash, setShowSplash] = React.useState(false);
   const [hwid, setHwid] = React.useState<string>(() => getStoredOrGeneratedHwid());
   const [activated, setActivated] = React.useState<boolean | null>(() => {
     const cached = loadLicenseCache();

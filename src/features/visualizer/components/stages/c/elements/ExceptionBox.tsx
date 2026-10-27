@@ -2,29 +2,36 @@ import React from 'react';
 import { motion } from 'motion/react';
 
 interface ExceptionBoxProps {
-  type: string;
+  type?: string;
   message: string;
+  lineNum?: number;
 }
 
-export const ExceptionBox: React.FC<ExceptionBoxProps> = ({ type, message }) => {
+export const ExceptionBox: React.FC<ExceptionBoxProps> = ({
+  type = 'C COMPILER ERROR',
+  message,
+  lineNum
+}) => {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+      initial={{ opacity: 0, scale: 0.96, y: 6 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="flex flex-col gap-1.5 p-3 px-5 rounded-xl border-2 border-red-500 bg-red-500/10 shadow-[0_0_25px_rgba(239,68,68,0.4)]"
-      style={{ minWidth: 'fit-content' }}
+      transition={{ duration: 0.15 }}
+      className="flex flex-col gap-1.5 p-3 px-4 rounded-none border border-rose-500/40 bg-slate-950/90 font-mono text-left max-w-md select-none my-1"
     >
-      <span className="text-[11px] font-black uppercase tracking-widest text-red-400 flex items-center gap-2">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
-        {type}
-      </span>
-      <span className="font-mono text-sm text-red-200">
+      <div className="flex items-center justify-between gap-3 border-b border-rose-500/20 pb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center">
+          {type}
+        </span>
+        {lineNum !== undefined && (
+          <span className="text-[10px] text-slate-400 font-mono">
+            line {lineNum}
+          </span>
+        )}
+      </div>
+      <div className="text-xs text-rose-200 font-mono leading-relaxed wrap-break-word">
         {message}
-      </span>
+      </div>
     </motion.div>
   );
 };

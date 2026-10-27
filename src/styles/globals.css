@@ -100,14 +100,23 @@
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Eco / Low-Power Motion Profile (Suppresses CPU animation thrashing on 1GB SmartBoards) */
+/* Eco / Low-Power Motion Profile (Suppresses CPU & GPU fill-rate thrashing on 1GB SmartBoards) */
 :root[data-eco-motion="true"] *,
 :root[data-eco-motion="true"] *::before,
 :root[data-eco-motion="true"] *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: 0.12s !important;
+  transition-duration: 0.08s !important;
   scroll-behavior: auto !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Retain high-contrast solid surface background when backdrop-blur is neutralized */
+:root[data-eco-motion="true"] [class*="backdrop-blur"] {
+  background-color: var(--color-bg-surface) !important;
 }
 
 /* Retain loading spinners in eco mode for clear user feedback */

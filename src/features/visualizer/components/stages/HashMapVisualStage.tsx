@@ -6,9 +6,15 @@ const CAPACITY = 7;
 
 export const HashMapVisualStage: React.FC = () => {
   const currentStep = useLessonStore(s => s.currentStep);
+  const activeSteps = useLessonStore(s => s.activeSteps);
+  const currentStepIndex = useLessonStore(s => s.currentStepIndex);
   const zoom = useLessonStore(s => s.zoom);
 
-  const mem = (currentStep?.memorySnapshot as any) || {};
+  const step = (activeSteps && activeSteps.length > 0)
+    ? (activeSteps[currentStepIndex] || activeSteps[0])
+    : currentStep;
+
+  const mem = (step?.memorySnapshot as any) || {};
   const entries: [string, string][] = Array.isArray(mem.entries) ? mem.entries : [['id', '101'], ['name', 'Alice'], ['age', '24']];
   const bucketMap: Record<number, [string, string][]> = mem.bucketMap || {};
   const targetIdx: number = typeof mem.targetIdx === 'number' ? mem.targetIdx : -1;
@@ -16,10 +22,18 @@ export const HashMapVisualStage: React.FC = () => {
   const activeVal: string = mem.activeVal || '';
   const action: string = mem.action || 'INIT';
 
-  // Fill default bucket map if missing
+  // Helper hash function for fallback
+  const hashKey = (key: string) => {
+    let num = 0;
+    for (let i = 0; i < key.length; i++) num += key.charCodeAt(i);
+    return Math.abs(num) % CAPACITY;
+  };
+
+  // Fill default bucket map if missing or empty
+  const hasRawBuckets = Boolean(mem.bucketMap && Object.keys(mem.bucketMap).length > 0);
   const buckets = Array.from({ length: CAPACITY }, (_, i) => ({
     index: i,
-    items: bucketMap[i] || [],
+    items: hasRawBuckets ? (bucketMap[i] || []) : entries.filter(([k]) => hashKey(k) === i),
   }));
 
   return (

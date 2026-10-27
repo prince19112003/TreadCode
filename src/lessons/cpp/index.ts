@@ -951,7 +951,7 @@ export const cpp_switch_calc = createCppLesson(
     { lineNum: 14, tokens: [{ type: 'text' as const, value: '    ' }, { type: 'keyword' as const, value: 'return' }, { type: 'text' as const, value: ' 0;' }] },
     { lineNum: 15, tokens: [{ type: 'punctuation' as const, value: '}' }] },
   ],
-  { a: { default: 10, label: 'a (int)' }, b: { default: 5, label: 'b (int)' }, op: { default: '+', label: 'op (char)', type: 'text' } },
+  { a: { default: 10, label: 'a (int)' }, b: { default: 5, label: 'b (int)' }, op: { default: '+', label: 'op (char)', type: 'text', quoteChar: "'" } },
   (vars: Record<string, any>) => {
     const a = Math.trunc(Number(vars.a ?? 10));
     const b = Math.trunc(Number(vars.b ?? 5));
@@ -996,7 +996,7 @@ export const cpp_switch_vowel = createCppLesson(
     { lineNum: 11, tokens: [{ type: 'text' as const, value: '    ' }, { type: 'keyword' as const, value: 'return' }, { type: 'text' as const, value: ' 0;' }] },
     { lineNum: 12, tokens: [{ type: 'punctuation' as const, value: '}' }] },
   ],
-  { ch: { default: 'E', label: 'ch (char)', type: 'text' } },
+  { ch: { default: 'E', label: 'ch (char)', type: 'text', quoteChar: "'" } },
   (vars: Record<string, any>) => {
     const rawCh = String(vars.ch ?? 'E').replace(/['"]/g, '');
     const ch = rawCh ? rawCh[0] : 'E';

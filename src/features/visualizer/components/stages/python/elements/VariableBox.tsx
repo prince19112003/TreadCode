@@ -85,7 +85,7 @@ export const VariableBox: React.FC<VariableBoxProps> = ({ name, value, oldValue,
           className={`absolute bottom-full ${labelMargin} left-1/2 -translate-x-1/2 flex items-center gap-1 z-10 whitespace-nowrap`}
         >
           {typeBadge && typeBadge !== 'Obj' && typeBadge !== 'Object' && name !== 'sc' && String(displayVal) !== 'Scanner' && (
-            <span className="text-[9px] font-mono font-black text-indigo-300 uppercase tracking-widest bg-indigo-500/20 px-1 py-0.2 rounded border border-indigo-500/30">
+            <span className="text-[9px] font-mono font-black text-indigo-300 uppercase tracking-widest bg-indigo-500/20 px-1 py-0.2 rounded-none border border-indigo-500/30">
               {typeBadge}
             </span>
           )}
@@ -100,7 +100,7 @@ export const VariableBox: React.FC<VariableBoxProps> = ({ name, value, oldValue,
         layout
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`relative flex items-center justify-center ${px} rounded-xl border-2 overflow-hidden transition-colors duration-300 ${colorClasses}`}
+        className={`relative flex items-center justify-center ${px} rounded-none border-2 overflow-hidden transition-colors duration-300 ${colorClasses}`}
         style={{ height, minWidth }}
       >
         <AnimatePresence mode="popLayout">

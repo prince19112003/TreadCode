@@ -12,11 +12,11 @@ export const SplashPage: React.FC<SplashPageProps> = ({ onComplete }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Exactly 3 Seconds Timer
+    // Exactly  Seconds Timer
     const timer = setTimeout(() => {
       if (onComplete) onComplete();
       else navigate('/languages', { replace: true });
-    }, 3000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [navigate, onComplete]);

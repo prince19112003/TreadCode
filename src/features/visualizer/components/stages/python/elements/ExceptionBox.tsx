@@ -11,7 +11,7 @@ export const ExceptionBox: React.FC<ExceptionBoxProps> = ({ type, message }) => 
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="flex flex-col gap-1.5 p-3 px-5 rounded-xl border-2 border-red-500 bg-red-500/10 shadow-[0_0_25px_rgba(239,68,68,0.4)]"
+      className="flex flex-col gap-1.5 p-3 px-5 rounded-none border-2 border-red-500 bg-red-500/10"
       style={{ minWidth: 'fit-content' }}
     >
       <span className="text-[11px] font-black uppercase tracking-widest text-red-400 flex items-center gap-2">

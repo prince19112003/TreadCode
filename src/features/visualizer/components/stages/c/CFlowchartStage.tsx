@@ -16,6 +16,7 @@ import { DataStructureBox } from './elements/DataStructureBox';
 import { UserInputPromptBox } from './elements/UserInputPromptBox';
 import { TypeCastBox } from './elements/TypeCastBox';
 import { FormatSpecifierBox } from './elements/FormatSpecifierBox';
+import { ExceptionBox } from './elements/ExceptionBox';
 
 const SVGConnector: React.FC<{ isActive: boolean; isReturning: boolean; isExecuting: boolean; isVisible: boolean }> = () => {
   return null;
@@ -67,9 +68,17 @@ const parseDataStructure = (val: any) => {
     try {
       const jsonStr = isTuple ? `[${cleaned.slice(1, -1)}]` : cleaned;
       const formattedJson = jsonStr.replace(/'/g, '"');
+      const parsed = JSON.parse(formattedJson);
+      if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+        return {
+          variant: 'matrix' as const,
+          items: parsed as Array<Array<string | number>>,
+          matrix: parsed as Array<Array<string | number>>
+        };
+      }
       return {
         variant: isTuple ? ('tuple' as const) : ('array' as const),
-        items: JSON.parse(formattedJson) as Array<string | number>
+        items: parsed as Array<string | number>
       };
     } catch {
       const items = cleaned.slice(1, -1).split(',').map(s => {
@@ -101,16 +110,18 @@ const parseDataStructure = (val: any) => {
   }
 };
 
-const getVarTypeForLanguage = (varName: string, lessonLines: any[], language?: string) => {
-  if (language !== 'c' || !varName || !lessonLines) return undefined;
+const getVarTypeForLanguage = (varName: string, lessonLines: any[], _language: string = 'c') => {
+  if (!varName || !lessonLines) return undefined;
   for (const line of lessonLines) {
     const tokens = line?.tokens || [];
     const varIdx = tokens.findIndex((t: any) => t.value === varName);
     if (varIdx > 0) {
-      const kwToken = tokens.slice(0, varIdx).reverse().find((t: any) => 
-        t.type === 'keyword' && ['int', 'double', 'float', 'bool', 'char', 'void', 'long', 'string', 'short', 'auto', 'struct', 'const'].includes(t.value)
+      const kwTokens = tokens.slice(0, varIdx).filter((t: any) => 
+        t.type === 'keyword' && ['const', 'int', 'double', 'float', 'bool', 'char', 'void', 'long', 'string', 'short', 'auto', 'struct'].includes(t.value)
       );
-      if (kwToken) return kwToken.value;
+      if (kwTokens.length > 0) {
+        return kwTokens.map((t: any) => t.value).join(' ');
+      }
     }
   }
   return undefined;
@@ -141,30 +152,44 @@ export const CFlowchartStage: React.FC = () => {
   if (!lesson) return null;
 
   // Derive active steps: use generateSteps (dynamic) or fallback to static executionSteps
-  const activeSteps = lesson.generateSteps
+  const activeSteps = (lesson.generateSteps
     ? lesson.generateSteps(editableValues)
-    : lesson.executionSteps;
+    : lesson.executionSteps) ?? [];
 
   // Global rule: step 0 = empty canvas (program not yet started).
   // currentStepIndex 1 shows step 0 of activeSteps, index 2 shows steps 0-1, etc.
   const visibleSteps = currentStepIndex === 0 ? [] : activeSteps.slice(0, currentStepIndex);
 
-  // Auto-scroll to the active element, or bottom if not found
+  // Auto-scroll & focus to the executed element
   useEffect(() => {
-    // Add a slight delay to allow the active step to render first
-    setTimeout(() => {
+    const scrollToActive = () => {
       const activeEl = document.getElementById('active-flowchart-step');
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const container = document.getElementById('flowchart-container');
+      if (container && activeEl) {
+        const containerRect = container.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
+        const scrollTop = container.scrollTop + (activeRect.top - containerRect.top) - (containerRect.height / 2) + (activeRect.height / 2);
+        const scrollLeft = container.scrollLeft + (activeRect.left - containerRect.left) - (containerRect.width / 2) + (activeRect.width / 2);
+        container.scrollTo({ top: Math.max(0, scrollTop), left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      } else if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
       } else if (bottomRef.current) {
         bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }
-    }, 50);
-  }, [visibleSteps.length]);
+    };
+
+    const rafId = requestAnimationFrame(scrollToActive);
+    const timerId = setTimeout(scrollToActive, 80);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
+    };
+  }, [visibleSteps.length, currentStepIndex]);
 
   const isMatchTopic = lesson.topic === 'match_case' || lesson.topic === 'switch_case';
-  const hasLoopKeyword = lesson.lines.some(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while')));
-  const isLoopTopic = (['for_loop', 'while_loop', 'nested_loop', 'loop_control'].includes(lesson.topic) || hasLoopKeyword) && lesson.topic !== 'searching_sorting';
+  const hasLoopKeyword = lesson.lines.some(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while' || t.value === 'do')));
+  const isLoopTopic = (['for_loop', 'while_loop', 'do_while_loop', 'nested_loop', 'loop_control'].includes(lesson.topic) || hasLoopKeyword) && lesson.topic !== 'searching_sorting';
+  const isStructureTopic = lesson.topic === 'structures';
 
   // Parse cases from lesson lines dynamically (for match_case & switch_case)
   const casesList: { value: string; displayValue: string }[] = [];
@@ -198,25 +223,30 @@ export const CFlowchartStage: React.FC = () => {
   const getCaseStatus = (caseVal: string): 'matched' | 'failed' | 'pending' => {
     const cleanCaseVal = caseVal.replace(/['"]/g, '').trim();
     
-    // Check if any step in visibleSteps matches this case
+    // Check if any step in visibleSteps evaluates this case condition
     const evalStep = visibleSteps.find(step => {
       const ev = step.animationEvent;
       if (!ev) return false;
 
-      if (ev.type === 'COMPUTE' && (ev.storeIn === 'Condition' || ev.storeIn === 'Match' || ev.operator === 'switch')) {
+      // Only check case condition evaluations (exclude the root switch evaluation step)
+      if (ev.type === 'COMPUTE' && ev.storeIn === 'Condition') {
         const op = String(ev.operator || '').replace(/['"]/g, '').trim();
-        const res = String(ev.result || '').replace(/['"]/g, '').trim();
         
         if (cleanCaseVal === '_' || cleanCaseVal === 'default') {
-          if (op.includes('default') || res.includes('default') || op === '== _' || op === '== default') return true;
+          if (op.includes('default') || op === '== _' || op === '== default') return true;
         }
 
-        if (op.includes('==')) {
-          const rightHand = op.split('==')[1]?.trim().replace(/['"]/g, '');
-          if (rightHand === cleanCaseVal) return true;
-        }
+        const opVal = op.replace(/^==\s*/, '').trim();
+        if (opVal === cleanCaseVal) return true;
+      }
 
-        if (op === cleanCaseVal || res === cleanCaseVal) return true;
+      if (ev.type === 'EVALUATE_CONDITION') {
+        const cond = String((ev as any).condition || '').replace(/['"]/g, '').trim();
+        if (cleanCaseVal === '_' || cleanCaseVal === 'default') {
+          if (cond.includes('default') || cond.includes('_')) return true;
+        }
+        const condVal = cond.replace(/^==\s*/, '').trim();
+        if (condVal === cleanCaseVal) return true;
       }
 
       return false;
@@ -257,15 +287,22 @@ export const CFlowchartStage: React.FC = () => {
   const matchStep = hasMatchStarted && matchStartIdx !== -1 ? visibleSteps[matchStartIdx] : (isMatchTopic && visibleSteps.length > 1 ? visibleSteps[1] : null);
 
   // Find the index of the successfully matched condition to group subsequent branch steps
-  const matchedConditionIdx = visibleSteps.findIndex(s => 
-    s.animationEvent?.type === 'COMPUTE' && 
-    s.animationEvent.storeIn === 'Condition' && 
-    (s.animationEvent.result === 'True' || String(s.animationEvent.result).toLowerCase() === 'true')
-  );
+  const matchedConditionIdx = visibleSteps.findIndex(s => {
+    const ev = s.animationEvent;
+    if (!ev) return false;
+    if (ev.type === 'COMPUTE' && ev.storeIn === 'Condition') {
+      return ev.result === 'True' || String(ev.result).toLowerCase() === 'true';
+    }
+    if (ev.type === 'EVALUATE_CONDITION') {
+      return (ev as any).result === true || String((ev as any).result).toLowerCase() === 'true';
+    }
+    return false;
+  });
 
   const branchSteps = matchedConditionIdx !== -1 ? visibleSteps.slice(matchedConditionIdx + 1) : [];
   
   const isFunctionTopic = lesson.topic === 'functions' || lesson.topic === 'recursion';
+  const isDoWhile = lesson.topic === 'do_while_loop' || lesson.lines.some(l => l.tokens.some(t => t.type === 'keyword' && t.value === 'do'));
   let currentActiveLine = -1;
 
   // Variables for loop topic parsing
@@ -292,26 +329,43 @@ export const CFlowchartStage: React.FC = () => {
   if (isFunctionTopic) {
     activeLines = lesson.lines;
     currentActiveLine = visibleSteps.length > 0 ? visibleSteps[visibleSteps.length - 1].lineNum : -1;
-    
-    let inFunctionDef = false;
-    for (const line of lesson.lines) {
-      const firstToken = line.tokens[0];
-      const indent = (firstToken?.type === 'text' && firstToken.value.trim() === '') ? firstToken.value.length : 0;
-      
-      const hasContent = line.tokens.some(t => t.value.trim() !== '');
-      const isDef = line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value));
-      
-      if (isDef) {
-        inFunctionDef = true;
-        functionLines.push(line);
-      } else if (inFunctionDef && hasContent && indent === 0) {
-        inFunctionDef = false;
-        mainFlowLines.push(line);
-      } else if (inFunctionDef) {
-        functionLines.push(line);
-      } else if (hasContent) {
-        mainFlowLines.push(line);
+
+    // In C, helper function definition appears before main()
+    const mainHeaderIdx = lesson.lines.findIndex(l => 
+      l.tokens.some((t: any) => t.type === 'function' && t.value === 'main')
+    );
+
+    const funcDefHeaderIdx = lesson.lines.findIndex(l => 
+      l.tokens.some((t: any) => t.type === 'function' && !['main', 'printf', 'scanf', 'print'].includes(t.value)) &&
+      l.tokens.some((t: any) => t.type === 'punctuation' && t.value.includes('('))
+    );
+
+    if (funcDefHeaderIdx !== -1) {
+      const endFuncIdx = mainHeaderIdx !== -1 ? mainHeaderIdx : lesson.lines.length;
+      for (let i = funcDefHeaderIdx; i < endFuncIdx; i++) {
+        const line = lesson.lines[i];
+        const trimmed = line.tokens.map((t: any) => t.value).join('').trim();
+        if (i === funcDefHeaderIdx) {
+          functionLines.push(line);
+        } else if (trimmed && trimmed !== '}' && trimmed !== '{') {
+          functionLines.push(line);
+        }
       }
+
+      if (mainHeaderIdx !== -1) {
+        for (let i = mainHeaderIdx + 1; i < lesson.lines.length; i++) {
+          const line = lesson.lines[i];
+          const trimmed = line.tokens.map((t: any) => t.value).join('').trim();
+          if (trimmed && trimmed !== '}' && trimmed !== '{' && trimmed !== 'return 0;') {
+            mainFlowLines.push(line);
+          }
+        }
+      }
+    } else {
+      mainFlowLines = lesson.lines.filter(l => {
+        const trimmed = l.tokens.map((t: any) => t.value).join('').trim();
+        return trimmed && !trimmed.startsWith('#include') && trimmed !== '}' && trimmed !== '{';
+      });
     }
   } else if (isLoopTopic) {
     // Show ALL lines from the start for loop topics
@@ -319,9 +373,11 @@ export const CFlowchartStage: React.FC = () => {
     currentActiveLine = visibleSteps.length > 0 ? visibleSteps[visibleSteps.length - 1].lineNum : -1;
 
     // Detect loop header
-    const loopHeaders = lesson.lines.filter(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while')));
+    const loopHeaders = lesson.lines.filter(l => l.tokens.some(t => t.type === 'keyword' && (
+      isDoWhile ? t.value === 'do' : (t.value === 'for' || t.value === 'while')
+    )));
     const loopHeaderLine = loopHeaders[0];
-    const innerLoopHeaders = loopHeaders.slice(1);
+    const innerLoopHeaders = isDoWhile ? [] : loopHeaders.slice(1);
     
     if (loopHeaderLine) {
       loopHeaderLineNum = loopHeaderLine.lineNum;
@@ -329,18 +385,26 @@ export const CFlowchartStage: React.FC = () => {
       if (headerIdx !== -1) {
         preLoopLines = activeLines.slice(0, headerIdx);
         
-        // Find where the loop ends (first line after header with same or less indentation)
-        const headerIndentStr = loopHeaderLine.tokens.find(t => t.type === 'text' && t.value.trim() === '')?.value || '';
-        const headerIndent = headerIndentStr.length;
-        
         let loopEndIdx = activeLines.length;
-        for (let i = headerIdx + 1; i < activeLines.length; i++) {
-          const line = activeLines[i];
-          const indentToken = line.tokens[0];
-          const indent = (indentToken?.type === 'text' && indentToken.value.trim() === '') ? indentToken.value.length : 0;
-          if (indent <= headerIndent) {
-            loopEndIdx = i;
-            break;
+        if (isDoWhile) {
+          // In do-while, the loop boundary ends AFTER the line containing 'while'
+          const whileLineIdx = activeLines.findIndex((l, idx) => idx > headerIdx && l.tokens.some(t => t.type === 'keyword' && t.value === 'while'));
+          if (whileLineIdx !== -1) {
+            loopEndIdx = whileLineIdx + 1;
+          }
+        } else {
+          // Find where the loop ends (first line after header with same or less indentation)
+          const headerIndentStr = loopHeaderLine.tokens.find(t => t.type === 'text' && t.value.trim() === '')?.value || '';
+          const headerIndent = headerIndentStr.length;
+          
+          for (let i = headerIdx + 1; i < activeLines.length; i++) {
+            const line = activeLines[i];
+            const indentToken = line.tokens[0];
+            const indent = (indentToken?.type === 'text' && indentToken.value.trim() === '') ? indentToken.value.length : 0;
+            if (indent <= headerIndent) {
+              loopEndIdx = i;
+              break;
+            }
           }
         }
         
@@ -403,16 +467,15 @@ export const CFlowchartStage: React.FC = () => {
     const latestStep = [...visibleSteps].reverse().find(s => s.lineNum === line.lineNum);
     const isLatest = line.lineNum === currentActiveLine;
     const hasExecuted = !!latestStep;
-    const isPrintLine = line.tokens.some((t: any) => t.type === 'function' && t.value === 'print');
-    const funcToken = line.tokens.find((t: any) => t.type === 'function' && t.value !== 'print');
+    const isPrintLine = line.tokens.some((t: any) => t.type === 'function' && (t.value === 'print' || t.value === 'printf'));
+    const funcToken = line.tokens.find((t: any) => t.type === 'function' && t.value !== 'print' && t.value !== 'printf');
 
     // Find the caller line in mainFlowLines
-    const isFunctionExecuting = isFunctionTopic && visibleSteps.length > 0 && functionLines.some(l => l.lineNum === currentActiveLine);
     let callerLineNum = -1;
+    const isFunctionExecuting = isFunctionTopic && visibleSteps.length > 0 && functionLines.some(l => l.lineNum === currentActiveLine);
     if (isFunctionExecuting) {
       const callerLine = mainFlowLines.find(l => 
-        !l.tokens.some((t: any) => t.type === 'keyword' && t.value === 'def') &&
-        l.tokens.some((t: any) => t.type === 'function' && t.value !== 'print')
+        l.tokens.some((t: any) => t.type === 'function' && !['printf', 'scanf', 'print', 'main'].includes(t.value))
       );
       if (callerLine) {
         callerLineNum = callerLine.lineNum;
@@ -503,7 +566,7 @@ export const CFlowchartStage: React.FC = () => {
           {!isFunctionBody && ev?.type === 'CREATE_VARIABLE' && (
             isDataStructure(ev.value) ? (() => {
               const { variant, items } = parseDataStructure(ev.value);
-              return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
+              return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} highlightedKey={(ev as any)?.highlightedKey} />;
             })() : (
               <div className="flex flex-col items-center gap-2">
                 <VariableBox name={ev.name} value={ev.value} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
@@ -511,7 +574,7 @@ export const CFlowchartStage: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    className="px-3 py-1 rounded-lg bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 shadow-md shadow-amber-950/30"
+                    className="px-3 py-1 rounded-none bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300"
                   >
                     {ev.formula}
                   </motion.div>
@@ -525,7 +588,7 @@ export const CFlowchartStage: React.FC = () => {
               {ev.variables.map((v, idx) => (
                 isDataStructure(v.value) ? (() => {
                   const { variant, items } = parseDataStructure(v.value);
-                  return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLatest} />;
+                  return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLatest} highlightedKey={(v as any)?.highlightedKey} />;
                 })() : (
                   <VariableBox key={idx} name={v.name} value={v.value} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(v.name, lesson.lines, lesson.language)} />
                 )
@@ -536,7 +599,7 @@ export const CFlowchartStage: React.FC = () => {
           {!isFunctionBody && ev?.type === 'UPDATE_VARIABLE' && (
             isDataStructure(ev.newValue) ? (() => {
               const { variant, items } = parseDataStructure(ev.newValue);
-              return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} />;
+              return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLatest} highlightedKey={(ev as any)?.highlightedKey} />;
             })() : (
               <div className="flex flex-col items-center gap-2">
                 <VariableBox name={ev.name} value={ev.newValue} oldValue={oldValue} isActive={isLatest} colorTheme={colorTheme} isSmall={isFunctionBody} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
@@ -544,7 +607,7 @@ export const CFlowchartStage: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    className="px-3 py-1 rounded-lg bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 shadow-md shadow-amber-950/30"
+                    className="px-3 py-1 rounded-none bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300"
                   >
                     {ev.formula}
                   </motion.div>
@@ -556,6 +619,12 @@ export const CFlowchartStage: React.FC = () => {
            {!isFunctionBody && ev?.type === 'UPDATE_ARRAY_INDEX' && (
             (() => {
               const { variant, items } = parseDataStructure(latestStep.memorySnapshot[ev.arrayName]);
+              const isMatrix = variant === 'matrix';
+              const cellCoord: [number, number] | undefined = isMatrix 
+                ? (Array.isArray((ev as any).cell) ? (ev as any).cell : Array.isArray((ev as any).index) ? (ev as any).index : undefined)
+                : undefined;
+              const normalIdx = !isMatrix && typeof ev.index === 'number' ? ev.index : undefined;
+
               return (
                 <div className="flex flex-col items-center gap-3">
                   <DataStructureBox 
@@ -563,15 +632,16 @@ export const CFlowchartStage: React.FC = () => {
                     variant={variant} 
                     items={items} 
                     isActive={isLatest} 
-                    highlightedIndex={ev.index} 
+                    highlightedIndex={normalIdx}
+                    highlightedCell={cellCoord}
                   />
                   {isLatest && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-xl shadow-md"
+                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-none"
                     >
-                      Updated index {ev.index}: {ev.oldValue} → {ev.newValue}
+                      {cellCoord ? `Updated [${cellCoord[0]}][${cellCoord[1]}]: ${ev.oldValue ?? ''} → ${ev.newValue}` : `Updated index [${ev.index}]: ${ev.oldValue} → ${ev.newValue}`}
                     </motion.div>
                   )}
                 </div>
@@ -582,6 +652,12 @@ export const CFlowchartStage: React.FC = () => {
           {!isFunctionBody && ev?.type === 'HIGHLIGHT_ARRAY_INDEX' && (
             (() => {
               const { variant, items } = parseDataStructure(latestStep.memorySnapshot[ev.arrayName]);
+              const isMatrix = variant === 'matrix';
+              const cellCoord: [number, number] | undefined = isMatrix 
+                ? (Array.isArray((ev as any).cell) ? (ev as any).cell : Array.isArray((ev as any).index) ? (ev as any).index : undefined)
+                : undefined;
+              const normalIdx = !isMatrix && typeof ev.index === 'number' ? ev.index : undefined;
+
               return (
                 <div className="flex flex-col items-center gap-3">
                   <DataStructureBox 
@@ -589,15 +665,16 @@ export const CFlowchartStage: React.FC = () => {
                     variant={variant} 
                     items={items} 
                     isActive={isLatest} 
-                    highlightedIndex={ev.index} 
+                    highlightedIndex={normalIdx}
+                    highlightedCell={cellCoord}
                   />
                   {isLatest && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-xl shadow-md"
+                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-none"
                     >
-                      Inspecting index [{ev.index}] (i = {ev.index})
+                      {cellCoord ? `Inspecting [${cellCoord[0]}][${cellCoord[1]}]` : `Inspecting index [${ev.index}] (i = ${ev.index})`}
                     </motion.div>
                   )}
                 </div>
@@ -650,7 +727,7 @@ export const CFlowchartStage: React.FC = () => {
             })() : (
               <PrintBox 
                 variableName={ev.variableName} 
-                value={latestStep?.consoleOutput || ev.outputValue} 
+                value={ev.outputValue !== undefined && String(ev.outputValue).trim() !== '' ? ev.outputValue : (latestStep?.consoleOutput || '')} 
                 isActive={isLatest} 
                 colorTheme={isPrintLine ? 'default' : colorTheme} 
                 isSmall={isFunctionBody} 
@@ -659,14 +736,16 @@ export const CFlowchartStage: React.FC = () => {
           )}
 
         {ev?.type === 'COMPUTE' && (
-          ev.storeIn === 'Condition' ? (() => {
+          (ev.storeIn === 'Condition' || ev.storeIn === 'Comparison') ? (() => {
             const currentLine = lesson.lines.find(l => l.lineNum === latestStep.lineNum);
             const isLoopHeader = !!currentLine?.tokens.some(t => t.type === 'keyword' && (t.value === 'while' || t.value === 'for'));
             const isForLoop = !!currentLine?.tokens.some(t => t.type === 'keyword' && t.value === 'for');
             
             let labelText = 'CONDITION';
             if (isLoopTopic && isLoopHeader) {
-              if (innerLoopHeaderLineNums.includes(latestStep.lineNum)) {
+              if (lesson.topic === 'do_while_loop' || isDoWhile) {
+                labelText = 'DO-WHILE CONDITION';
+              } else if (innerLoopHeaderLineNums.includes(latestStep.lineNum)) {
                 labelText = isForLoop ? 'INNER FOR LOOP' : 'INNER WHILE LOOP';
               } else if (latestStep.lineNum === loopHeaderLineNum) {
                 labelText = isForLoop ? 'OUTER FOR LOOP' : 'OUTER WHILE LOOP';
@@ -683,7 +762,7 @@ export const CFlowchartStage: React.FC = () => {
                 isTrue={ev.result === 'True' || String(ev.result) === 'true'}
                 isActive={isLatest}
                 label={labelText}
-                colorTheme={isLoopTopic && isLoopHeader ? (innerLoopHeaderLineNums.includes(latestStep.lineNum) ? 'fuchsia' : 'orange') : 'default'}
+                colorTheme={isLoopTopic && (isLoopHeader || isDoWhile) ? (innerLoopHeaderLineNums.includes(latestStep.lineNum) ? 'fuchsia' : 'orange') : 'default'}
               />
             );
           })() : (() => {
@@ -706,25 +785,26 @@ export const CFlowchartStage: React.FC = () => {
         )}
         
         {ev?.type === 'NONE' && !(isFunctionTopic && functionLines[0]?.lineNum === line.lineNum) && !isFunctionBody && (
-          <div className={`px-4 py-2 bg-slate-900 border rounded-xl text-center select-none shadow-sm transition-all duration-300 ${
+          <div className={`px-4 py-2 bg-slate-900 border rounded-none text-center select-none transition-all duration-300 ${
             isLatest 
               ? 'border-orange-500/50 scale-105' 
               : (isFunctionTopic && funcToken && line.lineNum === callerLineNum
-                  ? 'border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] animate-pulse'
+                  ? 'border-yellow-400/80'
                   : 'border-slate-700/60')
           }`}>
             <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
-              {isFunctionTopic && funcToken && !line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value))
-                ? `Calling ${funcToken.value}()`
-                : (isFunctionTopic && (functionLines.some(l => l.lineNum === latestStep.lineNum) || line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value)))
-                    ? (line.tokens.some((t: any) => t.type === 'keyword' && ['void','int','double','float','char'].includes(t.value)) ? 'Function Created' : 'Executing Function')
+              {isFunctionTopic && (line.lineNum === callerLineNum || funcToken)
+                ? `Calling ${funcToken?.value || 'Function'}()`
+                : (isFunctionTopic && functionLines.some(l => l.lineNum === line.lineNum)
+                    ? (line.lineNum === functionLines[0]?.lineNum ? 'Function Defined' : 'Executing Function')
                     : (() => {
                         const isElse = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'else');
                         const isIf = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'if');
                         const isPass = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'pass');
+                        const isStruct = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'struct') && line.tokens.some((t: any) => t.value.includes('{'));
                         if (isPass) return 'Pass Statement';
+                        if (isStruct) return 'Struct Template';
                         if (isElse) return 'Else Block';
-                        // No elif in this language
                         if (isIf) return 'If Block';
                         if (isLoopTopic && line.lineNum === loopHeaderLineNum) return 'Loop Header';
                         return 'Step Executed';
@@ -738,7 +818,7 @@ export const CFlowchartStage: React.FC = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={`px-5 py-2.5 bg-yellow-950/30 border border-yellow-500/50 rounded-none text-center select-none shadow-[0_0_10px_rgba(234,179,8,0.15)] transition-all duration-300 ${isLatest ? 'scale-105 border-yellow-400 ring-1 ring-yellow-500/30' : ''}`}
+            className={`px-5 py-2.5 bg-yellow-950/30 border border-yellow-500/50 rounded-none text-center select-none transition-all duration-300 ${isLatest ? 'scale-105 border-yellow-400 ring-1 ring-yellow-500/30' : ''}`}
           >
             <span className="text-[10px] font-mono font-black tracking-widest text-yellow-400/80 uppercase block mb-0.5">
               FUNCTION CREATED
@@ -750,11 +830,11 @@ export const CFlowchartStage: React.FC = () => {
         )}
         
         {ev?.type === 'FUNCTION_CALL' && (
-          <div className={`px-6 py-3 bg-yellow-950/20 border-2 rounded-xl text-center select-none transition-all duration-300 ${
-            isLatest ? 'scale-105 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 
+          <div className={`px-6 py-3 bg-yellow-950/20 border-2 rounded-none text-center select-none transition-all duration-300 ${
+            isLatest ? 'scale-105 border-yellow-400' : 
             (isFunctionTopic && functionLines.some(l => l.lineNum === currentActiveLine) && line.lineNum === callerLineNum 
-              ? 'border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] animate-pulse' 
-              : 'border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]')
+              ? 'border-yellow-400' 
+              : 'border-yellow-500/50')
           }`}>
             <span className="text-sm font-mono font-bold tracking-wider text-yellow-300">
               Calling {ev.functionName}()
@@ -763,7 +843,7 @@ export const CFlowchartStage: React.FC = () => {
         )}
 
         {ev?.type === 'FUNCTION_RETURN' && (
-          <div className={`px-6 py-3 bg-teal-950/20 border-2 border-teal-500/50 rounded-xl text-center select-none shadow-[0_0_15px_rgba(20,184,166,0.2)] transition-all duration-300 ${isLatest ? 'scale-105' : ''}`}>
+          <div className={`px-6 py-3 bg-teal-950/20 border-2 border-teal-500/50 rounded-none text-center select-none transition-all duration-300 ${isLatest ? 'scale-105' : ''}`}>
             <span className="text-sm font-mono font-bold tracking-wider text-teal-300">
               Returning from {ev.functionName}()
             </span>
@@ -784,7 +864,7 @@ export const CFlowchartStage: React.FC = () => {
       {/* Fixed Full Screen Toggle Button at bottom-left */}
       <button
         onClick={toggleFullScreen}
-        className="absolute bottom-4 left-4 z-50 p-2 bg-[#0d1126]/80 backdrop-blur-md border border-indigo-500/20 rounded-xl text-indigo-300 hover:bg-indigo-500/30 hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)] flex items-center justify-center"
+        className="absolute bottom-4 left-4 z-50 p-2 bg-[#0d1126]/80 backdrop-blur-md border border-indigo-500/20 rounded-none text-indigo-300 hover:bg-indigo-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
         title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
       >
         {isFullScreen ? <Shrink size={16} /> : <Expand size={16} />}
@@ -805,16 +885,19 @@ export const CFlowchartStage: React.FC = () => {
             {isFunctionTopic ? (() => {
               let functionPhase: 'idle' | 'defined' | 'calling' | 'executing' | 'returning' = 'idle';
               const defLineNum = functionLines[0]?.lineNum;
-              const defStep = visibleSteps.find(s => s.lineNum === defLineNum);
-              
-              if (defStep) functionPhase = 'defined';
+              if (defLineNum !== undefined) {
+                functionPhase = 'defined';
+              }
               
               let currentActiveLine = -1;
               if (visibleSteps.length > 0) {
                 const latestStep = visibleSteps[visibleSteps.length - 1];
                 currentActiveLine = latestStep.lineNum;
                 const latestEvent = latestStep.animationEvent;
-                if (latestEvent?.type === 'FUNCTION_CALL') {
+                const hasCallStep = visibleSteps.some(s => s.animationEvent?.type === 'FUNCTION_CALL');
+                const hasReturnStep = visibleSteps.some(s => s.animationEvent?.type === 'FUNCTION_RETURN');
+
+                if (latestEvent?.type === 'FUNCTION_CALL' || (hasCallStep && !hasReturnStep && !functionLines.some(l => l.lineNum === currentActiveLine && l.lineNum !== defLineNum))) {
                   functionPhase = 'calling';
                 } else if (latestEvent?.type === 'FUNCTION_RETURN') {
                   functionPhase = 'returning';
@@ -859,7 +942,7 @@ export const CFlowchartStage: React.FC = () => {
                   {/* Left Column: MAIN PROGRAM FLOW */}
                   <div className={`flex flex-col items-center gap-10 w-1/2 min-w-75 z-10 pt-4 transition-all duration-700 ease-in-out ${
                     functionPhase === 'executing' 
-                      ? 'opacity-35 scale-95 blur-[2px]' 
+                      ? 'opacity-40 scale-95' 
                       : 'opacity-100 scale-100'
                   }`}>
                     {mainFlowLines.map(renderFixedLineBlock)}
@@ -882,9 +965,9 @@ export const CFlowchartStage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
-                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-2xl flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
+                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-none flex flex-col items-center justify-center text-slate-600 gap-2 select-none"
                           >
-                            <svg className="w-6 h-6 opacity-30 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <svg className="w-6 h-6 opacity-30 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="text-[10px] font-mono tracking-wider">Awaiting Function Creation...</span>
@@ -895,80 +978,114 @@ export const CFlowchartStage: React.FC = () => {
                             lessonLines={lesson.lines}
                             currentStepIndex={currentStepIndex}
                           />
-                        ) : (
-                          <FunctionBlock 
-                            key="func-block"
-                            functionName={functionLines[0]?.tokens.find((t: any) => t.type === 'function')?.value || 'Function'} 
-                            phase={functionPhase}
-                          >
-                        {functionLines.slice(1).map(line => {
-                          const isLineLatest = line.lineNum === currentActiveLine;
-                          const hasExecuted = visibleSteps.some(s => s.lineNum === line.lineNum);
-                          const isPrint = line.tokens.some((t: any) => t.type === 'function' && t.value === 'print');
-                          const isReturn = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'return');
-                          const isCompute = line.tokens.some((t: any) => t.type === 'operator' && t.value === '=');
-                          let stmtType = isPrint ? 'print' : isReturn ? 'return' : isCompute ? 'compute' : 'other';
-                          
-                          let activeComponent = null;
-                          if (hasExecuted && visibleSteps.length > 0) {
-                            const lineLatestStep = [...visibleSteps].reverse().find(s => s.lineNum === line.lineNum);
-                            if (lineLatestStep) {
-                              const ev = lineLatestStep.animationEvent;
-                              if (ev?.type === 'PRINT_VALUE') activeComponent = <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLineLatest} isSmall />;
-                              if (ev?.type === 'CREATE_VARIABLE') {
-                                activeComponent = isDataStructure(ev.value) ? (() => {
-                                  const { variant, items } = parseDataStructure(ev.value);
-                                  return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
-                                })() : <VariableBox name={ev.name} value={ev.value} isActive={isLineLatest} isSmall />;
-                              }
-                              if (ev?.type === 'MULTI_CREATE_VARIABLES') {
-                                activeComponent = (
-                                  <div className="flex gap-2 items-center">
-                                    {ev.variables.map((v: any, idx: number) => (
-                                      isDataStructure(v.value) ? (() => {
-                                        const { variant, items } = parseDataStructure(v.value);
-                                        return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLineLatest} />;
-                                      })() : (
-                                        <VariableBox key={idx} name={v.name} value={v.value} isActive={isLineLatest} isSmall />
-                                      )
-                                    ))}
-                                  </div>
-                                );
-                              }
-                              if (ev?.type === 'UPDATE_VARIABLE') {
-                                activeComponent = isDataStructure(ev.newValue) ? (() => {
-                                  const { variant, items } = parseDataStructure(ev.newValue);
-                                  return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
-                                })() : <VariableBox name={ev.name} value={ev.newValue} oldValue={ev.oldValue} isActive={isLineLatest} isSmall />;
-                              }
-                              if (ev?.type === 'COMPUTE') {
-                                if (ev.storeIn === 'Condition') {
-                                  activeComponent = (
-                                    <ConditionBox
-                                      condition={getConditionString(ev)}
-                                      inputs={ev.inputs}
-                                      memorySnapshot={lineLatestStep.memorySnapshot}
-                                      isTrue={ev.result === 'True' || String(ev.result) === 'true'}
-                                      isActive={isLineLatest}
-                                      label="CONDITION"
-                                      colorTheme="default"
-                                    />
+                        ) : (() => {
+                          const funcCallStep = visibleSteps.find(s => s.animationEvent?.type === 'FUNCTION_CALL');
+                          const rawBaseName = functionLines[0]?.tokens.find((t: any) => t.type === 'function')?.value || 'Function';
+                          const argsMap = (funcCallStep?.animationEvent as any)?.args;
+                          const argsStr = argsMap ? Object.entries(argsMap).map(([k, v]) => `${k} = ${v}`).join(', ') : '';
+                          const fullFuncName = argsStr ? `${rawBaseName}(${argsStr})` : rawBaseName;
+
+                          return (
+                            <FunctionBlock 
+                              key="func-block"
+                              functionName={fullFuncName} 
+                              phase={functionPhase}
+                            >
+                          {functionLines.slice(1).map(line => {
+                            const isLineLatest = line.lineNum === currentActiveLine;
+                            const hasExecuted = visibleSteps.some(s => s.lineNum === line.lineNum);
+                            const isPrint = line.tokens.some((t: any) => t.type === 'function' && (t.value === 'print' || t.value === 'printf'));
+                            const isReturn = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'return');
+                            const isCompute = line.tokens.some((t: any) => t.type === 'operator' && t.value === '=');
+                            let stmtType = isPrint ? 'print' : isReturn ? 'return' : isCompute ? 'compute' : 'other';
+                            
+                            let activeComponent = null;
+                            if (hasExecuted && visibleSteps.length > 0) {
+                              const lineLatestStep = [...visibleSteps].reverse().find(s => s.lineNum === line.lineNum);
+                              if (lineLatestStep) {
+                                const ev = lineLatestStep.animationEvent;
+                                if (ev?.type === 'PRINT_VALUE') activeComponent = <PrintBox variableName={ev.variableName} value={ev.outputValue} isActive={isLineLatest} />;
+                                if (ev?.type === 'CREATE_VARIABLE') {
+                                  activeComponent = isDataStructure(ev.value) ? (() => {
+                                    const { variant, items } = parseDataStructure(ev.value);
+                                    return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
+                                  })() : (
+                                    <div className="flex flex-col items-center gap-2">
+                                      <VariableBox name={ev.name} value={ev.value} isActive={isLineLatest} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
+                                      {ev.formula && (
+                                        <div className="px-3 py-1 bg-slate-900 border border-amber-500/40 text-xs font-mono font-bold text-amber-300">
+                                          {ev.formula}
+                                        </div>
+                                      )}
+                                    </div>
                                   );
-                                } else {
-                                  activeComponent = <ComputeBlock inputs={ev.inputs} operator={ev.operator || '+'} storeIn={ev.storeIn} result={ev.result} memorySnapshot={lineLatestStep.memorySnapshot} isActive={isLineLatest} isSmall />;
+                                }
+                                if (ev?.type === 'MULTI_CREATE_VARIABLES') {
+                                  activeComponent = (
+                                    <div className="flex gap-4 items-center flex-wrap justify-center">
+                                      {ev.variables.map((v: any, idx: number) => (
+                                        isDataStructure(v.value) ? (() => {
+                                          const { variant, items } = parseDataStructure(v.value);
+                                          return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLineLatest} />;
+                                        })() : (
+                                          <VariableBox key={idx} name={v.name} value={v.value} isActive={isLineLatest} varType={getVarTypeForLanguage(v.name, lesson.lines, lesson.language)} />
+                                        )
+                                      ))}
+                                    </div>
+                                  );
+                                }
+                                if (ev?.type === 'UPDATE_VARIABLE') {
+                                  activeComponent = isDataStructure(ev.newValue) ? (() => {
+                                    const { variant, items } = parseDataStructure(ev.newValue);
+                                    return <DataStructureBox name={ev.name} variant={variant} items={items} isActive={isLineLatest} />;
+                                  })() : (
+                                    <div className="flex flex-col items-center gap-2">
+                                      <VariableBox name={ev.name} value={ev.newValue} oldValue={ev.oldValue} isActive={isLineLatest} varType={getVarTypeForLanguage(ev.name, lesson.lines, lesson.language)} />
+                                      {ev.formula && (
+                                        <div className="px-3 py-1 bg-slate-900 border border-amber-500/40 text-xs font-mono font-bold text-amber-300">
+                                          {ev.formula}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                if (ev?.type === 'COMPUTE') {
+                                  if (ev.storeIn === 'Condition') {
+                                    activeComponent = (
+                                      <ConditionBox
+                                        condition={getConditionString(ev)}
+                                        inputs={ev.inputs}
+                                        memorySnapshot={lineLatestStep.memorySnapshot}
+                                        isTrue={ev.result === 'True' || String(ev.result) === 'true'}
+                                        isActive={isLineLatest}
+                                        label="CONDITION"
+                                        colorTheme="default"
+                                      />
+                                    );
+                                  } else {
+                                    activeComponent = (
+                                      <ComputeBlock
+                                        inputs={ev.inputs}
+                                        operator={ev.operator || '+'}
+                                        storeIn={ev.storeIn}
+                                        result={ev.result}
+                                        memorySnapshot={lineLatestStep.memorySnapshot}
+                                        isActive={isLineLatest}
+                                      />
+                                    );
+                                  }
+                                }
+                                if (ev?.type === 'FUNCTION_RETURN') {
+                                  activeComponent = (
+                                    <div className={`px-5 py-3 bg-teal-950/40 border border-teal-500/50 rounded-none text-center select-none transition-all duration-300 ${isLineLatest ? 'scale-105 border-teal-400 ring-1 ring-teal-400/30' : ''}`}>
+                                      <span className="text-sm font-mono font-bold tracking-wider text-teal-300">
+                                        Return {ev.returnValue !== undefined ? ev.returnValue : ''}
+                                      </span>
+                                    </div>
+                                  );
                                 }
                               }
-                              if (ev?.type === 'FUNCTION_RETURN') {
-                                activeComponent = (
-                                  <div className={`px-4 py-2 bg-teal-950/40 border border-teal-500/50 rounded-xl text-center select-none shadow-md transition-all duration-300 ${isLineLatest ? 'scale-105 border-teal-400 ring-1 ring-teal-400/30' : ''}`}>
-                                    <span className="text-xs font-mono font-bold tracking-wider text-teal-300">
-                                      Return {ev.returnValue !== undefined ? ev.returnValue : ''}
-                                    </span>
-                                  </div>
-                                );
-                              }
                             }
-                          }
 
                           return (
                             <FunctionStatementRow
@@ -982,7 +1099,8 @@ export const CFlowchartStage: React.FC = () => {
                           );
                         })}
                       </FunctionBlock>
-                    )}
+                            );
+                          })()}
                   </AnimatePresence>
                 )}
                   </div>
@@ -997,7 +1115,7 @@ export const CFlowchartStage: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center gap-4 py-20 px-8 text-center"
               >
-                <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-indigo-500/30 flex items-center justify-center mb-2">
+                <div className="w-16 h-16 rounded-none border-2 border-dashed border-indigo-500/30 flex items-center justify-center mb-2">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-indigo-400/40">
                     <path d="M5 3l14 9-14 9V3z" />
                   </svg>
@@ -1029,6 +1147,13 @@ export const CFlowchartStage: React.FC = () => {
                       {idx > 0 && <div className="absolute -top-7 left-1/2 w-0.5 h-6 bg-indigo-500/20 -translate-x-1/2" />}
                       {ev?.type === 'CREATE_VARIABLE' && (
                         <VariableBox name={ev.name} value={ev.value} isActive={isLatest} />
+                      )}
+                      {ev?.type === 'MULTI_CREATE_VARIABLES' && (
+                        <div className="flex items-center gap-4">
+                          {ev.variables.map((v: any, vIdx: number) => (
+                            <VariableBox key={vIdx} name={v.name} value={v.value} isActive={isLatest} />
+                          ))}
+                        </div>
                       )}
                       {ev?.type === 'UPDATE_VARIABLE' && (
                         <VariableBox name={ev.name} value={ev.newValue} oldValue={ev.oldValue} isActive={isLatest} />
@@ -1082,7 +1207,7 @@ export const CFlowchartStage: React.FC = () => {
                         if (status === 'matched') {
                           lineStyle = 'border-green-500 border-solid';
                           cardStyle = 'border-green-500 bg-green-500/10 text-green-300';
-                          badgeColor = 'bg-green-500 text-white';
+                          badgeColor = 'bg-green-500 text-white font-black';
                           badgeText = '✓';
                         } else if (status === 'failed') {
                           lineStyle = 'border-red-500/50 border-dashed';
@@ -1101,15 +1226,15 @@ export const CFlowchartStage: React.FC = () => {
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: idx * 0.05 }}
-                              className={`flex items-center gap-3 px-6 py-4 rounded-xl border-2 transition-all duration-300 ${cardStyle}`}
+                              className={`flex items-center gap-3 px-6 py-4 rounded-none border-2 transition-all duration-300 ${cardStyle}`}
                             >
-                              <div className="flex flex-col font-mono">
+                              <div className="flex flex-col font-mono text-left">
                                 <span className="text-[10px] tracking-wider font-bold opacity-60">CASE</span>
                                 <span className="text-base font-bold">{c.displayValue}</span>
                               </div>
 
                               {/* Status Badge */}
-                              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${badgeColor}`}>
+                              <div className={`w-5 h-5 rounded-none flex items-center justify-center text-[10px] font-black ${badgeColor}`}>
                                 {badgeText}
                               </div>
                             </motion.div>
@@ -1135,6 +1260,9 @@ export const CFlowchartStage: React.FC = () => {
                                         {bIdx > 0 && <div className="absolute -top-7 left-1/2 w-0.5 h-6 bg-green-500/40 -translate-x-1/2" />}
                                         {bEv?.type === 'PRINT_VALUE' && (
                                           <PrintBox variableName={bEv.variableName} value={bEv.outputValue} isActive={isLatest} />
+                                        )}
+                                        {bEv?.type === 'CREATE_VARIABLE' && (
+                                          <VariableBox name={bEv.name} value={bEv.value} isActive={isLatest} />
                                         )}
                                         {bEv?.type === 'UPDATE_VARIABLE' && (
                                           <VariableBox name={bEv.name} value={bEv.newValue} oldValue={bEv.oldValue} isActive={isLatest} />
@@ -1242,9 +1370,9 @@ export const CFlowchartStage: React.FC = () => {
                       if (!hasExecutedInnerLoop) return null;
                       
                       return (
-                        <div key={sIdx} className="relative border-2 border-dashed border-fuchsia-500/30 bg-fuchsia-950/5 p-6 rounded-2xl ml-8 flex flex-col items-center gap-10">
+                        <div key={sIdx} className="relative border-2 border-dashed border-fuchsia-500/30 bg-fuchsia-950/5 p-6 rounded-none ml-8 flex flex-col items-center gap-10">
                           {/* Label tag for Inner Loop container */}
-                          <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#060814] text-[10px] font-black tracking-widest text-fuchsia-400 border border-fuchsia-500/20 rounded uppercase">
+                          <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#060814] text-[10px] font-black tracking-widest text-fuchsia-400 border border-fuchsia-500/20 rounded-none uppercase">
                             Inner Loop Box
                           </div>
 
@@ -1347,7 +1475,7 @@ export const CFlowchartStage: React.FC = () => {
                   {/* Left Column: MAIN PROGRAM FLOW */}
                   <div className={`flex flex-col items-center gap-10 w-1/2 min-w-75 z-10 pt-4 transition-all duration-700 ease-in-out ${
                     functionPhase === 'executing' 
-                      ? 'opacity-30 scale-95 blur-[2px]' 
+                      ? 'opacity-40 scale-95' 
                       : 'opacity-100 scale-100'
                   }`}>
                     {mainFlowLines.map(renderFixedLineBlock)}
@@ -1370,9 +1498,9 @@ export const CFlowchartStage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
-                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-2xl flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
+                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-none flex flex-col items-center justify-center text-slate-600 gap-2 select-none"
                           >
-                            <svg className="w-6 h-6 opacity-30 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <svg className="w-6 h-6 opacity-30 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="text-[10px] font-mono tracking-wider">Awaiting Function Creation...</span>
@@ -1386,7 +1514,7 @@ export const CFlowchartStage: React.FC = () => {
                         {functionLines.slice(1).filter(line => visibleSteps.some(s => s.lineNum === line.lineNum)).map(line => {
                           const isLatest = line.lineNum === currentActiveLine;
                           const hasExecuted = true;
-                          const isPrint = line.tokens.some((t: any) => t.type === 'function' && t.value === 'print');
+                          const isPrint = line.tokens.some((t: any) => t.type === 'function' && (t.value === 'print' || t.value === 'printf'));
                           const isReturn = line.tokens.some((t: any) => t.type === 'keyword' && t.value === 'return');
                           const isCompute = line.tokens.some((t: any) => t.type === 'operator' && t.value === '=');
                           let stmtType = isPrint ? 'print' : isReturn ? 'return' : isCompute ? 'compute' : 'other';
@@ -1411,7 +1539,167 @@ export const CFlowchartStage: React.FC = () => {
                 </div>
               </motion.div>
             );
-          })() : (
+          })() : isStructureTopic ? (() => {
+              // 1. Gather all struct copies in RAM up to the latest step (persistent in-place)
+              const structMap: Record<string, {
+                name: string;
+                items: Record<string, any>;
+                highlightedKey?: string;
+                isActive: boolean;
+              }> = {};
+
+              const latestStepIdx = visibleSteps.length - 1;
+
+              visibleSteps.forEach((step, idx) => {
+                const ev = step.animationEvent;
+                if (!ev) return;
+                const isLatest = idx === latestStepIdx;
+
+                if (ev.type === 'CREATE_VARIABLE' && isDataStructure(ev.value)) {
+                  const { items } = parseDataStructure(ev.value);
+                  structMap[ev.name] = {
+                    name: ev.name,
+                    items: { ...(items as Record<string, any>) },
+                    highlightedKey: isLatest ? (ev as any).highlightedKey : undefined,
+                    isActive: isLatest
+                  };
+                } else if (ev.type === 'UPDATE_VARIABLE' && isDataStructure(ev.newValue)) {
+                  const { items } = parseDataStructure(ev.newValue);
+                  if (structMap[ev.name]) {
+                    structMap[ev.name].items = { ...(items as Record<string, any>) };
+                    structMap[ev.name].highlightedKey = isLatest ? (ev as any).highlightedKey : undefined;
+                    structMap[ev.name].isActive = isLatest;
+                  } else {
+                    structMap[ev.name] = {
+                      name: ev.name,
+                      items: { ...(items as Record<string, any>) },
+                      highlightedKey: isLatest ? (ev as any).highlightedKey : undefined,
+                      isActive: isLatest
+                    };
+                  }
+                }
+              });
+
+              // 2. Downstream non-struct steps (Compute comparisons, printf, non-struct variables)
+              const downstreamSteps = visibleSteps.filter(s => {
+                const ev = s.animationEvent;
+                if (!ev) return false;
+                if (ev.type === 'CREATE_VARIABLE' && isDataStructure(ev.value)) return false;
+                if (ev.type === 'UPDATE_VARIABLE' && isDataStructure(ev.newValue)) return false;
+                if (ev.type === 'NONE') return false;
+                return true;
+              });
+
+              const structList = Object.values(structMap);
+
+              return (
+                <motion.div
+                  key="structure-canvas"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center gap-10 shrink-0 w-full max-w-4xl px-6 pb-20"
+                >
+                  {/* Top: Persistent Struct Instances in RAM */}
+                  {structList.length > 0 ? (
+                    <div className="flex flex-col items-center gap-4 w-full">
+                      <div className="flex flex-wrap items-start justify-center gap-6">
+                        {structList.map(inst => (
+                          <DataStructureBox
+                            key={inst.name}
+                            name={inst.name}
+                            variant="table"
+                            items={inst.items}
+                            isActive={inst.isActive}
+                            highlightedKey={inst.highlightedKey}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-slate-800 p-8 text-center text-xs font-mono text-slate-500">
+                      Step forward to allocate struct variables in RAM
+                    </div>
+                  )}
+
+                  {/* Connector & Downstream Flow (Condition checks, printf, math results) */}
+                  {downstreamSteps.length > 0 && (
+                    <div className="flex flex-col items-center gap-8 w-full">
+                      <div className="w-0.5 h-8 bg-indigo-500/30" />
+                      <div className="flex flex-col items-center gap-8 w-full">
+                        {downstreamSteps.map((dStep, dIdx) => {
+                          const isLatest = dStep.step === visibleSteps[latestStepIdx]?.step;
+                          const dev = dStep.animationEvent;
+                          return (
+                            <motion.div
+                              key={dStep.step}
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex flex-col items-center gap-4 relative shrink-0"
+                            >
+                              {dIdx > 0 && <div className="absolute -top-7 left-1/2 w-0.5 h-6 bg-indigo-500/30 -translate-x-1/2" />}
+                              
+                              {dev?.type === 'CREATE_VARIABLE' && !isDataStructure(dev.value) && (
+                                <VariableBox
+                                  name={dev.name}
+                                  value={dev.value}
+                                  isActive={isLatest}
+                                  varType={getVarTypeForLanguage(dev.name, lesson.lines, lesson.language)}
+                                />
+                              )}
+
+                              {dev?.type === 'COMPUTE' && (
+                                (dev.storeIn === 'Condition' || dev.storeIn === 'Comparison') ? (
+                                  <ConditionBox
+                                    condition={getConditionString(dev)}
+                                    inputs={dev.inputs}
+                                    memorySnapshot={dStep.memorySnapshot}
+                                    isTrue={dev.result === 'True' || String(dev.result) === 'true'}
+                                    isActive={isLatest}
+                                  />
+                                ) : (
+                                  <ComputeBlock
+                                    inputs={dev.inputs}
+                                    operator={dev.operator || '+'}
+                                    storeIn={dev.storeIn}
+                                    result={dev.result}
+                                    memorySnapshot={dStep.memorySnapshot}
+                                    isActive={isLatest}
+                                  />
+                                )
+                              )}
+
+                              {dev?.type === 'EVALUATE_CONDITION' && (() => {
+                                const condEv = dev as any;
+                                const condStr = condEv.condition 
+                                  ? (condEv.variableName ? `${condEv.variableName} ${condEv.condition}` : condEv.condition)
+                                  : (condEv.variableName || 'Condition');
+                                return (
+                                  <ConditionBox
+                                    condition={condStr}
+                                    inputs={condEv.variableName ? [condEv.variableName] : []}
+                                    memorySnapshot={dStep.memorySnapshot}
+                                    isTrue={condEv.result === 'True' || condEv.result === true}
+                                    isActive={isLatest}
+                                  />
+                                );
+                              })()}
+
+                              {dev?.type === 'PRINT_VALUE' && (
+                                <PrintBox
+                                  value={dev.outputValue}
+                                  variableName={dev.variableName}
+                                  isActive={isLatest}
+                                />
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })() : (
               /* ── Standard Linear Flowchart Layout (Variables, If, If-Else, If-Elif) ── */
               <motion.div
                 key="steps-canvas"
@@ -1431,7 +1719,9 @@ export const CFlowchartStage: React.FC = () => {
                       key={step.step}
                       initial={{ opacity: 0, y: -20, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      className={`flex flex-col items-center gap-4 relative shrink-0 min-w-max ${isMatchBranch ? 'ml-32' : ''}`}
+                      className={`flex flex-col items-center gap-4 relative shrink-0 min-w-max transition-all duration-300 ${isMatchBranch ? 'ml-32' : ''} ${
+                        isLatest ? 'ring-2 ring-indigo-500/70 ring-offset-4 ring-offset-slate-950 scale-[1.02] z-10' : 'opacity-85'
+                      }`}
                       id={isLatest ? 'active-flowchart-step' : undefined}
                     >
                       {/* Connector line from previous step */}
@@ -1439,7 +1729,7 @@ export const CFlowchartStage: React.FC = () => {
                         <div className="absolute -top-9 left-1/2 w-0.5 h-6 bg-indigo-500/30 -translate-x-1/2" />
                       )}
                       {index > 0 && isMatchBranch && (
-                        <div className="absolute -top-8 -left-32 w-32 h-8 border-l-2 border-b-2 border-fuchsia-500/40 rounded-bl-xl border-dashed" />
+                        <div className="absolute -top-8 -left-32 w-32 h-8 border-l-2 border-b-2 border-fuchsia-500/40 rounded-none border-dashed" />
                       )}
 
                       {(ev?.type === 'STACK_PUSH' || ev?.type === 'STACK_POP' || ev?.type === 'SET_POINTERS' || ev?.type === 'COMPARE_INDICES' || (ev?.type === 'NONE' && step.memorySnapshot?.stack !== undefined)) && (() => {
@@ -1454,7 +1744,7 @@ export const CFlowchartStage: React.FC = () => {
                         const highlightedIdx = ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA : (ev as any)?.pointers?.curr ?? (typeof step.memorySnapshot?.i === 'number' ? step.memorySnapshot.i : undefined);
 
                         return (
-                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-2xl bg-slate-950/80 border-2 border-indigo-500/20 shadow-2xl backdrop-blur-md min-w-75">
+                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-none bg-slate-950 border-2 border-indigo-500/30 min-w-75">
                             <div className="flex items-center justify-between w-full border-b border-indigo-500/10 pb-2">
                               <span className="text-xs font-mono font-black uppercase tracking-widest text-purple-400">
                                 STACK CONTAINER (LIFO)
@@ -1483,13 +1773,13 @@ export const CFlowchartStage: React.FC = () => {
                                       layout
                                       initial={{ scale: 0.9, opacity: 0 }}
                                       animate={{ scale: 1, opacity: 1 }}
-                                      className={`flex-1 h-11 rounded-xl flex items-center justify-center font-mono font-bold text-sm border-2 transition-all duration-300 ${
+                                      className={`flex-1 h-11 rounded-none flex items-center justify-center font-mono font-bold text-sm border-2 transition-all duration-300 ${
                                         isHighlighted
-                                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-[1.03]'
+                                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 scale-[1.03]'
                                           : isTop
-                                          ? 'border-purple-400 bg-purple-500/25 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-[1.02]'
+                                          ? 'border-purple-400 bg-purple-500/25 text-purple-200 scale-[1.02]'
                                           : hasVal
-                                          ? 'border-indigo-500/40 bg-indigo-950/70 text-slate-200 shadow-md'
+                                          ? 'border-indigo-500/40 bg-indigo-950/70 text-slate-200'
                                           : 'border-dashed border-slate-800/80 bg-slate-900/30 text-slate-700'
                                       }`}
                                     >
@@ -1502,7 +1792,7 @@ export const CFlowchartStage: React.FC = () => {
                                         <motion.span
                                           initial={{ x: -5, opacity: 0 }}
                                           animate={{ x: 0, opacity: 1 }}
-                                          className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-mono font-black tracking-wider shadow-sm"
+                                          className="px-2 py-0.5 rounded-none bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-mono font-black tracking-wider"
                                         >
                                           TOP ←
                                         </motion.span>
@@ -1543,6 +1833,7 @@ export const CFlowchartStage: React.FC = () => {
                               swappingIndices={swappingIndices}
                               minIdx={minIdx}
                               keyIndex={keyIndex}
+                              highlightedKey={(ev as any)?.highlightedKey}
                             />
                           );
                         })() : (
@@ -1575,6 +1866,7 @@ export const CFlowchartStage: React.FC = () => {
                               swappingIndices={swappingIndices}
                               minIdx={minIdx}
                               keyIndex={keyIndex}
+                              highlightedKey={(ev as any)?.highlightedKey}
                             />
                           );
                         })() : (
@@ -1618,10 +1910,10 @@ export const CFlowchartStage: React.FC = () => {
                                   isActive={isLatest}
                                   highlightedIndex={actualIdx}
                                 />
-                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md font-mono text-xs text-amber-300 font-bold">
+                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-none font-mono text-xs text-amber-300 font-bold">
                                   <span>Index [{rawIdx}]{rawIdx < 0 ? ` (pos ${actualIdx})` : ''}</span>
                                   <span>➡</span>
-                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{ev.outputValue}</span>
+                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded-none border border-slate-700">{ev.outputValue}</span>
                                 </div>
                                 <span className="text-[10px] font-black tracking-widest font-mono text-green-400 uppercase">
                                   PRINT OUTPUT
@@ -1647,10 +1939,10 @@ export const CFlowchartStage: React.FC = () => {
                                   isActive={isLatest}
                                   highlightedKey={dictKey}
                                 />
-                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md font-mono text-xs text-amber-300 font-bold">
+                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-none font-mono text-xs text-amber-300 font-bold">
                                   <span>Key ["{dictKey}"]</span>
                                   <span>➡</span>
-                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{ev.outputValue}</span>
+                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded-none border border-slate-700">{ev.outputValue}</span>
                                 </div>
                                 <span className="text-[10px] font-black tracking-widest font-mono text-green-400 uppercase">
                                   PRINT OUTPUT
@@ -1671,7 +1963,7 @@ export const CFlowchartStage: React.FC = () => {
                             </div>
                           );
                         })() : (
-                          <PrintBox variableName={ev.variableName} value={step?.consoleOutput || ev.outputValue} isActive={isLatest} />
+                          <PrintBox variableName={ev.variableName} value={ev.outputValue !== undefined && String(ev.outputValue).trim() !== '' ? ev.outputValue : (step?.consoleOutput || '')} isActive={isLatest} />
                         );
                       })()}
 
@@ -1711,7 +2003,7 @@ export const CFlowchartStage: React.FC = () => {
                         (() => {
                           const { variant, items } = parseDataStructure(step.memorySnapshot[ev.arrayName]);
                           const itemsArr = Array.isArray(items) ? items : [];
-                          const itemVal = itemsArr[ev.index];
+                          const itemVal = typeof ev.index === 'number' ? itemsArr[ev.index] : undefined;
                           return (
                             <div className="flex flex-col items-center gap-3">
                               <DataStructureBox 
@@ -1725,11 +2017,11 @@ export const CFlowchartStage: React.FC = () => {
                                 <motion.div 
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  className="text-xs font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md flex items-center gap-2"
+                                  className="text-xs font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-none flex items-center gap-2"
                                 >
                                   <span>Inspecting Index [{ev.index}]</span>
                                   <span>➡</span>
-                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{itemVal !== undefined ? (typeof itemVal === 'string' ? `"${itemVal}"` : itemVal) : ev.index}</span>
+                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded-none border border-slate-700">{itemVal !== undefined ? (typeof itemVal === 'string' ? `"${itemVal}"` : itemVal) : ev.index}</span>
                                 </motion.div>
                               )}
                             </div>
@@ -1738,7 +2030,7 @@ export const CFlowchartStage: React.FC = () => {
                       )}
 
                       {ev?.type === 'COMPUTE' && (
-                        ev.storeIn === 'Condition' ? (
+                        (ev.storeIn === 'Condition' || ev.storeIn === 'Comparison') ? (
                           <div className="flex flex-col items-center gap-3">
                             <ConditionBox
                               condition={getConditionString(ev)}
@@ -1784,7 +2076,7 @@ export const CFlowchartStage: React.FC = () => {
                           {ev.variables.map((v, idx) => (
                             isDataStructure(v.value) ? (() => {
                               const { variant, items } = parseDataStructure(v.value);
-                              return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLatest} pointers={undefined} searchRange={undefined} sortedIndices={undefined} comparingIndices={undefined} swappingIndices={undefined} minIdx={undefined} keyIndex={undefined} />;
+                              return <DataStructureBox key={idx} name={v.name} variant={variant} items={items} isActive={isLatest} pointers={undefined} searchRange={undefined} sortedIndices={undefined} comparingIndices={undefined} swappingIndices={undefined} minIdx={undefined} keyIndex={undefined} highlightedKey={(v as any)?.highlightedKey} />;
                             })() : (
                               <VariableBox key={idx} name={v.name} value={v.value} isActive={isLatest} varType={getVarTypeForLanguage(v.name, lesson.lines)} />
                             )
@@ -1821,11 +2113,11 @@ export const CFlowchartStage: React.FC = () => {
                             <motion.div
                               initial={{ opacity: 0, scale: 0.9, y: 8 }}
                               animate={{ opacity: 1, scale: 1, y: 0 }}
-                              className={`relative flex items-center gap-6 px-6 py-3.5 rounded-[22px] border-2 font-mono shadow-xl backdrop-blur-md transition-all duration-300 ${
+                              className={`relative flex items-center gap-6 px-6 py-3.5 rounded-none border-2 font-mono transition-all duration-300 ${
                                 isPass
-                                  ? 'bg-slate-950/95 border-emerald-400 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
-                                  : 'bg-slate-950/95 border-rose-500 text-rose-300 shadow-[0_0_25px_rgba(244,63,94,0.2)]'
-                              } ${isLatest ? 'ring-2 ring-emerald-400/40 scale-105' : ''}`}
+                                  ? 'bg-slate-950 border-emerald-400 text-emerald-300'
+                                  : 'bg-slate-950 border-rose-500 text-rose-300'
+                              } ${isLatest ? 'ring-1 ring-emerald-400/40 scale-105' : ''}`}
                             >
                               {/* Left: Variable Name + Value directly under it */}
                               {varName && isNaN(Number(varName)) && (
@@ -1846,8 +2138,8 @@ export const CFlowchartStage: React.FC = () => {
                                 {operatorText}
                               </div>
 
-                              {/* Right: Solid Circle Icon Badge with Checkmark / Cross */}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md ${
+                              {/* Right: Solid Square Icon Badge with Checkmark / Cross */}
+                              <div className={`w-8 h-8 rounded-none flex items-center justify-center shrink-0 ${
                                 isPass ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
                               }`}>
                                 {isPass ? (
@@ -1870,16 +2162,24 @@ export const CFlowchartStage: React.FC = () => {
                         );
                       })()}
 
+                      {ev?.type === 'COMPILER_ERROR' && (
+                        <ExceptionBox
+                          type={(ev as any).errorType || 'C COMPILER ERROR'}
+                          message={(ev as any).message}
+                          lineNum={(ev as any).lineNum}
+                        />
+                      )}
+
                       {ev?.type === 'NONE' && (
-                        <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-xl text-center select-none shadow-sm transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
+                        <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-none text-center select-none transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
                           <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
                             Step Executed
                           </span>
                         </div>
                       )}
 
-                      {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
-                        <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded">
+                      {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'COMPILER_ERROR', 'C_FORMAT_SPECIFIER', 'MATCH_START', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
+                        <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded-none">
                           [Step {step.step} Executed]
                         </div>
                       )}
@@ -1903,7 +2203,7 @@ export const CFlowchartStage: React.FC = () => {
                     <motion.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="w-96 border border-emerald-500/40 bg-slate-950/95 backdrop-blur-xl rounded-2xl p-4 flex flex-col gap-3 shadow-[0_0_30px_rgba(16,185,129,0.2)] sticky top-8 shrink-0"
+                      className="w-96 border border-emerald-500/40 bg-slate-950 rounded-none p-4 flex flex-col gap-3 sticky top-8 shrink-0"
                     >
                       {/* Header & Progress Bar */}
                       <div className="flex flex-col gap-2 border-b border-emerald-500/20 pb-3">
@@ -1911,15 +2211,15 @@ export const CFlowchartStage: React.FC = () => {
                           <span className="text-xs font-black font-mono tracking-widest text-emerald-400 uppercase flex items-center gap-2">
                             SORTING PROGRESS TRACKER
                           </span>
-                          <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-md">
+                          <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-none">
                             {percent}% SORTED
                           </span>
                         </div>
                         
                         {/* Animated Progress Bar */}
-                        <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                        <div className="w-full h-2.5 bg-slate-900 rounded-none overflow-hidden border border-slate-800 p-0.5">
                           <motion.div 
-                            className="h-full bg-linear-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.7)]"
+                            className="h-full bg-linear-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-none"
                             initial={{ width: 0 }}
                             animate={{ width: `${percent}%` }}
                             transition={{ duration: 0.5 }}
@@ -1929,16 +2229,16 @@ export const CFlowchartStage: React.FC = () => {
 
                       {/* Current Action Indicator */}
                       {mem.swappingIndices ? (
-                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-amber-200 font-bold">
+                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-none text-xs font-mono text-amber-200 font-bold">
                           <span>⇄ Swapping:</span>
-                          <span className="text-white font-black bg-amber-950 px-1.5 py-0.5 rounded border border-amber-400">
+                          <span className="text-white font-black bg-amber-950 px-1.5 py-0.5 rounded-none border border-amber-400">
                             {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[0]] : ''} ⇄ {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[1]] : ''}
                           </span>
                         </div>
                       ) : mem.comparingIndices ? (
-                        <div className="flex items-center gap-2 bg-cyan-500/15 border border-cyan-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-cyan-200 font-bold">
+                        <div className="flex items-center gap-2 bg-cyan-500/15 border border-cyan-500/40 px-3 py-1.5 rounded-none text-xs font-mono text-cyan-200 font-bold">
                           <span>🔍 Comparing:</span>
-                          <span className="text-white font-black bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-400">
+                          <span className="text-white font-black bg-cyan-950 px-1.5 py-0.5 rounded-none border border-cyan-400">
                             arr[{mem.comparingIndices[0]}] & arr[{mem.comparingIndices[1]}]
                           </span>
                         </div>
@@ -1951,7 +2251,7 @@ export const CFlowchartStage: React.FC = () => {
                             COMPLETED PASS SNAPSHOTS:
                           </span>
                           {mem.passSnapshots.map((pSnap: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between bg-slate-900/90 border border-emerald-500/25 rounded-xl px-3 py-2 text-xs font-mono shadow-sm">
+                            <div key={idx} className="flex items-center justify-between bg-slate-900/90 border border-emerald-500/25 rounded-none px-3 py-2 text-xs font-mono">
                               <span className="text-emerald-400 font-bold">Pass {pSnap.pass}:</span>
                               <div className="flex gap-1.5 items-center font-bold">
                                 {pSnap.array.map((val: any, cellIdx: number) => {
@@ -1959,8 +2259,8 @@ export const CFlowchartStage: React.FC = () => {
                                   return (
                                     <span 
                                       key={cellIdx} 
-                                      className={`px-2 py-0.5 rounded ${
-                                        isLocked ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 font-black shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-slate-300'
+                                      className={`px-2 py-0.5 rounded-none ${
+                                        isLocked ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 font-black' : 'text-slate-300'
                                       }`}
                                     >
                                       {val}
@@ -1968,7 +2268,7 @@ export const CFlowchartStage: React.FC = () => {
                                   );
                                 })}
                               </div>
-                              <span className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded font-extrabold flex items-center gap-1">
+                              <span className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-none font-extrabold flex items-center gap-1">
                                 <span>🔒</span>
                                 <span>Locked: {pSnap.lockedValue}</span>
                               </span>

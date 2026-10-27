@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { VisualizerWorkspace } from '../features/visualizer/VisualizerWorkspace';
-import { MlVisualizerWorkspace } from '../features/ml/MlVisualizerWorkspace';
 import { NetworkingVisualizerWorkspace } from '../features/networking/NetworkingVisualizerWorkspace';
 import { getLessonAsync, isModuleInstalled } from '../lessons/registry';
 import { LessonProvider } from '../lessons/LessonContext';
@@ -15,7 +14,7 @@ export const VisualizerPage: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    if (!languageId || !topicId || !programId || languageId === 'ml' || languageId === 'networking') return;
+    if (!languageId || !topicId || !programId || languageId === 'networking') return;
 
     setLoading(true);
     getLessonAsync(languageId, topicId, programId).then((loadedLesson) => {
@@ -32,11 +31,6 @@ export const VisualizerPage: React.FC = () => {
 
   if (!languageId || !topicId || !programId) return <Navigate to="/" />;
   if (languageId !== 'python' && !isModuleInstalled(languageId)) return <Navigate to="/" />;
-
-  // Dedicated Lightweight Interactive ML Workspace
-  if (languageId === 'ml') {
-    return <MlVisualizerWorkspace topicId={topicId} programId={programId} />;
-  }
 
   // Dedicated Interactive Computer Networks Workspace
   if (languageId === 'networking') {

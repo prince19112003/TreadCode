@@ -23,9 +23,9 @@ export const TypeCastBox: React.FC<TypeCastBoxProps> = ({
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border font-mono transition-all ${
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-none border font-mono transition-all ${
         isActive
-          ? 'bg-slate-900 border-amber-400/80 shadow-md text-slate-100'
+          ? 'bg-slate-900 border-amber-400/80 text-slate-100'
           : 'bg-slate-950/80 border-slate-700/60 text-slate-400'
       }`}
     >
@@ -34,7 +34,7 @@ export const TypeCastBox: React.FC<TypeCastBoxProps> = ({
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
           {fromType}
         </span>
-        <span className="text-sm font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-500/30">
+        <span className="text-sm font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-none border border-indigo-500/30">
           {fromDisplay}
         </span>
       </div>
@@ -42,7 +42,7 @@ export const TypeCastBox: React.FC<TypeCastBoxProps> = ({
       {/* Static Arrow & Target Type Cast Label */}
       <div className="flex items-center gap-1.5 text-amber-400">
         <ArrowRight size={14} className="text-slate-400" />
-        <span className="text-[11px] font-bold bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded text-amber-300">
+        <span className="text-[11px] font-bold bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-none text-amber-300">
           ({toType})
         </span>
         <ArrowRight size={14} className="text-slate-400" />
@@ -50,7 +50,7 @@ export const TypeCastBox: React.FC<TypeCastBoxProps> = ({
 
       {/* Target Result Box */}
       <div className="flex items-center gap-2">
-        <span className="text-sm font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+        <span className="text-sm font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-none border border-emerald-500/30">
           {variableName} = {toDisplay}
         </span>
         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">

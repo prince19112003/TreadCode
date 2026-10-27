@@ -36,17 +36,7 @@ export const PrintBox: React.FC<PrintBoxProps> = ({ variableName, value, isActiv
 
   let displayText = '';
   if (value !== undefined && value !== null && String(value).trim() !== '') {
-    const valStr = String(value);
-    if (
-      variableName &&
-      !valStr.startsWith(variableName) &&
-      !['output', 'print', 'val', 'value', 'result'].includes(variableName.toLowerCase()) &&
-      !valStr.includes(':')
-    ) {
-      displayText = `${variableName}: ${valStr}`;
-    } else {
-      displayText = valStr;
-    }
+    displayText = String(value);
   } else {
     displayText = variableName || '';
   }

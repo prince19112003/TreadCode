@@ -3,7 +3,7 @@ import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
 import { Plus, Trash, Search, RotateCcw, Trash2 } from 'lucide-react';
 
-const CAPACITY = 7;
+const CAPACITY = 8;
 
 export const HashSetOperationalPanel: React.FC = () => {
   const lesson = useLessonStore(s => s.lesson);
@@ -13,7 +13,7 @@ export const HashSetOperationalPanel: React.FC = () => {
   const customSteps = useLessonStore(s => s.customSteps);
 
   const [inputVal, setInputVal] = useState('');
-  const [elements, setElements] = useState<string[]>([]);
+  const [elements, setElements] = useState<string[]>(['10', '25', '42']);
   const [error, setError] = useState<string | null>(null);
 
   // Hash function: simple modulo by capacity
@@ -66,6 +66,22 @@ export const HashSetOperationalPanel: React.FC = () => {
       } as any,
     };
   };
+ 
+  // Dispatch initial state on mount or lesson switch
+  useEffect(() => {
+    const initList = ['10', '25', '42'];
+    setElements(initList);
+    const step = buildStep(
+      initList,
+      '',
+      'INIT',
+      `HashSet initialized with ${CAPACITY} Buckets and sample elements [${initList.join(', ')}].`,
+      `HashSet ${CAPACITY} Buckets aur sample elements [${initList.join(', ')}] ke saath initialize hui.`
+    );
+    setCustomSteps([step]);
+    setIsPlaying(false);
+    setTimeout(() => goToStep(0), 30);
+  }, [lesson?.id]);
 
   const handleAdd = () => {
     const val = inputVal.trim();

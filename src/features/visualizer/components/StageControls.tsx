@@ -12,6 +12,7 @@ export const StageControls: React.FC = () => {
   const goNext = useLessonStore(s => s.goNext);
   const goPrev = useLessonStore(s => s.goPrev);
   const togglePlay = useLessonStore(s => s.togglePlay);
+  const setIsPlaying = useLessonStore(s => s.setIsPlaying);
   const reset = useLessonStore(s => s.reset);
   const goToStep = useLessonStore(s => s.goToStep);
   const setZoom = useLessonStore(s => s.setZoom);
@@ -185,25 +186,37 @@ export const StageControls: React.FC = () => {
             <div className="relative">
               {isPlaying && (
                 <motion.div 
-                  className="absolute inset-0 bg-indigo-500 rounded-full blur-md"
+                  className="absolute inset-0 bg-indigo-500 rounded-full blur-md pointer-events-none"
                   animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.2, 1] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
                 />
               )}
               <motion.button
-                onClick={togglePlay}
+                onClick={() => {
+                  if (isComplete) {
+                    goToStep(0);
+                    setIsPlaying(true);
+                  } else {
+                    togglePlay();
+                  }
+                }}
                 whileTap={{ scale: 0.85 }}
-                disabled={isComplete}
-                className={`relative w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all ${
+                className={`relative w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                   isComplete
-                    ? 'bg-green-500/20 text-green-300 cursor-not-allowed border border-green-500/30'
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.5)] border border-indigo-400/50'
                     : isPlaying
                     ? 'bg-indigo-900 text-indigo-200 border-2 border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.6)]'
                     : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_25px_rgba(99,102,241,0.5)] border border-indigo-400/50 hover:shadow-[0_0_35px_rgba(99,102,241,0.8)]'
                 }`}
-                title={isPlaying ? "Pause" : "Auto Play"}
+                title={isComplete ? "Replay from Start" : isPlaying ? "Pause" : "Auto Play"}
               >
-                {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Play className="w-3.5 h-3.5 md:w-4 md:h-4 ml-0.5" />}
+                {isComplete ? (
+                  <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                ) : isPlaying ? (
+                  <Pause className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 md:w-4 md:h-4 ml-0.5" />
+                )}
               </motion.button>
             </div>
 

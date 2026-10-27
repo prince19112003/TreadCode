@@ -71,14 +71,15 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
 
   initLesson: (lesson: LessonProgram) => {
     const editableValues = getDefaultEditableValues(lesson);
-    const activeSteps = lesson.generateSteps ? lesson.generateSteps(editableValues) : lesson.executionSteps;
+    const activeSteps = (lesson.generateSteps ? lesson.generateSteps(editableValues) : lesson.executionSteps) ?? [];
+    const isInteractive = lesson.language === 'dsa' || lesson.language === 'ml';
     const totalSteps = activeSteps.length + 1;
     set({
       lesson,
       editableValues,
       activeSteps,
       currentStepIndex: 0,
-      currentStep: null,
+      currentStep: isInteractive ? (activeSteps[0] ?? null) : null,
       totalSteps,
       isComplete: false,
       isPlaying: false,
@@ -86,54 +87,63 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
       isCodeFullScreen: false,
       customSteps: null,
       hasEdited: false,
+      zoom: 1,
     });
   },
 
   updateActiveSteps: () => {
     const state = get();
     if (!state.lesson) return;
-    const activeSteps = state.customSteps
+    const activeSteps = (state.customSteps
       ? state.customSteps
-      : (state.lesson.generateSteps ? state.lesson.generateSteps(state.editableValues) : state.lesson.executionSteps);
+      : (state.lesson.generateSteps ? state.lesson.generateSteps(state.editableValues) : state.lesson.executionSteps)) ?? [];
     const totalSteps = activeSteps.length + 1;
     const stepIdx = state.currentStepIndex;
+    const isInteractive = state.lesson.language === 'dsa' || state.lesson.language === 'ml';
     const currentStep = state.customSteps
       ? (activeSteps[stepIdx] ?? activeSteps[Math.max(0, stepIdx - 1)] ?? activeSteps[0] ?? null)
-      : (stepIdx === 0 ? null : activeSteps[stepIdx - 1] ?? null);
+      : (stepIdx === 0 ? (isInteractive ? (activeSteps[0] ?? null) : null) : (activeSteps[stepIdx - 1] ?? activeSteps[stepIdx] ?? null));
     const isComplete = stepIdx >= totalSteps - 1;
     
     set({ activeSteps, totalSteps, currentStep, isComplete });
   },
 
   setEditableValue: (name, value) => {
-    set((state) => ({
-      editableValues: { ...state.editableValues, [name]: value },
-      isPlaying: false,
-      currentStepIndex: 0,
-      hasEdited: true,
-    }));
+    set((state) => {
+      const isMl = state.lesson?.language === 'ml';
+      return {
+        editableValues: { ...state.editableValues, [name]: value },
+        isPlaying: false,
+        currentStepIndex: isMl ? state.currentStepIndex : 0,
+        hasEdited: true,
+      };
+    });
     get().updateActiveSteps();
   },
 
   goNext: () => {
     const state = get();
     const nextIndex = Math.min(state.currentStepIndex + 1, state.totalSteps - 1);
+    const isComplete = nextIndex >= state.totalSteps - 1;
+    const isInteractive = state.lesson?.language === 'dsa' || state.lesson?.language === 'ml';
     const currentStep = state.customSteps
       ? (state.activeSteps[nextIndex] ?? state.activeSteps[Math.max(0, nextIndex - 1)] ?? state.activeSteps[0] ?? null)
-      : (nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null);
+      : (nextIndex === 0 ? (isInteractive ? (state.activeSteps[0] ?? null) : null) : (state.activeSteps[nextIndex - 1] ?? state.activeSteps[nextIndex] ?? null));
     set({
       currentStepIndex: nextIndex,
       currentStep,
-      isComplete: nextIndex >= state.totalSteps - 1
+      isComplete,
+      isPlaying: isComplete ? false : state.isPlaying
     });
   },
 
   goPrev: () => {
     const state = get();
     const nextIndex = Math.max(state.currentStepIndex - 1, 0);
+    const isInteractive = state.lesson?.language === 'dsa' || state.lesson?.language === 'ml';
     const currentStep = state.customSteps
       ? (state.activeSteps[nextIndex] ?? state.activeSteps[Math.max(0, nextIndex - 1)] ?? state.activeSteps[0] ?? null)
-      : (nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null);
+      : (nextIndex === 0 ? (isInteractive ? (state.activeSteps[0] ?? null) : null) : (state.activeSteps[nextIndex - 1] ?? state.activeSteps[nextIndex] ?? null));
     set({
       isPlaying: false,
       currentStepIndex: nextIndex,
@@ -145,9 +155,10 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
   goToStep: (index) => {
     const state = get();
     const nextIndex = Math.max(0, Math.min(index, state.totalSteps - 1));
+    const isInteractive = state.lesson?.language === 'dsa' || state.lesson?.language === 'ml';
     const currentStep = state.customSteps
       ? (state.activeSteps[nextIndex] ?? state.activeSteps[Math.max(0, nextIndex - 1)] ?? state.activeSteps[0] ?? null)
-      : (nextIndex === 0 ? null : state.activeSteps[nextIndex - 1] ?? null);
+      : (nextIndex === 0 ? (isInteractive ? (state.activeSteps[0] ?? null) : null) : (state.activeSteps[nextIndex - 1] ?? state.activeSteps[nextIndex] ?? null));
     set({
       isPlaying: false,
       currentStepIndex: nextIndex,
@@ -162,9 +173,11 @@ export const useLessonStore = create<LessonStoreType>((set, get) => ({
   toggleFullScreen: () => set((state) => ({ isFullScreen: !state.isFullScreen })),
   
   reset: () => {
+    const state = get();
+    const isInteractive = state.lesson?.language === 'dsa' || state.lesson?.language === 'ml';
     set({
       currentStepIndex: 0,
-      currentStep: null,
+      currentStep: isInteractive ? (state.activeSteps[0] ?? null) : null,
       isPlaying: false,
       isComplete: false,
       customSteps: null,

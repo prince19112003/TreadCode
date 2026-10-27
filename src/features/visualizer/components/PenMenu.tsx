@@ -1,9 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { motion } from 'motion/react';
 import { Pen, Eraser, Undo2, Redo2, Trash2, Sliders, Scissors, MoreHorizontal, X } from 'lucide-react';
 import { AnnotationCanvas } from './AnnotationCanvas';
 import type { Stroke } from './AnnotationCanvas';
+import { useLessonStore } from '../../../lessons/useLessonStore';
 
 const SIX_COLORS = [
   { hex: '#ffffff', label: 'White' },
@@ -36,28 +37,26 @@ export const PenMenu: React.FC = () => {
 
   // Portal target container inside flowchart canvas
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const lessonId = useLessonStore(s => s.lesson?.id);
+
+  const checkTarget = useCallback(() => {
+    const el = document.getElementById('canvas-pen-layer');
+    setPortalTarget(prev => (prev === el ? prev : el));
+  }, []);
 
   useEffect(() => {
-    const checkTarget = () => {
-      const el = document.getElementById('canvas-pen-layer');
-      setPortalTarget(prev => (prev === el ? prev : el));
-    };
     checkTarget();
-
-    const observer = new MutationObserver(() => {
-      checkTarget();
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => observer.disconnect();
-  }, []);
+    // Re-check after suspense/lazy stage renders
+    const timer = setTimeout(checkTarget, 120);
+    return () => clearTimeout(timer);
+  }, [lessonId, isPenActive, checkTarget]);
 
   // Floating position
   const [pos, setPos] = useState({ x: window.innerWidth - 64, y: window.innerHeight * 0.7 });
   const [isLeftEdge, setIsLeftEdge] = useState(false);
 
   const handleFabClick = () => {
+    checkTarget();
     if (!isPenActive) {
       setIsPenActive(true);
       setMode('pen');

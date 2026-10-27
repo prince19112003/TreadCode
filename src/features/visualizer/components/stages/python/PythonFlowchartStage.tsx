@@ -128,26 +128,39 @@ export const PythonFlowchartStage: React.FC = () => {
   if (!lesson) return null;
 
   // Derive active steps: use generateSteps (dynamic) or fallback to static executionSteps
-  const activeSteps = lesson.generateSteps
+  const activeSteps = (lesson.generateSteps
     ? lesson.generateSteps(editableValues)
-    : lesson.executionSteps;
+    : lesson.executionSteps) ?? [];
 
   // Global rule: step 0 = empty canvas (program not yet started).
   // currentStepIndex 1 shows step 0 of activeSteps, index 2 shows steps 0-1, etc.
   const visibleSteps = currentStepIndex === 0 ? [] : activeSteps.slice(0, currentStepIndex);
 
-  // Auto-scroll to the active element, or bottom if not found
+  // Auto-scroll & focus to the executed element
   useEffect(() => {
-    // Add a slight delay to allow the active step to render first
-    setTimeout(() => {
+    const scrollToActive = () => {
       const activeEl = document.getElementById('active-flowchart-step');
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const container = document.getElementById('flowchart-container');
+      if (container && activeEl) {
+        const containerRect = container.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
+        const scrollTop = container.scrollTop + (activeRect.top - containerRect.top) - (containerRect.height / 2) + (activeRect.height / 2);
+        const scrollLeft = container.scrollLeft + (activeRect.left - containerRect.left) - (containerRect.width / 2) + (activeRect.width / 2);
+        container.scrollTo({ top: Math.max(0, scrollTop), left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      } else if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
       } else if (bottomRef.current) {
         bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }
-    }, 50);
-  }, [visibleSteps.length]);
+    };
+
+    const rafId = requestAnimationFrame(scrollToActive);
+    const timerId = setTimeout(scrollToActive, 80);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
+    };
+  }, [visibleSteps.length, currentStepIndex]);
 
   const isMatchTopic = lesson.topic === 'match_case' || lesson.topic === 'switch_case';
   const hasLoopKeyword = lesson.lines.some(l => l.tokens.some(t => t.type === 'keyword' && (t.value === 'for' || t.value === 'while')));
@@ -527,17 +540,17 @@ export const PythonFlowchartStage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: -4 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="flex flex-col items-center gap-1.5 px-5 py-2.5 bg-linear-to-r from-amber-950/90 via-slate-900 to-orange-950/90 border-2 border-amber-500/70 rounded-2xl shadow-lg shadow-amber-950/50 select-none"
+                className="flex flex-col items-center gap-1.5 px-5 py-2.5 bg-linear-to-r from-amber-950/90 via-slate-900 to-orange-950/90 border-2 border-amber-500/70 rounded-none select-none"
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span className="w-2.5 h-2.5 rounded-none bg-amber-400" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
                     FOR LOOP RANGE ITERATION
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs font-mono">
                   <span className="text-slate-300 font-bold">
-                    <span className="text-amber-400 font-extrabold">{loopVar}</span> = <span className="text-white font-black bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">{currentVal}</span>
+                    <span className="text-amber-400 font-extrabold">{loopVar}</span> = <span className="text-white font-black bg-amber-500/20 px-2 py-0.5 rounded-none border border-amber-500/40">{currentVal}</span>
                   </span>
                   {rangeText && (
                     <>
@@ -563,7 +576,7 @@ export const PythonFlowchartStage: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    className="px-3 py-1 rounded-lg bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 shadow-md shadow-amber-950/30"
+                    className="px-3 py-1 rounded-none bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300"
                   >
                     {ev.formula}
                   </motion.div>
@@ -596,7 +609,7 @@ export const PythonFlowchartStage: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.85, y: 4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    className="px-3 py-1 rounded-lg bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300 shadow-md shadow-amber-950/30"
+                    className="px-3 py-1 rounded-none bg-slate-900/90 border border-amber-500/40 text-xs font-mono font-bold text-amber-300"
                   >
                     {ev.formula}
                   </motion.div>
@@ -621,7 +634,7 @@ export const PythonFlowchartStage: React.FC = () => {
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-xl shadow-md"
+                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-none"
                     >
                       Updated index {ev.index}: {ev.oldValue} → {ev.newValue}
                     </motion.div>
@@ -647,7 +660,7 @@ export const PythonFlowchartStage: React.FC = () => {
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-xl shadow-md"
+                      className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-none"
                     >
                       Inspecting index [{ev.index}] (i = {ev.index})
                     </motion.div>
@@ -740,11 +753,11 @@ export const PythonFlowchartStage: React.FC = () => {
         )}
         
         {ev?.type === 'NONE' && !(isFunctionTopic && functionLines[0]?.lineNum === line.lineNum) && !isFunctionBody && (
-          <div className={`px-4 py-2 bg-slate-900 border rounded-xl text-center select-none shadow-sm transition-all duration-300 ${
+          <div className={`px-4 py-2 bg-slate-900 border rounded-none text-center select-none transition-all duration-300 ${
             isLatest 
               ? 'border-orange-500/50 scale-105' 
               : (isFunctionTopic && funcToken && line.lineNum === callerLineNum
-                  ? 'border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] animate-pulse'
+                  ? 'border-yellow-400'
                   : 'border-slate-700/60')
           }`}>
             <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
@@ -777,7 +790,7 @@ export const PythonFlowchartStage: React.FC = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={`px-5 py-2.5 bg-yellow-950/30 border border-yellow-500/50 rounded-none text-center select-none shadow-[0_0_10px_rgba(234,179,8,0.15)] transition-all duration-300 ${isLatest ? 'scale-105 border-yellow-400 ring-1 ring-yellow-500/30' : ''}`}
+            className={`px-5 py-2.5 bg-yellow-950/30 border border-yellow-500/50 rounded-none text-center select-none transition-all duration-300 ${isLatest ? 'scale-105 border-yellow-400 ring-1 ring-yellow-500/30' : ''}`}
           >
             <span className="text-[10px] font-mono font-black tracking-widest text-yellow-400/80 uppercase block mb-0.5">
               FUNCTION CREATED
@@ -789,11 +802,11 @@ export const PythonFlowchartStage: React.FC = () => {
         )}
         
         {ev?.type === 'FUNCTION_CALL' && (
-          <div className={`px-6 py-3 bg-yellow-950/20 border-2 rounded-xl text-center select-none transition-all duration-300 ${
-            isLatest ? 'scale-105 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 
+          <div className={`px-6 py-3 bg-yellow-950/20 border-2 rounded-none text-center select-none transition-all duration-300 ${
+            isLatest ? 'scale-105 border-yellow-400' : 
             (isFunctionTopic && functionLines.some(l => l.lineNum === currentActiveLine) && line.lineNum === callerLineNum 
-              ? 'border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] animate-pulse' 
-              : 'border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]')
+              ? 'border-yellow-400' 
+              : 'border-yellow-500/50')
           }`}>
             <span className="text-sm font-mono font-bold tracking-wider text-yellow-300">
               Calling {ev.functionName}()
@@ -802,7 +815,7 @@ export const PythonFlowchartStage: React.FC = () => {
         )}
 
         {ev?.type === 'FUNCTION_RETURN' && (
-          <div className={`px-6 py-3 bg-teal-950/20 border-2 border-teal-500/50 rounded-xl text-center select-none shadow-[0_0_15px_rgba(20,184,166,0.2)] transition-all duration-300 ${isLatest ? 'scale-105' : ''}`}>
+          <div className={`px-6 py-3 bg-teal-950/20 border-2 border-teal-500/50 rounded-none text-center select-none transition-all duration-300 ${isLatest ? 'scale-105' : ''}`}>
             <span className="text-sm font-mono font-bold tracking-wider text-teal-300">
               Returning from {ev.functionName}()
             </span>
@@ -823,7 +836,7 @@ export const PythonFlowchartStage: React.FC = () => {
       {/* Fixed Full Screen Toggle Button at bottom-left */}
       <button
         onClick={toggleFullScreen}
-        className="absolute bottom-4 left-4 z-50 p-2 bg-[#0d1126]/80 backdrop-blur-md border border-indigo-500/20 rounded-xl text-indigo-300 hover:bg-indigo-500/30 hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)] flex items-center justify-center"
+        className="absolute bottom-4 left-4 z-50 p-2 bg-[#0d1126]/80 backdrop-blur-md border border-indigo-500/20 rounded-none text-indigo-300 hover:bg-indigo-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
         title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
       >
         {isFullScreen ? <Shrink size={16} /> : <Expand size={16} />}
@@ -924,7 +937,7 @@ export const PythonFlowchartStage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
-                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-2xl flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
+                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-none flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
                           >
                             <svg className="w-6 h-6 opacity-30 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1002,7 +1015,7 @@ export const PythonFlowchartStage: React.FC = () => {
                               }
                               if (ev?.type === 'FUNCTION_RETURN') {
                                 activeComponent = (
-                                  <div className={`px-4 py-2 bg-teal-950/40 border border-teal-500/50 rounded-xl text-center select-none shadow-md transition-all duration-300 ${isLineLatest ? 'scale-105 border-teal-400 ring-1 ring-teal-400/30' : ''}`}>
+                                  <div className={`px-4 py-2 bg-teal-950/40 border border-teal-500/50 rounded-none text-center select-none transition-all duration-300 ${isLineLatest ? 'scale-105 border-teal-400 ring-1 ring-teal-400/30' : ''}`}>
                                     <span className="text-xs font-mono font-bold tracking-wider text-teal-300">
                                       Return {ev.returnValue !== undefined ? ev.returnValue : ''}
                                     </span>
@@ -1039,7 +1052,7 @@ export const PythonFlowchartStage: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center gap-4 py-20 px-8 text-center"
               >
-                <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-indigo-500/30 flex items-center justify-center mb-2">
+                <div className="w-16 h-16 rounded-none border-2 border-dashed border-indigo-500/30 flex items-center justify-center mb-2">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-indigo-400/40">
                     <path d="M5 3l14 9-14 9V3z" />
                   </svg>
@@ -1143,7 +1156,7 @@ export const PythonFlowchartStage: React.FC = () => {
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: idx * 0.05 }}
-                              className={`flex items-center gap-3 px-6 py-4 rounded-xl border-2 transition-all duration-300 ${cardStyle}`}
+                              className={`flex items-center gap-3 px-6 py-4 rounded-none border-2 transition-all duration-300 ${cardStyle}`}
                             >
                               <div className="flex flex-col font-mono">
                                 <span className="text-[10px] tracking-wider font-bold opacity-60">CASE</span>
@@ -1151,7 +1164,7 @@ export const PythonFlowchartStage: React.FC = () => {
                               </div>
 
                               {/* Status Badge */}
-                              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${badgeColor}`}>
+                              <div className={`w-5 h-5 rounded-none flex items-center justify-center text-[10px] font-black ${badgeColor}`}>
                                 {badgeText}
                               </div>
                             </motion.div>
@@ -1284,9 +1297,9 @@ export const PythonFlowchartStage: React.FC = () => {
                       if (!hasExecutedInnerLoop) return null;
                       
                       return (
-                        <div key={sIdx} className="relative border-2 border-dashed border-fuchsia-500/30 bg-fuchsia-950/5 p-6 rounded-2xl ml-8 flex flex-col items-center gap-10">
+                        <div key={sIdx} className="relative border-2 border-dashed border-fuchsia-500/30 bg-fuchsia-950/5 p-6 rounded-none ml-8 flex flex-col items-center gap-10">
                           {/* Label tag for Inner Loop container */}
-                          <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#060814] text-[10px] font-black tracking-widest text-fuchsia-400 border border-fuchsia-500/20 rounded uppercase">
+                          <div className="absolute -top-3 left-4 px-2 py-0.5 bg-[#060814] text-[10px] font-black tracking-widest text-fuchsia-400 border border-fuchsia-500/20 rounded-none uppercase">
                             Inner Loop Box
                           </div>
 
@@ -1412,7 +1425,7 @@ export const PythonFlowchartStage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
-                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-2xl flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
+                            className="w-77.5 h-45 border-2 border-dashed border-slate-800/60 rounded-none flex flex-col items-center justify-center text-slate-600 gap-2 backdrop-blur-xs select-none"
                           >
                             <svg className="w-6 h-6 opacity-30 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1473,7 +1486,9 @@ export const PythonFlowchartStage: React.FC = () => {
                       key={step.step}
                       initial={{ opacity: 0, y: -20, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      className={`flex flex-col items-center gap-4 relative shrink-0 min-w-max ${isMatchBranch ? 'ml-32' : ''}`}
+                      className={`flex flex-col items-center gap-4 relative shrink-0 min-w-max transition-all duration-300 ${isMatchBranch ? 'ml-32' : ''} ${
+                        isLatest ? 'ring-2 ring-indigo-500/70 ring-offset-4 ring-offset-slate-950 scale-[1.02] z-10' : 'opacity-85'
+                      }`}
                       id={isLatest ? 'active-flowchart-step' : undefined}
                     >
                       {/* Connector line from previous step */}
@@ -1481,7 +1496,7 @@ export const PythonFlowchartStage: React.FC = () => {
                         <div className="absolute -top-9 left-1/2 w-0.5 h-6 bg-indigo-500/30 -translate-x-1/2" />
                       )}
                       {index > 0 && isMatchBranch && (
-                        <div className="absolute -top-8 -left-32 w-32 h-8 border-l-2 border-b-2 border-fuchsia-500/40 rounded-bl-xl border-dashed" />
+                        <div className="absolute -top-8 -left-32 w-32 h-8 border-l-2 border-b-2 border-fuchsia-500/40 rounded-none border-dashed" />
                       )}
 
                       {(ev?.type === 'STACK_PUSH' || ev?.type === 'STACK_POP' || ev?.type === 'SET_POINTERS' || ev?.type === 'COMPARE_INDICES' || (ev?.type === 'NONE' && step.memorySnapshot?.stack !== undefined)) && (() => {
@@ -1496,7 +1511,7 @@ export const PythonFlowchartStage: React.FC = () => {
                         const highlightedIdx = ev?.type === 'COMPARE_INDICES' ? (ev as any).indexA : (ev as any)?.pointers?.curr ?? (typeof step.memorySnapshot?.i === 'number' ? step.memorySnapshot.i : undefined);
 
                         return (
-                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-2xl bg-slate-950/80 border-2 border-indigo-500/20 shadow-2xl backdrop-blur-md min-w-75">
+                          <div className="flex flex-col items-center gap-4 py-4 px-6 rounded-none bg-slate-950/80 border-2 border-indigo-500/20 backdrop-blur-md min-w-75">
                             <div className="flex items-center justify-between w-full border-b border-indigo-500/10 pb-2">
                               <span className="text-xs font-mono font-black uppercase tracking-widest text-purple-400">
                                 STACK CONTAINER (LIFO)
@@ -1525,13 +1540,13 @@ export const PythonFlowchartStage: React.FC = () => {
                                       layout
                                       initial={{ scale: 0.9, opacity: 0 }}
                                       animate={{ scale: 1, opacity: 1 }}
-                                      className={`flex-1 h-11 rounded-xl flex items-center justify-center font-mono font-bold text-sm border-2 transition-all duration-300 ${
+                                      className={`flex-1 h-11 rounded-none flex items-center justify-center font-mono font-bold text-sm border-2 transition-all duration-300 ${
                                         isHighlighted
-                                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-[1.03]'
+                                          ? 'border-amber-400 bg-amber-500/20 text-amber-300 scale-[1.03]'
                                           : isTop
-                                          ? 'border-purple-400 bg-purple-500/25 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-[1.02]'
+                                          ? 'border-purple-400 bg-purple-500/25 text-purple-200 scale-[1.02]'
                                           : hasVal
-                                          ? 'border-indigo-500/40 bg-indigo-950/70 text-slate-200 shadow-md'
+                                          ? 'border-indigo-500/40 bg-indigo-950/70 text-slate-200'
                                           : 'border-dashed border-slate-800/80 bg-slate-900/30 text-slate-700'
                                       }`}
                                     >
@@ -1544,7 +1559,7 @@ export const PythonFlowchartStage: React.FC = () => {
                                         <motion.span
                                           initial={{ x: -5, opacity: 0 }}
                                           animate={{ x: 0, opacity: 1 }}
-                                          className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-mono font-black tracking-wider shadow-sm"
+                                          className="px-2 py-0.5 rounded-none bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-mono font-black tracking-wider"
                                         >
                                           TOP ←
                                         </motion.span>
@@ -1660,10 +1675,10 @@ export const PythonFlowchartStage: React.FC = () => {
                                   isActive={isLatest}
                                   highlightedIndex={actualIdx}
                                 />
-                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md font-mono text-xs text-amber-300 font-bold">
+                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-none font-mono text-xs text-amber-300 font-bold">
                                   <span>Index [{rawIdx}]{rawIdx < 0 ? ` (pos ${actualIdx})` : ''}</span>
                                   <span>➡</span>
-                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{ev.outputValue}</span>
+                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded-none border border-slate-700">{ev.outputValue}</span>
                                 </div>
                                 <span className="text-[10px] font-black tracking-widest font-mono text-green-400 uppercase">
                                   PRINT OUTPUT
@@ -1689,10 +1704,10 @@ export const PythonFlowchartStage: React.FC = () => {
                                   isActive={isLatest}
                                   highlightedKey={dictKey}
                                 />
-                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md font-mono text-xs text-amber-300 font-bold">
+                                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-none font-mono text-xs text-amber-300 font-bold">
                                   <span>Key ["{dictKey}"]</span>
                                   <span>➡</span>
-                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{ev.outputValue}</span>
+                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded-none border border-slate-700">{ev.outputValue}</span>
                                 </div>
                                 <span className="text-[10px] font-black tracking-widest font-mono text-green-400 uppercase">
                                   PRINT OUTPUT
@@ -1721,7 +1736,7 @@ export const PythonFlowchartStage: React.FC = () => {
                         (() => {
                           const { variant, items } = parseDataStructure(step.memorySnapshot[ev.arrayName]);
                           const itemsArr = Array.isArray(items) ? items : [];
-                          const itemVal = itemsArr[ev.index];
+                          const itemVal = ev.index !== undefined ? itemsArr[ev.index] : undefined;
                           return (
                             <div className="flex flex-col items-center gap-3">
                               <DataStructureBox 
@@ -1735,11 +1750,11 @@ export const PythonFlowchartStage: React.FC = () => {
                                 <motion.div 
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  className="text-xs font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-md flex items-center gap-2"
+                                  className="text-xs font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-none flex items-center gap-2"
                                 >
                                   <span>Inspecting Index [{ev.index}]</span>
                                   <span>➡</span>
-                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{itemVal !== undefined ? (typeof itemVal === 'string' ? `"${itemVal}"` : itemVal) : ev.index}</span>
+                                  <span className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded-none border border-slate-700">{itemVal !== undefined ? (typeof itemVal === 'string' ? `"${itemVal}"` : itemVal) : ev.index}</span>
                                 </motion.div>
                               )}
                             </div>
@@ -1831,10 +1846,10 @@ export const PythonFlowchartStage: React.FC = () => {
                             <motion.div
                               initial={{ opacity: 0, scale: 0.9, y: 8 }}
                               animate={{ opacity: 1, scale: 1, y: 0 }}
-                              className={`relative flex items-center gap-6 px-6 py-3.5 rounded-[22px] border-2 font-mono shadow-xl backdrop-blur-md transition-all duration-300 ${
+                              className={`relative flex items-center gap-6 px-6 py-3.5 rounded-none border-2 font-mono backdrop-blur-md transition-all duration-300 ${
                                 isPass
-                                  ? 'bg-slate-950/95 border-emerald-400 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
-                                  : 'bg-slate-950/95 border-rose-500 text-rose-300 shadow-[0_0_25px_rgba(244,63,94,0.2)]'
+                                  ? 'bg-slate-950/95 border-emerald-400 text-emerald-300'
+                                  : 'bg-slate-950/95 border-rose-500 text-rose-300'
                               } ${isLatest ? 'ring-2 ring-emerald-400/40 scale-105' : ''}`}
                             >
                               {/* Left: Variable Name + Value directly under it */}
@@ -1857,7 +1872,7 @@ export const PythonFlowchartStage: React.FC = () => {
                               </div>
 
                               {/* Right: Solid Circle Icon Badge with Checkmark / Cross */}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md ${
+                              <div className={`w-8 h-8 rounded-none flex items-center justify-center shrink-0 ${
                                 isPass ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
                               }`}>
                                 {isPass ? (
@@ -1898,7 +1913,7 @@ export const PythonFlowchartStage: React.FC = () => {
                           else if (isIf) label = 'If Block Executed';
                         }
                         return (
-                          <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-xl text-center select-none shadow-sm transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
+                          <div className={`px-4 py-2 bg-slate-900 border border-slate-700/60 rounded-none text-center select-none transition-all duration-300 ${isLatest ? 'border-orange-500/50 scale-105' : ''}`}>
                             <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
                               {label}
                             </span>
@@ -1907,7 +1922,7 @@ export const PythonFlowchartStage: React.FC = () => {
                       })()}
 
                       {!['CREATE_VARIABLE', 'MULTI_CREATE_VARIABLES', 'COPY_VALUE', 'UPDATE_VARIABLE', 'PRINT_VALUE', 'COMPUTE', 'NONE', 'EVALUATE_CONDITION', 'MATCH_START', 'HIGHLIGHT_ARRAY_INDEX', 'USER_INPUT_PROMPT', 'TYPE_CAST_TRANSFORM', 'STACK_PUSH', 'STACK_POP', 'SET_POINTERS', 'COMPARE_INDICES', 'COMPLETE'].includes(ev?.type || '') && (
-                        <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded">
+                        <div className="text-slate-500 font-mono text-sm border border-slate-700 p-2 rounded-none">
                           [Step {step.step} Executed]
                         </div>
                       )}
@@ -1931,7 +1946,7 @@ export const PythonFlowchartStage: React.FC = () => {
                     <motion.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="w-96 border border-emerald-500/40 bg-slate-950/95 backdrop-blur-xl rounded-2xl p-4 flex flex-col gap-3 shadow-[0_0_30px_rgba(16,185,129,0.2)] sticky top-8 shrink-0"
+                      className="w-96 border border-emerald-500/40 bg-slate-950/95 backdrop-blur-xl rounded-none p-4 flex flex-col gap-3 sticky top-8 shrink-0"
                     >
                       {/* Header & Progress Bar */}
                       <div className="flex flex-col gap-2 border-b border-emerald-500/20 pb-3">
@@ -1939,15 +1954,15 @@ export const PythonFlowchartStage: React.FC = () => {
                           <span className="text-xs font-black font-mono tracking-widest text-emerald-400 uppercase flex items-center gap-2">
                             SORTING PROGRESS TRACKER
                           </span>
-                          <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-md">
+                          <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-none">
                             {percent}% SORTED
                           </span>
                         </div>
                         
                         {/* Animated Progress Bar */}
-                        <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                        <div className="w-full h-2.5 bg-slate-900 rounded-none overflow-hidden border border-slate-800 p-0.5">
                           <motion.div 
-                            className="h-full bg-linear-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.7)]"
+                            className="h-full bg-linear-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-none"
                             initial={{ width: 0 }}
                             animate={{ width: `${percent}%` }}
                             transition={{ duration: 0.5 }}
@@ -1957,16 +1972,16 @@ export const PythonFlowchartStage: React.FC = () => {
 
                       {/* Current Action Indicator */}
                       {mem.swappingIndices ? (
-                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-amber-200 font-bold">
+                        <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 px-3 py-1.5 rounded-none text-xs font-mono text-amber-200 font-bold">
                           <span>⇄ Swapping:</span>
-                          <span className="text-white font-black bg-amber-950 px-1.5 py-0.5 rounded border border-amber-400">
+                          <span className="text-white font-black bg-amber-950 px-1.5 py-0.5 rounded-none border border-amber-400">
                             {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[0]] : ''} ⇄ {Array.isArray(arrItems) ? arrItems[mem.swappingIndices[1]] : ''}
                           </span>
                         </div>
                       ) : mem.comparingIndices ? (
-                        <div className="flex items-center gap-2 bg-cyan-500/15 border border-cyan-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-cyan-200 font-bold">
+                        <div className="flex items-center gap-2 bg-cyan-500/15 border border-cyan-500/40 px-3 py-1.5 rounded-none text-xs font-mono text-cyan-200 font-bold">
                           <span>🔍 Comparing:</span>
-                          <span className="text-white font-black bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-400">
+                          <span className="text-white font-black bg-cyan-950 px-1.5 py-0.5 rounded-none border border-cyan-400">
                             arr[{mem.comparingIndices[0]}] & arr[{mem.comparingIndices[1]}]
                           </span>
                         </div>
@@ -1979,7 +1994,7 @@ export const PythonFlowchartStage: React.FC = () => {
                             COMPLETED PASS SNAPSHOTS:
                           </span>
                           {mem.passSnapshots.map((pSnap: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between bg-slate-900/90 border border-emerald-500/25 rounded-xl px-3 py-2 text-xs font-mono shadow-sm">
+                            <div key={idx} className="flex items-center justify-between bg-slate-900/90 border border-emerald-500/25 rounded-none px-3 py-2 text-xs font-mono">
                               <span className="text-emerald-400 font-bold">Pass {pSnap.pass}:</span>
                               <div className="flex gap-1.5 items-center font-bold">
                                 {pSnap.array.map((val: any, cellIdx: number) => {
@@ -1987,8 +2002,8 @@ export const PythonFlowchartStage: React.FC = () => {
                                   return (
                                     <span 
                                       key={cellIdx} 
-                                      className={`px-2 py-0.5 rounded ${
-                                        isLocked ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 font-black shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-slate-300'
+                                      className={`px-2 py-0.5 rounded-none ${
+                                        isLocked ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 font-black' : 'text-slate-300'
                                       }`}
                                     >
                                       {val}
@@ -1996,7 +2011,7 @@ export const PythonFlowchartStage: React.FC = () => {
                                   );
                                 })}
                               </div>
-                              <span className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded font-extrabold flex items-center gap-1">
+                              <span className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-none font-extrabold flex items-center gap-1">
                                 <span>🔒</span>
                                 <span>Locked: {pSnap.lockedValue}</span>
                               </span>

@@ -1,0 +1,72 @@
+{
+  "rules": {
+    /* Block full root-level read & write (solves Firebase security alert) */
+    ".read": false,
+    ".write": false,
+
+    "licenses": {
+      ".read": true,
+      "$key": {
+        ".read": true,
+        ".write": true
+      }
+    },
+
+    "installations": {
+      ".read": true,
+      "$hwid": {
+        ".read": true,
+        ".write": true
+      }
+    },
+
+    "trial_devices": {
+      ".read": true,
+      "$hwid": {
+        ".read": true,
+        ".write": true
+      }
+    },
+
+    "key_requests": {
+      ".read": true,
+      "$id": {
+        ".read": true,
+        ".write": true
+      }
+    },
+
+    "feedbacks": {
+      ".read": true,
+      "$id": {
+        ".read": true,
+        ".write": true
+      }
+    },
+
+    "blacklisted_hwids": {
+      ".read": true,
+      ".write": true
+    },
+
+    "global_settings": {
+      ".read": true,
+      ".write": true
+    },
+
+    "tauri_updater": {
+      ".read": true,
+      ".write": true
+    },
+
+    "admin_release": {
+      ".read": true,
+      ".write": true
+    },
+
+    "admin_auth": {
+      ".read": true,
+      ".write": false
+    }
+  }
+}

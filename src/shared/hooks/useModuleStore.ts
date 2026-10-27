@@ -30,7 +30,7 @@ export interface ModuleMeta {
 }
 
 export const MODULE_SIZE_MAP: Record<string, string> = {
-  c: '164 KB',
+  c: '219 KB',
   cpp: '157 KB',
   java: '405 KB',
   dsa: '357 KB',
@@ -39,10 +39,10 @@ export const MODULE_SIZE_MAP: Record<string, string> = {
 };
 
 export const MODULE_CATALOG: ModuleMeta[] = [
-  { id: 'c',          name: 'C Programming',                     topics: 13, programs: 48,  sizeKB: 164,  version: '1.0.0' },
+  { id: 'c',          name: 'C Programming',                     topics: 13, programs: 47,  sizeKB: 219,  version: '1.0.1' },
   { id: 'cpp',        name: 'C++ Programming',                   topics: 14, programs: 48,  sizeKB: 157,  version: '1.0.0' },
   { id: 'java',       name: 'Java Programming',                  topics: 15, programs: 60,  sizeKB: 405,  version: '1.0.0' },
-  { id: 'dsa',        name: 'Data Structures & Algorithms',      topics: 26, programs: 30,  sizeKB: 357,  version: '1.0.0' },
+  { id: 'dsa',        name: 'Data Structures & Algorithms',      topics: 31, programs: 31,  sizeKB: 365,  version: '1.0.1' },
   { id: 'ml',         name: 'Machine Learning',                  topics: 11, programs: 11,  sizeKB: 8,    version: '1.0.0', isMarkerOnly: true },
   { id: 'networking', name: 'Computer Networks',                 topics: 8,  programs: 8,   sizeKB: 6,    version: '1.0.0', isMarkerOnly: true },
 ];
@@ -158,7 +158,7 @@ export const useModuleStore = create<ModuleStoreState>((set, get) => ({
           if (mod.isMarkerOnly || moduleStatus[mod.id] !== 'installed') continue;
           try {
             const existing = await idbGet(`pack_${mod.id}`);
-            if (!existing) {
+            if (!existing || existing.version !== mod.version) {
               const res = await fetch(`/visualizer/packs/${mod.id}.json`).catch(() => null);
               if (res && res.ok) {
                 const data = await res.json();
@@ -297,9 +297,10 @@ export const useModuleStore = create<ModuleStoreState>((set, get) => ({
 
   getPackRegistry: async (moduleId: string): Promise<Record<string, any> | null> => {
     try {
-      // 1. Fast path: load from IndexedDB cache
+      // 1. Fast path: load from IndexedDB cache if version matches
+      const catalogMod = MODULE_CATALOG.find(m => m.id === moduleId);
       let packData = await idbGet(`pack_${moduleId}`);
-      if (packData?.registry && Object.keys(packData.registry).length > 0) {
+      if (packData?.registry && Object.keys(packData.registry).length > 0 && (!catalogMod || packData.version === catalogMod.version)) {
         return packData.registry;
       }
 

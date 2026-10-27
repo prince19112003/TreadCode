@@ -33,13 +33,14 @@ export type AnimationEvent =
   | { type: 'MATCH_START'; variableName: string; value: string | number }
   | { type: 'FUNCTION_CALL'; functionName: string; args: Record<string, string | number> }
   | { type: 'FUNCTION_RETURN'; functionName: string; returnValue?: string | number }
-  | { type: 'UPDATE_ARRAY_INDEX'; arrayName: string; index: number; oldValue: string | number; newValue: string | number }
+  | { type: 'UPDATE_ARRAY_INDEX'; arrayName: string; index?: number; oldValue?: string | number; newValue: string | number; cell?: [number, number] }
   | { type: 'MULTI_CREATE_VARIABLES'; variables: Array<{ name: string; value: string | number }> }
-  | { type: 'HIGHLIGHT_ARRAY_INDEX'; arrayName: string; index: number }
+  | { type: 'HIGHLIGHT_ARRAY_INDEX'; arrayName: string; index?: number; cell?: [number, number] }
   | { type: 'USER_INPUT_PROMPT'; prompt: string; variableName: string; value: string | number }
   | { type: 'TYPE_CAST_TRANSFORM'; fromType: string; toType: string; fromValue: string | number; toValue: string | number; variableName: string }
   | { type: 'C_FORMAT_SPECIFIER'; specifier: string; variableName: string; rawValue: string | number; memoryAddress?: string; actionType?: 'scanf' | 'printf'; byteSize?: number | string }
   | { type: 'EVALUATE_CONDITION'; condition?: string; variableName?: string; variableValue?: string | number; operator?: string; formula?: string; inputs?: string[]; result: boolean; explanation?: string }
+  | { type: 'COMPILER_ERROR'; errorType?: string; message: string; lineNum?: number }
   | { type: 'BREAK_EXECUTION'; explanation?: string }
   | { type: 'SKIP_EXECUTION'; explanation?: string }
   | { type: 'COMPLETE' }
@@ -79,6 +80,7 @@ export interface EditableVariableDef {
   label?: string;
   type?: 'number' | 'text';
   noQuotes?: boolean;
+  quoteChar?: string;
 }
 
 // ─── Lesson Program ───────────────────────────────────────────────────────────
@@ -92,7 +94,7 @@ export interface LessonProgram {
   learningObjective: string;
   learningObjectiveHinglish?: string;
   lines: CodeLine[];
-  executionSteps: ExecutionStep[];
+  executionSteps?: ExecutionStep[];
   /** Defines which initial variables are user-editable */
   editableVariables?: Record<string, EditableVariableDef>;
   /** Pure function: given seed values, returns a fresh set of execution steps */

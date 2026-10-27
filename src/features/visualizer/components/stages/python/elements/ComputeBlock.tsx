@@ -264,9 +264,9 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
     <div className="flex items-center gap-3 relative">
       {/* 1. Left side: The inputs being calculated */}
       {isStringCalc ? (
-        <div className="flex flex-col items-center p-3 bg-slate-950/60 border border-slate-800/80 rounded-2xl gap-3 min-w-60 shadow-lg backdrop-blur-xs relative overflow-hidden">
+        <div className="flex flex-col items-center p-3 bg-slate-950/60 border border-slate-800/80 rounded-none gap-3 min-w-60 backdrop-blur-xs relative overflow-hidden">
           {/* Function badge */}
-          <div className="text-[9px] font-black tracking-widest text-indigo-400 font-mono uppercase bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+          <div className="text-[9px] font-black tracking-widest text-indigo-400 font-mono uppercase bg-indigo-500/10 px-2 py-0.5 rounded-none border border-indigo-500/20">
             {operator === 'len()' ? 'len() function' : operator === 'upper()' ? '.upper() function' : '.lower() function'}
           </div>
 
@@ -283,16 +283,16 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
 
               return (
                 <div 
-                  key={i}
-                  className={`relative min-w-8 h-8 px-2 flex items-center justify-center border font-mono rounded-lg font-bold text-sm transition-all duration-300 ${
+                  key={i} 
+                  className={`relative min-w-8 h-8 px-2 flex items-center justify-center border font-mono rounded-none font-bold text-sm transition-all duration-300 ${
                     calcState === 'inputs'
                       ? 'border-slate-800 bg-slate-900/50 text-slate-400'
                       : i === activeCountIdx 
-                        ? 'border-amber-400 bg-amber-500/20 text-white scale-110 shadow-[0_0_12px_rgba(245,158,11,0.6)] ring-1 ring-amber-400/40' 
+                        ? 'border-amber-400 bg-amber-500/20 text-white scale-110 ring-1 ring-amber-400/40' 
                         : isConverted
-                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300 shadow-sm scale-105'
+                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300 scale-105'
                           : i < activeCountIdx 
-                            ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-200 shadow-sm' 
+                            ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-200' 
                             : 'border-slate-800 bg-slate-900/50 text-slate-500'
                   }`}
                 >
@@ -399,7 +399,7 @@ export const ComputeBlock: React.FC<ComputeBlockProps> = ({
               animate={{ opacity: 1, scale: 1.2, y: -30, x: -10 }}
               exit={{ opacity: 0, scale: 0.5, y: 0, x: 20 }}
               transition={{ duration: 0.5, type: 'spring' }}
-              className="absolute z-10 font-mono font-black text-2xl text-yellow-300 drop-shadow-[0_0_10px_rgba(253,224,71,0.8)]"
+              className="absolute z-10 font-mono font-black text-2xl text-yellow-300"
             >
               {result}
             </motion.div>

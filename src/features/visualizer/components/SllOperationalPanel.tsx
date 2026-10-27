@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLesson } from '../../../lessons/LessonContext';
-import { useLessonStore } from '../../../lessons/useLessonStore';
 import type { ExecutionStep } from '../../../lessons/types';
-import { Plus, Trash, Search, Play, RotateCcw, Trash2, ArrowRightLeft } from 'lucide-react';
+import { Plus, Trash2, Search, RefreshCw } from 'lucide-react';
 
-/** Read list array from step */
 const listFromStep = (step: ExecutionStep | null): { list: (string | number)[]; capacity: number } => {
-  if (!step) return { list: [], capacity: 6 };
+  if (!step) return { list: [10, 20, 30], capacity: 6 };
   const mem = step.memorySnapshot as any;
   const cap = typeof mem?.capacity === 'number' ? mem.capacity : 6;
   if (Array.isArray(mem?.list)) return { list: mem.list, capacity: cap };
@@ -15,35 +13,36 @@ const listFromStep = (step: ExecutionStep | null): { list: (string | number)[]; 
   }
   const ev = step.animationEvent as any;
   if (ev?.listState) return { list: ev.listState, capacity: cap };
-  return { list: [], capacity: cap };
+  return { list: [10, 20, 30], capacity: cap };
 };
 
 export const SllOperationalPanel: React.FC = () => {
   const { lesson, setCustomSteps, currentStep, goToStep } = useLesson();
 
-  const [capacity, setCapacity] = useState<number>(6);
-  const [list, setList] = useState<(string | number)[]>([]);
-  const [insertVal, setInsertVal] = useState('');
-  const [insertIdx, setInsertIdx] = useState('0');
+  const [capacity] = useState<number>(6);
+  const [list, setList] = useState<(string | number)[]>([10, 20, 30]);
+  const [nodeVal, setNodeVal] = useState('40');
   const [searchVal, setSearchVal] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const { list: l, capacity: c } = listFromStep(currentStep);
+    const { list: l } = listFromStep(currentStep);
     setList(l);
-    if (c) setCapacity(c);
   }, [currentStep]);
 
+  // Initial load
   useEffect(() => {
+    const initialList = [10, 20, 30];
     const init: ExecutionStep = {
-      step: 1, lineNum: 1,
-      explanationEnglish: `Linked List initialized (Empty). Capacity: ${capacity}.`,
-      explanationHinglish: `Linked List khali initialize hui hai. Capacity: ${capacity}.`,
-      memorySnapshot: { capacity, list: [] },
-      consoleOutput: `> Singly Linked List initialized (Capacity: ${capacity}).`,
+      step: 1,
+      lineNum: 1,
+      explanationEnglish: `Singly Linked List initialized: HEAD points to Node(${initialList[0]}). Total ${initialList.length} nodes chained to NULL.`,
+      explanationHinglish: `Singly Linked List initialize hui: HEAD Node(${initialList[0]}) ko point karta hai. Total ${initialList.length} nodes chain me hain.`,
+      memorySnapshot: { capacity: 6, list: initialList, activeIdx: -1 },
+      consoleOutput: `> Linked List: ${initialList.join(' → ')} → NULL`,
       animationEvent: { type: 'NONE' } as any,
     };
-    setList([]);
+    setList(initialList);
     setCustomSteps([init]);
     setTimeout(() => goToStep(1), 30);
   }, [lesson?.id]);
@@ -58,7 +57,8 @@ export const SllOperationalPanel: React.FC = () => {
   ) => {
     setError(null);
     const step: ExecutionStep = {
-      step: 1, lineNum: 1,
+      step: 1,
+      lineNum: 1,
       explanationEnglish: explanationEn,
       explanationHinglish: explanationHi,
       memorySnapshot: { capacity, list: newList, ...extraMem },
@@ -73,398 +73,308 @@ export const SllOperationalPanel: React.FC = () => {
   /* ── Linked List Operations ── */
 
   const handleInsertHead = () => {
-    const val = insertVal.trim();
-    if (!val) return setError('Enter value to insert');
-    if (list.length >= capacity) return setError(`List Full (Capacity: ${capacity})`);
+    const val = nodeVal.trim();
+    if (!val) {
+      setError('Please enter a node value');
+      return;
+    }
+    if (list.length >= capacity) {
+      setError(`List is at maximum capacity (${capacity} nodes)`);
+      return;
+    }
     const parsed = isNaN(Number(val)) ? val : Number(val);
     const next = [parsed, ...list];
-    dispatch(next,
-      `INSERT HEAD(${parsed}): Node inserted at position 0. HEAD updated.`,
-      `INSERT HEAD(${parsed}): Position 0 pe naya Node insert hua.`,
-      `Inserted Head: ${parsed} | Size: ${next.length}/${capacity}`,
+    dispatch(
+      next,
+      `INSERT HEAD(${parsed}): Created new Node(${parsed}) and linked next to previous head. HEAD pointer updated.`,
+      `INSERT HEAD(${parsed}): Naya Node(${parsed}) banakar HEAD pointer ko ispar point kiya.`,
+      `Insert Head: ${parsed} | List: ${next.join(' → ')} → NULL`,
       { type: 'SLL_INSERT', value: parsed, index: 0, listState: next }
     );
-    setInsertVal('');
+    setNodeVal('');
   };
 
   const handleInsertTail = () => {
-    const val = insertVal.trim();
-    if (!val) return setError('Enter value to insert');
-    if (list.length >= capacity) return setError(`List Full (Capacity: ${capacity})`);
+    const val = nodeVal.trim();
+    if (!val) {
+      setError('Please enter a node value');
+      return;
+    }
+    if (list.length >= capacity) {
+      setError(`List is at maximum capacity (${capacity} nodes)`);
+      return;
+    }
     const parsed = isNaN(Number(val)) ? val : Number(val);
     const next = [...list, parsed];
-    dispatch(next,
-      `INSERT TAIL(${parsed}): Node inserted at end (pos=${list.length}).`,
-      `INSERT TAIL(${parsed}): End pe naya Node insert hua.`,
-      `Inserted Tail: ${parsed} | Size: ${next.length}/${capacity}`,
+    dispatch(
+      next,
+      `INSERT TAIL(${parsed}): Traversed to end and updated last node's next pointer to new Node(${parsed}).`,
+      `INSERT TAIL(${parsed}): Last node ka next pointer naye Node(${parsed}) par link kiya.`,
+      `Insert Tail: ${parsed} | List: ${next.join(' → ')} → NULL`,
       { type: 'SLL_INSERT', value: parsed, index: list.length, listState: next }
     );
-    setInsertVal('');
-  };
-
-  const handleInsertAtPos = () => {
-    const val = insertVal.trim();
-    if (!val) return setError('Enter value to insert');
-    if (list.length >= capacity) return setError(`List Full (Capacity: ${capacity})`);
-    const pos = Math.max(0, Math.min(list.length, Number(insertIdx || 0)));
-    const parsed = isNaN(Number(val)) ? val : Number(val);
-    const next = [...list];
-    next.splice(pos, 0, parsed);
-    dispatch(next,
-      `INSERT(${parsed}, pos=${pos}): Node inserted. Next pointers updated.`,
-      `INSERT(${parsed}, pos=${pos}): Index ${pos} pe naya Node insert hua.`,
-      `Inserted: ${parsed} at index ${pos} | Size: ${next.length}/${capacity}`,
-      { type: 'SLL_INSERT', value: parsed, index: pos, listState: next }
-    );
-    setInsertVal('');
+    setNodeVal('');
   };
 
   const handleDeleteHead = () => {
-    if (list.length === 0) return setError('List is empty');
-    const deletedVal = list[0];
+    if (list.length === 0) {
+      setError('List Underflow! Linked list is empty.');
+      return;
+    }
+    const removed = list[0];
     const next = list.slice(1);
-    dispatch(next,
-      `DELETE HEAD(): Removed node "${deletedVal}" from pos 0. HEAD updated.`,
-      `DELETE HEAD(): Pos 0 se "${deletedVal}" node remove hua.`,
-      `Deleted Head: ${deletedVal} | Size: ${next.length}/${capacity}`,
-      { type: 'SLL_DELETE', index: 0, listState: next }
+    dispatch(
+      next,
+      `DELETE HEAD: Unlinked Node(${removed}). HEAD pointer advanced to next node.`,
+      `DELETE HEAD: Node(${removed}) delete kiya. HEAD ab agle node ko point kar raha hai.`,
+      `Deleted Head: ${removed} | List: ${next.length > 0 ? next.join(' → ') + ' → NULL' : 'EMPTY'}`,
+      { type: 'SLL_DELETE', deletedValue: removed, index: 0, listState: next }
     );
   };
 
   const handleDeleteTail = () => {
-    if (list.length === 0) return setError('List is empty');
-    const deletedVal = list[list.length - 1];
+    if (list.length === 0) {
+      setError('List Underflow! Linked list is empty.');
+      return;
+    }
+    const removed = list[list.length - 1];
     const next = list.slice(0, -1);
-    dispatch(next,
-      `DELETE TAIL(): Removed node "${deletedVal}" from end (pos ${list.length - 1}).`,
-      `DELETE TAIL(): End se "${deletedVal}" node remove hua.`,
-      `Deleted Tail: ${deletedVal} | Size: ${next.length}/${capacity}`,
-      { type: 'SLL_DELETE', index: list.length - 1, listState: next }
-    );
-  };
-
-  const handleDeleteAtPos = () => {
-    if (list.length === 0) return setError('List is empty');
-    const pos = Math.max(0, Math.min(list.length - 1, Number(insertIdx || 0)));
-    const deletedVal = list[pos];
-    const next = [...list];
-    next.splice(pos, 1);
-    dispatch(next,
-      `DELETE(pos=${pos}): Removed node "${deletedVal}".`,
-      `DELETE(pos=${pos}): Index ${pos} se "${deletedVal}" node remove kiya.`,
-      `Deleted: ${deletedVal} from index ${pos} | Size: ${next.length}/${capacity}`,
-      { type: 'SLL_DELETE', index: pos, listState: next }
-    );
-  };
-
-  const handleReverse = () => {
-    if (list.length <= 1) return setError('Need at least 2 nodes to reverse');
-    const reversed = [...list].reverse();
-    dispatch(reversed,
-      `REVERSE(): Singly Linked List pointers reversed in-place.`,
-      `REVERSE(): Singly Linked List pointers reverse ho gaye.`,
-      `Reversed SLL: [${reversed.join(' → ')}]`,
-      { type: 'SLL_REVERSE', listState: reversed }
+    dispatch(
+      next,
+      `DELETE TAIL: Traversed to second-last node and set its next pointer to NULL. Removed Node(${removed}).`,
+      `DELETE TAIL: Last Node(${removed}) ko unlink kiya. Previous node ka next = NULL set kiya.`,
+      `Deleted Tail: ${removed} | List: ${next.length > 0 ? next.join(' → ') + ' → NULL' : 'EMPTY'}`,
+      { type: 'SLL_DELETE', deletedValue: removed, index: list.length - 1, listState: next }
     );
   };
 
   const handleSearch = () => {
     const val = searchVal.trim();
-    if (!val) return setError('Enter search value');
-    if (list.length === 0) return setError('List is empty');
+    if (!val) {
+      setError('Enter value to search');
+      return;
+    }
+    if (list.length === 0) {
+      setError('List is empty! Nothing to search.');
+      return;
+    }
     const target = isNaN(Number(val)) ? val : Number(val);
-    setSearchVal('');
-
     const steps: ExecutionStep[] = [];
+
     let found = false;
     for (let i = 0; i < list.length; i++) {
       const match = list[i] === target;
-      if (match) found = true;
       steps.push({
-        step: steps.length + 1,
-        lineNum: steps.length + 1,
-        explanationEnglish: `Search: checking node [${i}] = ${list[i]}`,
-        explanationHinglish: `Search: node [${i}] = ${list[i]} check kiya`,
-        memorySnapshot: { capacity, list, i },
-        consoleOutput: `> Node [${i}]: ${list[i]} ${match ? '✓ MATCH' : ''}`,
-        animationEvent: {
-          type: 'COMPARE_INDICES',
-          arrayName: 'list',
-          indexA: i, indexB: i,
-          result: match ? 'found' : 'not-found',
-        } as any,
+        step: i + 1,
+        lineNum: 4,
+        explanationEnglish: `Visiting Node at position [${i}] (Value = ${list[i]}). ${match ? `Target ${target} MATCHED!` : `Does not match target ${target}, advancing to next node.`}`,
+        explanationHinglish: `Position [${i}] pe Node(${list[i]}) check kiya. ${match ? `Mil gaya!` : `Agle node par aage badhe.`}`,
+        memorySnapshot: { capacity, list, activeIdx: i, isFound: match },
+        consoleOutput: `> Search: inspecting Node [${i}] (${list[i]}) ${match ? '→ MATCH FOUND' : ''}`,
+        animationEvent: { type: 'COMPARE_INDICES', indexA: i, result: match ? 'found' : 'not_found' } as any,
       });
-      if (match) break;
+      if (match) {
+        found = true;
+        break;
+      }
     }
+
     if (!found) {
       steps.push({
-        step: steps.length + 1, lineNum: steps.length + 1,
-        explanationEnglish: `Search complete: ${target} not found.`,
-        explanationHinglish: `Search complete: ${target} nahi mila.`,
-        memorySnapshot: { capacity, list },
-        consoleOutput: `> ${target} NOT FOUND`,
+        step: steps.length + 1,
+        lineNum: 6,
+        explanationEnglish: `Search finished: Reached NULL. Value ${target} not found in the linked list.`,
+        explanationHinglish: `Search khatam: List ke end tak NULL mila. Value ${target} nahi mili.`,
+        memorySnapshot: { capacity, list, activeIdx: -1, isFound: false },
+        consoleOutput: `> Search result: ${target} not found.`,
         animationEvent: { type: 'NONE' } as any,
       });
     }
+
     setError(null);
     setCustomSteps(steps);
-    setTimeout(() => {
-      goToStep(0);
-      useLessonStore.getState().setIsPlaying(true);
-    }, 30);
+    setTimeout(() => goToStep(1), 30);
+    setSearchVal('');
   };
 
-  const handleTraverse = () => {
-    if (list.length === 0) return setError('List is empty');
-    const steps: ExecutionStep[] = [];
-    for (let i = 0; i < list.length; i++) {
-      steps.push({
-        step: steps.length + 1, lineNum: steps.length + 1,
-        explanationEnglish: `Traverse: visiting node [${i}] = ${list[i]} -> next`,
-        explanationHinglish: `Traverse: node [${i}] = ${list[i]} pe visit kiya`,
-        memorySnapshot: { capacity, list, i },
-        consoleOutput: `> Visiting Node [${i}]: ${list[i]}`,
-        animationEvent: { type: 'SET_POINTERS', pointers: { curr: i } } as any,
-      });
-    }
-    setError(null);
-    setCustomSteps(steps);
-    setTimeout(() => {
-      goToStep(0);
-      useLessonStore.getState().setIsPlaying(true);
-    }, 30);
-  };
-
-  const handleIsEmpty = () => {
-    const empty = list.length === 0;
-    dispatch(list,
-      `isEmpty() = ${empty}`,
-      `isEmpty() = ${empty}`,
-      `isEmpty() = ${empty}`,
-      { type: 'NONE' } as any
-    );
-  };
-
-  const handleSize = () => {
-    dispatch(list,
-      `Size() = ${list.length}/${capacity}`,
-      `Size() = ${list.length}/${capacity}`,
-      `Size = ${list.length}/${capacity}`,
-      { type: 'NONE' } as any
+  const handleReset = () => {
+    const sample = [10, 20, 30];
+    dispatch(
+      sample,
+      `Reset list with 3 nodes: [10, 20, 30] → NULL.`,
+      `Linked list ko [10, 20, 30] nodes se reset kiya.`,
+      `Reset list: 10 → 20 → 30 → NULL`,
+      { type: 'NONE' }
     );
   };
 
   const handleClear = () => {
-    dispatch([],
-      `List cleared.`,
-      `List khali ho gayi.`,
-      `Cleared List`,
-      { type: 'SLL_DELETE', listState: [] }
+    dispatch(
+      [],
+      `Linked list cleared. HEAD points to NULL.`,
+      `Linked list khali kar di gayi hai (HEAD → NULL).`,
+      `Cleared list: HEAD → NULL`,
+      { type: 'SLL_DELETE', deletedValue: '', listState: [] }
     );
   };
 
-  const handleCapacityChange = (newCap: number) => {
-    setCapacity(newCap);
-    const trimmed = list.slice(0, newCap);
-    setList(trimmed);
-    setError(null);
-    const step: ExecutionStep = {
-      step: 1, lineNum: 1,
-      explanationEnglish: `Capacity changed to ${newCap}.`,
-      explanationHinglish: `Capacity badal kar ${newCap} set ki.`,
-      memorySnapshot: { capacity: newCap, list: trimmed },
-      consoleOutput: `> Capacity = ${newCap}`,
-      animationEvent: { type: 'NONE' } as any,
-    };
-    setCustomSteps([step]);
-    setTimeout(() => goToStep(1), 30);
-  };
-
-  const isEmpty = list.length === 0;
   const isFull = list.length >= capacity;
+  const isEmpty = list.length === 0;
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0c16] border border-slate-800/60 rounded-2xl overflow-hidden text-slate-200">
-      
-      {/* Sleek Minimal Header - Matching Stack & Queue Control Panels */}
-      <div className="px-3.5 py-2.5 bg-[#070913] border-b border-slate-800/80 flex items-center justify-between shrink-0 font-mono text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-bold tracking-wider text-slate-200 text-[11px]">SLL CONTROLS</span>
-        </div>
-        <div className="flex items-center gap-3 text-[11px]">
-          <div className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 rounded-md px-2 py-0.5">
-            <span className="text-slate-400">Cap:</span>
-            <select
-              value={capacity}
-              onChange={e => handleCapacityChange(Number(e.target.value))}
-              className="bg-transparent text-emerald-400 font-bold focus:outline-none cursor-pointer text-xs"
-            >
-              {[3, 4, 5, 6, 8, 10].map(n => (
-                <option key={n} value={n} className="bg-slate-900 text-slate-200">{n}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-1 bg-slate-900/80 border border-slate-800 rounded-md px-2 py-0.5">
-            <span className="text-slate-400">HEAD:</span>
-            <strong className="text-emerald-400 font-mono">{isEmpty ? 'NULL' : 0}</strong>
-          </div>
-          <button
-            onClick={() => handleCapacityChange(capacity)}
-            className="text-slate-500 hover:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-colors"
-            title="Reset List"
-          >
-            <RotateCcw size={13} />
-          </button>
-        </div>
+    <div className="h-full flex flex-col bg-[#07090e] border border-neutral-800 rounded-none overflow-hidden font-mono text-neutral-200">
+      {/* Header */}
+      <div className="px-3 py-2 bg-[#040508] border-b border-neutral-800 flex items-center justify-between shrink-0 text-xs">
+        <span className="font-bold tracking-wider text-neutral-100 text-[11px] uppercase">
+          LINKED LIST CONTROLS
+        </span>
+        <span className="text-[10px] text-purple-400 bg-purple-950/60 border border-purple-800/60 px-2 py-0.5 rounded-none font-bold">
+          Dynamic Nodes
+        </span>
       </div>
 
-      {/* Dashboard Body - Evenly Distributed Layout */}
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col justify-between gap-2">
-
-        {/* Error Alert */}
-        {error && (
-          <div className="px-3 py-1.5 rounded bg-rose-950/90 border border-rose-500/60 text-rose-200 text-xs font-mono flex items-center justify-between shadow-md">
-            <span className="font-medium">⚠ {error}</span>
-            <button onClick={() => setError(null)} className="text-rose-300 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded-none bg-rose-900/60">✕</button>
-          </div>
-        )}
-
-        {/* Main Controls Stack */}
-        <div className="flex flex-col gap-2">
-          
-          {/* Quick Insert Head / Tail Buttons */}
-          <div className="grid grid-cols-2 gap-1.5">
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-2.5 flex flex-col justify-between gap-2.5 custom-scrollbar">
+        {/* Node Insertion Section */}
+        <div className="flex flex-col gap-1.5 border border-neutral-800/80 p-2 bg-[#0a0d14]">
+          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-semibold px-0.5">
+            1. Insert Node:
+          </span>
+          <div className="flex items-center gap-1.5">
+            <input
+              type="text"
+              maxLength={4}
+              value={nodeVal}
+              onChange={e => {
+                setNodeVal(e.target.value);
+                setError(null);
+              }}
+              placeholder="Value"
+              className="w-20 text-center py-1.5 rounded-none bg-[#060810] border border-neutral-700 focus:border-purple-400 text-neutral-100 text-xs font-bold focus:outline-none transition-colors"
+            />
             <button
               onClick={handleInsertHead}
-              disabled={isFull || !insertVal.trim()}
-              className="py-1.5 px-2 rounded font-mono font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/60 text-emerald-300 disabled:opacity-40"
+              disabled={isFull}
+              className={`flex-1 py-1.5 px-1.5 flex items-center justify-center gap-1 text-[10.5px] font-bold rounded-none border transition-colors cursor-pointer ${
+                isFull
+                  ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed'
+                  : 'bg-emerald-950/80 border-emerald-500/70 text-emerald-200 hover:bg-emerald-900/80'
+              }`}
             >
-              <Plus size={13} /> Insert Head
+              <Plus size={11} />
+              <span>Head</span>
             </button>
             <button
               onClick={handleInsertTail}
-              disabled={isFull || !insertVal.trim()}
-              className="py-1.5 px-2 rounded font-mono font-bold text-xs flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95 bg-teal-950/70 hover:bg-teal-900 border border-teal-500/60 text-teal-300 disabled:opacity-40"
+              disabled={isFull}
+              className={`flex-1 py-1.5 px-1.5 flex items-center justify-center gap-1 text-[10.5px] font-bold rounded-none border transition-colors cursor-pointer ${
+                isFull
+                  ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed'
+                  : 'bg-cyan-950/80 border-cyan-500/70 text-cyan-200 hover:bg-cyan-900/80'
+              }`}
             >
-              <Plus size={13} /> Insert Tail
+              <Plus size={11} />
+              <span>Tail</span>
             </button>
           </div>
+        </div>
 
-          {/* Row 1: Insert Input & Position Action */}
-          <div className="flex gap-1.5">
-            <input
-              type="text"
-              placeholder="Value..."
-              value={insertVal}
-              onChange={e => setInsertVal(e.target.value)}
-              className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-700 focus:border-emerald-400 text-slate-100 text-xs font-mono placeholder:text-slate-500 focus:outline-none transition-all shadow-inner"
-            />
-            <input
-              type="number"
-              placeholder="Pos"
-              value={insertIdx}
-              onChange={e => setInsertIdx(e.target.value)}
-              className="w-12 px-1.5 py-1.5 rounded bg-slate-950 border border-slate-700 text-center text-slate-100 text-xs font-mono focus:outline-none"
-            />
-            <button
-              onClick={handleInsertAtPos}
-              disabled={isFull || !insertVal.trim()}
-              className="px-3 py-1.5 rounded font-mono font-bold text-xs flex items-center gap-1 shadow-md transition-all shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/40 disabled:opacity-40 active:scale-95"
-            >
-              <Plus size={13} /> At Pos
-            </button>
-          </div>
-
-          {/* Row 2: Delete Head | Delete Tail | Delete Pos Grid */}
-          <div className="grid grid-cols-3 gap-1.5">
+        {/* Node Deletion Section */}
+        <div className="flex flex-col gap-1.5 border border-neutral-800/80 p-2 bg-[#0a0d14]">
+          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-semibold px-0.5">
+            2. Delete Node:
+          </span>
+          <div className="grid grid-cols-2 gap-1.5">
             <button
               onClick={handleDeleteHead}
               disabled={isEmpty}
-              className="py-1.5 px-1 rounded font-mono font-bold text-[10px] flex items-center justify-center gap-1 shadow-sm transition-all bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 disabled:opacity-40 active:scale-95"
+              className={`py-1.5 px-2 flex items-center justify-center gap-1 text-[10.5px] font-bold rounded-none border transition-colors cursor-pointer ${
+                isEmpty
+                  ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed'
+                  : 'bg-rose-950/80 border-rose-500/70 text-rose-200 hover:bg-rose-900/80'
+              }`}
             >
-              <Trash size={11} /> Del Head
+              <Trash2 size={11} />
+              <span>Delete Head</span>
             </button>
             <button
               onClick={handleDeleteTail}
               disabled={isEmpty}
-              className="py-1.5 px-1 rounded font-mono font-bold text-[10px] flex items-center justify-center gap-1 shadow-sm transition-all bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 disabled:opacity-40 active:scale-95"
+              className={`py-1.5 px-2 flex items-center justify-center gap-1 text-[10.5px] font-bold rounded-none border transition-colors cursor-pointer ${
+                isEmpty
+                  ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed'
+                  : 'bg-amber-950/80 border-amber-500/70 text-amber-200 hover:bg-amber-900/80'
+              }`}
             >
-              <Trash size={11} /> Del Tail
-            </button>
-            <button
-              onClick={handleDeleteAtPos}
-              disabled={isEmpty}
-              className="py-1.5 px-1 rounded font-mono font-bold text-[10px] flex items-center justify-center gap-1 shadow-sm transition-all bg-rose-950/70 hover:bg-rose-900 border border-rose-500/60 text-rose-300 disabled:opacity-40 active:scale-95"
-            >
-              <Trash size={11} /> Del Pos
+              <Trash2 size={11} />
+              <span>Delete Tail</span>
             </button>
           </div>
+        </div>
 
-          {/* Row 3: Search Input & Action */}
-          <div className="flex gap-1.5">
+        {/* Search Node Section */}
+        <div className="flex flex-col gap-1.5 border border-neutral-800/80 p-2 bg-[#0a0d14]">
+          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-semibold px-0.5">
+            3. Search Value:
+          </span>
+          <div className="flex items-center gap-1.5">
             <input
               type="text"
-              placeholder="Search..."
+              maxLength={4}
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              className="flex-1 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-700 focus:border-purple-400 text-slate-100 text-xs font-mono placeholder:text-slate-500 focus:outline-none transition-all shadow-inner"
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleSearch();
+              }}
+              placeholder="Find..."
+              className="flex-1 text-center py-1.5 rounded-none bg-[#060810] border border-neutral-700 focus:border-purple-400 text-neutral-100 text-xs font-bold focus:outline-none transition-colors"
             />
             <button
               onClick={handleSearch}
-              disabled={isEmpty}
-              className="px-3 py-1.5 rounded font-mono font-bold text-xs flex items-center gap-1 shrink-0 bg-purple-950/70 hover:bg-purple-900 border border-purple-500/60 text-purple-200 disabled:opacity-40 active:scale-95 shadow-md"
+              className="py-1.5 px-3 flex items-center justify-center gap-1 text-[10.5px] font-bold rounded-none bg-purple-950/80 border border-purple-500/70 text-purple-200 hover:bg-purple-900/80 cursor-pointer transition-colors"
             >
-              <Search size={13} /> Search
+              <Search size={11} />
+              <span>Search</span>
             </button>
           </div>
-
-          {/* Row 4: Reverse & Traverse Actions */}
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              onClick={handleReverse}
-              disabled={list.length <= 1}
-              className="py-1.5 rounded bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/60 disabled:opacity-40 text-indigo-300 font-bold text-xs font-mono flex items-center justify-center gap-1 shadow-sm active:scale-95"
-            >
-              <ArrowRightLeft size={12} /> Reverse SLL
-            </button>
-            <button
-              onClick={handleTraverse}
-              disabled={isEmpty}
-              className="py-1.5 rounded bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/60 disabled:opacity-40 text-cyan-300 font-bold text-xs font-mono flex items-center justify-center gap-1 shadow-sm active:scale-95"
-            >
-              <Play size={12} /> Traverse
-            </button>
-          </div>
-
         </div>
 
-        {/* Bottom Utility Stack */}
-        <div className="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800/80">
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              onClick={handleIsEmpty}
-              className="py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[10px] font-bold shadow-sm"
-            >
-              isEmpty()
-            </button>
-            <button
-              onClick={handleSize}
-              className="py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[10px] font-bold shadow-sm"
-            >
-              Size()
-            </button>
-          </div>
-
+        {/* Quick Reset & Clear */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleReset}
+            className="flex-1 py-1.5 px-2 flex items-center justify-center gap-1 text-[10px] font-bold rounded-none bg-neutral-900 border border-neutral-700 text-neutral-300 hover:bg-neutral-800 cursor-pointer transition-colors"
+          >
+            <RefreshCw size={11} />
+            <span>Sample (3 Nodes)</span>
+          </button>
           <button
             onClick={handleClear}
-            disabled={isEmpty}
-            className="w-full py-1.5 rounded bg-rose-950/90 hover:bg-rose-900 border border-rose-600/70 disabled:opacity-30 text-rose-300 font-mono text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm active:scale-95"
+            className="flex-1 py-1.5 px-2 flex items-center justify-center gap-1 text-[10px] font-bold rounded-none bg-neutral-900 border border-neutral-700 text-neutral-400 hover:text-rose-300 hover:border-rose-700 cursor-pointer transition-colors"
           >
-            <Trash2 size={12} /> Clear List
+            <Trash2 size={11} />
+            <span>Clear List</span>
           </button>
         </div>
 
+        {/* Error Callout */}
+        {error && (
+          <div className="px-2 py-1 bg-rose-950/90 border border-rose-500/60 text-rose-300 text-[10px] font-bold">
+            ⚠ {error}
+          </div>
+        )}
+
+        {/* Minimal Concept Guide */}
+        <div className="border border-neutral-800/80 p-2 bg-[#090c15] text-[9.5px] space-y-1">
+          <div className="text-[10px] font-bold text-neutral-300 uppercase tracking-wide">
+            Node Structure:
+          </div>
+          <div className="text-neutral-400 space-y-0.5">
+            <div>• <span className="text-emerald-400 font-bold">HEAD:</span> Pointer to first node.</div>
+            <div>• <span className="text-cyan-400 font-bold">[DATA | NEXT]:</span> Value &amp; pointer to next node.</div>
+            <div>• <span className="text-neutral-300 font-bold">NULL:</span> Marks end of chain (terminator).</div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLessonStore } from '../../../../lessons/useLessonStore';
+import { useLesson } from '../../../../lessons/LessonContext';
 import type { AnimationEvent } from '../../../../lessons/types';
 
 /* ─── Color Palette ──────────────────────────────────────────────────────── */
@@ -310,11 +311,13 @@ const LinkedListViz: React.FC<{ nodes: LLNode[]; activeNodeId?: string | number 
 
 /* ─── Main DSA Stage ─────────────────────────────────────────────────────── */
 export const DsaAlgoStage: React.FC = () => {
+  const { zoom } = useLesson();
   const lesson = useLessonStore(s => s.lesson);
   const currentStep = useLessonStore(s => s.currentStep);
+  const activeSteps = useLessonStore(s => s.activeSteps) || [];
   const currentStepIndex = useLessonStore(s => s.currentStepIndex);
 
-  const step = currentStep;
+  const step = activeSteps[currentStepIndex] || activeSteps[0] || currentStep;
   const event: AnimationEvent | undefined = step?.animationEvent as AnimationEvent | undefined;
   const mem = step?.memorySnapshot ?? {};
 
@@ -366,8 +369,8 @@ export const DsaAlgoStage: React.FC = () => {
   const pointers = useMemo<Record<string, number | null>>(() => {
     if (event?.type === 'SET_POINTERS') return event.pointers;
     if (event?.type === 'COMPARE_INDICES') return { i: event.indexA, j: event.indexB };
-    if (event?.type === 'HIGHLIGHT_ARRAY_INDEX') return { i: event.index };
-    if (event?.type === 'UPDATE_ARRAY_INDEX') return { i: event.index };
+    if (event?.type === 'HIGHLIGHT_ARRAY_INDEX') return { i: event.index ?? null };
+    if (event?.type === 'UPDATE_ARRAY_INDEX') return { i: event.index ?? null };
     const p: Record<string, number | null> = {};
     for (const name of ['i', 'j', 'left', 'right', 'mid', 'low', 'high', 'top', 'front', 'rear', 'curr']) {
       if (mem[name] !== undefined) { const v = Number(mem[name]); if (!isNaN(v)) p[name] = v; }
@@ -387,30 +390,31 @@ export const DsaAlgoStage: React.FC = () => {
   );
 
   return (
-    <div className="flex-1 relative flex flex-col items-center justify-center gap-8 overflow-auto rounded-2xl p-6"
-      style={{ background: 'rgba(8,10,20,0.95)', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="flex-1 w-full h-full bg-transparent flex flex-col items-center justify-start overflow-y-auto p-4 custom-scrollbar select-none font-mono text-neutral-200">
+      <div
+        className="relative w-full max-w-4xl flex flex-col items-center justify-start gap-6 py-3 transition-transform duration-150 ease-out"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+      >
+        <div id="canvas-pen-layer" className="absolute inset-0 z-50 pointer-events-none" />
 
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(168,85,247,0.06) 0%, transparent 65%)' }} />
+        {/* Minimal Header Status Bar */}
+        <div className="flex items-center justify-between w-full bg-[#080b13] border border-neutral-800 px-4 py-2 font-mono text-xs shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-indigo-400 inline-block" />
+            <span className="font-bold text-indigo-400 tracking-wider text-[11px] uppercase">
+              ALGORITHM VISUALIZATION
+            </span>
+          </div>
 
-      {/* Badge */}
-      <div className="absolute top-4 left-4">
-        <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-          style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)' }}>
-          Algorithm Visualization
-        </span>
-      </div>
-
-      {/* Step counter */}
-      {step && (
-        <div className="absolute top-4 right-4 text-xs font-mono" style={{ color: '#4b5563' }}>
-          Step {currentStepIndex + 1} / {lesson.executionSteps.length}
+          {step && (
+            <div className="text-xs font-mono text-neutral-400">
+              Step <strong className="text-neutral-200">{currentStepIndex + 1}</strong> / {lesson.executionSteps?.length ?? 0}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* ── Visualization area ── */}
-      <div className="relative flex flex-col items-center gap-8 z-10 w-full">
+        {/* ── Visualization area ── */}
+        <div className="relative flex flex-col items-center gap-8 z-10 w-full">
 
         {/* ARRAY */}
         {arrayData && arrayData.length > 0 && (
@@ -460,19 +464,77 @@ export const DsaAlgoStage: React.FC = () => {
             activeNodeId={event?.type === 'NODE_TRAVERSE' ? event.nodeId : undefined} />
         )}
 
-        {/* Fallback: memory variables as chips */}
+        {/* Fallback: memory variables as chips or struct boxes */}
         {!arrayData?.length && !stackState && !queueState && !linkedListNodes && (
-          <div className="flex flex-wrap gap-3 justify-center max-w-lg">
+          <div className="flex flex-wrap gap-4 justify-center max-w-xl">
             {Object.entries(mem)
               .filter(([k]) => !['i','j','left','right','mid','low','high','front','rear','curr','prev'].includes(k))
-              .map(([k, v]) => (
-                <motion.div key={k} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                  style={{ background: 'rgba(22,27,45,0.9)', border: '1px solid rgba(99,102,241,0.25)' }}>
-                  <span className="text-xs font-mono" style={{ color: '#6366f1' }}>{k}</span>
-                  <span className="text-xs font-mono font-bold" style={{ color: '#e2e8f0' }}>{String(v)}</span>
-                </motion.div>
-              ))}
+              .map(([k, v]) => {
+                const valStr = String(v).trim();
+                const isStructLike = valStr.startsWith('{') && valStr.endsWith('}');
+                if (isStructLike) {
+                  const clean = valStr.slice(1, -1).trim();
+                  const pairs = clean.split(',').map(part => {
+                    const colonIdx = part.indexOf(':');
+                    if (colonIdx === -1) return { key: part.trim(), val: '' };
+                    return {
+                      key: part.slice(0, colonIdx).trim().replace(/['"]/g, ''),
+                      val: part.slice(colonIdx + 1).trim().replace(/['"]/g, '')
+                    };
+                  }).filter(p => p.key);
+
+                  return (
+                    <motion.div
+                      key={k}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col rounded-none overflow-hidden border border-slate-800 bg-slate-950 min-w-44 shadow-none"
+                    >
+                      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800">
+                        <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">{k}</span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-none bg-slate-900 text-emerald-400 border border-slate-700 font-bold uppercase tracking-widest">
+                          COPY
+                        </span>
+                      </div>
+                      <div className="flex items-center text-[9px] font-mono font-bold uppercase tracking-wider bg-slate-900/90 border-b border-slate-800 text-slate-400">
+                        <div className="flex-1 px-3 py-1 border-r border-slate-800">MEMBER</div>
+                        <div className="flex-1 px-3 py-1 text-center">VALUE</div>
+                      </div>
+                      {pairs.map((p, pIdx) => {
+                        const isQ = p.val === '?' || p.val === '';
+                        return (
+                          <div
+                            key={p.key}
+                            className={`flex items-center text-xs font-mono px-3 py-1.5 ${pIdx !== pairs.length - 1 ? 'border-b border-slate-800/80' : ''}`}
+                          >
+                            <div className="flex-1 text-emerald-400 font-mono font-medium border-r border-slate-800/80 pr-2">
+                              {p.key}
+                            </div>
+                            <div className="flex-1 text-center font-mono font-bold pl-2">
+                              {isQ ? (
+                                <span className="text-rose-400 font-mono font-bold text-xs select-none">
+                                  ?
+                                </span>
+                              ) : (
+                                <span className="text-slate-100">{p.val}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </motion.div>
+                  );
+                }
+
+                return (
+                  <motion.div key={k} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                    style={{ background: 'rgba(22,27,45,0.9)', border: '1px solid rgba(99,102,241,0.25)' }}>
+                    <span className="text-xs font-mono" style={{ color: '#6366f1' }}>{k}</span>
+                    <span className="text-xs font-mono font-bold" style={{ color: '#e2e8f0' }}>{valStr}</span>
+                  </motion.div>
+                );
+              })}
           </div>
         )}
 
@@ -491,6 +553,7 @@ export const DsaAlgoStage: React.FC = () => {
             {event.result === 'not-found' && '✗ Not found here'}
           </motion.div>
         )}
+      </div>
       </div>
     </div>
   );

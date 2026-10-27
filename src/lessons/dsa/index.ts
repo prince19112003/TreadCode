@@ -17,100 +17,193 @@ const cm = (v: string): T => ({ type: 'comment', value: v });
 
 export const dsa_array_declare: LessonProgram = {
   id: 'dsa_array_declare', language: 'dsa', topic: 'array_operations', lessonNumber: 1,
-  friendlyName: 'Array Declaration & Initialization',
-  learningObjective: 'Understand how arrays allocate contiguous memory blocks. Each index stores one element.',
+  friendlyName: 'Array Memory Addressing: 1D & 2D (RMO/CMO)',
+  learningObjective: 'Calculate physical memory addresses in 1D contiguous RAM and 2D arrays using Row Major Order (RMO) and Column Major Order (CMO).',
   lines: [
-    line(1, [cm('// Array Declaration & Memory Layout (C++ style)')]),
-    line(2, [kw('int'), tx(' '), va('arr'), pu('['), nu('5'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('10'), pu(','), tx(' '), nu('30'), pu(','), tx(' '), nu('20'), pu(','), tx(' '), nu('50'), pu(','), tx(' '), nu('40'), pu('}'), pu(';')]),
-    line(3, [kw('int'), tx(' '), va('n'), tx(' '), op('='), tx(' '), nu('5'), pu(';'), tx(' '), cm('// array size')]),
-    line(4, [cm('// Access elements using index:')]),
-    line(5, [kw('for'), pu('('), kw('int'), tx(' '), va('i'), op('='), nu('0'), pu(';'), tx(' '), va('i'), op('<'), va('n'), pu(';'), tx(' '), va('i'), op('++'), pu(')'), tx(' {')]),
-    line(6, [tx('    '), fn('print'), pu('('), va('arr'), pu('['), va('i'), pu(']'), pu(')')]),
-    line(7, [pu('}')]),
+    line(1, [cm('// 1D & 2D Array Memory Addressing Formulas (Contiguous RAM):')]),
+    line(2, [cm('// 1D:  Loc(A[i])    = Base + (i - LB) * w')]),
+    line(3, [cm('// RMO: Loc(A[i][j]) = Base + [(i - LBr) * C + (j - LBc)] * w')]),
+    line(4, [cm('// CMO: Loc(A[i][j]) = Base + [(j - LBc) * R + (i - LBr)] * w')]),
+    line(5, [kw('int'), tx(' '), va('arr'), pu('['), nu('6'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('10'), pu(','), tx(' '), nu('25'), pu(','), tx(' '), nu('42'), pu(','), tx(' '), nu('68'), pu(','), tx(' '), nu('85'), pu(','), tx(' '), nu('99'), pu('}'), pu(';')]),
+    line(6, [kw('int'), tx(' '), va('Base'), tx(' '), op('='), tx(' '), nu('1000'), pu(';'), tx(' '), kw('int'), tx(' '), va('w'), tx(' '), op('='), tx(' '), nu('4'), pu(';'), tx(' '), cm('// 4 bytes per element')]),
+    line(7, [kw('int'), tx(' '), va('i'), tx(' '), op('='), tx(' '), nu('3'), pu(';'), tx(' '), cm('// Target element: arr[3] = 68')]),
+    line(8, [kw('int'), tx(' '), va('offset'), tx(' '), op('='), tx(' '), va('i'), tx(' '), op('*'), tx(' '), va('w'), pu(';'), tx(' '), cm('// 3 * 4 = 12 Bytes')]),
+    line(9, [kw('int'), tx(' '), va('address'), tx(' '), op('='), tx(' '), va('Base'), tx(' '), op('+'), tx(' '), va('offset'), pu(';'), tx(' '), cm('// 1000 + 12 = 1012')]),
   ],
   editableVariables: {},
   generateSteps: (): ExecutionStep[] => {
+    const bAddr = 1000, wSize = 4, tIdx = 3, targetVal = 68;
+    const offsetBytes = tIdx * wSize; // 12
+    const finalAddress = bAddr + offsetBytes; // 1012
+    const arr1D = [10, 25, 42, 68, 85, 99];
     return [
-      { step: 1, lineNum: 2, explanationEnglish: 'Declare int arr[5] and allocate 5 × 4B = 20 bytes of contiguous memory.', explanationHinglish: 'int arr[5] declare hua — 5 × 4 Bytes = 20 Bytes contiguous memory allocate hui.', memorySnapshot: { 'arr[0]': '10 [4B]', 'arr[1]': '30 [4B]', 'arr[2]': '20 [4B]', 'arr[3]': '50 [4B]', 'arr[4]': '40 [4B]' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'arr', value: '[10,30,20,50,40]' } },
-      { step: 2, lineNum: 3, explanationEnglish: 'n = 5 stores the array size.', explanationHinglish: 'n = 5 array ki length store karta hai.', memorySnapshot: { 'arr[0]': '10 [4B]', 'arr[1]': '30 [4B]', 'arr[2]': '20 [4B]', 'arr[3]': '50 [4B]', 'arr[4]': '40 [4B]', n: 5 }, animationEvent: { type: 'CREATE_VARIABLE', name: 'n', value: 5 } },
-      { step: 3, lineNum: 5, explanationEnglish: 'Loop i=0: access arr[0] = 10.', explanationHinglish: 'i=0: arr[0] = 10 access hua.', memorySnapshot: { 'arr[0]': '10 [4B]', 'arr[1]': '30 [4B]', 'arr[2]': '20 [4B]', 'arr[3]': '50 [4B]', 'arr[4]': '40 [4B]', n: 5, i: 0 }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: 0 } },
-      { step: 4, lineNum: 5, explanationEnglish: 'Loop i=1: access arr[1] = 30.', explanationHinglish: 'i=1: arr[1] = 30 access hua.', memorySnapshot: { 'arr[0]': '10 [4B]', 'arr[1]': '30 [4B]', 'arr[2]': '20 [4B]', 'arr[3]': '50 [4B]', 'arr[4]': '40 [4B]', n: 5, i: 1 }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: 1 } },
-      { step: 5, lineNum: 5, explanationEnglish: 'Loop i=2: access arr[2] = 20.', explanationHinglish: 'i=2: arr[2] = 20 access hua.', memorySnapshot: { 'arr[0]': '10 [4B]', 'arr[1]': '30 [4B]', 'arr[2]': '20 [4B]', 'arr[3]': '50 [4B]', 'arr[4]': '40 [4B]', n: 5, i: 2 }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: 2 } },
-      { step: 6, lineNum: 6, explanationEnglish: 'Print all: 10 30 20 50 40.', explanationHinglish: 'Console pe print: 10 30 20 50 40.', memorySnapshot: { 'arr[0]': '10 [4B]', 'arr[1]': '30 [4B]', 'arr[2]': '20 [4B]', 'arr[3]': '50 [4B]', 'arr[4]': '40 [4B]' }, consoleOutput: '10 30 20 50 40', animationEvent: { type: 'PRINT_VALUE', variableName: 'arr', outputValue: '10 30 20 50 40' } },
+      {
+        step: 1, lineNum: 5,
+        explanationEnglish: 'Given 1D Array [size 6]. Base = 1000, w = 4B. Target element arr[3] = 68.',
+        explanationHinglish: '1D Array [size 6] diya hai. Base = 1000, w = 4B. Target element arr[3] = 68.',
+        memorySnapshot: { dim: '1D', arr1D, baseAddress: bAddr, elementSize: wSize, targetIndex: tIdx, targetVal, offsetBytes, finalAddress, stage: 'given' },
+        consoleOutput: '> 1D Array | Base=1000 w=4B Target=A[3]',
+        animationEvent: { type: 'NONE' } as any,
+      },
+      {
+        step: 2, lineNum: 6,
+        explanationEnglish: '1D Formula: Loc(A[i]) = Base + (i - LB) * w = 1000 + (3 - 0) * 4.',
+        explanationHinglish: '1D Formula: Loc = Base + (i - LB) * w = 1000 + (3 - 0) * 4.',
+        memorySnapshot: { dim: '1D', arr1D, baseAddress: bAddr, elementSize: wSize, targetIndex: tIdx, targetVal, offsetBytes, finalAddress, stage: 'formula' },
+        consoleOutput: '> Loc(A[3]) = 1000 + (3 * 4)',
+        animationEvent: { type: 'NONE' } as any,
+      },
+      {
+        step: 3, lineNum: 8,
+        explanationEnglish: 'Offset = 3 * 4B = 12 Bytes.',
+        explanationHinglish: 'Offset = 3 * 4B = 12 Bytes.',
+        memorySnapshot: { dim: '1D', arr1D, baseAddress: bAddr, elementSize: wSize, targetIndex: tIdx, targetVal, offsetBytes, finalAddress, stage: 'offset' },
+        consoleOutput: '> Offset = 12 Bytes',
+        animationEvent: { type: 'NONE' } as any,
+      },
+      {
+        step: 4, lineNum: 9,
+        explanationEnglish: 'Address = 1000 + 12 = 1012. Element arr[3] = 68 located.',
+        explanationHinglish: 'Address = 1000 + 12 = 1012. Element arr[3] = 68 locate hua.',
+        memorySnapshot: { dim: '1D', arr1D, baseAddress: bAddr, elementSize: wSize, targetIndex: tIdx, targetVal, offsetBytes, finalAddress, stage: 'located' },
+        consoleOutput: '> Address(A[3]) = 1012 [LOCATED: 68]',
+        animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: tIdx } as any,
+      },
     ];
-  },
-  executionSteps: [],
-};
-
-export const dsa_array_sum: LessonProgram = {
-  id: 'dsa_array_sum', language: 'dsa', topic: 'array_operations', lessonNumber: 2,
-  friendlyName: 'Sum & Average of Array Elements',
-  learningObjective: 'Accumulate the sum of all array elements and compute the average.',
-  lines: [
-    line(1, [kw('int'), tx(' '), va('arr'), pu('['), nu('5'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('10'), pu(','), tx(' '), nu('20'), pu(','), tx(' '), nu('30'), pu(','), tx(' '), nu('40'), pu(','), tx(' '), nu('50'), pu('}'), pu(';')]),
-    line(2, [kw('int'), tx(' '), va('sum'), tx(' '), op('='), tx(' '), nu('0'), pu(';')]),
-    line(3, [kw('for'), pu('('), kw('int'), tx(' '), va('i'), op('='), nu('0'), pu(';'), tx(' '), va('i'), op('<'), nu('5'), pu(';'), tx(' '), va('i'), op('++'), pu(')'), tx(' {')]),
-    line(4, [tx('    '), va('sum'), tx(' '), op('+='), tx(' '), va('arr'), pu('['), va('i'), pu(']'), pu(';')]),
-    line(5, [pu('}')]),
-    line(6, [kw('double'), tx(' '), va('avg'), tx(' '), op('='), tx(' '), pu('('), kw('double'), pu(')'), va('sum'), tx(' '), op('/'), tx(' '), nu('5'), pu(';')]),
-    line(7, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Sum: "'), tx(' '), op('<<'), tx(' '), va('sum'), tx(' '), op('<<'), tx(' '), st('" Avg: "'), tx(' '), op('<<'), tx(' '), va('avg'), pu(';')]),
-  ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => {
-    const arr = [10, 20, 30, 40, 50];
-    const steps: ExecutionStep[] = [];
-    let sum = 0;
-    steps.push({ step: 1, lineNum: 1, explanationEnglish: 'Array arr = {10,20,30,40,50} initialized.', explanationHinglish: 'Array arr initialize hua: {10,20,30,40,50}.', memorySnapshot: { arr: '[10,20,30,40,50]' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'arr', value: '[10,20,30,40,50]' } });
-    steps.push({ step: 2, lineNum: 2, explanationEnglish: 'sum = 0 initialized.', explanationHinglish: 'Accumulator sum = 0 se shuru.', memorySnapshot: { arr: '[10,20,30,40,50]', sum: 0 }, animationEvent: { type: 'CREATE_VARIABLE', name: 'sum', value: 0 } });
-    for (let i = 0; i < arr.length; i++) {
-      const prev = sum;
-      sum += arr[i];
-      steps.push({ step: 3 + i, lineNum: 4, explanationEnglish: `i=${i}: sum = ${prev} + arr[${i}](${arr[i]}) = ${sum}.`, explanationHinglish: `i=${i}: sum = ${prev} + ${arr[i]} = ${sum}.`, memorySnapshot: { arr: '[10,20,30,40,50]', sum, i }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'sum', oldValue: prev, newValue: sum } });
-    }
-    const avg = sum / 5;
-    steps.push({ step: 8, lineNum: 6, explanationEnglish: `avg = ${sum} / 5 = ${avg}.`, explanationHinglish: `avg = ${sum} / 5 = ${avg}.`, memorySnapshot: { arr: '[10,20,30,40,50]', sum, avg }, animationEvent: { type: 'CREATE_VARIABLE', name: 'avg', value: avg } });
-    steps.push({ step: 9, lineNum: 7, explanationEnglish: `Output: Sum: ${sum} Avg: ${avg}`, explanationHinglish: `Console pe print: Sum ${sum}, Avg ${avg}.`, memorySnapshot: { sum, avg }, consoleOutput: `Sum: ${sum} Avg: ${avg}`, animationEvent: { type: 'PRINT_VALUE', variableName: 'sum', outputValue: `${sum}` } });
-    return steps;
   },
   executionSteps: [],
 };
 
 export const dsa_array_max_min: LessonProgram = {
-  id: 'dsa_array_max_min', language: 'dsa', topic: 'array_operations', lessonNumber: 3,
-  friendlyName: 'Find Maximum & Minimum Element',
-  learningObjective: 'Traverse the array in one pass to track the maximum and minimum values.',
+  id: 'dsa_array_max_min', language: 'dsa', topic: 'array_operations', lessonNumber: 2,
+  friendlyName: 'Find Minimum & Maximum: 1D & 2D Array',
+  learningObjective: 'Traverse 8 elements in 1D array or 2D matrix (2x4) in a single pass to track the minimum and maximum values.',
   lines: [
-    line(1, [kw('int'), tx(' '), va('arr'), pu('['), nu('5'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('40'), pu(','), tx(' '), nu('10'), pu(','), tx(' '), nu('70'), pu(','), tx(' '), nu('25'), pu(','), tx(' '), nu('55'), pu('}'), pu(';')]),
-    line(2, [kw('int'), tx(' '), va('maxVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), nu('0'), pu(']'), pu(';')]),
-    line(3, [kw('int'), tx(' '), va('minVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), nu('0'), pu(']'), pu(';')]),
-    line(4, [kw('for'), pu('('), kw('int'), tx(' '), va('i'), op('='), nu('1'), pu(';'), tx(' '), va('i'), op('<'), nu('5'), pu(';'), tx(' '), va('i'), op('++'), pu(')'), tx(' {')]),
-    line(5, [tx('    '), kw('if'), pu('('), va('arr'), pu('['), va('i'), pu(']'), tx(' '), op('>'), tx(' '), va('maxVal'), pu(')'), tx(' '), va('maxVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), va('i'), pu(']'), pu(';')]),
+    line(1, [cm('// Find Minimum & Maximum in Array (8 elements, 1D & 2D):')]),
+    line(2, [kw('int'), tx(' '), va('arr'), pu('['), nu('8'), pu(']'), tx(' '), op('='), tx(' '), pu('{'), nu('42'), pu(','), tx(' '), nu('17'), pu(','), tx(' '), nu('89'), pu(','), tx(' '), nu('5'), pu(','), tx(' '), nu('63'), pu(','), tx(' '), nu('28'), pu(','), tx(' '), nu('94'), pu(','), tx(' '), nu('31'), pu('}'), pu(';')]),
+    line(3, [kw('int'), tx(' '), va('minVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), nu('0'), pu(']'), pu(';'), tx(' '), cm('// Initial min = 42')]),
+    line(4, [kw('int'), tx(' '), va('maxVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), nu('0'), pu(']'), pu(';'), tx(' '), cm('// Initial max = 42')]),
+    line(5, [kw('for'), pu('('), kw('int'), tx(' '), va('i'), op('='), nu('1'), pu(';'), tx(' '), va('i'), op('<'), nu('8'), pu(';'), tx(' '), va('i'), op('++'), pu(')'), tx(' {')]),
     line(6, [tx('    '), kw('if'), pu('('), va('arr'), pu('['), va('i'), pu(']'), tx(' '), op('<'), tx(' '), va('minVal'), pu(')'), tx(' '), va('minVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), va('i'), pu(']'), pu(';')]),
-    line(7, [pu('}')]),
-    line(8, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Max: "'), tx(' '), op('<<'), tx(' '), va('maxVal'), tx(' '), op('<<'), tx(' '), st('" Min: "'), tx(' '), op('<<'), tx(' '), va('minVal'), pu(';')]),
+    line(7, [tx('    '), kw('if'), pu('('), va('arr'), pu('['), va('i'), pu(']'), tx(' '), op('>'), tx(' '), va('maxVal'), pu(')'), tx(' '), va('maxVal'), tx(' '), op('='), tx(' '), va('arr'), pu('['), va('i'), pu(']'), pu(';')]),
+    line(8, [pu('}')]),
+    line(9, [fn('cout'), tx(' '), op('<<'), tx(' '), st('"Min: "'), tx(' '), op('<<'), tx(' '), va('minVal'), tx(' '), op('<<'), tx(' '), st('" | Max: "'), tx(' '), op('<<'), tx(' '), va('maxVal'), pu(';')]),
   ],
   editableVariables: {},
   generateSteps: (): ExecutionStep[] => {
-    const arr = [40, 10, 70, 25, 55];
-    let maxVal = arr[0], minVal = arr[0];
-    const steps: ExecutionStep[] = [
-      { step: 1, lineNum: 2, explanationEnglish: `maxVal starts at arr[0] = ${maxVal}.`, explanationHinglish: `maxVal = arr[0] = ${maxVal} se initialize.`, memorySnapshot: { maxVal, minVal }, animationEvent: { type: 'CREATE_VARIABLE', name: 'maxVal', value: maxVal } },
-      { step: 2, lineNum: 3, explanationEnglish: `minVal starts at arr[0] = ${minVal}.`, explanationHinglish: `minVal = arr[0] = ${minVal} se initialize.`, memorySnapshot: { maxVal, minVal }, animationEvent: { type: 'CREATE_VARIABLE', name: 'minVal', value: minVal } },
-    ];
-    for (let i = 1; i < arr.length; i++) {
+    const arr = [42, 17, 89, 5, 63, 28, 94, 31];
+    let minVal = arr[0], maxVal = arr[0];
+    let minIdx = 0, maxIdx = 0;
+    const steps: ExecutionStep[] = [];
 
-      if (arr[i] > maxVal) maxVal = arr[i];
-      if (arr[i] < minVal) minVal = arr[i];
-      steps.push({ step: 2 + i, lineNum: 5, explanationEnglish: `i=${i}: arr[${i}]=${arr[i]} — maxVal=${maxVal}, minVal=${minVal}.`, explanationHinglish: `arr[${i}]=${arr[i]} check kiya — max=${maxVal}, min=${minVal}.`, memorySnapshot: { i, maxVal, minVal }, animationEvent: { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: i } });
+    // Step 1: Initialize min and max at index 0
+    steps.push({
+      step: 1, lineNum: 3,
+      explanationEnglish: `Initialize: minVal = arr[0] (${minVal}) at [0], maxVal = arr[0] (${maxVal}) at [0].`,
+      explanationHinglish: `Shuruat: minVal = arr[0] (${minVal}), maxVal = arr[0] (${maxVal}).`,
+      memorySnapshot: {
+        type: 'min_max',
+        dim: '1D',
+        arr,
+        matrix2D: [arr.slice(0, 4), arr.slice(4, 8)],
+        currentIdx: 0,
+        currentVal: arr[0],
+        minVal,
+        maxVal,
+        minIdx,
+        maxIdx,
+        updatedMin: false,
+        updatedMax: false,
+        stage: 'init',
+      },
+      consoleOutput: `> Initial: min = ${minVal} at [0], max = ${maxVal} at [0]`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
+    // Step 2 to 8: Loop through elements 1 to 7
+    for (let i = 1; i < arr.length; i++) {
+      const val = arr[i];
+      let updatedMin = false;
+      let updatedMax = false;
+
+      if (val < minVal) {
+        minVal = val;
+        minIdx = i;
+        updatedMin = true;
+      }
+      if (val > maxVal) {
+        maxVal = val;
+        maxIdx = i;
+        updatedMax = true;
+      }
+
+      const reason = updatedMin
+        ? `arr[${i}]=${val} < min → New MIN = ${minVal}!`
+        : updatedMax
+        ? `arr[${i}]=${val} > max → New MAX = ${maxVal}!`
+        : `arr[${i}]=${val} between ${minVal} and ${maxVal}. No change.`;
+
+      steps.push({
+        step: i + 1,
+        lineNum: updatedMin ? 6 : updatedMax ? 7 : 5,
+        explanationEnglish: `i = ${i} (arr[${i}] = ${val}): ${reason} Current Min: ${minVal}, Current Max: ${maxVal}.`,
+        explanationHinglish: `i = ${i} par arr[${i}] = ${val}: ${reason} Min: ${minVal}, Max: ${maxVal}.`,
+        memorySnapshot: {
+          type: 'min_max',
+          dim: '1D',
+          arr,
+          matrix2D: [arr.slice(0, 4), arr.slice(4, 8)],
+          currentIdx: i,
+          currentVal: val,
+          minVal,
+          maxVal,
+          minIdx,
+          maxIdx,
+          updatedMin,
+          updatedMax,
+          stage: 'scan',
+        },
+        consoleOutput: `> [${i}] = ${val} | Min: ${minVal} ([${minIdx}]), Max: ${maxVal} ([${maxIdx}])`,
+        animationEvent: {
+          type: 'HIGHLIGHT_ARRAY_INDEX',
+          arrayName: 'arr',
+          index: i,
+        } as any,
+      });
     }
-    steps.push({ step: steps.length + 1, lineNum: 8, explanationEnglish: `Output: Max: ${maxVal} Min: ${minVal}`, explanationHinglish: `Console pe Max: ${maxVal}, Min: ${minVal} print hua.`, memorySnapshot: { maxVal, minVal }, consoleOutput: `Max: ${maxVal} Min: ${minVal}`, animationEvent: { type: 'PRINT_VALUE', variableName: 'maxVal', outputValue: maxVal } });
+
+    // Final Step: Complete summary
+    steps.push({
+      step: 9,
+      lineNum: 9,
+      explanationEnglish: `Complete! Minimum element = ${minVal} at index [${minIdx}], Maximum element = ${maxVal} at index [${maxIdx}].`,
+      explanationHinglish: `Poora hua! Minimum element = ${minVal} (index [${minIdx}]), Maximum element = ${maxVal} (index [${maxIdx}]).`,
+      memorySnapshot: {
+        type: 'min_max',
+        dim: '1D',
+        arr,
+        matrix2D: [arr.slice(0, 4), arr.slice(4, 8)],
+        currentIdx: -1,
+        currentVal: null,
+        minVal,
+        maxVal,
+        minIdx,
+        maxIdx,
+        updatedMin: false,
+        updatedMax: false,
+        stage: 'complete',
+      },
+      consoleOutput: `> COMPLETE | MIN = ${minVal} at [${minIdx}] | MAX = ${maxVal} at [${maxIdx}]`,
+      animationEvent: { type: 'NONE' } as any,
+    });
+
     return steps;
   },
   executionSteps: [],
 };
 
 export const dsa_array_reverse: LessonProgram = {
-  id: 'dsa_array_reverse', language: 'dsa', topic: 'array_operations', lessonNumber: 4,
+  id: 'dsa_array_reverse', language: 'dsa', topic: 'array_operations', lessonNumber: 3,
   friendlyName: 'In-place Array Reversal (Two Pointers)',
   learningObjective: 'Use two pointer technique — swap elements from both ends moving inward until they meet.',
   lines: [
@@ -126,31 +219,140 @@ export const dsa_array_reverse: LessonProgram = {
   ],
   editableVariables: {},
   generateSteps: (): ExecutionStep[] => {
-    const arr = [10, 20, 30, 40, 50];
-    let left = 0, right = 4;
+    const arr = [10, 20, 30, 40, 50, 60];
+    let left = 0, right = arr.length - 1;
+    const settledIndices: number[] = [];
     const steps: ExecutionStep[] = [
-      { step: 1, lineNum: 1, explanationEnglish: 'Array arr = {10,20,30,40,50} initialized.', explanationHinglish: 'Array arr = {10,20,30,40,50} memory me store hua.', memorySnapshot: { arr: '[10,20,30,40,50]' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'arr', value: '[10,20,30,40,50]' } },
-      { step: 2, lineNum: 2, explanationEnglish: 'left = 0 (start), right = 4 (end). Two pointer setup.', explanationHinglish: 'left = 0 (shuru), right = 4 (end). Two pointer ready.', memorySnapshot: { arr: '[10,20,30,40,50]', left, right }, animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'left', value: 0 }, { name: 'right', value: 4 }] } },
+      {
+        step: 1,
+        lineNum: 1,
+        explanationEnglish: `Array arr[${arr.length}] = {${arr.join(', ')}} initialized in memory.`,
+        explanationHinglish: `Array arr[${arr.length}] = {${arr.join(', ')}} memory me store hua.`,
+        memorySnapshot: {
+          type: 'reverse',
+          arr: [...arr],
+          left: 0,
+          right: arr.length - 1,
+          temp: null,
+          stage: 'init',
+          swapping: null,
+          settledIndices: [],
+        },
+        animationEvent: { type: 'CREATE_VARIABLE', name: 'arr', value: `[${arr.join(',')}]` },
+      },
+      {
+        step: 2,
+        lineNum: 2,
+        explanationEnglish: `left = 0 (pointing to ${arr[0]}), right = ${right} (pointing to ${arr[right]}). Two pointers initialized at endpoints.`,
+        explanationHinglish: `left = 0 (${arr[0]}), right = ${right} (${arr[right]}). Dono pointers ends par setup hue.`,
+        memorySnapshot: {
+          type: 'reverse',
+          arr: [...arr],
+          left,
+          right,
+          temp: null,
+          stage: 'init',
+          swapping: null,
+          settledIndices: [],
+        },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'left', value: 0 }, { name: 'right', value: right }] },
+      },
     ];
+
     let step = 3;
     while (left < right) {
       const temp = arr[left];
-      steps.push({ step: step++, lineNum: 4, explanationEnglish: `temp = arr[${left}] = ${arr[left]}. Save before swap.`, explanationHinglish: `temp = arr[${left}] = ${arr[left]} save kiya.`, memorySnapshot: { arr: `[${arr.join(',')}]`, left, right, temp }, animationEvent: { type: 'CREATE_VARIABLE', name: 'temp', value: temp } });
+      // Step A: Save temp
+      steps.push({
+        step: step++,
+        lineNum: 4,
+        explanationEnglish: `temp = arr[${left}] (${temp}). Save left element before replacing.`,
+        explanationHinglish: `temp = arr[${left}] (${temp}) save kiya swap ke liye.`,
+        memorySnapshot: {
+          type: 'reverse',
+          arr: [...arr],
+          left,
+          right,
+          temp,
+          stage: 'temp',
+          swapping: null,
+          settledIndices: [...settledIndices],
+        },
+        animationEvent: { type: 'CREATE_VARIABLE', name: 'temp', value: temp },
+      });
+
+      // Step B: Swap left with right
       arr[left] = arr[right];
-      steps.push({ step: step++, lineNum: 5, explanationEnglish: `arr[${left}] = arr[${right}] = ${arr[right]}. Left replaced.`, explanationHinglish: `arr[${left}] ko arr[${right}] ki value didi.`, memorySnapshot: { arr: `[${arr.join(',')}]`, left, right }, animationEvent: { type: 'UPDATE_ARRAY_INDEX', arrayName: 'arr', index: left, oldValue: temp, newValue: arr[left] } });
       arr[right] = temp;
-      steps.push({ step: step++, lineNum: 6, explanationEnglish: `arr[${right}] = temp = ${temp}. Swap complete!`, explanationHinglish: `arr[${right}] ko temp = ${temp} se replace kiya. Swap complete!`, memorySnapshot: { arr: `[${arr.join(',')}]`, left, right }, animationEvent: { type: 'UPDATE_ARRAY_INDEX', arrayName: 'arr', index: right, oldValue: arr[left], newValue: temp } });
-      left++; right--;
-      steps.push({ step: step++, lineNum: 7, explanationEnglish: `left = ${left}, right = ${right}. Pointers moved inward.`, explanationHinglish: `left++ = ${left}, right-- = ${right}. Pointers andar aaye.`, memorySnapshot: { arr: `[${arr.join(',')}]`, left, right }, animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'left', value: left }, { name: 'right', value: right }] } });
+      settledIndices.push(left, right);
+
+      steps.push({
+        step: step++,
+        lineNum: 6,
+        explanationEnglish: `Swap complete! arr[${left}] (${arr[left]}) ⇄ arr[${right}] (${arr[right]}). In-place swap done.`,
+        explanationHinglish: `Swap complete! arr[${left}] (${arr[left]}) ⇄ arr[${right}] (${arr[right]}) exchange hua.`,
+        memorySnapshot: {
+          type: 'reverse',
+          arr: [...arr],
+          left,
+          right,
+          temp,
+          stage: 'swap',
+          swapping: [left, right],
+          settledIndices: [...settledIndices],
+        },
+        animationEvent: { type: 'UPDATE_ARRAY_INDEX', arrayName: 'arr', index: left, oldValue: temp, newValue: arr[left] },
+      });
+
+      // Step C: Move inward
+      left++;
+      right--;
+      steps.push({
+        step: step++,
+        lineNum: 7,
+        explanationEnglish: `Pointers moved inward: left = ${left}, right = ${right}. Checking loop condition (left < right).`,
+        explanationHinglish: `Pointers andar badhe: left = ${left}, right = ${right}. Condition check: left < right.`,
+        memorySnapshot: {
+          type: 'reverse',
+          arr: [...arr],
+          left,
+          right,
+          temp: null,
+          stage: 'advance',
+          swapping: null,
+          settledIndices: [...settledIndices],
+        },
+        animationEvent: { type: 'MULTI_CREATE_VARIABLES', variables: [{ name: 'left', value: left }, { name: 'right', value: right }] },
+      });
     }
-    steps.push({ step: step, lineNum: 9, explanationEnglish: `Reversed array: [${arr.join(',')}]`, explanationHinglish: `Reversed array: [${arr.join(',')}]`, memorySnapshot: { arr: `[${arr.join(',')}]` }, consoleOutput: `Reversed: [${arr.join(', ')}]`, animationEvent: { type: 'PRINT_VALUE', variableName: 'arr', outputValue: `[${arr.join(',')}]` } });
+
+    // Step Final: Complete
+    steps.push({
+      step: step,
+      lineNum: 9,
+      explanationEnglish: `Reversal complete! Two pointers met/crossed (left >= right). Final reversed array: [${arr.join(', ')}].`,
+      explanationHinglish: `Reversal complete! Pointers mil gaye (left >= right). Reversed array: [${arr.join(', ')}].`,
+      memorySnapshot: {
+        type: 'reverse',
+        arr: [...arr],
+        left,
+        right,
+        temp: null,
+        stage: 'complete',
+        swapping: null,
+        settledIndices: arr.map((_, i) => i),
+      },
+      consoleOutput: `Reversed: [${arr.join(', ')}]`,
+      animationEvent: { type: 'PRINT_VALUE', variableName: 'arr', outputValue: `[${arr.join(',')}]` },
+    });
+
     return steps;
   },
   executionSteps: [],
 };
 
 export const dsa_array_count: LessonProgram = {
-  id: 'dsa_array_count', language: 'dsa', topic: 'array_operations', lessonNumber: 5,
+  id: 'dsa_array_count', language: 'dsa', topic: 'array_operations', lessonNumber: 4,
   friendlyName: 'Count Occurrences of Element',
   learningObjective: 'Scan the array and count how many times the target value appears.',
   lines: [
@@ -167,15 +369,78 @@ export const dsa_array_count: LessonProgram = {
     const arr = [5, 3, 5, 7, 5, 2];
     const t = Number(target ?? 5);
     let count = 0;
+    const matchedIndices: number[] = [];
     const steps: ExecutionStep[] = [
-      { step: 1, lineNum: 2, explanationEnglish: `Target = ${t}. Searching for this value.`, explanationHinglish: `target = ${t}. Is value ko dhundh rhe hai.`, memorySnapshot: { arr: `[${arr.join(',')}]`, target: t, count: 0 }, animationEvent: { type: 'CREATE_VARIABLE', name: 'target', value: t } },
+      {
+        step: 1,
+        lineNum: 2,
+        explanationEnglish: `Target = ${t}. Initialized count = 0. Beginning linear scan through array.`,
+        explanationHinglish: `Target = ${t}, count = 0 shuru kiya. Array scan shuru ho rha hai.`,
+        memorySnapshot: {
+          type: 'count',
+          arr: [...arr],
+          target: t,
+          currentIdx: -1,
+          count: 0,
+          matchedIndices: [],
+          isMatch: false,
+          stage: 'init',
+        },
+        animationEvent: { type: 'CREATE_VARIABLE', name: 'target', value: t },
+      },
     ];
+
     for (let i = 0; i < arr.length; i++) {
-      const prev = count;
-      if (arr[i] === t) count++;
-      steps.push({ step: 2 + i, lineNum: 5, explanationEnglish: `i=${i}: arr[${i}]=${arr[i]} ${arr[i] === t ? '== target → count++' : '!= target'} → count=${count}.`, explanationHinglish: `arr[${i}]=${arr[i]} check kiya — count=${count}.`, memorySnapshot: { i, arr: `[${arr.join(',')}]`, target: t, count }, animationEvent: arr[i] === t ? { type: 'UPDATE_VARIABLE', name: 'count', oldValue: prev, newValue: count } : { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: i } });
+      const isMatch = arr[i] === t;
+      if (isMatch) {
+        count++;
+        matchedIndices.push(i);
+      }
+
+      steps.push({
+        step: 2 + i,
+        lineNum: 5,
+        explanationEnglish: `i = ${i} (arr[${i}] = ${arr[i]}): ${
+          isMatch ? `EQUAL to target (${t}) → count incremented to ${count}!` : `NOT EQUAL to target (${t}) → count remains ${count}.`
+        }`,
+        explanationHinglish: `i = ${i} (arr[${i}] = ${arr[i]}): ${
+          isMatch ? `Target (${t}) ke barabar mila → count = ${count}!` : `Target (${t}) nahi mila → count = ${count}.`
+        }`,
+        memorySnapshot: {
+          type: 'count',
+          arr: [...arr],
+          target: t,
+          currentIdx: i,
+          count,
+          matchedIndices: [...matchedIndices],
+          isMatch,
+          stage: 'check',
+        },
+        animationEvent: isMatch
+          ? { type: 'UPDATE_VARIABLE', name: 'count', oldValue: count - 1, newValue: count }
+          : { type: 'HIGHLIGHT_ARRAY_INDEX', arrayName: 'arr', index: i },
+      });
     }
-    steps.push({ step: steps.length + 1, lineNum: 7, explanationEnglish: `Target ${t} appears ${count} time(s).`, explanationHinglish: `target ${t} array me ${count} baar mila.`, memorySnapshot: { count }, consoleOutput: `Count: ${count}`, animationEvent: { type: 'PRINT_VALUE', variableName: 'count', outputValue: count } });
+
+    steps.push({
+      step: steps.length + 1,
+      lineNum: 7,
+      explanationEnglish: `Complete! Target value ${t} occurs ${count} time(s) at index/indices [${matchedIndices.join(', ')}].`,
+      explanationHinglish: `Complete! Target ${t} array me kul ${count} baar mila (indices [${matchedIndices.join(', ')}]).`,
+      memorySnapshot: {
+        type: 'count',
+        arr: [...arr],
+        target: t,
+        currentIdx: -1,
+        count,
+        matchedIndices: [...matchedIndices],
+        isMatch: false,
+        stage: 'complete',
+      },
+      consoleOutput: `Count: ${count}`,
+      animationEvent: { type: 'PRINT_VALUE', variableName: 'count', outputValue: count },
+    });
+
     return steps;
   },
   executionSteps: [],
@@ -429,6 +694,84 @@ export const dsa_merge_sort: LessonProgram = {
   executionSteps: [],
 };
 
+export const dsa_quick_sort: LessonProgram = {
+  id: 'dsa_quick_sort', language: 'dsa', topic: 'quick_sort', lessonNumber: 1,
+  friendlyName: 'Quick Sort (Pivot & Partition)',
+  learningObjective: 'Understand Divide-and-Conquer sorting: pick a Pivot element, partition array so smaller elements go left and larger go right, then recursively sort.',
+  lines: [
+    line(1, [cm('// Quick Sort (Lomuto Partition Scheme)')]),
+    line(2, [kw('int'), tx(' '), fn('partition'), pu('('), kw('int'), tx(' '), va('arr'), pu('[]'), pu(','), tx(' '), kw('int'), tx(' '), va('low'), pu(','), tx(' '), kw('int'), tx(' '), va('high'), pu(') {')]),
+    line(3, [tx('    '), kw('int'), tx(' '), va('pivot'), tx(' '), op('='), tx(' '), va('arr'), pu('['), va('high'), pu(']'), pu(';'), tx(' '), kw('int'), tx(' '), va('i'), tx(' '), op('='), tx(' '), va('low'), tx(' '), op('-'), tx(' '), nu('1'), pu(';')]),
+    line(4, [tx('    '), kw('for'), pu('('), kw('int'), tx(' '), va('j'), tx(' '), op('='), tx(' '), va('low'), pu(';'), tx(' '), va('j'), tx(' '), op('<'), tx(' '), va('high'), pu(';'), tx(' '), va('j'), op('++'), pu(') {')]),
+    line(5, [tx('        '), kw('if'), pu('('), va('arr'), pu('['), va('j'), pu(']'), tx(' '), op('<'), tx(' '), va('pivot'), pu(') {')]),
+    line(6, [tx('            '), va('i'), op('++'), pu(';'), tx(' '), fn('swap'), pu('('), va('arr'), pu('['), va('i'), pu(']'), pu(','), tx(' '), va('arr'), pu('['), va('j'), pu(']'), pu(');')]),
+    line(7, [tx('        '), pu('}')]),
+    line(8, [tx('    '), pu('}')]),
+    line(9, [tx('    '), fn('swap'), pu('('), va('arr'), pu('['), va('i'), op('+'), nu('1'), pu(']'), pu(','), tx(' '), va('arr'), pu('['), va('high'), pu(']'), pu(');')]),
+    line(10, [tx('    '), kw('return'), tx(' '), va('i'), tx(' '), op('+'), tx(' '), nu('1'), pu(';')]),
+    line(11, [pu('}')]),
+    line(12, [kw('void'), tx(' '), fn('quickSort'), pu('('), kw('int'), tx(' '), va('arr'), pu('[]'), pu(','), tx(' '), kw('int'), tx(' '), va('low'), pu(','), tx(' '), kw('int'), tx(' '), va('high'), pu(') {')]),
+    line(13, [tx('    '), kw('if'), pu('('), va('low'), tx(' '), op('<'), tx(' '), va('high'), pu(') {')]),
+    line(14, [tx('        '), kw('int'), tx(' '), va('pi'), tx(' '), op('='), tx(' '), fn('partition'), pu('('), va('arr'), pu(','), tx(' '), va('low'), pu(','), tx(' '), va('high'), pu(');')]),
+    line(15, [tx('        '), fn('quickSort'), pu('('), va('arr'), pu(','), tx(' '), va('low'), pu(','), tx(' '), va('pi'), op('-'), nu('1'), pu(');')]),
+    line(16, [tx('        '), fn('quickSort'), pu('('), va('arr'), pu(','), tx(' '), va('pi'), op('+'), nu('1'), pu(','), tx(' '), va('high'), pu(');')]),
+    line(17, [tx('    '), pu('}')]),
+    line(18, [pu('}')]),
+  ],
+  editableVariables: {},
+  generateSteps: (): ExecutionStep[] => {
+    return [
+      {
+        step: 1, lineNum: 1,
+        explanationEnglish: 'Quick Sort initialized with 8 elements: [52, 38, 74, 19, 63, 27, 85, 41]. Lomuto partition picks rightmost element (41) as Pivot.',
+        explanationHinglish: '8 elements ke saath Quick Sort shuru hua: [52, 38, 74, 19, 63, 27, 85, 41]. Rightmost element (41) ko Pivot chuna gaya.',
+        memorySnapshot: { arr: [52, 38, 74, 19, 63, 27, 85, 41], low: 0, high: 7, pivotIdx: 7, pivotVal: 41, i: -1, j: 0, sortedIndices: [], phase: 'INIT' },
+        consoleOutput: '> Quick Sort Initialized: [52, 38, 74, 19, 63, 27, 85, 41]',
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 2, lineNum: 3,
+        explanationEnglish: 'Partition [0..7]: Pivot = 41, boundary pointer i = -1. Scanning elements with pointer j.',
+        explanationHinglish: 'Partition [0..7]: Pivot = 41, boundary i = -1. Pointer j se scan shuru.',
+        memorySnapshot: { arr: [52, 38, 74, 19, 63, 27, 85, 41], low: 0, high: 7, pivotIdx: 7, pivotVal: 41, i: -1, j: 0, sortedIndices: [], phase: 'WINDOW_SELECT' },
+        animationEvent: { type: 'NONE' },
+      },
+      {
+        step: 3, lineNum: 5,
+        explanationEnglish: 'Compare arr[0]=52 vs Pivot=41: 52 >= 41, no swap. Advance j to 1.',
+        explanationHinglish: 'arr[0]=52 vs Pivot=41 compare kiya: 52 bada hai, right region me rahega.',
+        memorySnapshot: { arr: [52, 38, 74, 19, 63, 27, 85, 41], low: 0, high: 7, pivotIdx: 7, pivotVal: 41, i: -1, j: 0, sortedIndices: [], comparing: [0, 7], phase: 'SCAN_COMPARE' },
+        animationEvent: { type: 'COMPARE_INDICES', arrayName: 'arr', indexA: 0, indexB: 7 } as any,
+      },
+      {
+        step: 4, lineNum: 5,
+        explanationEnglish: 'Compare arr[1]=38 vs Pivot=41: 38 < 41 → Increment i to 0 and swap arr[0] (52) with arr[1] (38).',
+        explanationHinglish: 'arr[1]=38 chhota hai 41 se! i++ = 0 aur arr[0] (52) ko arr[1] (38) se swap kiya.',
+        memorySnapshot: { arr: [38, 52, 74, 19, 63, 27, 85, 41], low: 0, high: 7, pivotIdx: 7, pivotVal: 41, i: 0, j: 1, sortedIndices: [], swapping: [0, 1], phase: 'SWAP_SMALLER' },
+        consoleOutput: '> Swapped: [38, 52, 74, 19, 63, 27, 85, 41]',
+        animationEvent: { type: 'SWAP', arrayName: 'arr', indexA: 0, indexB: 1 } as any,
+      },
+      {
+        step: 5, lineNum: 9,
+        explanationEnglish: 'Place Pivot 41 into its permanent position at index [3]: Swap arr[3] (52) with arr[7] (41).',
+        explanationHinglish: 'Pivot 41 ko permanent jagah par rakha: index [3] par swap kiya.',
+        memorySnapshot: { arr: [38, 19, 27, 41, 63, 74, 85, 52], low: 0, high: 7, pivotIdx: 3, pivotVal: 41, i: 3, j: 7, sortedIndices: [3], swapping: [3, 7], phase: 'PIVOT_LOCK' },
+        consoleOutput: '> Pivot 41 locked at index [3]',
+        animationEvent: { type: 'SWAP', arrayName: 'arr', indexA: 3, indexB: 7 } as any,
+      },
+      {
+        step: 6, lineNum: 16,
+        explanationEnglish: 'Quick Sort Complete! All 8 elements partitioned and recursively sorted: [19, 27, 38, 41, 52, 63, 74, 85].',
+        explanationHinglish: 'Quick Sort Poora Hua! Saare 8 elements sorted hain: [19, 27, 38, 41, 52, 63, 74, 85].',
+        memorySnapshot: { arr: [19, 27, 38, 41, 52, 63, 74, 85], low: 0, high: 7, pivotIdx: -1, pivotVal: -1, i: -1, j: -1, sortedIndices: [0, 1, 2, 3, 4, 5, 6, 7], phase: 'COMPLETE', isFinished: true },
+        consoleOutput: '> ALL 8 ELEMENTS SORTED: [19, 27, 38, 41, 52, 63, 74, 85]',
+        animationEvent: { type: 'NONE' },
+      },
+    ];
+  },
+  executionSteps: [],
+};
+
 export const dsa_heap_sort: LessonProgram = {
   id: 'dsa_heap_sort', language: 'dsa', topic: 'heap_sort', lessonNumber: 1,
   friendlyName: 'Heap Sort Algorithm',
@@ -490,73 +833,6 @@ export const dsa_heap_sort: LessonProgram = {
   executionSteps: [],
 };
 
-// ─── TOPIC 04: RECURSION ─────────────────────────────────────────────────────
-
-export const dsa_recursion_factorial: LessonProgram = {
-  id: 'dsa_recursion_factorial', language: 'dsa', topic: 'recursion_dsa', lessonNumber: 1,
-  friendlyName: 'Factorial — Recursive Call Stack',
-  learningObjective: 'Trace how factorial(N) pushes call frames onto the stack until base case (N=0), then unwinds.',
-  lines: [
-    line(1, [kw('int'), tx(' '), fn('factorial'), pu('('), kw('int'), tx(' '), va('n'), pu(')'), tx(' {')]),
-    line(2, [tx('    '), kw('if'), pu('('), va('n'), tx(' '), op('=='), tx(' '), nu('0'), pu(')'), tx(' '), kw('return'), tx(' '), nu('1'), pu(';'), tx(' '), cm('// BASE CASE')]),
-    line(3, [tx('    '), kw('return'), tx(' '), va('n'), tx(' '), op('*'), tx(' '), fn('factorial'), pu('('), va('n'), op('-'), nu('1'), pu(')'), pu(';')]),
-    line(4, [pu('}')]),
-    line(5, [kw('int'), tx(' '), va('result'), tx(' '), op('='), tx(' '), fn('factorial'), pu('('), nu('5', 'n'), pu(')'), pu(';')]),
-    line(6, [fn('cout'), tx(' '), op('<<'), tx(' '), va('result'), pu(';')]),
-  ],
-  editableVariables: { n: { default: 5, min: 1, max: 7, label: 'N (factorial)' } },
-  generateSteps: ({ n }): ExecutionStep[] => {
-    const N = Math.min(7, Math.max(1, Number(n ?? 5)));
-    const steps: ExecutionStep[] = [];
-    let step = 1;
-    const callStack: string[] = [];
-    for (let i = N; i >= 0; i--) {
-      callStack.push(`factorial(${i})`);
-      steps.push({ step: step++, lineNum: i === 0 ? 2 : 3, explanationEnglish: i === 0 ? `factorial(0): base case! Return 1. Stack unwinds now.` : `factorial(${i}) called → factorial(${i-1}) called recursively. Stack: [${callStack.join(' → ')}]`, explanationHinglish: i === 0 ? `factorial(0) base case! Return 1. Stack ab unwind hogi.` : `factorial(${i}) ne factorial(${i-1}) call kiya. Stack badh rhi hai.`, memorySnapshot: { 'call stack': callStack.join(' → '), 'current n': i }, animationEvent: { type: 'FUNCTION_CALL', functionName: `factorial`, args: { n: i } } });
-    }
-    let result = 1;
-    for (let i = 1; i <= N; i++) {
-      result *= i;
-      callStack.pop();
-      steps.push({ step: step++, lineNum: 3, explanationEnglish: `factorial(${i}) returns ${i} × ${result/i} = ${result}. Stack unwinds.`, explanationHinglish: `factorial(${i}) return karta hai ${result}. Stack kam ho rhi hai.`, memorySnapshot: { 'call stack': callStack.join(' → ') || 'empty', 'returned': result }, animationEvent: { type: 'FUNCTION_RETURN', functionName: `factorial(${i})`, returnValue: result } });
-    }
-    steps.push({ step: step, lineNum: 6, explanationEnglish: `Final result: ${N}! = ${result}`, explanationHinglish: `${N}! = ${result} output aaya.`, memorySnapshot: { result }, consoleOutput: `${result}`, animationEvent: { type: 'PRINT_VALUE', variableName: 'result', outputValue: result } });
-    return steps;
-  },
-  executionSteps: [],
-};
-
-export const dsa_recursion_sum: LessonProgram = {
-  id: 'dsa_recursion_sum', language: 'dsa', topic: 'recursion_dsa', lessonNumber: 2,
-  friendlyName: 'Sum of N Natural Numbers (Recursion)',
-  learningObjective: 'sum(N) = N + sum(N-1) with base case sum(0) = 0. Visualize call stack.',
-  lines: [
-    line(1, [kw('int'), tx(' '), fn('sum'), pu('('), kw('int'), tx(' '), va('n'), pu(')'), tx(' {')]),
-    line(2, [tx('    '), kw('if'), pu('('), va('n'), tx(' '), op('=='), tx(' '), nu('0'), pu(')'), tx(' '), kw('return'), tx(' '), nu('0'), pu(';'), tx(' '), cm('// BASE CASE')]),
-    line(3, [tx('    '), kw('return'), tx(' '), va('n'), tx(' '), op('+'), tx(' '), fn('sum'), pu('('), va('n'), op('-'), nu('1'), pu(')'), pu(';')]),
-    line(4, [pu('}')]),
-    line(5, [kw('int'), tx(' '), va('result'), tx(' '), op('='), tx(' '), fn('sum'), pu('('), nu('5', 'n'), pu(')'), pu(';')]),
-    line(6, [fn('cout'), tx(' '), op('<<'), tx(' '), va('result'), pu(';')]),
-  ],
-  editableVariables: { n: { default: 5, min: 1, max: 8, label: 'N' } },
-  generateSteps: ({ n }): ExecutionStep[] => {
-    const N = Math.min(8, Math.max(1, Number(n ?? 5)));
-    const steps: ExecutionStep[] = [];
-    let step = 1;
-    for (let i = N; i >= 0; i--) {
-      steps.push({ step: step++, lineNum: i === 0 ? 2 : 3, explanationEnglish: i === 0 ? `sum(0): base case → return 0.` : `sum(${i}) calls sum(${i-1}).`, explanationHinglish: i === 0 ? `sum(0) base case! Return 0.` : `sum(${i}) ne sum(${i-1}) call kiya.`, memorySnapshot: { 'current n': i }, animationEvent: { type: 'FUNCTION_CALL', functionName: 'sum', args: { n: i } } });
-    }
-    let acc = 0;
-    for (let i = 1; i <= N; i++) {
-      acc += i;
-      steps.push({ step: step++, lineNum: 3, explanationEnglish: `sum(${i}) returns ${i} + ${acc - i} = ${acc}.`, explanationHinglish: `sum(${i}) = ${i} + ${acc-i} = ${acc} return kiya.`, memorySnapshot: { 'accumulated': acc }, animationEvent: { type: 'FUNCTION_RETURN', functionName: `sum(${i})`, returnValue: acc } });
-    }
-    steps.push({ step: step, lineNum: 6, explanationEnglish: `sum(${N}) = ${acc}. Output printed.`, explanationHinglish: `Final answer: ${acc}`, memorySnapshot: { result: acc }, consoleOutput: `${acc}`, animationEvent: { type: 'PRINT_VALUE', variableName: 'result', outputValue: acc } });
-    return steps;
-  },
-  executionSteps: [],
-};
-
 // ─── TOPIC 05: STACK ──────────────────────────────────────────────────────────
 
 export const dsa_stack_push_pop: LessonProgram = {
@@ -611,41 +887,6 @@ export const dsa_queue_enq_deq: LessonProgram = {
   executionSteps: [],
 };
 
-export const dsa_queue_array_impl: LessonProgram = {
-  id: 'dsa_queue_array_impl', language: 'dsa', topic: 'queue', lessonNumber: 2,
-  friendlyName: 'Queue using Arrays',
-  learningObjective: 'Implement a Queue using an array, tracking front and rear pointers.',
-  lines: [
-    line(1, [kw('int'), tx(' '), va('queue'), pu('['), nu('4'), pu(']'), pu(';')]),
-    line(2, [kw('int'), tx(' '), va('front'), tx(' '), op('='), tx(' '), op('-'), nu('1'), pu(','), tx(' '), va('rear'), tx(' '), op('='), tx(' '), op('-'), nu('1'), pu(';')]),
-    line(3, [cm('// Enqueue 10')]),
-    line(4, [kw('if'), pu('('), va('front'), tx(' '), op('=='), tx(' '), op('-'), nu('1'), pu(')'), tx(' '), va('front'), tx(' '), op('='), tx(' '), nu('0'), pu(';')]),
-    line(5, [va('rear'), op('++'), pu(';')]),
-    line(6, [va('queue'), pu('['), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('10'), pu(';')]),
-    line(7, [cm('// Enqueue 20')]),
-    line(8, [va('rear'), op('++'), pu(';')]),
-    line(9, [va('queue'), pu('['), va('rear'), pu(']'), tx(' '), op('='), tx(' '), nu('20'), pu(';')]),
-    line(10, [cm('// Dequeue')]),
-    line(11, [kw('int'), tx(' '), va('val'), tx(' '), op('='), tx(' '), va('queue'), pu('['), va('front'), pu(']'), pu(';')]),
-    line(12, [va('front'), op('++'), pu(';')]),
-  ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => {
-    return [
-      { step: 1, lineNum: 1, explanationEnglish: 'Array for queue is declared with capacity 4.', explanationHinglish: 'Queue array capacity 4 ke sath declare hua.', memorySnapshot: { capacity: 4, queue: [], front: -1, rear: -1 }, animationEvent: { type: 'NONE' } },
-      { step: 2, lineNum: 2, explanationEnglish: 'Pointers initialized. front = -1, rear = -1 means empty queue.', explanationHinglish: 'Front aur rear -1 par set hain (Empty queue).', memorySnapshot: { capacity: 4, queue: [], front: -1, rear: -1 }, animationEvent: { type: 'NONE' } },
-      { step: 3, lineNum: 4, explanationEnglish: 'First element being enqueued. Set front = 0.', explanationHinglish: 'Pehla element enqueue ho raha hai, front = 0 set.', memorySnapshot: { capacity: 4, queue: [], front: 0, rear: -1 }, animationEvent: { type: 'NONE' } },
-      { step: 4, lineNum: 5, explanationEnglish: 'Increment rear to 0 to insert element.', explanationHinglish: 'Rear ko 0 pe aage badhaya.', memorySnapshot: { capacity: 4, queue: [], front: 0, rear: 0 }, animationEvent: { type: 'NONE' } },
-      { step: 5, lineNum: 6, explanationEnglish: 'queue[0] = 10. Enqueue complete.', explanationHinglish: 'queue[0] me 10 dal diya. Enqueue pura hua.', memorySnapshot: { capacity: 4, queue: [10], front: 0, rear: 0 }, animationEvent: { type: 'QUEUE_ENQUEUE', value: 10, queueState: [10] } },
-      { step: 6, lineNum: 8, explanationEnglish: 'Enqueue next element. Increment rear to 1.', explanationHinglish: 'Dusra element. Rear = 1.', memorySnapshot: { capacity: 4, queue: [10], front: 0, rear: 1 }, animationEvent: { type: 'NONE' } },
-      { step: 7, lineNum: 9, explanationEnglish: 'queue[1] = 20. Enqueue complete.', explanationHinglish: 'queue[1] = 20.', memorySnapshot: { capacity: 4, queue: [10, 20], front: 0, rear: 1 }, animationEvent: { type: 'QUEUE_ENQUEUE', value: 20, queueState: [10, 20] } },
-      { step: 8, lineNum: 11, explanationEnglish: 'Dequeue starts. Read queue[front]. val = queue[0] = 10.', explanationHinglish: 'Dequeue karna hai. val = queue[0] (jo ki 10 hai) read kiya.', memorySnapshot: { capacity: 4, queue: [10, 20], front: 0, rear: 1, val: 10 }, animationEvent: { type: 'NONE' } },
-      { step: 9, lineNum: 12, explanationEnglish: 'Increment front to 1. Element removed from queue logic.', explanationHinglish: 'Front ko badha kar 1 kar diya, matlab element remove ho gaya.', memorySnapshot: { capacity: 4, queue: [null, 20], front: 1, rear: 1, val: 10 }, animationEvent: { type: 'QUEUE_DEQUEUE', dequeuedValue: 10, queueState: [null, 20] } },
-    ];
-  },
-  executionSteps: [],
-};
-
 // ─── TOPIC 07: SINGLY LINKED LIST ─────────────────────────────────────────────
 
 export const dsa_sll_traverse: LessonProgram = {
@@ -668,41 +909,6 @@ export const dsa_sll_traverse: LessonProgram = {
         consoleOutput: 'Singly Linked List initialized (Empty).',
         animationEvent: { type: 'NONE' },
       },
-    ];
-  },
-  executionSteps: [],
-};
-
-export const dsa_sll_reverse: LessonProgram = {
-  id: 'dsa_sll_reverse', language: 'dsa', topic: 'singly_linked_list', lessonNumber: 2,
-  friendlyName: 'Reverse a Singly Linked List',
-  learningObjective: 'Use three pointers (prev=NULL, curr=head, next) to reverse all next pointer links one by one.',
-  lines: [
-    line(1, [cm('// Reverse Singly Linked List using 3 Pointers')]),
-    line(2, [va('Node'), op('*'), va('prev'), tx(' '), op('='), tx(' '), kw('nullptr'), pu(';')]),
-    line(3, [va('Node'), op('*'), va('curr'), tx(' '), op('='), tx(' '), va('head'), pu(';')]),
-    line(4, [kw('while'), pu('('), va('curr'), tx(' '), op('!='), tx(' '), kw('nullptr'), pu(')'), tx(' {')]),
-    line(5, [tx('    '), va('Node'), op('*'), va('nextNode'), tx(' '), op('='), tx(' '), va('curr'), op('->'), va('next'), pu(';'), tx(' '), cm('// Save next')]),
-    line(6, [tx('    '), va('curr'), op('->'), va('next'), tx(' '), op('='), tx(' '), va('prev'), pu(';'), tx(' '), cm('// Reverse link')]),
-    line(7, [tx('    '), va('prev'), tx(' '), op('='), tx(' '), va('curr'), pu(';')]),
-    line(8, [tx('    '), va('curr'), tx(' '), op('='), tx(' '), va('nextNode'), pu(';')]),
-    line(9, [pu('}')]),
-    line(10, [va('head'), tx(' '), op('='), tx(' '), va('prev'), pu(';'), tx(' '), cm('// New head')]),
-  ],
-  editableVariables: {},
-  generateSteps: (): ExecutionStep[] => {
-    return [
-      { step: 1, lineNum: 2, explanationEnglish: 'prev = nullptr. No previous node initially.', explanationHinglish: 'prev = nullptr. Abhi koi previous nahi.', memorySnapshot: { prev: 'NULL', curr: 'head→10', list: '10→20→30→NULL' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'prev', value: 'NULL' } },
-      { step: 2, lineNum: 3, explanationEnglish: 'curr = head → Node(10). Start from first node.', explanationHinglish: 'curr = head = Node(10). Traversal shuru.', memorySnapshot: { prev: 'NULL', curr: '→10' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'curr', value: 'Node(10)' } },
-      { step: 3, lineNum: 5, explanationEnglish: 'nextNode = curr->next = Node(20). Save before reversing.', explanationHinglish: 'nextNode = Node(20) save kiya.', memorySnapshot: { prev: 'NULL', curr: '→10', nextNode: '→20' }, animationEvent: { type: 'CREATE_VARIABLE', name: 'nextNode', value: 'Node(20)' } },
-      { step: 4, lineNum: 6, explanationEnglish: 'curr->next = prev = NULL. Node(10) now points backward (NULL).', explanationHinglish: 'Node(10) ka next reverse hua → NULL.', memorySnapshot: { 'Node10.next': 'NULL (reversed)', prev: 'NULL', curr: '→10' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'curr->next', oldValue: '→20', newValue: 'NULL' } },
-      { step: 5, lineNum: 7, explanationEnglish: 'prev = curr = Node(10). Move prev forward.', explanationHinglish: 'prev = Node(10) ho gaya.', memorySnapshot: { prev: '→10', curr: '→10' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'prev', oldValue: 'NULL', newValue: 'Node(10)' } },
-      { step: 6, lineNum: 8, explanationEnglish: 'curr = nextNode = Node(20). Advance to next.', explanationHinglish: 'curr = Node(20). Agla iteration.', memorySnapshot: { prev: '→10', curr: '→20' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'curr', oldValue: 'Node(10)', newValue: 'Node(20)' } },
-      { step: 7, lineNum: 5, explanationEnglish: 'nextNode = curr->next = Node(30). Save next again.', explanationHinglish: 'nextNode = Node(30). Save kiya.', memorySnapshot: { prev: '→10', curr: '→20', nextNode: '→30' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'nextNode', oldValue: 'Node(20)', newValue: 'Node(30)' } },
-      { step: 8, lineNum: 6, explanationEnglish: 'curr->next = prev = Node(10). 20 now points to 10.', explanationHinglish: 'Node(20).next → Node(10). Reverse hua!', memorySnapshot: { 'Node20.next': '→10 (reversed)' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'curr->next', oldValue: '→30', newValue: 'Node(10)' } },
-      { step: 9, lineNum: 7, explanationEnglish: 'prev = Node(20). curr = Node(30). Continue.', explanationHinglish: 'prev = Node(20), curr = Node(30).', memorySnapshot: { prev: '→20', curr: '→30' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'prev', oldValue: 'Node(10)', newValue: 'Node(20)' } },
-      { step: 10, lineNum: 6, explanationEnglish: 'Node(30)->next = Node(20). Last reverse done!', explanationHinglish: 'Node(30).next → Node(20). Teesra reverse hua!', memorySnapshot: { 'Node30.next': '→20 (reversed)', list: '30→20→10→NULL' }, animationEvent: { type: 'UPDATE_VARIABLE', name: 'curr->next', oldValue: 'NULL', newValue: 'Node(20)' } },
-      { step: 11, lineNum: 10, explanationEnglish: 'head = prev = Node(30). Reversed! 30→20→10→NULL.', explanationHinglish: 'head = Node(30). Reverse complete! 30→20→10→NULL.', memorySnapshot: { head: '→30', list: '30→20→10→NULL' }, consoleOutput: '30 → 20 → 10 → NULL', animationEvent: { type: 'PRINT_VALUE', variableName: 'head', outputValue: '30→20→10→NULL' } },
     ];
   },
   executionSteps: [],
@@ -1537,7 +1743,6 @@ export const dsa_hashmap: LessonProgram = {
 
 export const dsaLessons: Record<string, LessonProgram> = {
   dsa_array_declare,
-  dsa_array_sum,
   dsa_array_max_min,
   dsa_array_reverse,
   dsa_array_count,
@@ -1546,13 +1751,9 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_bubble_sort,
   dsa_selection_sort,
   dsa_insertion_sort,
-  dsa_recursion_factorial,
-  dsa_recursion_sum,
   dsa_stack_push_pop,
   dsa_queue_enq_deq,
-  dsa_queue_array_impl,
   dsa_sll_traverse,
-  dsa_sll_reverse,
   dsa_dll_traverse,
   dsa_graph_basics,
   dsa_graph_bfs,
@@ -1563,6 +1764,7 @@ export const dsaLessons: Record<string, LessonProgram> = {
   dsa_graph_astar,
   dsa_binary_tree,
   dsa_merge_sort,
+  dsa_quick_sort,
   dsa_heap_sort,
   dsa_hashset,
   dsa_hashmap,
@@ -1572,6 +1774,7 @@ export const dsaLessons: Record<string, LessonProgram> = {
   bubble_sort: dsa_bubble_sort,
   selection_sort: dsa_selection_sort,
   insertion_sort: dsa_insertion_sort,
+  quick_sort: dsa_quick_sort,
   hashset: dsa_hashset,
   hashmap: dsa_hashmap,
 };
