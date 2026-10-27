@@ -124,10 +124,9 @@ async function exportAll() {
       };
     }
 
-    // ── Marker-only packs (ML & Networking — renderers are compiled, packs just unlock access) ──
+    // ── Marker-only packs (Networking — renderers are compiled, pack just unlocks access) ──
     const markerModules = [
-      { id: 'ml',         name: 'Machine Learning',  topics: 11, programs: 11 },
-      { id: 'networking', name: 'Computer Networks', topics: 8,  programs: 8  },
+      { id: 'networking', name: 'Computer Networks', topics: 8, programs: 8 },
     ];
     for (const mod of markerModules) {
       const packData = { id: mod.id, name: mod.name, version: '1.0.0', exportedAt: new Date().toISOString(), topicsCount: mod.topics, programsCount: mod.programs, isMarkerOnly: true, registry: {} };
